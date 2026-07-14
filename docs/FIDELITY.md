@@ -4,6 +4,25 @@
 >
 > **Klucz:** **wszystkie te klienty są open source.** Wierne odtwarzanie to **port z ground truth**, nie zgadywanie z pamięci. Nie zgadujesz fioletu Amethysta — to stała w `Color.kt`.
 
+## Status / next-up (aktualizuj po każdym kliencie)
+
+**Głębokie flagowce ZROBIONE (wzorzec wierności, recording→recon→screen-map→rebuild→verify):**
+- ✅ **Amethyst** (8 powierzchni) — `0ea6f07`, `docs/refs/amethyst/`
+- ✅ **Damus** (11) — `6ab3956`, `docs/refs/damus/screen-map.md`
+- ✅ **YakiHonne** (13) — `eacd2c3`, `docs/refs/yakihonne/screen-map.md`
+
+**Do zrobienia (druga fala, słabsza wierność / stare stuby):** Snort, Primal, Keychat, Olas, Coracle, Gossip. Tokeny + killery każdego są niżej w tym pliku; korekty kolorów w `[[client-fidelity-ground-truth]]`.
+
+**Start następnej sesji (agent robiący kolejny symulator):**
+1. **Użytkownik NAJPIERW wrzuca referencję** do `docs/refs/<client>/shots/` — screen-RECORDING (mobile: Keychat/Olas/Primal-mobile) albo screeny/live-capture (web za Cloudflare: Snort/Primal-web/Coracle — `WebFetch` daje pustą skorupę). Bez realnego renderu nie startuj (layout ≠ pamięć).
+2. Odpal **background `Workflow`** recon repo (~11 agentów/powierzchnia) → zapisz verbatim `docs/refs/<client>/screen-map.md`.
+3. Czytaj recording (klatki: `ffmpeg select='gt(scene,0.12)'`) + repo RAZEM. **[REC vs REPO]:** recording wygrywa LAYOUT, repo wygrywa HEX/nazwy-ikon/labelki.
+4. Rebuild token-first w `src/simulators/<client>/`, reużyj inline-SVG robohash `Avatar` + `data:` media. Zachowaj interfejs komend toura + `data-tour`.
+5. Weryfikacja (DoD niżej): `npm run build` + live click-through w podglądzie (**0 błędów, 0 zagnieżdżonych buttonów**), overlaye w stanie końcowym. Port podglądu: fixed `--strictPort` w `.claude/launch.json` (5173 bywa zajęty przez dev usera → użyj np. 5180, potem cofnij). Gotcha: avatar-`<button>` we `flex` bez `items-start` rozciąga się i centruje w pionie.
+6. Commit `<client>: faithful, reference-verified reproduction (recording + repo)` (labelowane PNG + screen-map, surowe wideo/klatki w `.gitignore`). Zaktualizuj ten Status.
+
+Pełny how-to w pamięci `[[fidelity-repro-playbook]]`.
+
 ## Proces (powtarzalny, per klient)
 
 1. **Ground truth.** Web (Snort, Primal, Coracle, YakiHonne) → otwórz żywą instancję i czytaj wyliczone zmienne CSS w devtools (te SPA są za Cloudflare — `WebFetch` dostaje pustą skorupę, trzeba realnego browsera). Mobile/desktop (Damus, Amethyst, Olas, Keychat, Gossip) → czytaj plik motywu w repo (mapa niżej). Layout → screeny App Store / Google Play.
