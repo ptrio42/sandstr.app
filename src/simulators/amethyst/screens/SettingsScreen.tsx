@@ -1,26 +1,7 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  Moon, 
-  Sun, 
-  Monitor,
-  Bell,
-  Shield,
-  Database,
-  Zap,
-  Globe,
-  Key,
-  FileText,
-  HelpCircle,
-  ChevronRight,
-  LogOut,
-  Trash2,
-  ChevronDown,
-  ChevronUp,
-  Check
-} from 'lucide-react';
-import { mockRelays, recommendedRelays } from '../../../data/mock';
+import { motion } from 'framer-motion';
+import { ArrowLeft, ChevronRight, Plus } from 'lucide-react';
+import { Avatar } from '../components/Avatar';
 import '../amethyst.theme.css';
 
 interface SettingsScreenProps {
@@ -28,308 +9,195 @@ interface SettingsScreenProps {
   initialSection?: string | null;
 }
 
-export function SettingsScreen({ onBack, initialSection = 'relays' }: SettingsScreenProps) {
-  const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('auto');
-  const [expandedSection, setExpandedSection] = useState<string | null>(initialSection);
-  const [notifications, setNotifications] = useState({
-    likes: true,
-    mentions: true,
-    zaps: true,
-    follows: false,
-  });
+const TITLES: Record<string, string> = {
+  preferences: 'Application Preferences',
+  security: 'Security Filters',
+  relays: 'Relays',
+};
 
-  const toggleSection = (section: string) => {
-    setExpandedSection(expandedSection === section ? null : section);
-  };
+// Three real Amethyst drawer destinations (verified vs the screen recording):
+// Application Preferences · Security Filters · Relays.
+export function SettingsScreen({ onBack, initialSection = 'preferences' }: SettingsScreenProps) {
+  const section = (initialSection === 'privacy' ? 'security' : initialSection) || 'preferences';
 
   return (
     <div className="flex flex-col h-full bg-[var(--md-background)]" data-tour="amethyst-settings">
-      {/* App Bar */}
-      <div className="md-app-bar sticky top-0 z-20">
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={onBack}
-          className="p-2 rounded-full hover:bg-[var(--md-surface-variant)]"
-        >
+      <div className="md-app-bar md-app-bar-enhanced">
+        <button onClick={onBack} aria-label="Back" className="md-app-bar-icon-btn">
           <ArrowLeft className="w-6 h-6 text-[var(--md-on-surface)]" />
-        </motion.button>
-        <h1 className="flex-1 text-xl font-semibold text-[var(--md-on-surface)] ml-2">
-          Settings
-        </h1>
+        </button>
+        <h1 className="flex-1 font-semibold text-[var(--md-on-surface)] px-1">{TITLES[section] || 'Settings'}</h1>
       </div>
 
-      {/* Settings List */}
       <div className="flex-1 overflow-y-auto">
-        {/* Account Section */}
-        <SettingsSection title="Account">
-          <SettingsItem
-            icon={<Key className="w-5 h-5" />}
-            title="Keys & Backup"
-            subtitle="Manage your private keys"
-            onClick={() => {}}
-          />
-          <SettingsItem
-            icon={<Shield className="w-5 h-5" />}
-            title="Privacy"
-            subtitle="Control your privacy settings"
-            onClick={() => {}}
-          />
-          <SettingsItem
-            icon={<FileText className="w-5 h-5" />}
-            title="NIP-05 Identifier"
-            subtitle="you@nostr.local"
-            onClick={() => {}}
-          />
-        </SettingsSection>
+        {section === 'relays' ? <RelaysView /> : section === 'security' ? <SecurityView /> : <PreferencesView />}
+      </div>
+    </div>
+  );
+}
 
-        {/* Appearance Section */}
-        <SettingsSection title="Appearance">
-          <div className="px-4 py-3">
-            <p className="text-sm text-[var(--md-on-surface-variant)] mb-3">Theme</p>
-            <div className="flex gap-2">
-              <ThemeButton
-                icon={<Sun className="w-5 h-5" />}
-                label="Light"
-                isActive={theme === 'light'}
-                onClick={() => setTheme('light')}
-              />
-              <ThemeButton
-                icon={<Moon className="w-5 h-5" />}
-                label="Dark"
-                isActive={theme === 'dark'}
-                onClick={() => setTheme('dark')}
-              />
-              <ThemeButton
-                icon={<Monitor className="w-5 h-5" />}
-                label="Auto"
-                isActive={theme === 'auto'}
-                onClick={() => setTheme('auto')}
-              />
-            </div>
+/* ---------- Application Preferences ---------- */
+
+const PREFS = [
+  { title: 'Language', desc: "For the App's interface", value: 'English' },
+  { title: 'Theme', desc: 'Dark, Light or System theme', value: 'System' },
+  { title: 'Image Preview', desc: 'Automatically load images and GIFs', value: 'Always' },
+  { title: 'Video Playback', desc: 'Automatically plays videos and GIFs', value: 'Always' },
+  { title: 'URL Preview', desc: 'Show URL previews', value: 'Always' },
+  { title: 'Profile Picture', desc: 'Show Profile pictures', value: 'Always' },
+  { title: 'Immersive Scrolling', desc: 'Hide Nav Bars when scrolling', value: 'Always' },
+  { title: 'UI Mode', desc: 'Choose the post style', value: 'Simplified' },
+  { title: 'Profile Gallery Style', desc: 'Choose the gallery style', value: 'Classic' },
+  { title: 'Push Notification', desc: 'From installed UnifiedPush apps', value: 'None' },
+];
+
+function PreferencesView() {
+  return (
+    <div className="py-1">
+      {PREFS.map((p) => (
+        <button key={p.title} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--md-surface-variant)]/40 transition-colors text-left">
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-[var(--md-on-surface)]">{p.title}</p>
+            <p className="text-sm text-[var(--md-on-surface-variant)]">{p.desc}</p>
           </div>
-        </SettingsSection>
+          <span className="text-sm text-[var(--md-on-surface-variant)] shrink-0">{p.value}</span>
+          <ChevronRight className="w-4 h-4 text-[var(--md-on-surface-variant)] shrink-0" />
+        </button>
+      ))}
+    </div>
+  );
+}
 
-        {/* Notifications Section */}
-        <SettingsSection title="Notifications">
-          <ToggleItem
-            icon={<Bell className="w-5 h-5" />}
-            title="Likes"
-            isOn={notifications.likes}
-            onToggle={() => setNotifications(prev => ({ ...prev, likes: !prev.likes }))}
-          />
-          <ToggleItem
-            icon={<Zap className="w-5 h-5" />}
-            title="Zaps"
-            isOn={notifications.zaps}
-            onToggle={() => setNotifications(prev => ({ ...prev, zaps: !prev.zaps }))}
-          />
-          <ToggleItem
-            icon={<Globe className="w-5 h-5" />}
-            title="Mentions"
-            isOn={notifications.mentions}
-            onToggle={() => setNotifications(prev => ({ ...prev, mentions: !prev.mentions }))}
-          />
-        </SettingsSection>
+/* ---------- Security Filters ---------- */
 
-        {/* Relays Section */}
-        <div className="mt-6">
-          <button
-            onClick={() => toggleSection('relays')}
-            className="w-full px-4 py-3 flex items-center justify-between bg-[var(--md-surface-variant)]/30"
-          >
-            <div className="flex items-center gap-3">
-              <Database className="w-5 h-5 text-[var(--md-on-surface)]" />
-              <span className="font-medium text-[var(--md-on-surface)]">Relays</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-[var(--md-on-surface-variant)]">
-                {recommendedRelays.length} connected
-              </span>
-              {expandedSection === 'relays' ? (
-                <ChevronUp className="w-5 h-5 text-[var(--md-on-surface-variant)]" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-[var(--md-on-surface-variant)]" />
-              )}
-            </div>
+function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  return (
+    <button onClick={onToggle} aria-pressed={on} className={`md-switch ${on ? 'checked' : ''}`}>
+      <div className="md-switch-thumb" />
+    </button>
+  );
+}
+
+const BLOCKED = [
+  { name: 'npub1v7u…eqmz37jj' },
+  { name: 'npub1j2p…cs6kxw0d' },
+  { name: 'npub1al9…hswjuds8' },
+  { name: 'npub1lck…8qgyhdfm' },
+  { name: 'npub144k…ssuua6c9' },
+  { name: 'npub1ylt…4qnwlakz' },
+];
+
+function SecurityView() {
+  const [warnReports, setWarnReports] = useState(true);
+  const [filterSpam, setFilterSpam] = useState(true);
+  const [tab, setTab] = useState<'blocked' | 'spammers' | 'hidden'>('blocked');
+
+  return (
+    <div>
+      <div className="px-4 pt-3 space-y-4">
+        <Row title="Warn on reports" desc="Shows a warning message when posts have 5 or more reports from your follows">
+          <Toggle on={warnReports} onToggle={() => setWarnReports((v) => !v)} />
+        </Row>
+        <Row title="Filter spam" desc="Hides posts from strangers that were exactly the same for 5 or more times">
+          <Toggle on={filterSpam} onToggle={() => setFilterSpam((v) => !v)} />
+        </Row>
+        <Row title="Show sensitive content" desc="Shows a warning message when the author of the post marked it as sensitive">
+          <span className="px-4 py-1.5 rounded-lg bg-[var(--md-surface-variant)] text-sm text-[var(--md-on-surface)]">Warn</span>
+        </Row>
+      </div>
+
+      {/* sub-tabs */}
+      <div className="md-tabs mt-4 sticky top-0 bg-[var(--md-background)] z-10">
+        {(['blocked', 'spammers', 'hidden'] as const).map((t) => (
+          <button key={t} onClick={() => setTab(t)} className={`md-tab whitespace-nowrap ${tab === t ? 'active' : ''}`}>
+            {t === 'blocked' ? 'Blocked Users' : t === 'spammers' ? 'Spammers' : 'Hidden Words'}
+            {tab === t && <motion.div layoutId="sec-tab-indicator" className="md-tab-indicator" transition={{ type: 'spring', stiffness: 500, damping: 30 }} />}
           </button>
-          
-          <AnimatePresence>
-            {expandedSection === 'relays' && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                className="overflow-hidden"
-              >
-                <div className="p-4 space-y-3">
-                  {recommendedRelays.slice(0, 4).map((relay, index) => (
-                    <div
-                      key={relay.id}
-                      className="flex items-center justify-between p-3 bg-[var(--md-surface)] rounded-xl"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-2 h-2 rounded-full ${relay.isOnline ? 'bg-green-500' : 'bg-red-500'}`} />
-                        <div>
-                          <p className="font-medium text-[var(--md-on-surface)] text-sm">{relay.name}</p>
-                          <p className="text-xs text-[var(--md-on-surface-variant)]">{relay.url}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-[var(--md-on-surface-variant)]">
-                          {relay.latency}ms
-                        </span>
-                        <motion.button
-                          whileTap={{ scale: 0.95 }}
-                          className="p-1.5 rounded-full bg-[var(--md-surface-variant)] text-[var(--md-on-surface-variant)]"
-                        >
-                          <Check className="w-3 h-3" />
-                        </motion.button>
-                      </div>
-                    </div>
-                  ))}
-                  <motion.button
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full py-3 text-[var(--md-primary)] font-medium text-sm hover:bg-[var(--md-surface-variant)] rounded-xl transition-colors"
-                  >
-                    + Add Relay
-                  </motion.button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Support Section */}
-        <SettingsSection title="Support">
-          <SettingsItem
-            icon={<HelpCircle className="w-5 h-5" />}
-            title="Help & Support"
-            onClick={() => {}}
-          />
-          <SettingsItem
-            icon={<FileText className="w-5 h-5" />}
-            title="Terms of Service"
-            onClick={() => {}}
-          />
-        </SettingsSection>
-
-        {/* Danger Zone */}
-        <div className="mt-6 px-4 pb-8 space-y-3">
-          <motion.button
-            whileTap={{ scale: 0.98 }}
-            className="w-full flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20 text-red-600"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="font-medium">Sign Out</span>
-          </motion.button>
-          
-          <motion.button
-            whileTap={{ scale: 0.98 }}
-            className="w-full flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20 text-red-600"
-          >
-            <Trash2 className="w-5 h-5" />
-            <span className="font-medium">Delete Account</span>
-          </motion.button>
-        </div>
+        ))}
       </div>
+
+      {tab === 'blocked' ? (
+        <div className="py-1">
+          {BLOCKED.map((u) => (
+            <div key={u.name} className="flex items-center gap-3 px-4 py-2.5">
+              <Avatar seed={u.name} className="w-10 h-10" />
+              <span className="flex-1 min-w-0 truncate text-[var(--md-on-surface)]">{u.name}</span>
+              <button className="px-4 py-1.5 rounded-full text-sm font-medium bg-[var(--md-primary)] text-[var(--md-on-primary)]">Unblock</button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12 text-[var(--md-on-surface-variant)]">
+          {tab === 'spammers' ? 'No blocked spammers' : 'No hidden words'}
+        </div>
+      )}
     </div>
   );
 }
 
-function SettingsSection({ title, children }: { title: string; children: React.ReactNode }) {
+function Row({ title, desc, children }: { title: string; desc: string; children: React.ReactNode }) {
   return (
-    <div className="mt-6">
-      <h3 className="px-4 text-xs font-medium text-[var(--md-on-surface-variant)] uppercase tracking-wider mb-2">
-        {title}
-      </h3>
-      <div className="bg-[var(--md-surface)] rounded-2xl mx-4 overflow-hidden">
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function SettingsItem({ 
-  icon, 
-  title, 
-  subtitle, 
-  onClick 
-}: { 
-  icon: React.ReactNode; 
-  title: string; 
-  subtitle?: string;
-  onClick: () => void;
-}) {
-  return (
-    <motion.button
-      whileTap={{ scale: 0.99 }}
-      onClick={onClick}
-      className="w-full flex items-center gap-3 p-4 hover:bg-[var(--md-surface-variant)] transition-colors"
-    >
-      <span className="text-[var(--md-on-surface-variant)]">{icon}</span>
-      <div className="flex-1 text-left">
+    <div className="flex items-start justify-between gap-4">
+      <div className="flex-1 min-w-0">
         <p className="font-medium text-[var(--md-on-surface)]">{title}</p>
-        {subtitle && (
-          <p className="text-sm text-[var(--md-on-surface-variant)]">{subtitle}</p>
-        )}
+        <p className="text-sm text-[var(--md-on-surface-variant)]">{desc}</p>
       </div>
-      <ChevronRight className="w-5 h-5 text-[var(--md-on-surface-variant)]" />
-    </motion.button>
-  );
-}
-
-function ToggleItem({ 
-  icon, 
-  title, 
-  isOn, 
-  onToggle 
-}: { 
-  icon: React.ReactNode; 
-  title: string; 
-  isOn: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <div className="flex items-center justify-between p-4 hover:bg-[var(--md-surface-variant)] transition-colors">
-      <div className="flex items-center gap-3">
-        <span className="text-[var(--md-on-surface-variant)]">{icon}</span>
-        <span className="font-medium text-[var(--md-on-surface)]">{title}</span>
-      </div>
-      <motion.button
-        whileTap={{ scale: 0.95 }}
-        onClick={onToggle}
-        className={`md-switch ${isOn ? 'checked' : ''}`}
-      >
-        <div className="md-switch-thumb" />
-      </motion.button>
+      <div className="shrink-0 pt-0.5">{children}</div>
     </div>
   );
 }
 
-function ThemeButton({ 
-  icon, 
-  label, 
-  isActive, 
-  onClick 
-}: { 
-  icon: React.ReactNode; 
-  label: string; 
-  isActive: boolean;
-  onClick: () => void;
-}) {
+/* ---------- Relays ---------- */
+
+const OUTBOX = [
+  { name: 'nostr.wine', size: '196 MB', hue: 300 },
+  { name: 'nostr.mom', size: '163 MB', hue: 140 },
+  { name: 'nos.lol', size: '2 MB', hue: 40 },
+  { name: 'relay.damus.io', size: '1 MB', hue: 260 },
+  { name: 'garden.zap.cooking', size: '0', hue: 90 },
+];
+const INBOX = [
+  { name: 'nostr.wine', size: '196 MB', hue: 300 },
+  { name: 'nostr.mom', size: '163 MB', hue: 140 },
+];
+
+function RelaysView() {
   return (
-    <motion.button
-      whileTap={{ scale: 0.95 }}
-      onClick={onClick}
-      className={`flex-1 flex flex-col items-center gap-1 p-3 rounded-xl transition-colors ${
-        isActive 
-          ? 'bg-[var(--md-secondary-container)] text-[var(--md-on-secondary-container)]' 
-          : 'bg-[var(--md-surface-variant)] text-[var(--md-on-surface-variant)]'
-      }`}
-    >
-      {icon}
-      <span className="text-xs font-medium">{label}</span>
-    </motion.button>
+    <div className="pb-6">
+      <RelaySection
+        title="Public Outbox/Home Relays"
+        desc="This relay type stores all your posts here and others read your content. Insert between 1–3 relays, paid relays or public relays."
+        relays={OUTBOX}
+        showAdd
+      />
+      <RelaySection
+        title="Public Inbox Relays"
+        desc="This relay type receives all your tags. They can be public so the relay operator can limit the good and for the bad."
+        relays={INBOX}
+      />
+    </div>
+  );
+}
+
+function RelaySection({ title, desc, relays, showAdd }: { title: string; desc: string; relays: typeof OUTBOX; showAdd?: boolean }) {
+  return (
+    <div className="px-4 pt-4">
+      <h3 className="font-semibold" style={{ color: 'var(--md-primary)' }}>{title}</h3>
+      <p className="text-sm text-[var(--md-on-surface-variant)] mt-1 mb-3">{desc}</p>
+      <div className="space-y-2">
+        {relays.map((r) => (
+          <div key={r.name} className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full shrink-0" style={{ background: `linear-gradient(135deg, hsl(${r.hue} 55% 55%), hsl(${(r.hue + 40) % 360} 60% 42%))` }} />
+            <span className="flex-1 min-w-0 truncate text-[var(--md-on-surface)]">{r.name}</span>
+            <span className="text-sm text-[var(--md-on-surface-variant)] shrink-0">{r.size}</span>
+          </div>
+        ))}
+      </div>
+      {showAdd && (
+        <button className="mt-3 flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--md-primary)' }}>
+          <Plus className="w-4 h-4" /> Add a Relay
+        </button>
+      )}
+    </div>
   );
 }

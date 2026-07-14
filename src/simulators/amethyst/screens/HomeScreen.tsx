@@ -1,49 +1,28 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, Bell, Search, Filter, Plus } from 'lucide-react';
-import { MaterialCard } from '../components/MaterialCard';
-import { mockNotes, getRecentNotes, mockUsers, getUserByPubkey } from '../../../data/mock';
+import { MaterialCard, PostData } from '../components/MaterialCard';
+import { AppTopBar } from '../components/AppTopBar';
+import { FeedSelector } from '../components/FeedSelector';
+import { getRecentNotes, getUserByPubkey } from '../../../data/mock';
 import type { MockNote } from '../../../data/mock';
 import '../amethyst.theme.css';
 
 interface HomeScreenProps {
   onOpenCompose: () => void;
   onOpenDrawer?: () => void;
+  onOpenThread?: (post: PostData) => void;
 }
 
-interface Story {
-  id: string;
-  name: string;
-  avatar: string;
-  hasStory: boolean;
-  isLive?: boolean;
-}
-
-export function HomeScreen({ onOpenCompose, onOpenDrawer }: HomeScreenProps) {
-  const [activeTab, setActiveTab] = useState<'following' | 'global'>('following');
+export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread }: HomeScreenProps) {
+  // Real Amethyst home has TWO switchers: the feed selector in the app bar
+  // ("All Follows ▾") and the content sub-tabs below it.
+  const [activeTab, setActiveTab] = useState<'new_threads' | 'conversations'>('new_threads');
   const [refreshing, setRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [isPulling, setIsPulling] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef(0);
-  
-  // Generate stories from first 10 mock users
-  const stories: Story[] = [
-    {
-      id: 'add-story',
-      name: 'Add Story',
-      avatar: '',
-      hasStory: false,
-    },
-    ...mockUsers.slice(0, 10).map(user => ({
-      id: user.pubkey,
-      name: user.displayName,
-      avatar: user.avatar,
-      hasStory: true,
-      isLive: user.isVerified && Math.random() < 0.3,
-    })),
-  ];
-  
+
   const [posts, setPosts] = useState(() => {
     // Convert mock notes to post format
     return getRecentNotes(20).map(note => {
@@ -133,57 +112,17 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer }: HomeScreenProps) {
 
   return (
     <div className="flex flex-col h-full bg-[var(--md-background)]" data-tour="amethyst-feed">
-      {/* App Bar */}
-      <div className="md-app-bar md-app-bar-enhanced">
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-          onClick={onOpenDrawer}
-          aria-label="Open navigation drawer"
-          className="md-app-bar-icon-btn"
-        >
-          <Menu className="w-6 h-6 text-[var(--md-on-surface)]" />
-        </motion.button>
-        
-        <div className="flex-1 flex items-center justify-center gap-2">
-          {/* Amethyst Logo */}
-          <svg viewBox="0 0 24 24" className="w-8 h-8 text-[var(--md-primary)]">
-            <path
-              fill="currentColor"
-              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
-            />
-          </svg>
-          <span className="font-semibold text-[var(--md-on-surface)] hidden sm:block">Amethyst</span>
-        </div>
-        
-        <div className="flex items-center gap-1">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-            className="md-app-bar-icon-btn relative"
-          >
-            <Search className="w-6 h-6 text-[var(--md-on-surface)]" />
-          </motion.button>
-          
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-            className="md-app-bar-icon-btn relative"
-          >
-            <Bell className="w-6 h-6 text-[var(--md-on-surface)]" />
-            <span className="notification-badge">3</span>
-          </motion.button>
-        </div>
-      </div>
+      {/* Shared Amethyst app bar; center = feed selector "All Follows ▾" */}
+      <AppTopBar onOpenDrawer={onOpenDrawer} center={<FeedSelector defaultFeed="All Follows" />} />
 
-      {/* Tabs */}
+      {/* Content sub-tabs (distinct from the feed selector above) */}
       <div className="md-tabs sticky top-16 z-10 bg-[var(--md-surface)]">
         <button
-          onClick={() => setActiveTab('following')}
-          className={`md-tab ${activeTab === 'following' ? 'active' : ''}`}
+          onClick={() => setActiveTab('new_threads')}
+          className={`md-tab ${activeTab === 'new_threads' ? 'active' : ''}`}
         >
-          Following
-          {activeTab === 'following' && (
+          New Threads
+          {activeTab === 'new_threads' && (
             <motion.div
               layoutId="tab-indicator"
               className="md-tab-indicator"
@@ -192,11 +131,11 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer }: HomeScreenProps) {
           )}
         </button>
         <button
-          onClick={() => setActiveTab('global')}
-          className={`md-tab ${activeTab === 'global' ? 'active' : ''}`}
+          onClick={() => setActiveTab('conversations')}
+          className={`md-tab ${activeTab === 'conversations' ? 'active' : ''}`}
         >
-          Global
-          {activeTab === 'global' && (
+          Conversations
+          {activeTab === 'conversations' && (
             <motion.div
               layoutId="tab-indicator"
               className="md-tab-indicator"
@@ -204,54 +143,6 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer }: HomeScreenProps) {
             />
           )}
         </button>
-      </div>
-
-      {/* Stories Row */}
-      <div className="stories-container">
-        <div className="stories-scroll">
-          {stories.map((story, index) => (
-            <motion.div
-              key={story.id}
-              className="story-item"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div className={`story-avatar-wrapper ${story.hasStory ? 'has-story' : ''} ${story.isLive ? 'is-live' : ''}`}>
-                {story.id === 'add-story' ? (
-                  <div className="story-add-button">
-                    <Plus className="w-6 h-6 text-[var(--md-primary)]" />
-                  </div>
-                ) : (
-                  <img
-                    src={`https://api.dicebear.com/7.x/bottts/svg?seed=${story.id || 'default'}`}
-                    alt={story.name}
-                    className="story-avatar"
-                  />
-                )}
-                {story.isLive && (
-                  <div className="live-indicator">
-                    <span className="live-text">LIVE</span>
-                  </div>
-                )}
-              </div>
-              <span className="story-name">{story.name}</span>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* Filter Chips */}
-      <div className="px-4 py-3 flex gap-2 overflow-x-auto bg-[var(--md-surface)] border-b border-[var(--md-outline-variant)]">
-        <button className="md-chip md-chip-filter selected">
-          <Filter className="w-4 h-4" />
-          All
-        </button>
-        <button className="md-chip md-chip-filter">Bitcoin</button>
-        <button className="md-chip md-chip-filter">Nostr</button>
-        <button className="md-chip md-chip-filter">Tech</button>
-        <button className="md-chip md-chip-filter">Memes</button>
       </div>
 
       {/* Pull to Refresh Indicator */}
@@ -280,6 +171,22 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer }: HomeScreenProps) {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
+        {/* LIVE now — real Amethyst shows a live-activities strip as the first feed item (NIP-53), NOT a stories carousel */}
+        <button
+          className="flex items-center gap-3 -mx-2 mb-1 px-4 py-3 border-b border-[var(--md-outline-variant)] text-left"
+          style={{ width: 'calc(100% + 1rem)' }}
+        >
+          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-fuchsia-600 to-purple-700 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-[var(--md-on-surface)] truncate">Exploring random ideas …</p>
+            <p className="text-sm text-[var(--md-on-surface-variant)] truncate">Just exploring some random ideas, nothing specific</p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="live-badge text-xs font-bold px-2 py-0.5 rounded text-white">LIVE</span>
+            <span className="text-sm text-[var(--md-on-surface-variant)]">🚀 17</span>
+            <span className="text-sm font-medium" style={{ color: 'var(--bitcoin-orange)' }}>⚡ 122.5k</span>
+          </div>
+        </button>
         <AnimatePresence mode="popLayout">
           {posts.map((post, index) => (
             <motion.div
@@ -300,6 +207,7 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer }: HomeScreenProps) {
                 onRepost={handleRepost}
                 onZap={handleZap}
                 onReply={handleReply}
+                onOpenThread={() => onOpenThread?.(post)}
               />
             </motion.div>
           ))}

@@ -180,28 +180,35 @@ export function generateAvatarGradient(seed: string): string {
   return gradients[Math.abs(hash) % gradients.length];
 }
 
-// Sample image URLs for posts
+// Post images as local, deterministic, CSP-safe inline-SVG gradient "photos".
+// (The old list was mostly non-resolving fake URLs + remote picsum — broken
+// offline and under strict CSP. These data-URIs need no network.)
+let __imgSeq = 0;
+function svgPhoto(i: number): string {
+  const pairs = [[280, 330], [205, 255], [20, 48], [150, 190], [325, 15], [240, 285], [40, 90], [190, 230], [95, 140], [355, 30]];
+  const [h1, h2] = pairs[i % pairs.length];
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'>` +
+    `<defs>` +
+    `<linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>` +
+    `<stop offset='0' stop-color='hsl(${h1},64%,54%)'/><stop offset='1' stop-color='hsl(${h2},70%,40%)'/>` +
+    `</linearGradient>` +
+    `<radialGradient id='b1' cx='28%' cy='30%' r='55%'>` +
+    `<stop offset='0' stop-color='hsl(${h1},85%,72%)' stop-opacity='.75'/><stop offset='1' stop-color='hsl(${h1},85%,72%)' stop-opacity='0'/>` +
+    `</radialGradient>` +
+    `<radialGradient id='b2' cx='78%' cy='72%' r='50%'>` +
+    `<stop offset='0' stop-color='hsl(${h2},88%,62%)' stop-opacity='.65'/><stop offset='1' stop-color='hsl(${h2},88%,62%)' stop-opacity='0'/>` +
+    `</radialGradient>` +
+    `</defs>` +
+    `<rect width='800' height='600' fill='url(#g)'/><rect width='800' height='600' fill='url(#b1)'/><rect width='800' height='600' fill='url(#b2)'/>` +
+    `</svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
 export function getSampleImages(count: number = 1): string[] {
-  const images = [
-    'https://image.nostr.build/abc123.jpg',
-    'https://void.cat/d/abc456.webp',
-    'https://nostr.build/i/xyz789.png',
-    'https://pbs.twimg.com/media/sample1.jpg',
-    'https://i.imgur.com/sample2.jpg',
-    'https://cdn.nostr.com/image3.webp',
-    'https://image.hosting.com/photo4.jpg',
-    'https://media.nostr.net/pic5.png',
-    'https://picsum.photos/800/600?random=1',
-    'https://picsum.photos/800/600?random=2',
-    'https://picsum.photos/800/600?random=3',
-    'https://picsum.photos/800/600?random=4',
-  ];
-  
-  const selected: string[] = [];
-  for (let i = 0; i < count; i++) {
-    selected.push(images[Math.floor(Math.random() * images.length)]);
-  }
-  return selected;
+  const out: string[] = [];
+  for (let i = 0; i < count; i++) out.push(svgPhoto(__imgSeq++));
+  return out;
 }
 
 // Validate mock event structure

@@ -12,6 +12,8 @@ import { ProfileScreen } from './screens/ProfileScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { ComposeScreen } from './screens/ComposeScreen';
 import { VideoScreen } from './screens/VideoScreen';
+import { ThreadScreen } from './screens/ThreadScreen';
+import type { PostData } from './components/MaterialCard';
 import { useParentTheme } from '../shared/hooks/useParentTheme';
 import './amethyst.theme.css';
 import type { MockUser } from '../../data/mock';
@@ -38,8 +40,9 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
   const [activeTab, setActiveTab] = useState<TabId>('home');
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [settingsSection, setSettingsSection] = useState<string | null>('relays');
+  const [settingsSection, setSettingsSection] = useState<string | null>('preferences');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [threadPost, setThreadPost] = useState<PostData | null>(null);
   const parentTheme = useParentTheme();
   const tourContext = useContext(TourContext);
   const registerAction = (actionType: string) => {
@@ -88,7 +91,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       setIsSettingsOpen(true);
       registerAction('navigate_settings');
     } else if (id === 'security') {
-      setSettingsSection('privacy');
+      setSettingsSection('security');
       setIsSettingsOpen(true);
       registerAction('navigate_settings');
     } else if (id === 'bookmarks') {
@@ -207,6 +210,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
             key="home"
             onOpenCompose={() => setIsComposeOpen(true)}
             onOpenDrawer={() => setIsDrawerOpen(true)}
+            onOpenThread={(post) => setThreadPost(post)}
           />
         );
       case 'search':
@@ -214,9 +218,9 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       case 'video':
         return <VideoScreen key="video" />;
       case 'notifications':
-        return <NotificationsScreen key="notifications" />;
+        return <NotificationsScreen key="notifications" onOpenDrawer={() => setIsDrawerOpen(true)} />;
       case 'messages':
-        return <MessagesScreen key="messages" />;
+        return <MessagesScreen key="messages" onOpenDrawer={() => setIsDrawerOpen(true)} />;
       case 'profile':
         return (
           <ProfileScreen 
@@ -253,26 +257,22 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         activeTab={activeTab}
         onTabChange={handleDrawerNavigate}
         onOpenSettings={() => {
-          setSettingsSection('relays');
+          setSettingsSection('preferences');
           setIsSettingsOpen(true);
           setIsDrawerOpen(false);
         }}
       />
 
-      {/* Main Content Area */}
+      {/* Main Content Area.
+          NOTE: no screen-level enter/exit animation here. AnimatePresence mode="wait"
+          deadlocked with the shared layoutId indicators (froze tab navigation), and a
+          keyed motion.div's opacity spring got stuck partway (interfered with the inner
+          layout animations). A plain keyed div remounts each screen reliably; the inner
+          per-element animations (cards/rows) still replay on the key change. */}
       <div className="amethyst-simulator-content pb-20">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="h-full"
-          >
-            {renderScreen()}
-          </motion.div>
-        </AnimatePresence>
+        <div key={activeTab} className="h-full">
+          {renderScreen()}
+        </div>
       </div>
 
       {/* FAB - Only show on Home tab */}
@@ -295,10 +295,10 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         )}
       </AnimatePresence>
 
-      {/* Bottom Navigation - Only show on main tabs (Profile is full-screen with its own back button) */}
-      {activeTab !== 'profile' && (
-        <BottomNav 
-          activeTab={activeTab} 
+      {/* Bottom Navigation - hidden on Profile (full-screen), while composing, and in the thread view */}
+      {activeTab !== 'profile' && !isComposeOpen && !threadPost && !isSettingsOpen && (
+        <BottomNav
+          activeTab={activeTab}
           onTabChange={handleTabChange}
         />
       )}
@@ -310,32 +310,21 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         onPost={handleNewPost}
       />
 
-      {/* Settings Modal */}
-      <AnimatePresence>
-        {isSettingsOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50"
-            onClick={() => setIsSettingsOpen(false)}
-          >
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="absolute right-0 top-0 bottom-0 w-full max-w-md bg-[var(--md-background)]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <SettingsScreen
-                onBack={() => setIsSettingsOpen(false)}
-                initialSection={settingsSection}
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Note / thread detail overlay */}
+      {threadPost && (
+        <ThreadScreen post={threadPost} onBack={() => setThreadPost(null)} />
+      )}
+
+      {/* Settings — full-screen within the phone (plain div: a framer opacity spring
+          gets stuck at ~0.95 here and lets the feed bleed through on OLED black). */}
+      {isSettingsOpen && (
+        <div className="absolute inset-0 z-[55] bg-[var(--md-background)]">
+          <SettingsScreen
+            onBack={() => setIsSettingsOpen(false)}
+            initialSection={settingsSection}
+          />
+        </div>
+      )}
 
       {/* Toast Notification */}
       <AnimatePresence>

@@ -4,9 +4,10 @@
  */
 
 /* Material Design 3 Color Tokens - Light Theme */
-:root {
-  /* Primary Palette */
-  --md-primary: #6750A4;
+/* Scoped to .amethyst-simulator so these light tokens don't leak onto the host document. */
+.amethyst-simulator {
+  /* Primary Palette — real Amethyst signature purple (Color.kt Primary50 #7F67BE), NOT generic Material #6750A4 */
+  --md-primary: #7F67BE;
   --md-on-primary: #FFFFFF;
   --md-primary-container: #EADDFF;
   --md-on-primary-container: #21005D;
@@ -53,29 +54,16 @@
   --md-inverse-on-surface: #F4EFF4;
   --md-inverse-primary: #D0BCFF;
   
-  /* Elevation Surface Tints */
-  --md-surface-tint: #6750A4;
-  --md-surface-1: linear-gradient(0deg, rgba(103, 80, 164, 0.05), rgba(103, 80, 164, 0.05)), #FFFBFE;
-  --md-surface-2: linear-gradient(0deg, rgba(103, 80, 164, 0.08), rgba(103, 80, 164, 0.08)), #FFFBFE;
-  --md-surface-3: linear-gradient(0deg, rgba(103, 80, 164, 0.11), rgba(103, 80, 164, 0.11)), #FFFBFE;
-  --md-surface-4: linear-gradient(0deg, rgba(103, 80, 164, 0.12), rgba(103, 80, 164, 0.12)), #FFFBFE;
-  --md-surface-5: linear-gradient(0deg, rgba(103, 80, 164, 0.14), rgba(103, 80, 164, 0.14)), #FFFBFE;
-  
-  /* Bitcoin Orange for Zaps */
-  --bitcoin-orange: #F7931A;
-  --bitcoin-orange-light: #B66605;
-  --bitcoin-orange-dark: #F7931A;
-  
-  /* Bitcoin Orange for Zaps */
-  --bitcoin-orange: #F7931A;
-  --bitcoin-orange-light: #B66605;
-  --bitcoin-orange-dark: #F7931A;
-  
-  /* Bitcoin Orange for Zaps */
-  --bitcoin-orange: #F7931A;
-  --bitcoin-orange-light: #B66605;
-  --bitcoin-orange-dark: #F7931A;
-  
+  /* Elevation Surface Tints — tinted with the real Amethyst purple #7F67BE (rgb 127,103,190) */
+  --md-surface-tint: #7F67BE;
+  --md-surface-1: linear-gradient(0deg, rgba(127, 103, 190, 0.05), rgba(127, 103, 190, 0.05)), #FFFBFE;
+  --md-surface-2: linear-gradient(0deg, rgba(127, 103, 190, 0.08), rgba(127, 103, 190, 0.08)), #FFFBFE;
+  --md-surface-3: linear-gradient(0deg, rgba(127, 103, 190, 0.11), rgba(127, 103, 190, 0.11)), #FFFBFE;
+  --md-surface-4: linear-gradient(0deg, rgba(127, 103, 190, 0.12), rgba(127, 103, 190, 0.12)), #FFFBFE;
+  --md-surface-5: linear-gradient(0deg, rgba(127, 103, 190, 0.14), rgba(127, 103, 190, 0.14)), #FFFBFE;
+
+  /* Bitcoin Orange for Zaps — defined once above (was triplicated) */
+
   /* Elevation Shadows */
   --md-shadow-0: none;
   --md-shadow-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
@@ -158,12 +146,13 @@
   --md-error-container: #8C1D18;
   --md-on-error-container: #F9DEDC;
   
-  --md-surface: #1C1B1F;
+  /* Amethyst dark = pure black (Theme.kt: background/surface = Color.Black) */
+  --md-surface: #000000;
   --md-on-surface: #E6E1E5;
   --md-surface-variant: #49454F;
   --md-on-surface-variant: #CAC4D0;
-  
-  --md-background: #1C1B1F;
+
+  --md-background: #000000;
   --md-on-background: #E6E1E5;
   
   --md-outline: #938F99;
@@ -171,13 +160,14 @@
   
   --md-inverse-surface: #E6E1E5;
   --md-inverse-on-surface: #313033;
-  --md-inverse-primary: #6750A4;
-  
-  --md-surface-1: linear-gradient(0deg, rgba(208, 188, 255, 0.05), rgba(208, 188, 255, 0.05)), #1C1B1F;
-  --md-surface-2: linear-gradient(0deg, rgba(208, 188, 255, 0.08), rgba(208, 188, 255, 0.08)), #1C1B1F;
-  --md-surface-3: linear-gradient(0deg, rgba(208, 188, 255, 0.11), rgba(208, 188, 255, 0.11)), #1C1B1F;
-  --md-surface-4: linear-gradient(0deg, rgba(208, 188, 255, 0.12), rgba(208, 188, 255, 0.12)), #1C1B1F;
-  --md-surface-5: linear-gradient(0deg, rgba(208, 188, 255, 0.14), rgba(208, 188, 255, 0.14)), #1C1B1F;
+  --md-inverse-primary: #7F67BE;
+
+  /* Elevation = purple tint layered over pure black */
+  --md-surface-1: linear-gradient(0deg, rgba(208, 188, 255, 0.05), rgba(208, 188, 255, 0.05)), #000000;
+  --md-surface-2: linear-gradient(0deg, rgba(208, 188, 255, 0.08), rgba(208, 188, 255, 0.08)), #000000;
+  --md-surface-3: linear-gradient(0deg, rgba(208, 188, 255, 0.11), rgba(208, 188, 255, 0.11)), #000000;
+  --md-surface-4: linear-gradient(0deg, rgba(208, 188, 255, 0.12), rgba(208, 188, 255, 0.12)), #000000;
+  --md-surface-5: linear-gradient(0deg, rgba(208, 188, 255, 0.14), rgba(208, 188, 255, 0.14)), #000000;
 }
 
 /* Amethyst Specific Colors */
@@ -678,6 +668,12 @@
   position: sticky;
   top: 0;
   z-index: 50;
+}
+
+/* Reliable CSS slide for the account drawer (framer x-springs get stuck in this env). */
+@keyframes amethystDrawerIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 }
 
 .md-app-bar-icon-btn {

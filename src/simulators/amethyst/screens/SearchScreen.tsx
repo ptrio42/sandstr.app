@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ArrowLeft, TrendingUp, Clock, X } from 'lucide-react';
 import { MaterialCard } from '../components/MaterialCard';
+import { Avatar } from '../components/Avatar';
 import { mockNotes, getUserByPubkey } from '../../../data/mock';
 import '../amethyst.theme.css';
 
@@ -183,16 +184,14 @@ export function SearchScreen() {
                 </h3>
                 <div className="space-y-2">
                   {['fiatjaf', 'pablo', 'jb55', 'vitor'].map((user, index) => (
-                    <motion.button
+                    <motion.div
                       key={index}
+                      role="button"
+                      tabIndex={0}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--md-surface-variant)] transition-colors"
+                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--md-surface-variant)] transition-colors cursor-pointer"
                     >
-                      <img
-                        src={`https://api.dicebear.com/7.x/bottts/svg?seed=${user}`}
-                        alt={user}
-                        className="w-10 h-10 rounded-full"
-                      />
+                      <Avatar seed={user} className="w-10 h-10" />
                       <div className="flex-1 text-left">
                         <p className="text-[var(--md-on-surface)] font-medium capitalize">{user}</p>
                         <p className="text-[var(--md-on-surface-variant)] text-sm">@{user}</p>
@@ -200,7 +199,7 @@ export function SearchScreen() {
                       <button className="md-button md-button-outlined text-sm py-1.5 px-4">
                         Follow
                       </button>
-                    </motion.button>
+                    </motion.div>
                   ))}
                 </div>
               </div>

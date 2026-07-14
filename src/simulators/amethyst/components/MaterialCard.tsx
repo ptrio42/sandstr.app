@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Heart, MessageCircle, Repeat, Zap, Share, MoreVertical } from 'lucide-react';
+import { Heart, MessageCircle, Repeat, Zap, BarChart3, MoreVertical } from 'lucide-react';
+import { Avatar } from './Avatar';
 import '../amethyst.theme.css';
 
 interface PostAuthor {
@@ -18,7 +19,7 @@ interface PostStats {
   likes: number;
 }
 
-interface PostData {
+export interface PostData {
   id: string;
   author: PostAuthor;
   content: string;
@@ -37,15 +38,17 @@ interface MaterialCardProps {
   onZap?: (id: string) => void;
   onReply?: (id: string) => void;
   onShare?: (id: string) => void;
+  /** Tap the card body to open the note/thread detail. */
+  onOpenThread?: () => void;
 }
 
-export function MaterialCard({ 
-  post, 
-  onLike, 
-  onRepost, 
-  onZap, 
-  onReply, 
-  onShare 
+export function MaterialCard({
+  post,
+  onLike,
+  onRepost,
+  onZap,
+  onReply,
+  onOpenThread,
 }: MaterialCardProps) {
   const [isLiked, setIsLiked] = React.useState(false);
   const [isReposted, setIsReposted] = React.useState(false);
@@ -96,11 +99,12 @@ export function MaterialCard({
 
   return (
     <motion.article
-      className="md-card mb-2"
+      className={`md-card mb-2 ${onOpenThread ? 'cursor-pointer' : ''}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 500, damping: 30 }}
       layout
+      onClick={onOpenThread}
     >
       {/* Card Header */}
       <div className="p-4 flex items-start gap-3">
@@ -109,11 +113,7 @@ export function MaterialCard({
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
           className="relative z-10"
         >
-          <img
-            src={`https://api.dicebear.com/7.x/bottts/svg?seed=${post.author.handle || post.author.name || 'default'}`}
-            alt={post.author.name}
-            className="md-avatar"
-          />
+          <Avatar seed={post.author.handle || post.author.name || 'default'} className="md-avatar" />
           {post.author.nip05 && (
             <div className="nip05-badge absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center z-20">
               <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -204,7 +204,7 @@ export function MaterialCard({
       )}
 
       {/* Action Buttons */}
-      <div className="px-4 py-2 flex items-center justify-between border-t border-[var(--md-outline-variant)]" data-tour="amethyst-actions">
+      <div className="px-4 py-2 flex items-center justify-between border-t border-[var(--md-outline-variant)]" data-tour="amethyst-actions" onClick={(e) => e.stopPropagation()}>
         <motion.button
           whileTap={{ scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
@@ -229,6 +229,22 @@ export function MaterialCard({
           </span>
         </motion.button>
 
+        {/* Reaction (Amethyst's default reaction is a heart; can be any emoji) */}
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+          onClick={handleLike}
+          className={`action-btn action-btn-like md-ripple flex items-center gap-1.5 transition-colors ${
+            isLiked ? 'active text-red-500' : 'text-[var(--md-on-surface-variant)] hover:text-red-500'
+          }`}
+        >
+          <Heart className="w-5 h-5" fill={isLiked ? 'currentColor' : 'none'} />
+          <span className="text-sm font-medium min-w-[20px] text-center">
+            {formatNumber(post.stats.likes + (isLiked ? 1 : 0))}
+          </span>
+        </motion.button>
+
+        {/* Zap is the rightmost, emphasized action in Amethyst's footer */}
         <motion.button
           whileTap={{ scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
@@ -244,28 +260,13 @@ export function MaterialCard({
           </span>
         </motion.button>
 
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-          onClick={handleLike}
-          className={`action-btn action-btn-like md-ripple flex items-center gap-1.5 transition-colors ${
-            isLiked ? 'active text-red-500' : 'text-[var(--md-on-surface-variant)] hover:text-red-500'
-          }`}
-        >
-          <Heart className="w-5 h-5" fill={isLiked ? 'currentColor' : 'none'} />
+        {/* Stats / views indicator (real footer ends with a bar-chart + count, not a share button) */}
+        <div className="action-btn flex items-center gap-1.5 text-[var(--md-on-surface-variant)]">
+          <BarChart3 className="w-5 h-5" />
           <span className="text-sm font-medium min-w-[20px] text-center">
-            {formatNumber(post.stats.likes + (isLiked ? 1 : 0))}
+            {formatNumber(post.stats.likes * 9 + post.stats.reposts * 4 + 137)}
           </span>
-        </motion.button>
-
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-          onClick={() => onShare?.(post.id)}
-          className={`action-btn md-ripple flex items-center gap-1.5 text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)] transition-colors`}
-        >
-          <Share className="w-5 h-5" />
-        </motion.button>
+        </div>
       </div>
     </motion.article>
   );

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Clock, Eye, Heart, MoreVertical } from 'lucide-react';
+import { Avatar } from '../components/Avatar';
 import '../amethyst.theme.css';
 
 interface Video {
@@ -143,11 +144,7 @@ export function VideoScreen() {
 
               {/* Video Info */}
               <div className="p-3 flex gap-3">
-                <img
-                  src={video.author.avatar}
-                  alt={video.author.name}
-                  className="md-avatar w-10 h-10"
-                />
+                <Avatar seed={video.author.name} className="md-avatar w-10 h-10" />
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-[var(--md-on-surface)] line-clamp-2 text-sm">
                     {video.title}
