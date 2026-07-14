@@ -1,114 +1,175 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Search, TrendingUp, Hash, Users } from 'lucide-react';
+import { Search } from 'lucide-react';
+import { Avatar } from './Avatar';
+import { VerifiedBadge } from './ui';
+import {
+  liveCard, trending, networkStats, hotTopics, trendingUsers,
+  latestReads, popularNotes, searchResults, currentUser, relays,
+} from '../data';
 
-interface RightSidebarProps {
-  theme: 'light' | 'dark';
+export type RightVariant = 'home' | 'explore' | 'profile' | 'notifications' | 'bookmarks' | 'settings';
+
+function SearchPill() {
+  const [q, setQ] = React.useState('');
+  return (
+    <div style={{ position: 'relative' }}>
+      <div className="primal-search">
+        <Search size={18} />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search..." />
+      </div>
+      {q.trim() !== '' && (
+        <div className="primal-searchdrop">
+          <div className="primal-searchrow">
+            <Search size={18} className="primal-muted" />
+            <span>{q}</span>
+          </div>
+          {searchResults.map((r) => (
+            <div key={r.name} className="primal-searchrow">
+              <Avatar seed={r.name} className="w-9 h-9" legend={r.legend} />
+              <div className="min-w-0 flex-1">
+                <div className="primal-note-name truncate" style={{ fontSize: 15 }}>{r.name}</div>
+                {r.handle && <div className="primal-note-handle truncate" style={{ fontSize: 13 }}>{r.handle}</div>}
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>{r.followers}</div>
+                <div className="primal-muted" style={{ fontSize: 12 }}>followers</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
-const trendingTopics = [
-  { category: 'Bitcoin', topic: 'Halving Countdown', posts: '24.5K posts' },
-  { category: 'Technology', topic: '#Nostr', posts: '18.2K posts' },
-  { category: 'Crypto', topic: 'Lightning Network', posts: '12.8K posts' },
-  { category: 'News', topic: 'ETF Approval', posts: '9.5K posts' },
-  { category: 'Programming', topic: 'TypeScript', posts: '7.3K posts' },
-];
-
-const suggestedUsers = [
-  { name: 'Satoshi Nakamoto', handle: '@satoshi', followers: '2.1M' },
-  { name: 'Jack Dorsey', handle: '@jack', followers: '6.5M' },
-  { name: 'fiatjaf', handle: '@fiatjaf', followers: '45K' },
-];
-
-export function RightSidebar({ theme }: RightSidebarProps) {
-  return (
-    <aside className="primal-right-sidebar right-sidebar">
-      {/* Search */}
-      <div className="primal-search">
-        <Search className="w-5 h-5 text-[var(--primal-on-surface-muted)]" />
-        <input type="text" placeholder="Search Primal" />
+export function RightSidebar({ variant }: { variant: RightVariant }) {
+  if (variant === 'notifications') {
+    return (
+      <div className="primal-col-right">
+        <SearchPill />
+        <div className="primal-side-h strong" style={{ letterSpacing: '0.03em', textTransform: 'uppercase' }}>Summary</div>
+        <div className="primal-muted">no new notifications</div>
       </div>
+    );
+  }
 
-      {/* Wallet Card */}
-      <div className="primal-wallet">
-        <div className="primal-wallet-header">
-          <span className="primal-wallet-label">Wallet Balance</span>
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-          </svg>
-        </div>
-        <div className="primal-wallet-balance">128,450 sats</div>
-        <div className="primal-wallet-actions mt-4">
-          <button className="primal-wallet-btn">Receive</button>
-          <button className="primal-wallet-btn">Send</button>
-        </div>
-      </div>
-
-      {/* Trending */}
-      <div className="primal-trending">
-        <div className="primal-trending-header flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-[#7C3AED]" />
-          Trending for you
-        </div>
-        {trendingTopics.map((item, index) => (
-          <motion.div
-            key={index}
-            className="primal-trending-item"
-            whileHover={{ x: 4 }}
-          >
-            <div className="primal-trending-category">{item.category} · Trending</div>
-            <div className="primal-trending-topic">{item.topic}</div>
-            <div className="primal-trending-count">{item.posts}</div>
-          </motion.div>
-        ))}
-        <motion.div 
-          className="p-4 text-[#7C3AED] cursor-pointer text-sm"
-          whileHover={{ x: 4 }}
-        >
-          Show more
-        </motion.div>
-      </div>
-
-      {/* Who to follow */}
-      <div className="primal-card mt-4">
-        <div className="font-bold text-xl mb-4 flex items-center gap-2">
-          <Users className="w-5 h-5 text-[#7C3AED]" />
-          Who to follow
-        </div>
-        {suggestedUsers.map((user, index) => (
-          <motion.div
-            key={index}
-            className="flex items-center gap-3 py-3 border-b border-[var(--primal-border-subtle)] last:border-0"
-            whileHover={{ x: 4 }}
-          >
-            <div className="primal-avatar primal-avatar-small" />
-            <div className="flex-1 min-w-0">
-              <div className="font-bold text-sm truncate">{user.name}</div>
-              <div className="text-[var(--primal-on-surface-variant)] text-sm truncate">{user.handle}</div>
+  if (variant === 'explore') {
+    return (
+      <div className="primal-col-right">
+        <div className="primal-statgrid">
+          {networkStats.map((s) => (
+            <div key={s.label}>
+              <div className="primal-stat-num">{s.num}</div>
+              <div className="primal-stat-label">{s.label}</div>
             </div>
-            <button className="primal-follow-btn text-sm">
-              Follow
-            </button>
-          </motion.div>
-        ))}
-        <motion.div 
-          className="mt-3 text-[#7C3AED] cursor-pointer text-sm"
-          whileHover={{ x: 4 }}
-        >
-          Show more
-        </motion.div>
+          ))}
+        </div>
+        <div className="primal-side-h strong">Hot Topics</div>
+        <div className="primal-topic-tags">
+          {hotTopics.map((t) => (<span key={t} className="primal-topic-tag">{t}</span>))}
+        </div>
+        <div className="primal-side-h strong">Trending Users</div>
+        <div className="primal-user-grid">
+          {trendingUsers.map((u) => (
+            <div key={u.name} className="primal-user-grid-cell">
+              <Avatar seed={u.name} className="w-12 h-12" legend={u.legend} />
+              <div className="primal-user-grid-name">{u.name}</div>
+            </div>
+          ))}
+        </div>
       </div>
+    );
+  }
 
-      {/* Footer Links */}
-      <div className="mt-6 text-sm text-[var(--primal-on-surface-muted)] flex flex-wrap gap-x-4 gap-y-2">
-        <a href="#" className="hover:underline">Terms of Service</a>
-        <a href="#" className="hover:underline">Privacy Policy</a>
-        <a href="#" className="hover:underline">Cookie Policy</a>
-        <a href="#" className="hover:underline">Accessibility</a>
-        <a href="#" className="hover:underline">Ads info</a>
-        <span>© 2025 Primal, Inc.</span>
+  if (variant === 'profile') {
+    return (
+      <div className="primal-col-right">
+        <SearchPill />
+        <div className="primal-side-h">Latest Reads</div>
+        {latestReads.map((r, i) => (
+          <div key={i} style={{ borderBottom: '1px solid var(--primal-border)', paddingBottom: 14, marginBottom: 12 }}>
+            <div className="flex items-center gap-2">
+              <Avatar seed={currentUser.name} className="w-6 h-6" />
+              <span className="primal-note-name" style={{ fontSize: 14 }}>{currentUser.name}</span>
+              <span className="primal-muted" style={{ fontSize: 13 }}>· {r.time}</span>
+            </div>
+            <div className="flex justify-between gap-3 mt-2">
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 16, lineHeight: 1.25 }}>{r.title}</div>
+                <div className="primal-muted" style={{ fontSize: 13, marginTop: 4 }}>{r.read}</div>
+              </div>
+              <div style={{ width: 64, height: 64, borderRadius: 8, border: '1px solid var(--primal-border)', flexShrink: 0 }} />
+            </div>
+          </div>
+        ))}
+        <div className="primal-side-h">Popular Notes</div>
+        {popularNotes.map((n, i) => (
+          <div key={i} className="primal-trend">
+            <Avatar seed={currentUser.name} className="w-9 h-9" />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="primal-trend-name">{currentUser.name}</span>
+                <span className="primal-muted" style={{ fontSize: 13 }}>| {n.time}</span>
+              </div>
+              <div className="primal-trend-preview">{n.text}</div>
+            </div>
+          </div>
+        ))}
       </div>
-    </aside>
+    );
+  }
+
+  if (variant === 'bookmarks') {
+    return <div className="primal-col-right"><SearchPill /></div>;
+  }
+
+  if (variant === 'settings') {
+    return (
+      <div className="primal-col-right">
+        <SearchPill />
+        <div className="primal-side-h strong">Relays</div>
+        {relays.map((r) => (
+          <div key={r.url} className="primal-relay-item">
+            <span className="primal-relay-dot" style={{ background: r.up ? 'var(--primal-repost)' : 'var(--primal-live)' }} />
+            {r.url}
+          </div>
+        ))}
+        <div className="primal-side-h strong">Caching services</div>
+        <div className="primal-relay-item">
+          <span className="primal-relay-dot" style={{ background: 'var(--primal-repost)' }} />
+          wss://cache2.primal.net/v1
+        </div>
+      </div>
+    );
+  }
+
+  // home (default)
+  return (
+    <div className="primal-col-right">
+      <SearchPill />
+      <div className="primal-side-h">Live on Nostr</div>
+      <div className="primal-live-card">
+        <Avatar seed={liveCard.name} className="w-9 h-9" />
+        <div className="min-w-0">
+          <div className="primal-note-name" style={{ fontSize: 14 }}>{liveCard.name}</div>
+          <div className="primal-muted" style={{ fontSize: 12 }}>{liveCard.started}  {liveCard.viewers}</div>
+        </div>
+        <span className="primal-live-badge"><span className="primal-live-dot" /> Live</span>
+      </div>
+      <div className="primal-side-h">Trending 4h</div>
+      {trending.map((t, i) => (
+        <div key={i} className="primal-trend">
+          <Avatar seed={t.name} className="w-9 h-9" />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="primal-trend-name">{t.name}</span>
+              <span className="primal-muted" style={{ fontSize: 13 }}>| {t.time}</span>
+            </div>
+            <div className="primal-trend-preview">{t.preview}</div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 

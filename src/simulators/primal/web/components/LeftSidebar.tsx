@@ -1,84 +1,87 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Home, Search, Bell, Mail, User, Feather, Zap } from 'lucide-react';
+import { Home, AlignLeft, Compass, Mail, Bookmark, Bell, Download, BadgeCheck, Settings, Clock } from 'lucide-react';
+import { PrimalLogo } from './PrimalLogo';
+import { Avatar } from './Avatar';
+import { currentUser } from '../data';
 import type { TabId } from '../WebSimulator';
+
+interface NavDef { id: TabId; label: string; Icon: React.ComponentType<any>; fillable?: boolean; badge?: string; }
+
+const NAV: NavDef[] = [
+  { id: 'home', label: 'Home', Icon: Home, fillable: true },
+  { id: 'reads', label: 'Reads', Icon: AlignLeft },
+  { id: 'explore', label: 'Explore', Icon: Compass },
+  { id: 'messages', label: 'Messages', Icon: Mail, fillable: true, badge: '99+' },
+  { id: 'bookmarks', label: 'Bookmarks', Icon: Bookmark, fillable: true },
+  { id: 'notifications', label: 'Notifications', Icon: Bell, fillable: true, badge: '99+' },
+  { id: 'downloads', label: 'Downloads', Icon: Download, badge: '2' },
+  { id: 'premium', label: 'Premium', Icon: BadgeCheck, badge: '1' },
+  { id: 'settings', label: 'Settings', Icon: Settings },
+];
 
 interface LeftSidebarProps {
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
-  onNewPost: () => void;
-  theme: 'light' | 'dark';
+  onNewNote: () => void;
+  onOpenProfile: () => void;
+  showPending?: boolean;
 }
 
-export function LeftSidebar({ activeTab, onTabChange, onNewPost, theme }: LeftSidebarProps) {
-  const navItems: { id: TabId; label: string; icon: React.ReactNode }[] = [
-    { id: 'home', label: 'Home', icon: <Home /> },
-    { id: 'explore', label: 'Explore', icon: <Search /> },
-    { id: 'notifications', label: 'Notifications', icon: <Bell /> },
-    { id: 'messages', label: 'Messages', icon: <Mail /> },
-    { id: 'profile', label: 'Profile', icon: <User /> },
-  ];
-
+export function LeftSidebar({ activeTab, onTabChange, onNewNote, onOpenProfile, showPending }: LeftSidebarProps) {
   return (
-    <aside className="primal-left-sidebar">
-      {/* Logo */}
-      <div className="mb-6 px-3">
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="cursor-pointer"
-          onClick={() => onTabChange('home')}
-        >
-          <svg viewBox="0 0 24 24" className="w-10 h-10" fill="#7C3AED">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-          </svg>
-        </motion.div>
-      </div>
+    <div className="primal-col-left">
+      <div className="primal-col-left-inner">
+        <button onClick={() => onTabChange('home')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+          <PrimalLogo />
+        </button>
 
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1">
-        {navItems.map((item) => (
-          <motion.button
-            key={item.id}
-            onClick={() => onTabChange(item.id)}
-            className={`primal-nav-item w-full ${activeTab === item.id ? 'active' : ''}`}
-            whileHover={{ x: 4 }}
-            whileTap={{ scale: 0.98 }}
+        <nav className="primal-nav">
+          {NAV.map(({ id, label, Icon, fillable, badge }) => {
+            const active = activeTab === id;
+            return (
+              <button
+                key={id}
+                className={`primal-nav-item${active ? ' active' : ''}`}
+                onClick={() => onTabChange(id)}
+                data-tour={id === 'settings' ? 'primal-settings' : undefined}
+              >
+                <span className="primal-nav-icon">
+                  <Icon size={26} strokeWidth={active ? 2.4 : 1.8} fill={active && fillable ? 'currentColor' : 'none'} />
+                </span>
+                <span className="primal-nav-label">
+                  {label}
+                  {badge && <span className="primal-nav-badge">{badge}</span>}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+
+        <button className="primal-newnote primal-post-btn" data-tour="primal-post" onClick={onNewNote}>
+          New Note
+        </button>
+
+        <div style={{ marginTop: 'auto' }}>
+          {showPending && (
+            <div className="primal-pending">
+              <Clock size={14} /> Publish pending (1)
+            </div>
+          )}
+          <button
+            className="primal-userchip primal-profile"
+            data-tour="primal-profile"
+            onClick={onOpenProfile}
+            style={{ border: 'none', width: '100%', textAlign: 'left' }}
           >
-            <span className={activeTab === item.id ? 'text-[#7C3AED]' : ''}>
-              {item.icon}
-            </span>
-            <span>{item.label}</span>
-          </motion.button>
-        ))}
-      </nav>
-
-      {/* Post Button */}
-      <motion.button
-        className="primal-btn-primary"
-        onClick={onNewPost}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-      >
-        <span className="flex items-center justify-center gap-2">
-          <Feather className="w-5 h-5" />
-          Post
-        </span>
-      </motion.button>
-
-      {/* User Profile */}
-      <div className="mt-auto pt-4 border-t border-[var(--primal-border)]">
-        <motion.div
-          className="flex items-center gap-3 p-3 rounded-full cursor-pointer hover:bg-[var(--primal-hover)] transition-colors"
-          whileHover={{ scale: 1.02 }}
-        >
-          <div className="primal-avatar primal-avatar-small" />
-          <div className="flex-1 min-w-0">
-            <div className="font-bold text-sm truncate">Your Name</div>
-            <div className="text-[var(--primal-on-surface-variant)] text-sm truncate">@handle</div>
-          </div>
-        </motion.div>
+            <Avatar seed={currentUser.name} className="w-9 h-9" />
+            <div className="min-w-0">
+              <div className="primal-uc-name truncate">{currentUser.name}</div>
+              <div className="primal-uc-handle truncate">{currentUser.handle}</div>
+            </div>
+          </button>
+        </div>
       </div>
-    </aside>
+    </div>
   );
 }
 

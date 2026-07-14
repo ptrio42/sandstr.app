@@ -1,145 +1,83 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Heart, Repeat2, UserPlus, Zap, MessageCircle, AtSign } from 'lucide-react';
+import { UserPlus, Heart, Zap, MessageCircle, Repeat2, AtSign } from 'lucide-react';
+import { Avatar } from '../components/Avatar';
+import { notifications, type PNotif, type NotifType } from '../data';
 
-interface NotificationsScreenProps {
-  showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
+const TABS = ['ALL', 'ZAPS', 'REPLIES', 'MENTIONS', 'REPOSTS'] as const;
+type NTab = (typeof TABS)[number];
+
+const iconFor: Record<NotifType, { Icon: React.ComponentType<any>; color: string; fill?: boolean }> = {
+  follow: { Icon: UserPlus, color: 'var(--primal-text-2)' },
+  like: { Icon: Heart, color: 'var(--primal-like)', fill: true },
+  zap: { Icon: Zap, color: 'var(--primal-zap)', fill: true },
+  reply: { Icon: MessageCircle, color: 'var(--primal-accent)' },
+  repost: { Icon: Repeat2, color: 'var(--primal-repost)' },
+  mention: { Icon: AtSign, color: 'var(--primal-accent)' },
+};
+
+const verbFor: Record<NotifType, string> = {
+  follow: 'followed you',
+  like: 'liked your note',
+  zap: 'zapped your note',
+  reply: 'replied to your note',
+  repost: 'reposted your note',
+  mention: 'mentioned you',
+};
+
+function Row({ n }: { n: PNotif }) {
+  const { Icon, color, fill } = iconFor[n.type];
+  return (
+    <div className="primal-notif">
+      <div className="primal-notif-icon" style={{ color }}>
+        <Icon size={22} fill={fill ? color : 'none'} />
+      </div>
+      <div className="primal-notif-body">
+        <div className="flex items-start">
+          <div>
+            {n.legend && <span style={{ color: 'var(--primal-legend)' }}>⭐ </span>}
+            <span className="primal-note-name">{n.name}</span>{' '}
+            {n.type === 'zap' && n.sats ? (
+              <span className="primal-muted">zapped your note for a total of <span style={{ color: 'var(--primal-zap)', fontWeight: 700 }}>{n.sats} sats</span></span>
+            ) : (
+              <span className="primal-muted">{verbFor[n.type]}</span>
+            )}
+          </div>
+          <span className="primal-notif-time">{n.time}</span>
+        </div>
+        {n.note && <div className="primal-muted" style={{ marginTop: 6, fontSize: 15 }}>{n.note}</div>}
+      </div>
+    </div>
+  );
 }
 
-const notifications = [
-  { 
-    type: 'like', 
-    user: 'Alice Nakamoto', 
-    handle: '@alice',
-    content: 'liked your post',
-    time: '2m',
-    icon: Heart,
-    color: '#EF4444'
-  },
-  { 
-    type: 'repost', 
-    user: 'Bob Builder', 
-    handle: '@bob',
-    content: 'reposted your note',
-    time: '15m',
-    icon: Repeat2,
-    color: '#22C55E'
-  },
-  { 
-    type: 'follow', 
-    user: 'Charlie Crypto', 
-    handle: '@charlie',
-    content: 'followed you',
-    time: '1h',
-    icon: UserPlus,
-    color: '#7C3AED'
-  },
-  { 
-    type: 'zap', 
-    user: 'Dave BTC', 
-    handle: '@dave',
-    content: 'zapped you 1,000 sats',
-    time: '2h',
-    icon: Zap,
-    color: '#F59E0B'
-  },
-  { 
-    type: 'reply', 
-    user: 'Eve Developer', 
-    handle: '@eve',
-    content: 'replied to your note',
-    time: '3h',
-    icon: MessageCircle,
-    color: '#3B82F6'
-  },
-  { 
-    type: 'mention', 
-    user: 'Frank Nostr', 
-    handle: '@frank',
-    content: 'mentioned you in a note',
-    time: '5h',
-    icon: AtSign,
-    color: '#7C3AED'
-  },
-];
-
-export function NotificationsScreen({ showToast }: NotificationsScreenProps) {
-  const [activeTab, setActiveTab] = React.useState<'all' | 'mentions' | 'zaps'>('all');
-
-  const filteredNotifications = activeTab === 'all' 
-    ? notifications 
-    : activeTab === 'mentions'
-    ? notifications.filter(n => n.type === 'mention' || n.type === 'reply')
-    : notifications.filter(n => n.type === 'zap');
+export function NotificationsScreen() {
+  const [tab, setTab] = React.useState<NTab>('ALL');
+  const filtered = notifications.filter((n) => {
+    if (tab === 'ALL') return true;
+    if (tab === 'ZAPS') return n.type === 'zap';
+    if (tab === 'REPLIES') return n.type === 'reply';
+    if (tab === 'MENTIONS') return n.type === 'mention';
+    if (tab === 'REPOSTS') return n.type === 'repost';
+    return true;
+  });
 
   return (
-    <div className="min-h-full">
-      <div className="primal-header">
-        <h1 className="primal-header-title">Notifications</h1>
+    <div>
+      <div className="primal-pagehead">
+        <div className="primal-pagetitle">notifications</div>
+        <div className="primal-tabs">
+          {TABS.map((t) => (
+            <button key={t} className={`primal-tab primal-tab-upper${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>{t}</button>
+          ))}
+        </div>
       </div>
-
-      <div className="primal-tabs">
-        <button
-          className={`primal-tab ${activeTab === 'all' ? 'active' : ''}`}
-          onClick={() => setActiveTab('all')}
-        >
-          All
-        </button>
-        <button
-          className={`primal-tab ${activeTab === 'mentions' ? 'active' : ''}`}
-          onClick={() => setActiveTab('mentions')}
-        >
-          Mentions
-        </button>
-        <button
-          className={`primal-tab ${activeTab === 'zaps' ? 'active' : ''}`}
-          onClick={() => setActiveTab('zaps')}
-        >
-          Zaps
-        </button>
-      </div>
-
-      <div>
-        {filteredNotifications.length === 0 ? (
-          <div className="p-8 text-center text-[var(--primal-on-surface-muted)]">
-            <div className="text-6xl mb-4">🔔</div>
-            <h3 className="text-xl font-bold mb-2">No notifications yet</h3>
-            <p>When you get notifications, they will show up here.</p>
+      <div style={{ position: 'relative' }}>
+        {tab === 'ALL' && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '14px 0 2px' }}>
+            <button className="primal-newpill">99+ new notifications</button>
           </div>
-        ) : (
-          filteredNotifications.map((notification, index) => {
-            const Icon = notification.icon;
-            return (
-              <motion.div
-                key={index}
-                className="primal-notification cursor-pointer hover:bg-[var(--primal-hover)]"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                onClick={() => showToast(`Viewing notification from ${notification.user}`, 'info')}
-              >
-                <div 
-                  className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: `${notification.color}20`, color: notification.color }}
-                >
-                  <Icon className="w-5 h-5" />
-                </div>
-                <div className="primal-notification-content">
-                  <div className="flex items-start gap-3">
-                    <div className="primal-avatar primal-avatar-small flex-shrink-0" />
-                    <div className="flex-1">
-                      <span className="font-bold">{notification.user}</span>
-                      {' '}{notification.content}
-                      <span className="text-[var(--primal-on-surface-muted)] ml-2">
-                        · {notification.time}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })
         )}
+        {filtered.map((n) => (<Row key={n.id} n={n} />))}
       </div>
     </div>
   );

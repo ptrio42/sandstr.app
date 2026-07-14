@@ -1,103 +1,60 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Mail, MoreHorizontal } from 'lucide-react';
+import { Search, Send } from 'lucide-react';
+import { Avatar } from '../components/Avatar';
+import { conversations } from '../data';
 
-interface MessagesScreenProps {
-  showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
-}
+export function MessagesScreen() {
+  const [active, setActive] = React.useState(0);
+  const [tab, setTab] = React.useState<'follows' | 'other'>('follows');
+  const convo = conversations[active];
 
-const conversations = [
-  {
-    id: '1',
-    user: 'Alice Nakamoto',
-    handle: '@alice',
-    lastMessage: 'Hey! Did you see the latest NIP?',
-    time: '2m',
-    unread: true,
-  },
-  {
-    id: '2',
-    user: 'Bob Builder',
-    handle: '@bob',
-    lastMessage: 'Thanks for the zap! ⚡',
-    time: '1h',
-    unread: false,
-  },
-  {
-    id: '3',
-    user: 'Charlie Crypto',
-    handle: '@charlie',
-    lastMessage: 'Want to collaborate on a project?',
-    time: '3h',
-    unread: true,
-  },
-  {
-    id: '4',
-    user: 'Dave BTC',
-    handle: '@dave',
-    lastMessage: 'Check out this article on Bitcoin',
-    time: '1d',
-    unread: false,
-  },
-  {
-    id: '5',
-    user: 'Eve Developer',
-    handle: '@eve',
-    lastMessage: 'Great meeting you at the conference!',
-    time: '2d',
-    unread: false,
-  },
-];
-
-export function MessagesScreen({ showToast }: MessagesScreenProps) {
   return (
-    <div className="min-h-full">
-      <div className="primal-header flex items-center justify-between">
-        <h1 className="primal-header-title">Messages</h1>
-        <motion.button
-          className="p-2 hover:bg-[var(--primal-hover)] rounded-full"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => showToast('New message', 'info')}
-        >
-          <Mail className="w-5 h-5" />
-        </motion.button>
-      </div>
-
-      <div>
-        {conversations.map((conv, index) => (
-          <motion.div
-            key={conv.id}
-            className="p-4 border-b border-[var(--primal-border-subtle)] cursor-pointer hover:bg-[var(--primal-hover)]"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
-            onClick={() => showToast(`Opening conversation with ${conv.user}`, 'info')}
-          >
-            <div className="flex items-center gap-3">
-              <div className="primal-avatar primal-avatar-small flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold">{conv.user}</span>
-                    <span className="text-[var(--primal-on-surface-variant)] text-sm">{conv.handle}</span>
-                  </div>
-                  <span className="text-[var(--primal-on-surface-muted)] text-sm">{conv.time}</span>
-                </div>
-                <div className={`truncate mt-1 ${conv.unread ? 'font-medium text-[var(--primal-on-surface)]' : 'text-[var(--primal-on-surface-variant)]'}`}>
-                  {conv.lastMessage}
-                </div>
+    <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', height: '100%' }}>
+      {/* conversation list */}
+      <div style={{ borderRight: '1px solid var(--primal-border)', height: '100%', overflowY: 'auto' }}>
+        <div className="primal-pagehead">
+          <div className="primal-pagetitle" style={{ fontSize: 30 }}>messages</div>
+          <div className="primal-tabs">
+            <button className={`primal-tab${tab === 'follows' ? ' active' : ''}`} onClick={() => setTab('follows')}>follows</button>
+            <button className={`primal-tab${tab === 'other' ? ' active' : ''}`} onClick={() => setTab('other')}>other</button>
+            <span className="primal-link" style={{ marginLeft: 'auto', fontWeight: 700, fontSize: 14, cursor: 'pointer', alignSelf: 'center' }}>Mark All Read</span>
+          </div>
+        </div>
+        {conversations.map((c, i) => (
+          <div key={c.name} className={`primal-convo${i === active ? ' active' : ''}`} onClick={() => setActive(i)}>
+            <Avatar seed={c.name} className="w-12 h-12" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span className="primal-note-name truncate">{c.name}</span>
+                <span className="primal-muted" style={{ fontSize: 13 }}>· {c.time}</span>
+                {c.unread > 0 && <span className="primal-unread">{c.unread}</span>}
               </div>
-              {conv.unread && (
-                <div className="w-2 h-2 bg-[#7C3AED] rounded-full flex-shrink-0" />
-              )}
+              {c.handle && <div className="primal-note-handle truncate" style={{ fontSize: 14 }}>{c.handle}</div>}
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
 
-      <div className="p-8 text-center text-[var(--primal-on-surface-muted)]">
-        <p className="text-sm">End of conversations</p>
+      {/* chat pane */}
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div className="primal-pagehead" style={{ display: 'flex', justifyContent: 'flex-end', padding: '14px 20px' }}>
+          <div className="primal-search" style={{ maxWidth: 280 }}><Search size={18} /><input placeholder="find user" /></div>
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ alignSelf: 'flex-start', maxWidth: '70%', background: 'var(--primal-surface-2)', borderRadius: 16, padding: '10px 16px' }}>
+            gm! saw your note about {convo.name.split(' ')[0]} — really solid work ⚡
+          </div>
+          <div style={{ alignSelf: 'flex-end', maxWidth: '70%', background: 'var(--primal-accent)', color: '#fff', borderRadius: 16, padding: '10px 16px' }}>
+            thank you 🙏 means a lot coming from you
+          </div>
+          <div style={{ alignSelf: 'flex-start', maxWidth: '70%', background: 'var(--primal-surface-2)', borderRadius: 16, padding: '10px 16px' }}>
+            keep building 🚀
+          </div>
+        </div>
+        <div style={{ padding: 16, display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div className="primal-search" style={{ flex: 1 }}><input placeholder="Message..." /></div>
+          <button className="primal-roundbtn" style={{ background: 'var(--primal-accent)', color: '#fff' }} aria-label="send"><Send size={18} /></button>
+        </div>
       </div>
     </div>
   );

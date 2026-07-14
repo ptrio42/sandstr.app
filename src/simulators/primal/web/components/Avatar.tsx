@@ -1,0 +1,77 @@
+import React from 'react';
+
+// Deterministic FNV-1a hash → same seed always yields the same robot.
+// CSP-safe, offline, deterministic robohash-style avatar (shared pattern with
+// Amethyst/Damus). Replaces the old DiceBear hotlink entirely.
+function hashSeed(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+interface AvatarProps {
+  seed: string;
+  /** Tailwind size/shape classes for the container, e.g. "w-11 h-11". */
+  className?: string;
+  /** Gold "Primal Legend" ring (paid tier). */
+  legend?: boolean;
+}
+
+export function Avatar({ seed, className = 'w-11 h-11', legend = false }: AvatarProps) {
+  const h = hashSeed(seed || 'anon');
+  const bg = h % 360;
+  const bg2 = (bg + 45) % 360;
+  const headHue = (h >> 9) % 360;
+  const eyeType = (h >> 4) & 3;
+  const mouthType = (h >> 6) & 3;
+  const bigAntenna = ((h >> 11) & 1) === 1;
+
+  const headFill = `hsl(${headHue} 22% ${65 + (h % 20)}%)`;
+  const detail = `hsl(${(headHue + 200) % 360} 55% 28%)`;
+  const eye = `hsl(${bg2} 75% 48%)`;
+  const gid = `probg${h.toString(36)}`;
+
+  const robot = (
+    <svg viewBox="0 0 100 100" className="w-full h-full" role="img" aria-label="avatar">
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor={`hsl(${bg} 62% 56%)`} />
+          <stop offset="1" stopColor={`hsl(${bg2} 66% 42%)`} />
+        </linearGradient>
+      </defs>
+      <rect width="100" height="100" fill={`url(#${gid})`} />
+      <line x1="50" y1="30" x2="50" y2="15" stroke={detail} strokeWidth="3" strokeLinecap="round" />
+      <circle cx="50" cy="12" r={bigAntenna ? 5 : 3.5} fill={eye} />
+      <rect x="15" y="45" width="8" height="16" rx="3" fill={headFill} />
+      <rect x="77" y="45" width="8" height="16" rx="3" fill={headFill} />
+      <rect x="24" y="28" width="52" height="50" rx="13" fill={headFill} />
+      {eyeType === 0 && (<><circle cx="39" cy="48" r="6" fill={detail} /><circle cx="61" cy="48" r="6" fill={detail} /></>)}
+      {eyeType === 1 && (<><rect x="33" y="43" width="12" height="10" rx="4" fill={eye} /><rect x="55" y="43" width="12" height="10" rx="4" fill={eye} /></>)}
+      {eyeType === 2 && (<><circle cx="39" cy="48" r="7" fill={detail} /><circle cx="61" cy="48" r="7" fill={detail} /><circle cx="41" cy="46" r="2" fill="#fff" /><circle cx="63" cy="46" r="2" fill="#fff" /></>)}
+      {eyeType === 3 && (<><rect x="31" y="43" width="38" height="11" rx="5" fill={detail} /><circle cx="42" cy="48.5" r="3" fill={eye} /><circle cx="58" cy="48.5" r="3" fill={eye} /></>)}
+      {mouthType === 0 && (<rect x="38" y="63" width="24" height="4" rx="2" fill={detail} />)}
+      {mouthType === 1 && (<g fill={detail}>{[0, 1, 2, 3].map((i) => (<rect key={i} x={38 + i * 6} y="61" width="4" height="7" rx="1" />))}</g>)}
+      {mouthType === 2 && (<rect x="40" y="61" width="20" height="8" rx="3" fill={detail} />)}
+      {mouthType === 3 && (<path d="M40 62 Q50 71 60 62" stroke={detail} strokeWidth="3" fill="none" strokeLinecap="round" />)}
+    </svg>
+  );
+
+  if (legend) {
+    return (
+      <div className={`${className} shrink-0 primal-legend-ring`}>
+        <div className="w-full h-full rounded-full overflow-hidden bg-[var(--primal-bg)] p-[1.5px]">
+          <div className="w-full h-full rounded-full overflow-hidden">{robot}</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${className} shrink-0 rounded-full overflow-hidden`}>{robot}</div>
+  );
+}
+
+export default Avatar;

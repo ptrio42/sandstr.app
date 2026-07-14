@@ -78,9 +78,17 @@ kodu klienta. **„Sandstr" to nazwa robocza** — trywialna do zmiany.
 - **Wzorzec wierności:** **Amethyst** i **Damus** — głębokie, zweryfikowane referencyjnie flagowce/szablony
   (Amethyst 8 powierzchni; Damus 11) — inline-SVG robohash avatary, lokalne media postów jako `data:`-URI,
   offline/CSP-safe, tokeny z repo klienta + weryfikacja side-by-side z realnym recordingiem. Do nich równamy.
-- **Dopieszczeni 2026-07-14 (wierność):** **Amethyst, Damus, Snort, YakiHonne** (+ Nostr Kitten jako
-  opcjonalny easter-egg, nie lider).
-- **Druga fala** (odłożone: słabsza wierność / bugi): Primal, Keychat, Olas, Coracle, Gossip.
+- **Dopieszczeni 2026-07-14 (wierność):** **Amethyst, Damus, Snort, YakiHonne, Primal (web)** (+ Nostr
+  Kitten jako opcjonalny easter-egg, nie lider).
+- **Druga fala** (odłożone: słabsza wierność / bugi): Keychat, Olas, Coracle, Gossip. (Primal-MOBILE stub.)
+- **Primal web (ZROBIONE 2026-07-14):** rebuild z recordingu + recon → `docs/refs/primal/screen-map.md`
+  (autorytatywny: exact tokeny `palette.scss` Midnight/Ice, NavMenu, NoteFooter, Explore/Notifications/DMs).
+  3-kolumnowy (lewy nav / feed / prawy sidebar); Ice(light, w recordingu) + Midnight(dark, OLED, realny
+  default); accent **BLUE `#2394EF`** (NIE oranż — configs naprawiony); akcje **reply→zap→like→repost→
+  bookmark** (zap 2., like=magenta `#f800c1`/`#CA079F`, repost green, bookmark `#0C7DD8`); inline compose
+  z „NOTE PREVIEW"; swirl-logo (verbatim path + grad `#00E0FF→#0090F8→#2554ED`); nav badge PO labelu
+  (recording > repo). Prawy sidebar zmienny per-ekran (Home: Search/Live/Trending; Explore: Stats/HotTopics/
+  TrendingUsers; Settings: Relays). Znany drobny: Primal-mobile wciąż stary stub.
 - **Damus (ZROBIONE 2026-07-14):** pełny rebuild z recordingu + recon repo → `docs/refs/damus/screen-map.md`
   (autorytatywny spec: hexy DamusColors.swift, MainTabView, EventActionBar, SideMenu, Search/Notif/Relays).
   OLED-dark; DamusPurple `#CC43C5` + **PinkGradient `#D34CD9→#F869B6`** (marka: CTA/Post/banner) +

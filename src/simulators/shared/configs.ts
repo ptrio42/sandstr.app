@@ -62,15 +62,15 @@ export const amethystConfig: SimulatorConfig = {
 
 /**
  * Primal - Web & Mobile Nostr client
- * Orange Bitcoin-themed design
+ * Blue-accented (Midnight/Ice), NOT orange (see docs/FIDELITY.md / ground truth)
  */
 export const primalConfig: SimulatorConfig = {
   id: SimulatorClient.PRIMAL,
   name: 'Primal',
   description: 'Fast, modern Nostr client with excellent UX.',
   platform: 'web',
-  primaryColor: '#F97316', // Orange - Primal brand color
-  secondaryColor: '#FB923C', // Light orange
+  primaryColor: '#2394EF', // Primal brand blue (--accent, Midnight/Ice)
+  secondaryColor: '#14B9FF', // signature gradient cyan (#14B9FF→#690DFF)
   icon: '/icons/primal.png',
   supportedFeatures: [
     SimulatorFeature.DM,

@@ -1,0 +1,9 @@
+# Bulky reference capture — keep labeled refs (shots/*.png) + screen-map.md in git,
+# not the raw screen recording / derived frames / contact sheets.
+shots/*.mov
+shots/*.mp4
+shots/*.webm
+frames/
+full/
+sheet_*.jpg
+.DS_Store

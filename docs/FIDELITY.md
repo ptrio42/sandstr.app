@@ -10,8 +10,9 @@
 - ✅ **Amethyst** (8 powierzchni) — `0ea6f07`, `docs/refs/amethyst/`
 - ✅ **Damus** (11) — `6ab3956`, `docs/refs/damus/screen-map.md`
 - ✅ **YakiHonne** (13) — `eacd2c3`, `docs/refs/yakihonne/screen-map.md`
+- ✅ **Primal (web)** (9 powierzchni: Home/Explore/Notifications/Messages/Bookmarks/Profile/Settings/Thread/Login + compose + search-drop) — `docs/refs/primal/screen-map.md` (autorytatywny, 14 sekcji z `PrimalHQ/primal-web-app@main`). Ice(light)+Midnight(dark) OLED, accent BLUE `#2394EF`, akcje reply→zap→like→repost→bookmark (zap 2., like=magenta `#f800c1`), swirl-logo (verbatim path + gradient `#00E0FF→#0090F8→#2554ED`).
 
-**Do zrobienia (druga fala, słabsza wierność / stare stuby):** Snort, Primal, Keychat, Olas, Coracle, Gossip. Tokeny + killery każdego są niżej w tym pliku; korekty kolorów w `[[client-fidelity-ground-truth]]`.
+**Do zrobienia (druga fala, słabsza wierność / stare stuby):** Snort, Keychat, Olas, Coracle, Gossip. Tokeny + killery każdego są niżej w tym pliku; korekty kolorów w `[[client-fidelity-ground-truth]]`. (Primal-MOBILE nadal stary stub — zrobiony tylko web.)
 
 **Start następnej sesji (agent robiący kolejny symulator):**
 1. **Użytkownik NAJPIERW wrzuca referencję** do `docs/refs/<client>/shots/` — screen-RECORDING (mobile: Keychat/Olas/Primal-mobile) albo screeny/live-capture (web za Cloudflare: Snort/Primal-web/Coracle — `WebFetch` daje pustą skorupę). Bez realnego renderu nie startuj (layout ≠ pamięć).
