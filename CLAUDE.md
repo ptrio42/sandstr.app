@@ -94,9 +94,11 @@ widoku. **„Sandstr" to nazwa robocza** — trywialna do zmiany.
 
 ## Pointers
 
+- **`docs/AUDIT.md`** — pełny audyt w-repo: wierność/kompletność/polish **każdego z 10 symulatorów**,
+  architektura + plan wydzielenia, pozycjonowanie/branding/ryzyka prawne, synteza + roadmapa. Główne
+  źródło kontekstu decyzji (samowystarczalne, nie zależy od pamięci sesji).
 - `README.md` — przegląd + jak dokładnie wyodrębniono feature z oryginału.
-- **Origin / audyt / decyzje** (wierność per-sim, wykonalność wydzielenia, pozycjonowanie, rankingi,
-  ryzyka prawne): powstały w sesji w `../nostr-beginner-guide` (pamięć projektu
-  `sandstr-simulators-spinoff`). Ten katalog to inny projekt → tamta pamięć **nie** ładuje się tu
-  automatycznie; kluczowy kontekst jest w tym pliku.
+- Origin: audyt powstał w sesji w `../nostr-beginner-guide` (pamięć `sandstr-simulators-spinoff`); ten
+  katalog to inny projekt, więc tamta pamięć **nie** ładuje się tu automatycznie — dlatego audyt jest
+  w `docs/AUDIT.md`.
 - Osobiste / lokalne notatki: `CLAUDE.local.md` (gitignore), nie tutaj.
