@@ -1,0 +1,12 @@
+# Reference library: keep the labeled screenshots (*.png), NOT the bulky raw
+# recordings or derived frame dumps (applies to every <client>/shots/ folder).
+*.mp4
+*.MP4
+*.mov
+*.MOV
+*.webm
+*.MKV
+*.mkv
+frames/
+sheets/
+full/

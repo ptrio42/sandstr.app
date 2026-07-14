@@ -1,6 +1,10 @@
 # Sandstr — CLAUDE.md
 
 Samodzielny, w 100% kliencki produkt: **„try 10 Nostr clients in your browser — no keys, no install"**.
+**Rdzeń wartości = REAL-CLIENTS-FIRST:** wierne, wysokiej wierności, przeglądarkowe reprodukcje **realnych,
+brandowanych klientów Nostr** (Damus, Amethyst, Primal, Snort, YakiHonne, Coracle, Keychat, Olas, Gossip) —
+bez kluczy, bez instalacji. **Wierność wobec prawdziwych appek JEST produktem** — użytkownik ma naprawdę
+przetestować klienta, nie „jakiś losowy twór".
 Wyodrębniony (extraction spike, 2026-07-14) z feature'u symulatorów klientów, który żył w przewodniku
 `nostrich.love` i jako **jedyny** złapał sygnał na Nostr, podczas gdy sam przewodnik nie zyskał trakcji.
 
@@ -51,20 +55,30 @@ Podgląd w sesji: `.claude/launch.json` → config **sandstr** (`preview_start`,
   komend) — inaczej guided tour się psuje.
 - **Bez nowych zależności npm** (dostępne: react, react-dom, framer-motion, lucide-react, clsx,
   tailwind-merge). Bez realnej krypto/sieci — to symulacja.
-- **Baner „SIMULATION · unofficial · mock data" MUSI zostać** na każdym widoku klienta (`ClientView`) —
-  to #1 mitygacja ryzyka znaku towarowego. Nie usuwaj.
+- **Baner „SIMULATION · unofficial · mock data · not affiliated" MUSI zostać** na każdym widoku klienta
+  (`ClientView`) — to #1 lekka mitygacja ryzyka znaku towarowego. Nie usuwaj.
 
 ## Branding / ryzyko prawne (kontekst decyzji — WAŻNE)
 
-**Owned-IP-first.** Jako samodzielny/monetyzowalny produkt, reprodukcja marek cudzych klientów
-(Damus/Primal/Amethyst…) niesie ryzyko znaku towarowego i trade-dress, którego darmowy przewodnik
-edukacyjny nie miał. Kierunek: **front door = Nostr Kitten** (oryginalny, bezpieczny prawnie klient
-parodia GeoCities), realne klienty tylko **opt-in / za zgodą** zespołów, trwały disclaimer na każdym
-widoku. **„Sandstr" to nazwa robocza** — trywialna do zmiany.
+**Real-clients-first.** Reprodukcja realnych, brandowanych klientów (Damus/Primal/Amethyst…) niesie ryzyko
+znaku towarowego i trade-dress, którego darmowy przewodnik edukacyjny nie miał — mitygujemy je, **nie**
+ucieczką od cudzej marki. Ścieżki:
+(a) **GŁÓWNA: zgoda-opt-in od każdego zespołu.** Właściciel odzywa się do twórców — są osiągalni na Nostr,
+    a wierne demo im schlebia (to dokładnie mitygacja z audytu „zdobądź pisemną zgodę", wybrana jako
+    podstawowa zamiast „prowadź własnym IP"). **Nie monetyzujemy marki konkretnego zespołu bez jego zgody.**
+(b) trwały disclaimer „SIMULATION · unofficial · mock data · not affiliated" na każdym widoku — nadal #1
+    lekka mitygacja.
+**Nostr Kitten NIE jest fundamentem ani „front door"** — nie istnieje jako realny klient Nostr; najwyżej
+opcjonalny easter-egg / maskotka. Nie traktuj go jako lidera strategicznego, kotwicy marki ani centrum
+deryzykowania. **Web klienty odtwarzamy we wspólnym stacku React („Poziom A")**, nie uruchamiając realnego
+kodu klienta. **„Sandstr" to nazwa robocza** — trywialna do zmiany.
 
 ## Liderzy vs reszta
 
-- **Liderzy** (dopieszczeni 2026-07-14): **Snort, Amethyst, Nostr Kitten, YakiHonne**.
+- **Wzorzec wierności:** **Amethyst** — głęboki, zweryfikowany referencyjnie flagowiec/szablon (8 powierzchni,
+  inline-SVG robohash avatary, lokalne media postów jako `data:`-URI, offline/CSP-safe). Do niego równamy.
+- **Dopieszczeni 2026-07-14 (wierność):** **Snort, Amethyst, YakiHonne** (+ Nostr Kitten jako opcjonalny
+  easter-egg, nie lider).
 - **Druga fala** (odłożone: słabsza wierność / bugi): Damus (defer, **nie cut** — dobry motyw iOS),
   Primal, Keychat, Olas, Coracle, Gossip.
 
@@ -95,8 +109,18 @@ widoku. **„Sandstr" to nazwa robocza** — trywialna do zmiany.
 ## Pointers
 
 - **`docs/AUDIT.md`** — pełny audyt w-repo: wierność/kompletność/polish **każdego z 10 symulatorów**,
-  architektura + plan wydzielenia, pozycjonowanie/branding/ryzyka prawne, synteza + roadmapa. Główne
-  źródło kontekstu decyzji (samowystarczalne, nie zależy od pamięci sesji).
+  architektura + plan wydzielenia, pozycjonowanie/branding/ryzyka prawne, synteza + roadmapa.
+  **UWAGA: snapshot historyczny.** Jego rekomendacja „owned-IP-first / front door = Nostr Kitten" jest
+  **nieaktualna** — kierunek zmieniono na real-clients-first (patrz sekcja „Branding / ryzyko prawne" wyżej
+  + `docs/FIDELITY.md`). Reszta (mapa wierności, architektura) nadal wartościowa jako kontekst.
+- **`docs/FIDELITY.md`** — **główny kit wiernego odtwarzania (proces reference-first).** Dla każdego z 9
+  realnych klientów zweryfikowane tokeny marki + **plik-źródło tokenów w repo klienta** (wszystkie są
+  open source), struktura nawigacji, detale-zabójcy wierności, kanały opt-in. Proces: **realne screeny +
+  źródło klienta czytane razem → tokeny → weryfikacja side-by-side.** Biblioteka referencji żyje w
+  **`docs/refs/<client>/`** (`screen-map.md` + `shots/`). Zawiera **korekty błędnych rekomendacji kolorów
+  z `AUDIT.md`** (YakiHonne jest oranż, nie fiolet; Keychat fiolet, nie blue; Primal domyślnie blue).
+  Wzorzec wykonany na Amethyście: głęboki, zweryfikowany referencyjnie (8 powierzchni, realny fiolet
+  `#7F67BE` + OLED czerń + kolejność akcji reply/boost/react/zap, inline-SVG avatary, lokalne `data:` media).
 - `README.md` — przegląd + jak dokładnie wyodrębniono feature z oryginału.
 - Origin: audyt powstał w sesji w `../nostr-beginner-guide` (pamięć `sandstr-simulators-spinoff`); ten
   katalog to inny projekt, więc tamta pamięć **nie** ładuje się tu automatycznie — dlatego audyt jest
