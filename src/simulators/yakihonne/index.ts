@@ -1,37 +1,14 @@
 /**
- * YakiHonne Simulator
- * 
- * A full-featured cross-platform Nostr client simulator with Bitcoin/Lightning integration.
- * Features include:
- * - Mixed content feed (posts, articles, media)
- * - Long-form article publishing
- * - Media gallery with photo/video grid
- * - Wallet with balance and transaction history
- * - Purple/violet brand theme (#7C3AED)
- * - Content type switching
- * - Zap integration
- * 
+ * YakiHonne Simulator — faithful reproduction of the real YakiHonne mobile app (Flutter).
+ * Dark-first (OLED), ORANGE brand accent (#EE7700), article-centric, "Relay orbits",
+ * Wallet-of-Satoshi, Yaki-chest dashboard. Reference: docs/refs/yakihonne/.
+ *
  * @module simulators/yakihonne
  */
 
 export { YakiHonneSimulator } from './YakiHonneSimulator';
 export type { YakiHonneSimulatorProps, TabId } from './YakiHonneSimulator';
 
-// Screens
-export { FeedScreen } from './screens/FeedScreen';
-export { ArticlesScreen } from './screens/ArticlesScreen';
-export { MediaScreen } from './screens/MediaScreen';
-export { ProfileScreen } from './screens/ProfileScreen';
-export { WalletScreen } from './screens/WalletScreen';
-export { SettingsScreen } from './screens/SettingsScreen';
-export { ComposeScreen } from './screens/ComposeScreen';
-
-// Components
-export { ArticleCard } from './components/ArticleCard';
-export { MediaGrid } from './components/MediaGrid';
-export { WalletDisplay } from './components/WalletDisplay';
-export { ContentTabs } from './components/ContentTabs';
-
-// Theme
+// Theme + tour styles
 import './yakihonne.theme.css';
 import '../../components/tour/tour.css';

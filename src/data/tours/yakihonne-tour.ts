@@ -1,6 +1,7 @@
 /**
- * YakiHonne Web Simulator Tour
- * Tour drives the simulator - user clicks Next, tour navigates simulator
+ * YakiHonne Simulator Tour
+ * Tour drives the simulator - user clicks Next, tour navigates the sim.
+ * 10 steps — index-mapped to state commands in YakiHonneSimulatorWithTour.
  */
 
 import type { TourConfig, TourStep } from '../../components/tour';
@@ -10,15 +11,15 @@ const yakihonneTourSteps: TourStep[] = [
     id: 'yakihonne-welcome',
     target: '.yakihonne-simulator',
     title: 'Welcome to YakiHonne',
-    content: 'YakiHonne (やきほんね) is a Japanese-inspired web Nostr client with unique features. The name means "true feelings" - expressing authentic thoughts on Nostr! Let us explore together.',
+    content: 'YakiHonne is a mobile-first Nostr client built around long-form articles, curations, videos and a built-in Lightning wallet — with its signature orange accent. Let us take a look around.',
     position: 'center',
     spotlightPadding: 0,
   },
   {
     id: 'yakihonne-login',
     target: '.yakihonne-login, [data-tour="yakihonne-keys"]',
-    title: 'Secure Login',
-    content: 'Login with your Nostr keys or generate new ones. YakiHonne emphasizes privacy and security. Browser extensions are supported for the safest experience. Your keys are your identity!',
+    title: 'Sign in',
+    content: 'Log in with your Nostr keys, a remote signer, or continue as a guest. Your key is your identity — it works across every Nostr app. (Here it is fully simulated with mock keys.)',
     position: 'bottom',
     allowClickThrough: true,
     spotlightPadding: 16,
@@ -26,8 +27,8 @@ const yakihonneTourSteps: TourStep[] = [
   {
     id: 'yakihonne-home',
     target: '.yakihonne-feed, [data-tour="yakihonne-feed"]',
-    title: 'Customizable Feed',
-    content: 'Your timeline with multiple view options. Switch between different layouts and filters. YakiHonne offers unique ways to browse Nostr content beyond the standard feed.',
+    title: 'Your feed',
+    content: 'The home timeline. Tap the feed selector up top to switch between Recent, Trending, Global and more — Trending surfaces long-form articles with read-times and cover images.',
     position: 'top',
     allowClickThrough: true,
     spotlightPadding: 8,
@@ -35,17 +36,17 @@ const yakihonneTourSteps: TourStep[] = [
   {
     id: 'yakihonne-compose',
     target: '.yakihonne-compose, [data-tour="yakihonne-compose"]',
-    title: 'Express Yourself',
-    content: 'Create notes with full formatting support. YakiHonne supports rich media embedding, custom reactions, and even drawing/art features for creative expression.',
-    position: 'bottom',
+    title: 'Compose a note',
+    content: 'The orange button opens the compose sheet. Attach media, GIFs, mentions and smart widgets, or schedule your note for later.',
+    position: 'left',
     allowClickThrough: true,
     spotlightPadding: 12,
   },
   {
     id: 'yakihonne-post',
     target: '.yakihonne-post-btn, [data-tour="yakihonne-post"]',
-    title: 'Publish Your Note',
-    content: 'Write something interesting and hit post! Your note will be cryptographically signed and broadcast to all connected relays. Once published, it is permanent on the Nostr network.',
+    title: 'Publish',
+    content: 'Hit send and your note is signed and broadcast to your relays. On Nostr, once published it lives on the network — no central server to delete it.',
     position: 'bottom',
     allowClickThrough: true,
     spotlightPadding: 12,
@@ -53,8 +54,8 @@ const yakihonneTourSteps: TourStep[] = [
   {
     id: 'yakihonne-profile',
     target: '.yakihonne-profile, [data-tour="yakihonne-profile"]',
-    title: 'Personal Space',
-    content: 'Your profile hub with customizable themes, detailed statistics, and content organization. Show off your NIP-05 badge and Lightning address for tips. This is your identity on Nostr!',
+    title: 'Your profile',
+    content: 'Your profile has a NOSTR banner, NIP-05 verification, and tabs for Notes, Articles, Media and more. The account drawer also opens your Yaki-chest dashboard and Relay orbits.',
     position: 'bottom',
     allowClickThrough: true,
     spotlightPadding: 16,
@@ -62,35 +63,35 @@ const yakihonneTourSteps: TourStep[] = [
   {
     id: 'yakihonne-follow',
     target: '.yakihonne-follow-btn, [data-tour="yakihonne-follow"]',
-    title: 'Following Users',
-    content: 'Find interesting people by browsing your network. When you follow someone, their posts appear in your feed. Your follows are stored in your account and synced across all Nostr clients.',
-    position: 'left',
+    title: 'Follow people',
+    content: 'Follow anyone to see their notes and articles in your feed. Your follow list is stored on Nostr and syncs across every client you use.',
+    position: 'bottom',
     allowClickThrough: true,
     spotlightPadding: 8,
   },
   {
     id: 'yakihonne-interactions',
     target: '.yakihonne-zap-btn, [data-tour="yakihonne-zaps"]',
-    title: 'Unique Interactions',
-    content: 'YakiHonne offers custom emoji reactions, zaps (Bitcoin tips), likes, and replies. Zaps use Lightning Network to send real Bitcoin to content creators instantly!',
+    title: 'Zaps & reactions',
+    content: 'React, reply, repost, quote — and zap. Zaps send real Bitcoin over the Lightning Network straight to a creator; YakiHonne shows the total sats a note has earned.',
     position: 'top',
     allowClickThrough: true,
     spotlightPadding: 8,
   },
   {
     id: 'yakihonne-settings',
-    target: '.yakihonne-features, [data-tour="yakihonne-unique"]',
-    title: 'Unique Features',
-    content: 'Discover YakiHonne\'s special features: custom emoji reactions, art/drawing tools, community spaces, and unique UI customizations. Remember to backup your private key securely!',
-    position: 'left',
+    target: '.yakihonne-simulator',
+    title: 'Wallet, relays & Yaki chest',
+    content: 'YakiHonne bundles a Lightning wallet (Wallet of Satoshi by default), branded "Relay orbits", and a gamified "Yaki chest" that rewards you with XP for being active.',
+    position: 'center',
     allowClickThrough: true,
     spotlightPadding: 8,
   },
   {
     id: 'yakihonne-complete',
     target: '.yakihonne-simulator',
-    title: 'YakiHonne Explorer!',
-    content: 'You have explored YakiHonne! This creative client offers unique ways to experience Nostr. Your keys work everywhere - the protocol is yours to explore freely!',
+    title: 'That\'s YakiHonne!',
+    content: 'You have explored YakiHonne — articles, media, wallet and all. Your keys work everywhere on Nostr; the protocol is yours to explore freely.',
     position: 'center',
     spotlightPadding: 0,
   },

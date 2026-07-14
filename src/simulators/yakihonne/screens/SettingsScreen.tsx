@@ -1,312 +1,113 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  Moon, 
-  Sun, 
-  Globe, 
-  Shield, 
-  Key, 
-  Server, 
-  Bell, 
-  Lock,
-  FileText,
-  HelpCircle,
-  LogOut,
-  ChevronRight,
-  Palette
-} from 'lucide-react';
+import React from 'react';
+import { Avatar } from '../components/Avatar';
+import { OverlayHeader } from '../components/OverlayHeader';
+import { YakiTile } from '../components/YakiLogo';
+import {
+  KeyIcon, WalletIcon, BellIcon, TranslateIcon, TrashIcon, ChevronRightIcon, ZapIcon, ComposeDmIcon,
+} from '../components/icons';
 
-interface SettingsScreenProps {
-  theme: 'light' | 'dark';
-  onThemeChange: (theme: 'light' | 'dark') => void;
+type IconC = React.FC<{ className?: string }>;
+
+const ServerIcon: IconC = ({ className = 'w-6 h-6' }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"><rect x="4" y="4" width="16" height="6" rx="2" /><rect x="4" y="14" width="16" height="6" rx="2" /><path d="M8 7h.01M8 17h.01" /></svg>
+);
+const ModIcon: IconC = ({ className = 'w-6 h-6' }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"><path d="M6 4h9l4 4v12H6z" /><path d="M9 12l2 2 4-4" /></svg>
+);
+const WandIcon: IconC = ({ className = 'w-6 h-6' }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><path d="M6 18 16 8M14 6l1.5-1.5M18 10l1.5-1.5M9 4l.6 1.4L11 6l-1.4.6L9 8l-.6-1.4L7 6l1.4-.6z" /></svg>
+);
+const BrushIcon: IconC = ({ className = 'w-6 h-6' }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"><path d="M4 15l9-9 5 5-9 9H6a2 2 0 0 1-2-2z" /><path d="M13 6l3-3 5 5-3 3" /></svg>
+);
+const DeviceIcon: IconC = ({ className = 'w-6 h-6' }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"><rect x="6" y="3" width="12" height="18" rx="2.5" /><path d="M11 18h2" /></svg>
+);
+const TrophyIcon: IconC = ({ className = 'w-6 h-6' }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"><path d="M7 4h10v4a5 5 0 0 1-10 0z" /><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3M9 15h6M10 20h4M12 15v5" /></svg>
+);
+const GithubIcon: IconC = ({ className = 'w-5 h-5' }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.3-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.3 4.7-4.6 5 .4.3.7.9.7 1.9v2.8c0 .3.2.6.7.5A10 10 0 0 0 12 2z" /></svg>
+);
+
+type NavDest = 'profile' | 'relays' | 'wallet' | 'notifications' | 'dashboard';
+
+interface Row { label: string; Icon: IconC; dest?: NavDest; trailing?: React.ReactNode; }
+
+interface Props {
+  currentUserSeed: string;
   onBack: () => void;
+  onNav: (d: NavDest) => void;
+  onToast: (m: string) => void;
 }
 
-interface SettingSection {
-  title: string;
-  items: SettingItem[];
-}
-
-interface SettingItem {
-  id: string;
-  icon: React.ElementType;
-  label: string;
-  description?: string;
-  type: 'toggle' | 'link' | 'action';
-  value?: boolean;
-  onClick?: () => void;
-}
-
-export function SettingsScreen({ theme, onThemeChange, onBack }: SettingsScreenProps) {
-  const [notifications, setNotifications] = useState(true);
-  const [autoPlay, setAutoPlay] = useState(false);
-  const [showKeys, setShowKeys] = useState(false);
-
-  const settingsSections: SettingSection[] = [
-    {
-      title: 'Appearance',
-      items: [
-        {
-          id: 'theme',
-          icon: theme === 'dark' ? Moon : Sun,
-          label: theme === 'dark' ? 'Dark Mode' : 'Light Mode',
-          description: 'Toggle between light and dark theme',
-          type: 'toggle',
-          value: theme === 'dark',
-          onClick: () => onThemeChange(theme === 'dark' ? 'light' : 'dark'),
-        },
-        {
-          id: 'accent',
-          icon: Palette,
-          label: 'Accent Color',
-          description: 'Bitcoin Orange (Default)',
-          type: 'link',
-        },
-      ],
-    },
-    {
-      title: 'Notifications',
-      items: [
-        {
-          id: 'notifications',
-          icon: Bell,
-          label: 'Push Notifications',
-          description: 'Get notified about zaps and mentions',
-          type: 'toggle',
-          value: notifications,
-          onClick: () => setNotifications(!notifications),
-        },
-        {
-          id: 'zaps',
-          icon: Key,
-          label: 'Zap Notifications',
-          description: 'Notify when someone zaps you',
-          type: 'toggle',
-          value: true,
-        },
-      ],
-    },
-    {
-      title: 'Content',
-      items: [
-        {
-          id: 'autoplay',
-          icon: Globe,
-          label: 'Auto-play Videos',
-          description: 'Play videos automatically in feed',
-          type: 'toggle',
-          value: autoPlay,
-          onClick: () => setAutoPlay(!autoPlay),
-        },
-      ],
-    },
-    {
-      title: 'Security & Privacy',
-      items: [
-        {
-          id: 'keys',
-          icon: Lock,
-          label: 'Private Keys',
-          description: 'View and backup your keys',
-          type: 'link',
-          onClick: () => setShowKeys(true),
-        },
-        {
-          id: 'relays',
-          icon: Server,
-          label: 'Relay Connections',
-          description: 'Manage connected relays',
-          type: 'link',
-        },
-        {
-          id: 'privacy',
-          icon: Shield,
-          label: 'Privacy Settings',
-          description: 'Control your data and visibility',
-          type: 'link',
-        },
-      ],
-    },
-    {
-      title: 'About',
-      items: [
-        {
-          id: 'terms',
-          icon: FileText,
-          label: 'Terms of Service',
-          type: 'link',
-        },
-        {
-          id: 'help',
-          icon: HelpCircle,
-          label: 'Help & Support',
-          type: 'link',
-        },
-      ],
-    },
+export const SettingsScreen: React.FC<Props> = ({ currentUserSeed, onBack, onNav, onToast }) => {
+  const rows: Row[] = [
+    { label: 'Keys', Icon: KeyIcon },
+    { label: 'Relay settings 10 / 10', Icon: ServerIcon, dest: 'relays' },
+    { label: 'Content moderation', Icon: ModIcon },
+    { label: 'Wallets', Icon: WalletIcon, dest: 'wallet' },
+    { label: 'Customization', Icon: WandIcon },
+    { label: 'Notifications', Icon: BellIcon, dest: 'notifications' },
+    { label: 'Language preferences', Icon: TranslateIcon },
+    { label: 'Appearance', Icon: BrushIcon },
+    { label: 'Crashlytics & cache', Icon: DeviceIcon },
+    { label: 'Yaki chest', Icon: TrophyIcon, dest: 'dashboard', trailing: <span className="text-[13px] font-semibold text-[var(--yh-orange)] px-3 py-1 rounded-full bg-[color-mix(in_srgb,var(--yh-orange)_15%,transparent)]">Connect</span> },
   ];
 
   return (
-    <div className="flex flex-col h-full bg-[var(--yh-background)]" data-tour="yakihonne-unique">
-      {/* Header */}
-      <div className="yakihonne-header">
-        <button 
-          onClick={onBack}
-          className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-        >
-          <ArrowLeft className="w-6 h-6 text-[var(--yh-text-primary)]" />
-        </button>
-        <span className="yakihonne-header-title">Settings</span>
-        <div className="w-10" /> {/* Spacer for alignment */}
-      </div>
+    <div className="absolute inset-0 z-[58] bg-[var(--yh-bg)] flex flex-col">
+      <OverlayHeader title="Settings" onBack={onBack} logo />
 
       <div className="flex-1 overflow-y-auto">
-        {settingsSections.map((section, sectionIndex) => (
-          <motion.div
-            key={section.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: sectionIndex * 0.1 }}
-            className="mb-6"
+        {/* profile section */}
+        <div className="flex items-center gap-3 px-4 py-3">
+          <Avatar seed={currentUserSeed} className="w-12 h-12" />
+          <div className="flex-1" />
+          <button onClick={() => onNav('profile')} className="yakihonne-btn-orange px-5 py-2.5 text-[15px]">View profile</button>
+        </div>
+
+        {rows.map((r) => (
+          <button
+            key={r.label}
+            onClick={() => (r.dest ? onNav(r.dest) : onToast(r.label))}
+            className="w-full flex items-center gap-4 px-5 py-4 border-b border-[var(--yh-divider)] text-left"
           >
-            <h3 className="px-4 py-2 text-xs font-semibold text-[var(--yh-text-tertiary)] uppercase tracking-wide">
-              {section.title}
-            </h3>
-            
-            <div className="bg-[var(--yh-surface)]">
-              {section.items.map((item, itemIndex) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={item.id}
-                    className={`yakihonne-setting-item ${
-                      itemIndex < section.items.length - 1 ? 'border-b border-[var(--yh-border-light)]' : ''
-                    }`}
-                  >
-                    <div className="yakihonne-setting-label">
-                      <div className="yakihonne-setting-icon">
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="yakihonne-setting-text">{item.label}</div>
-                        {item.description && (
-                          <div className="text-sm text-[var(--yh-text-tertiary)]">
-                            {item.description}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {item.type === 'toggle' && (
-                      <button
-                        onClick={item.onClick}
-                        className={`w-12 h-7 rounded-full transition-colors relative ${
-                          item.value ? 'bg-[var(--yh-primary)]' : 'bg-gray-300 dark:bg-gray-600'
-                        }`}
-                      >
-                        <div
-                          className={`w-5 h-5 bg-white rounded-full absolute top-1 transition-transform ${
-                            item.value ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                    )}
-                    
-                    {item.type === 'link' && (
-                      <ChevronRight className="w-5 h-5 text-[var(--yh-text-tertiary)]" />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
+            <r.Icon className="w-6 h-6 text-[var(--yh-text)]" />
+            <span className="flex-1 text-[17px] font-medium">{r.label}</span>
+            {r.trailing}
+          </button>
         ))}
 
-        {/* Logout Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="px-4 pb-8"
-        >
-          <button className="w-full yakihonne-btn yakihonne-btn-outline text-red-500 border-red-500 hover:bg-red-50 hover:text-red-600">
-            <LogOut className="w-4 h-4" />
-            Log Out
+        {/* delete account */}
+        <div className="px-4 py-5">
+          <button onClick={() => onToast('Delete account')} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border border-[#DD2222] text-[#FF4A4A] font-semibold">
+            <TrashIcon className="w-5 h-5" /> Delete account
           </button>
-        </motion.div>
+        </div>
+
+        {/* version footer */}
+        <div className="px-6 pb-10 flex flex-col items-center text-center">
+          <button className="flex items-center gap-2.5">
+            <YakiTile className="w-9 h-9" />
+            <span className="text-left leading-tight">
+              <span className="block text-[13px] text-[var(--yh-text-2)]">YakiHonne</span>
+              <span className="block text-[17px] font-extrabold">v1.9.8+179</span>
+            </span>
+            <ChevronRightIcon className="w-5 h-5 text-[var(--yh-orange)]" />
+          </button>
+          <p className="text-[13px] text-[var(--yh-text-2)] mt-4 leading-relaxed">
+            We strive to make the best out of Nostr, Support us below or send us your valuable feed: zap, dms, github.
+          </p>
+          <div className="flex items-center gap-3 mt-4">
+            <button onClick={() => onToast('Zap YakiHonne')} className="w-11 h-11 rounded-full bg-[var(--yh-surface-2)] flex items-center justify-center text-[var(--yh-orange)]"><ZapIcon filled className="w-5 h-5" /></button>
+            <button onClick={() => onToast('Email us')} className="w-11 h-11 rounded-full bg-[var(--yh-surface-2)] flex items-center justify-center"><ComposeDmIcon className="w-5 h-5" /></button>
+            <button onClick={() => onToast('GitHub')} className="w-11 h-11 rounded-full bg-[var(--yh-surface-2)] flex items-center justify-center"><GithubIcon className="w-5 h-5" /></button>
+          </div>
+        </div>
       </div>
-
-      {/* Keys Modal */}
-      {showKeys && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-          onClick={() => setShowKeys(false)}
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-[var(--yh-surface)] rounded-2xl p-6 w-full max-w-sm"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-red-600 dark:text-red-400" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-[var(--yh-text-primary)]">Your Keys</h3>
-                <p className="text-sm text-[var(--yh-text-tertiary)]">Keep these safe!</p>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-[var(--yh-text-secondary)] uppercase mb-1">
-                  Public Key (npub)
-                </label>
-                <div className="flex items-center gap-2 p-3 bg-[var(--yh-surface-variant)] rounded-lg">
-                  <code className="flex-1 text-xs text-[var(--yh-text-primary)] truncate font-mono">
-                    npub1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                  </code>
-                  <button className="p-1.5 text-[var(--yh-primary)] hover:bg-[var(--yh-surface)] rounded transition-colors">
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-xs font-semibold text-[var(--yh-text-secondary)] uppercase mb-1">
-                  Private Key (nsec)
-                </label>
-                <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                  <code className="flex-1 text-xs text-red-600 dark:text-red-400 truncate font-mono">
-                    nsec1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                  </code>
-                  <button className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors">
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </div>
-                <p className="text-xs text-red-500 mt-1">
-                  Never share your private key with anyone!
-                </p>
-              </div>
-            </div>
-
-            <button 
-              onClick={() => setShowKeys(false)}
-              className="w-full yakihonne-btn yakihonne-btn-primary mt-6"
-            >
-              I Understand
-            </button>
-          </motion.div>
-        </motion.div>
-      )}
     </div>
   );
-}
+};
 
 export default SettingsScreen;

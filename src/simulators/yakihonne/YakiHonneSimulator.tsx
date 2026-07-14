@@ -1,49 +1,29 @@
-import React, { useState, useCallback, useContext, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Home, 
-  FileText, 
-  Image, 
-  User, 
-  Wallet, 
-  Settings, 
-  Plus,
-  Zap
-} from 'lucide-react';
-import { LoginScreen } from './screens/LoginScreen';
-import { FeedScreen } from './screens/FeedScreen';
-import { ArticlesScreen } from './screens/ArticlesScreen';
-import { MediaScreen } from './screens/MediaScreen';
-import { ProfileScreen } from './screens/ProfileScreen';
-import { WalletScreen } from './screens/WalletScreen';
-import { SettingsScreen } from './screens/SettingsScreen';
-import { ComposeScreen } from './screens/ComposeScreen';
-import { useParentTheme } from '../shared/hooks/useParentTheme';
-import type { MockUser } from '../../data/mock';
-import type { SimulatorUser, SimulatorFeedItem } from '../shared/types';
-import { TourContext } from '../../components/tour';
+import React, { useState, useContext, useEffect, useCallback } from 'react';
 import './yakihonne.theme.css';
+import { useParentTheme } from '../shared/hooks/useParentTheme';
+import { TourContext } from '../../components/tour';
 
-/** Normalize a logged-in MockUser into the SimulatorUser shape the screens expect. */
-function toSimulatorUser(user: MockUser): SimulatorUser {
-  return {
-    pubkey: user.pubkey,
-    npub: user.pubkey.startsWith('npub') ? user.pubkey : `npub1${user.pubkey}`,
-    displayName: user.displayName,
-    username: user.username,
-    avatar: user.avatar,
-    bio: user.bio,
-    website: user.website,
-    location: user.location,
-    lightningAddress: user.lightningAddress,
-    nip05: user.nip05,
-    followersCount: user.followersCount,
-    followingCount: user.followingCount,
-    notesCount: 0,
-    createdAt: user.createdAt,
-    isVerified: user.isVerified ?? false,
-  };
-}
+import { TabBar, type YakiTab } from './components/TabBar';
+import { Drawer, type DrawerDest } from './components/Drawer';
+import { type FeedSource } from './components/FeedSelector';
+import { ZapIcon } from './components/icons';
+
+import { LoginScreen } from './screens/LoginScreen';
+import { HomeScreen } from './screens/HomeScreen';
+import { MediaScreen } from './screens/MediaScreen';
+import { WalletScreen } from './screens/WalletScreen';
+import { MessagesScreen } from './screens/MessagesScreen';
+import { NotificationsScreen } from './screens/NotificationsScreen';
+import { SearchScreen } from './screens/SearchScreen';
+import { ProfileScreen, type YakiProfile } from './screens/ProfileScreen';
+import { ArticleReader } from './screens/ArticleReader';
+import { ThreadScreen } from './screens/ThreadScreen';
+import { ComposeSheet } from './screens/ComposeSheet';
+import { SettingsScreen } from './screens/SettingsScreen';
+import { NotificationSettingsScreen } from './screens/NotificationSettingsScreen';
+import { RelaysScreen } from './screens/RelaysScreen';
+import { DashboardScreen } from './screens/DashboardScreen';
+import { homeNotes, type YakiArticle, type YakiNoteData } from './data';
 
 export type TabId = 'feed' | 'articles' | 'media' | 'profile' | 'wallet' | 'settings';
 
@@ -58,337 +38,186 @@ export interface YakiHonneSimulatorProps {
   onCommandHandled?: () => void;
 }
 
+const SELF: YakiProfile = {
+  seed: 'pitiunited', name: 'pitiunited', nip05: true,
+  nip05addr: '_@thisbitcointhing.com', website: 'https://UseLessShit.co',
+  bio: 'All-round buidler.', followings: '2.37K', followers: '3.51K', isSelf: true,
+};
+
+function buildProfile(seed: string, name: string): YakiProfile {
+  if (seed === SELF.seed) return SELF;
+  return {
+    seed, name, nip05: true,
+    nip05addr: `${name.toLowerCase().replace(/[^a-z0-9]/g, '')}@yakihonne.com`,
+    bio: 'Nostrich exploring the decentralized web. ⚡',
+    followings: '312', followers: '1.2K', followsYou: true,
+  };
+}
+
+type Overlay =
+  | { type: 'compose'; replyTo?: { name: string; seed: string; content: string; when: string } | null }
+  | { type: 'thread'; note: YakiNoteData }
+  | { type: 'article'; article: YakiArticle }
+  | { type: 'profile'; profile: YakiProfile }
+  | { type: 'search' }
+  | { type: 'settings' }
+  | { type: 'notifSettings' }
+  | { type: 'relays' }
+  | { type: 'dashboard' };
+
 export function YakiHonneSimulator({ className = '', tourCommand, onCommandHandled }: YakiHonneSimulatorProps) {
   const parentTheme = useParentTheme();
   const tourContext = useContext(TourContext);
-  const registerAction = (actionType: string) => {
-    if (tourContext?.registerAction) {
-      tourContext.registerAction(actionType);
-    }
-  };
-  const [activeTab, setActiveTab] = useState<TabId>('feed');
-  const [isComposeOpen, setIsComposeOpen] = useState(false);
-  const [composeType, setComposeType] = useState<'post' | 'article' | 'media'>('post');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState<MockUser | null>(null);
-  const [composedPosts, setComposedPosts] = useState<SimulatorFeedItem[]>([]);
-  const [toast, setToast] = useState<{
-    message: string;
-    isVisible: boolean;
-    type: 'success' | 'error' | 'info';
-  }>({ message: '', isVisible: false, type: 'info' });
-  const [walletBalance, setWalletBalance] = useState(500000); // 500k sats
+  const registerAction = (a: string) => tourContext?.registerAction?.(a);
 
-  // Show toast notification
-  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    setToast({ message, isVisible: true, type });
-    setTimeout(() => {
-      setToast(prev => ({ ...prev, isVisible: false }));
-    }, 3000);
+  const [authed, setAuthed] = useState(false);
+  const [tab, setTab] = useState<YakiTab>('home');
+  const [source, setSource] = useState<FeedSource>('recent');
+  const [overlays, setOverlays] = useState<Overlay[]>([]);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [balance, setBalance] = useState(537311);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const push = useCallback((o: Overlay) => setOverlays((s) => [...s, o]), []);
+  const pop = useCallback(() => setOverlays((s) => s.slice(0, -1)), []);
+
+  const showToast = useCallback((m: string) => {
+    setToast(m);
+    setTimeout(() => setToast(null), 2400);
   }, []);
 
-  // Handle login
-  const handleLogin = useCallback((user: MockUser) => {
-    setCurrentUser(user);
-    setIsAuthenticated(true);
-    registerAction('login');
-    registerAction('navigate_home');
-    console.log('[YakiHonne] Logged in as:', user.displayName);
-  }, [registerAction]);
+  const goTab = useCallback((t: YakiTab) => { setOverlays([]); setDrawerOpen(false); setTab(t); }, []);
 
-  // Handle tab change
-  const handleTabChange = useCallback((tab: TabId) => {
-    setActiveTab(tab);
-    if (tab === 'feed') registerAction('navigate_home');
-    if (tab === 'profile') registerAction('view_profile');
-    if (tab === 'settings') registerAction('navigate_settings');
-  }, [registerAction]);
+  const login = useCallback(() => {
+    setAuthed(true); setTab('home'); setOverlays([]);
+    registerAction('login'); registerAction('navigate_home');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Handle compose open
-  const handleOpenCompose = useCallback((type: 'post' | 'article' | 'media' = 'post') => {
-    setComposeType(type);
-    setIsComposeOpen(true);
-    registerAction('compose');
-  }, [registerAction]);
+  const viewProfile = (seed: string, name: string) => { registerAction('view_profile'); push({ type: 'profile', profile: buildProfile(seed, name) }); };
+  const openArticle = (article: YakiArticle) => push({ type: 'article', article });
+  const openThread = (id: string) => { const note = homeNotes.find((n) => n.id === id) || homeNotes[0]; push({ type: 'thread', note }); };
+  const openCompose = () => { registerAction('compose'); push({ type: 'compose', replyTo: null }); };
+  const openReply = () => push({ type: 'compose', replyTo: { name: 'Maria2000', seed: 'maria2000', content: homeNotes[0].content, when: 'On Jul 14 2026, 3:07PM' } });
 
-  // Handle new post — thread the composed post into the feed under the logged-in identity.
-  const handleNewPost = useCallback((content: string, type: 'post' | 'article' | 'media') => {
-    registerAction('post');
+  const doZap = (sats: number) => { setBalance((b) => Math.max(0, b - sats)); showToast(`Zapped ${sats} sats! ⚡`); };
 
-    if (currentUser && content.trim()) {
-      const author = toSimulatorUser(currentUser);
-      const now = Date.now() / 1000;
-      const id = `composed-${Date.now()}`;
-      const hashtags = (content.match(/#(\w+)/g) || []).map((t) => t.slice(1));
-      const newItem: SimulatorFeedItem = {
-        id,
-        type: type === 'article' ? 'long_form' : 'note',
-        note: {
-          id,
-          pubkey: author.pubkey,
-          created_at: now,
-          kind: type === 'article' ? 30023 : 1,
-          tags: [],
-          content: content.trim(),
-          sig: `sig-${id}`,
-          likes: 0,
-          reposts: 0,
-          replies: 0,
-          zaps: 0,
-          zapAmount: 0,
-          images: [],
-          hashtags,
-          category: 'nostr' as const,
-        },
-        author,
-        isRead: true,
-        timestamp: now,
-      };
-      setComposedPosts((prev) => [newItem, ...prev]);
-    }
+  const onDrawerNav = (d: DrawerDest) => {
+    setDrawerOpen(false);
+    if (d === 'profile') push({ type: 'profile', profile: SELF });
+    else if (d === 'dashboard') push({ type: 'dashboard' });
+    else if (d === 'relays') push({ type: 'relays' });
+    else if (d === 'settings') { registerAction('navigate_settings'); push({ type: 'settings' }); }
+    else if (d === 'bookmarks') showToast('Bookmarks');
+  };
 
-    showToast(
-      type === 'article' ? 'Article published! 📝' :
-      type === 'media' ? 'Media shared! 📸' :
-      'Post published! 🎉',
-      'success'
-    );
-    setIsComposeOpen(false);
-  }, [showToast, registerAction, currentUser]);
+  const onSettingsNav = (d: 'profile' | 'relays' | 'wallet' | 'notifications' | 'dashboard') => {
+    if (d === 'profile') push({ type: 'profile', profile: SELF });
+    else if (d === 'relays') push({ type: 'relays' });
+    else if (d === 'wallet') { setOverlays([]); setTab('wallet'); }
+    else if (d === 'notifications') push({ type: 'notifSettings' });
+    else if (d === 'dashboard') push({ type: 'dashboard' });
+  };
 
-  // Handle zap
-  const handleZap = useCallback((amount: number) => {
-    setWalletBalance(prev => prev - amount);
-    showToast(`Zapped ${amount.toLocaleString()} sats! ⚡`, 'success');
-  }, [showToast]);
-
-  // Handle receive
-  const handleReceive = useCallback((amount: number) => {
-    setWalletBalance(prev => prev + amount);
-    showToast(`Received ${amount.toLocaleString()} sats! ⚡`, 'success');
-  }, [showToast]);
-
-  // Handle tour commands
+  // Tour command bridge (interface preserved)
   useEffect(() => {
     if (!tourCommand) return;
-    
-    console.log('[YakiHonneSimulator] Processing command:', tourCommand);
-    
     switch (tourCommand.type) {
       case 'login':
-        if (!isAuthenticated) {
-          // Create mock user
-          const mockUser: MockUser = {
-            pubkey: 'npub1yakihonne123',
-            displayName: 'YakiHonne User',
-            username: 'yakihonneuser',
-            avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=yakihonne',
-            bio: 'Exploring Nostr with YakiHonne',
-            followersCount: 88,
-            followingCount: 44,
-            createdAt: Date.now() / 1000,
-            lastActive: Date.now() / 1000,
-          };
-          handleLogin(mockUser);
-        }
+        if (!authed) login();
         break;
-        
-      case 'navigate':
-        const tab = tourCommand.payload as TabId;
-        if (['feed', 'articles', 'media', 'profile', 'wallet', 'settings'].includes(tab)) {
-          setActiveTab(tab);
-        }
+      case 'navigate': {
+        const p = tourCommand.payload as string;
+        if (p === 'feed' || p === 'home') goTab('home');
+        else if (p === 'profile') { setOverlays([{ type: 'profile', profile: SELF }]); }
+        else if (p === 'settings') { setOverlays([{ type: 'settings' }]); }
+        else if (p === 'wallet') { setOverlays([]); setTab('wallet'); }
         break;
-        
+      }
       case 'compose':
-        if (isAuthenticated) {
-          setComposeType('post');
-          setIsComposeOpen(true);
-        }
+        setOverlays((s) => [...s, { type: 'compose', replyTo: null }]);
         break;
-        
       case 'post':
-        if (isAuthenticated) {
-          setComposeType('post');
-          setIsComposeOpen(true);
-          // Simulate post after a short delay
-          setTimeout(() => {
-            handleNewPost('Tour test post!', 'post');
-          }, 500);
-        }
+        setOverlays([]); setTab('home'); showToast('Note published! 🎉');
         break;
-        
       case 'viewProfile':
-        if (isAuthenticated) {
-          setActiveTab('profile');
-        }
+        setOverlays([{ type: 'profile', profile: SELF }]);
         break;
     }
-    
-    // Mark command as handled
     onCommandHandled?.();
-  }, [tourCommand, isAuthenticated, handleLogin, handleNewPost, onCommandHandled]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tourCommand]);
 
-  // Render active screen
-  const renderScreen = () => {
-    const sessionUser = currentUser ? toSimulatorUser(currentUser) : null;
-    switch (activeTab) {
-      case 'feed':
+  const renderTab = () => {
+    switch (tab) {
+      case 'home':
         return (
-          <FeedScreen
-            key="feed"
-            onOpenCompose={() => handleOpenCompose('post')}
-            onZap={handleZap}
-            composedPosts={composedPosts}
-          />
-        );
-      case 'articles':
-        return (
-          <ArticlesScreen
-            key="articles"
-            onOpenCompose={() => handleOpenCompose('article')}
-            onZap={handleZap}
+          <HomeScreen
+            currentUserSeed={SELF.seed} source={source} onSource={setSource}
+            onOpenDrawer={() => setDrawerOpen(true)} onOpenSearch={() => push({ type: 'search' })}
+            onOpenThread={openThread} onOpenArticle={openArticle} onViewProfile={viewProfile}
+            onReply={openReply} onZap={doZap}
           />
         );
       case 'media':
-        return (
-          <MediaScreen 
-            key="media"
-            onOpenCompose={() => handleOpenCompose('media')}
-          />
-        );
-      case 'profile':
-        if (!sessionUser) return null;
-        return (
-          <ProfileScreen
-            key="profile"
-            user={sessionUser}
-            onOpenSettings={() => setActiveTab('settings')}
-            composedPosts={composedPosts}
-          />
-        );
+        return <MediaScreen currentUserSeed={SELF.seed} onOpenDrawer={() => setDrawerOpen(true)} onOpenSearch={() => push({ type: 'search' })} />;
       case 'wallet':
-        return (
-          <WalletScreen 
-            key="wallet"
-            balance={walletBalance}
-            onZap={handleZap}
-            onReceive={handleReceive}
-          />
-        );
-      case 'settings':
-        return (
-          <SettingsScreen 
-            key="settings"
-            theme={parentTheme}
-            onThemeChange={(newTheme: string) => console.log('Theme change:', newTheme)}
-            onBack={() => setActiveTab('profile')}
-          />
-        );
-      default:
-        return null;
+        return <WalletScreen currentUserSeed={SELF.seed} balance={balance} onOpenDrawer={() => setDrawerOpen(true)} />;
+      case 'dms':
+        return <MessagesScreen currentUserSeed={SELF.seed} onOpenDrawer={() => setDrawerOpen(true)} />;
+      case 'notifications':
+        return <NotificationsScreen currentUserSeed={SELF.seed} onOpenDrawer={() => setDrawerOpen(true)} onOpenNotifSettings={() => push({ type: 'notifSettings' })} />;
     }
   };
 
-  const navItems: { id: TabId; icon: React.ElementType; label: string }[] = [
-    { id: 'feed', icon: Home, label: 'Feed' },
-    { id: 'articles', icon: FileText, label: 'Articles' },
-    { id: 'media', icon: Image, label: 'Media' },
-    { id: 'wallet', icon: Wallet, label: 'Wallet' },
-    { id: 'profile', icon: User, label: 'Profile' },
-  ];
+  const renderOverlay = (o: Overlay) => {
+    switch (o.type) {
+      case 'compose':
+        return <ComposeSheet currentUserSeed={SELF.seed} replyTo={o.replyTo} onClose={pop} onPost={() => { registerAction('post'); pop(); showToast('Note published! 🎉'); }} />;
+      case 'thread':
+        return <ThreadScreen note={o.note} onBack={pop} onViewProfile={viewProfile} onReply={openReply} onZap={doZap} />;
+      case 'article':
+        return <ArticleReader article={o.article} onBack={pop} onViewProfile={viewProfile} />;
+      case 'profile':
+        return <ProfileScreen profile={o.profile} onBack={pop} onOpenThread={openThread} onReply={openReply} onZap={doZap} />;
+      case 'search':
+        return <SearchScreen onBack={pop} onViewProfile={viewProfile} />;
+      case 'settings':
+        return <SettingsScreen currentUserSeed={SELF.seed} onBack={pop} onNav={onSettingsNav} onToast={showToast} />;
+      case 'notifSettings':
+        return <NotificationSettingsScreen onBack={pop} />;
+      case 'relays':
+        return <RelaysScreen onBack={pop} />;
+      case 'dashboard':
+        return <DashboardScreen currentUserSeed={SELF.seed} onBack={pop} />;
+    }
+  };
 
-  // Show login screen if not authenticated
-  if (!isAuthenticated) {
-    return (
-      <div className={`yakihonne-simulator ${parentTheme === 'dark' ? 'dark' : ''} ${className}`}>
-        <LoginScreen onLogin={handleLogin} />
-      </div>
-    );
-  }
+  const showTabBar = authed && overlays.length === 0 && !drawerOpen;
 
   return (
-    <div 
-      className={`yakihonne-simulator ${parentTheme === 'dark' ? 'dark' : ''} ${className}`}
-      data-theme={parentTheme}
-    >
-      {/* Main Content Area */}
-      <div className="yakihonne-content pb-20">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="h-full"
-          >
-            {renderScreen()}
-          </motion.div>
-        </AnimatePresence>
-      </div>
+    <div className={`yakihonne-simulator ${className}`} data-theme={parentTheme}>
+      {!authed ? (
+        <LoginScreen onLogin={login} />
+      ) : (
+        <>
+          <div className="yakihonne-content">{renderTab()}</div>
 
-      {/* Floating Action Button - Only show on Feed, Articles, Media */}
-      <AnimatePresence>
-        {(activeTab === 'feed' || activeTab === 'articles' || activeTab === 'media') && !isComposeOpen && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="yakihonne-fab"
-            onClick={() => handleOpenCompose(
-              activeTab === 'articles' ? 'article' : 
-              activeTab === 'media' ? 'media' : 
-              'post'
-            )}
-          >
-            <Plus className="w-6 h-6" />
-          </motion.button>
-        )}
-      </AnimatePresence>
+          {overlays.map((o, i) => (
+            <React.Fragment key={i}>{i === overlays.length - 1 && renderOverlay(o)}</React.Fragment>
+          ))}
 
-      {/* Bottom Navigation */}
-      <nav className="yakihonne-bottom-nav">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.id}
-              onClick={() => handleTabChange(item.id)}
-              className={`yakihonne-nav-item ${activeTab === item.id ? 'active' : ''}`}
-            >
-              <Icon className="w-6 h-6" />
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
-      </nav>
+          {drawerOpen && <Drawer seed={SELF.seed} onClose={() => setDrawerOpen(false)} onNav={onDrawerNav} />}
 
-      {/* Compose Modal */}
-      <ComposeScreen
-        isOpen={isComposeOpen}
-        onClose={() => setIsComposeOpen(false)}
-        onPost={handleNewPost}
-        initialType={composeType}
-        author={currentUser ? toSimulatorUser(currentUser) : undefined}
-      />
+          {showTabBar && <TabBar active={tab} onNavigate={goTab} onCompose={() => openCompose()} />}
 
-      {/* Toast Notification */}
-      <AnimatePresence>
-        {toast.isVisible && (
-          <motion.div
-            initial={{ opacity: 0, y: 50, x: '-50%' }}
-            animate={{ opacity: 1, y: 0, x: '-50%' }}
-            exit={{ opacity: 0, y: 20, x: '-50%' }}
-            className="yakihonne-toast"
-          >
-            {toast.type === 'success' && <Zap className="w-4 h-4 text-yellow-400" />}
-            <span>{toast.message}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {toast && (
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-24 z-[80] flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[var(--yh-surface-2)] text-[var(--yh-text)] text-[14px] font-medium shadow-lg">
+              <ZapIcon filled className="w-4 h-4 text-[var(--yh-orange)]" />{toast}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

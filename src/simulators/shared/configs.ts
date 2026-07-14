@@ -119,10 +119,10 @@ export const snortConfig: SimulatorConfig = {
 export const yakihonneConfig: SimulatorConfig = {
   id: SimulatorClient.YAKIHONNE,
   name: 'YakiHonne',
-  description: 'Mobile-first Nostr client with unique social features.',
+  description: 'Article-centric mobile Nostr client with wallet, curations & smart widgets.',
   platform: 'ios',
-  primaryColor: '#7C3AED', // Purple/violet (YakiHonne brand)
-  secondaryColor: '#8B5CF6',
+  primaryColor: '#EE7700', // Orange — real YakiHonne default accent (kMainColor). Purple is only the logo/app-icon.
+  secondaryColor: '#86318C',
   icon: '/icons/yakihonne.svg',
   supportedFeatures: [
     SimulatorFeature.DM,

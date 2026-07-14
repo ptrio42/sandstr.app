@@ -1,264 +1,127 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Settings, MapPin, Link as LinkIcon, Zap, Users, FileText, Image as ImageIcon, Heart } from 'lucide-react';
-import { ContentTabs } from '../components/ContentTabs';
-import { NoteCard } from '../../../simulators/shared/components/NoteCard';
-import type { SimulatorUser, SimulatorFeedItem } from '../../shared/types';
+import { Avatar } from '../components/Avatar';
+import { NoteCard } from '../components/NoteCard';
+import {
+  ChevronLeftIcon, EllipsisVIcon, VerifiedRosette, Nip05Badge, LinkIcon, QrIcon, PersonIcon, ZapIcon,
+} from '../components/icons';
+import { homeNotes } from '../data';
 
-interface ProfileScreenProps {
-  user: SimulatorUser;
-  onOpenSettings: () => void;
-  /** Posts composed by the logged-in user during this session. */
-  composedPosts?: SimulatorFeedItem[];
+export interface YakiProfile {
+  seed: string;
+  name: string;
+  nip05?: boolean;
+  nip05addr?: string;
+  website?: string;
+  bio?: string;
+  followings: string;
+  followers: string;
+  isSelf?: boolean;
+  followsYou?: boolean;
 }
 
-/**
- * Base mock posts for the profile. Authorship is filled in at render time from
- * the logged-in user so identity stays consistent (no hardcoded "Satoshi").
- */
-const baseUserPosts: Array<{
-  id: string;
-  content: string;
-  ageSeconds: number;
-  likes: number;
-  reposts: number;
-  replies: number;
-  zaps: number;
-  zapAmount: number;
-  hashtags: string[];
-}> = [
-  {
-    id: 'post1',
-    content: 'Working on something big for the Nostr community. Stay tuned! 🚀',
-    ageSeconds: 3600,
-    likes: 234,
-    reposts: 45,
-    replies: 23,
-    zaps: 56,
-    zapAmount: 10000,
-    hashtags: ['Nostr'],
-  },
-  {
-    id: 'post2',
-    content: 'Just published a new long-form piece on YakiHonne. Owning your content feels good. #Nostr #Writing',
-    ageSeconds: 86400,
-    likes: 512,
-    reposts: 88,
-    replies: 41,
-    zaps: 120,
-    zapAmount: 42000,
-    hashtags: ['Nostr', 'Writing'],
-  },
-];
+const TABS = ['Notes', 'Articles', 'Media', 'Others'] as const;
+const SUBTABS = ['Pinned', 'Notes', 'Replies', 'Mentions'] as const;
 
-export function ProfileScreen({ user, onOpenSettings, composedPosts = [] }: ProfileScreenProps) {
-  const [activeTab, setActiveTab] = useState<'posts' | 'articles' | 'media' | 'likes'>('posts');
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [likedNotes, setLikedNotes] = useState<Set<string>>(new Set());
+interface Props {
+  profile: YakiProfile;
+  onBack: () => void;
+  onOpenThread: (id: string) => void;
+  onReply: () => void;
+  onZap: (sats: number) => void;
+}
 
-  const handleLike = (noteId: string) => {
-    setLikedNotes(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(noteId)) {
-        newSet.delete(noteId);
-      } else {
-        newSet.add(noteId);
-      }
-      return newSet;
-    });
-  };
+export const ProfileScreen: React.FC<Props> = ({ profile, onBack, onOpenThread, onReply, onZap }) => {
+  const [tab, setTab] = useState<(typeof TABS)[number]>('Notes');
+  const [sub, setSub] = useState<(typeof SUBTABS)[number]>('Notes');
 
-  const formatNumber = (num: number): string => {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-    return num.toString();
-  };
-
-  // Build the logged-in user's own posts so authorship reflects who is logged in.
-  const ownPosts: SimulatorFeedItem[] = baseUserPosts.map((p) => ({
-    id: p.id,
-    type: 'note',
-    note: {
-      id: p.id,
-      pubkey: user.pubkey,
-      created_at: Date.now() / 1000 - p.ageSeconds,
-      kind: 1,
-      tags: [],
-      content: p.content,
-      sig: `sig-${p.id}`,
-      likes: p.likes,
-      reposts: p.reposts,
-      replies: p.replies,
-      zaps: p.zaps,
-      zapAmount: p.zapAmount,
-      images: [],
-      hashtags: p.hashtags,
-      category: 'nostr' as const,
-    },
-    author: user,
-    isRead: false,
-    timestamp: Date.now() / 1000 - p.ageSeconds,
-  }));
-
-  const userPosts: SimulatorFeedItem[] = [...composedPosts, ...ownPosts];
+  const notes = homeNotes.filter((n) => n.seed === profile.seed);
+  const list = notes.length ? notes : homeNotes.slice(0, 3).map((n) => ({ ...n, seed: profile.seed, name: profile.name }));
 
   return (
-    <div className="flex flex-col h-full" data-tour="yakihonne-profile">
-      {/* Header */}
-      <div className="yakihonne-header">
-        <div className="flex items-center gap-3">
-          <button 
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            onClick={onOpenSettings}
-          >
-            <Settings className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+    <div className="absolute inset-0 z-[55] bg-[var(--yh-bg)] overflow-y-auto" data-tour="yakihonne-profile">
+      {/* banner */}
+      <div className="relative h-40">
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(120deg,#7a117e 0%,#b026c9 45%,#5b1170 100%)' }} />
+        <div className="absolute inset-0 flex items-center justify-center text-white/25 text-[46px] font-black tracking-[0.5em] select-none">NOSTR</div>
+        <button onClick={onBack} aria-label="Back" className="absolute top-3 left-3 w-9 h-9 rounded-full bg-black/45 flex items-center justify-center text-white"><ChevronLeftIcon className="w-5 h-5" /></button>
+        <button aria-label="More" className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/45 flex items-center justify-center text-white"><EllipsisVIcon className="w-5 h-5" /></button>
+      </div>
+
+      <div className="px-4">
+        {/* avatar + action */}
+        <div className="flex items-start justify-between -mt-9">
+          <Avatar seed={profile.seed} className="w-[86px] h-[86px] ring-4 ring-[var(--yh-bg)]" rounded="rounded-2xl" />
+          <button className={`mt-11 px-5 py-2 rounded-xl text-[15px] font-semibold ${profile.isSelf ? 'bg-[var(--yh-surface-2)] text-[var(--yh-text)]' : 'yakihonne-btn-orange'}`} data-tour="yakihonne-follow">
+            {profile.isSelf ? 'Edit profile' : 'Follow'}
           </button>
-          <span className="yakihonne-header-title">Profile</span>
+        </div>
+
+        {/* name */}
+        <div className="flex items-center gap-2 mt-2.5">
+          <span className="text-[24px] font-extrabold">{profile.name}</span>
+          {profile.nip05 && <VerifiedRosette className="w-[19px] h-[19px]" />}
+          <QrIcon className="w-[18px] h-[18px] text-[var(--yh-text-2)]" />
+        </div>
+
+        {/* nip05 + website */}
+        {profile.nip05addr && (
+          <div className="flex items-center gap-2 mt-2 text-[15px]">
+            <Nip05Badge className="w-[18px] h-[18px] text-[var(--yh-text-2)]" />
+            <span className="text-[var(--yh-text)]">{profile.nip05addr}</span>
+          </div>
+        )}
+        {profile.website && (
+          <div className="flex items-center gap-2 mt-1.5 text-[15px]">
+            <LinkIcon className="w-[17px] h-[17px] text-[var(--yh-text-2)]" />
+            <span className="text-[var(--yh-text)]">{profile.website}</span>
+          </div>
+        )}
+
+        {profile.bio && <p className="text-[15px] mt-2.5">{profile.bio}</p>}
+
+        {/* counts */}
+        <div className="flex items-center gap-4 mt-3 text-[15px]">
+          <span className="flex items-center gap-1.5 text-[var(--yh-text-2)]">
+            <PersonIcon className="w-4 h-4" />
+            <span className="font-bold text-[var(--yh-text)]">{profile.followings}</span> Followings
+          </span>
+          <span className="text-[var(--yh-text-2)]"><span className="font-bold text-[var(--yh-text)]">{profile.followers}</span> Followers</span>
+          {profile.followsYou && <span className="text-[12px] px-2 py-1 rounded-md bg-[var(--yh-surface-2)] text-[var(--yh-text-2)]">Follows you</span>}
+        </div>
+
+        {/* main tabs */}
+        <div className="flex gap-6 mt-4 border-b border-[var(--yh-divider)]">
+          {TABS.map((t) => (
+            <button key={t} onClick={() => setTab(t)} className={`pb-2.5 text-[16px] font-semibold ${tab === t ? 'yakihonne-seg-active' : 'text-[var(--yh-text-2)]'}`}>{t}</button>
+          ))}
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        {/* Profile Header */}
-        <div className="bg-[var(--yh-surface)] pb-4">
-          {/* Cover Image */}
-          <div className="h-32 bg-gradient-to-br from-[var(--yh-primary)] to-[var(--yh-primary-dark)]" />
-          
-          {/* Avatar and Actions */}
-          <div className="px-4 -mt-12">
-            <div className="flex justify-between items-end">
-              <img
-                src={user.avatar}
-                alt={user.displayName}
-                className="w-24 h-24 rounded-full border-4 border-[var(--yh-surface)] bg-gray-200"
-              />
-              <button
-                onClick={() => setIsFollowing(!isFollowing)}
-                className={`yakihonne-btn ${isFollowing ? 'yakihonne-btn-secondary' : 'yakihonne-btn-primary'} mb-2`}
-              >
-                {isFollowing ? 'Following' : 'Follow'}
-              </button>
-            </div>
-          </div>
-
-          {/* User Info */}
-          <div className="px-4 mt-3">
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-[var(--yh-text-primary)]">
-                {user.displayName}
-              </h1>
-              {user.isVerified && (
-                <span className="text-[var(--yh-primary)]">
-                  <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                </span>
-              )}
-            </div>
-            
-            <p className="text-[var(--yh-text-secondary)] text-sm">
-              @{user.username}
-              {user.nip05 && <span className="text-[var(--yh-primary)]"> ✓ {user.nip05}</span>}
-            </p>
-
-            <p className="mt-2 text-[var(--yh-text-primary)]">{user.bio}</p>
-
-            {/* Meta Info */}
-            <div className="flex flex-wrap gap-4 mt-3 text-sm text-[var(--yh-text-secondary)]">
-              {user.location && (
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-4 h-4" />
-                  {user.location}
-                </span>
-              )}
-              {user.website && (
-                <span className="flex items-center gap-1">
-                  <LinkIcon className="w-4 h-4" />
-                  <a href={user.website} className="text-[var(--yh-primary)] hover:underline">
-                    {user.website.replace(/^https?:\/\//, '')}
-                  </a>
-                </span>
-              )}
-              {user.lightningAddress && (
-                <span className="flex items-center gap-1">
-                  <Zap className="w-4 h-4 text-[var(--yh-primary)]" />
-                  {user.lightningAddress}
-                </span>
-              )}
-            </div>
-
-            {/* Stats */}
-            <div className="flex gap-6 mt-4">
-              <div className="flex items-center gap-1">
-                <span className="font-bold text-[var(--yh-text-primary)]">{formatNumber(user.followingCount)}</span>
-                <span className="text-[var(--yh-text-secondary)]">Following</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="font-bold text-[var(--yh-text-primary)]">{formatNumber(user.followersCount)}</span>
-                <span className="text-[var(--yh-text-secondary)]">Followers</span>
-              </div>
-            </div>
-          </div>
+      {/* sub-tabs (Notes) */}
+      {tab === 'Notes' && (
+        <div className="flex gap-2 px-4 py-3">
+          {SUBTABS.map((s) => (
+            <button key={s} onClick={() => setSub(s)} className={`px-3.5 py-1.5 rounded-lg text-[14px] font-medium ${sub === s ? 'bg-[var(--yh-surface-2)] text-[var(--yh-text)]' : 'text-[var(--yh-text-2)]'}`}>{s}</button>
+          ))}
         </div>
+      )}
 
-        {/* Content Tabs */}
-        <ContentTabs
-          tabs={[
-            { id: 'posts', label: 'Posts', icon: FileText },
-            { id: 'articles', label: 'Articles', icon: FileText },
-            { id: 'media', label: 'Media', icon: ImageIcon },
-            { id: 'likes', label: 'Likes', icon: Heart },
-          ]}
-          activeTab={activeTab}
-          onTabChange={(tab) => setActiveTab(tab as typeof activeTab)}
-        />
-
-        {/* Tab Content */}
-        <div className="p-3">
-          {activeTab === 'posts' && (
-            <div className="space-y-3">
-              {userPosts.map((item) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                >
-                  <NoteCard
-                    item={item}
-                    compact={false}
-                    showActions={true}
-                    isLiked={likedNotes.has(item.id)}
-                    onLike={() => handleLike(item.id)}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          )}
-          
-          {activeTab === 'articles' && (
-            <div className="text-center py-12 text-[var(--yh-text-tertiary)]">
-              <FileText className="w-16 h-16 mx-auto mb-4 opacity-50" />
-              <p>No articles yet</p>
-            </div>
-          )}
-          
-          {activeTab === 'media' && (
-            <div className="text-center py-12 text-[var(--yh-text-tertiary)]">
-              <ImageIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
-              <p>No media yet</p>
-            </div>
-          )}
-          
-          {activeTab === 'likes' && (
-            <div className="text-center py-12 text-[var(--yh-text-tertiary)]">
-              <Heart className="w-16 h-16 mx-auto mb-4 opacity-50" />
-              <p>No liked posts yet</p>
-            </div>
-          )}
+      {tab === 'Notes' ? (
+        <div>
+          {list.map((n) => (
+            <NoteCard key={n.id} note={n} onOpenThread={() => onOpenThread(n.id)} onReply={onReply} onZap={onZap} />
+          ))}
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <ZapIcon className="w-9 h-9 text-[var(--yh-text-3)]" />
+          <div className="text-[17px] font-bold mt-3">Oops! Nothing to show here!</div>
+          <div className="text-[15px] text-[var(--yh-text-2)]">{tab}</div>
+        </div>
+      )}
+      <div className="h-16" />
     </div>
   );
-}
+};
 
 export default ProfileScreen;
