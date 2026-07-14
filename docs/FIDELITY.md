@@ -12,6 +12,22 @@
 4. **Wpompuj realne tokeny do `src/simulators/<client>/<client>.theme.css`.** Architektura jest token-driven → wierność to głównie podmiana wartości, nie przepisywanie.
 5. **Weryfikacja side-by-side.** Render obok realnego screena/żywej strony (`preview_start` config `sandstr`, port 5173) — nie obok pamięci. To był brakujący krok.
 
+## Techniki wykonawcze (recording → klatki, recon repo, weryfikacja)
+
+> Sprawdzone na **Amethyście** (8 powierzchni) i **Damusie** (11). To „jak" do powyższego „co".
+
+1. **Referencja LAYOUTU = realny render, nie pamięć.** Mobile → poproś użytkownika o screen-RECORDING lub screeny do `docs/refs/<client>/shots/` (gitignore surowe `*.mp4` + `frames/`/`full/`/`sheet_*.jpg`; commituj tylko labelowane PNG + `screen-map.md`). Web = Cloudflare SPA → **`WebFetch` zwraca pustą skorupę**; potrzeba screenów od usera albo live-capture przez `claude-in-chrome`. Repo zawsze czytelne (raw.githubusercontent); web-klienci (Snort/Primal/Coracle) są React/TS → **port, nie translacja** (czytaj `index.css`/`*.scss` + komponenty TSX wprost).
+
+2. **Klatki z nagrania — maszyna ma `ffmpeg`, NIE ma ImageMagick** (`montage`/`convert` brak). Scene-detect: `ffmpeg -i in.MP4 -vf "select='gt(scene,0.15)',showinfo" -vsync vfr frames/scene_%03d.jpg`. Contact-sheet **filtrem `tile` ffmpega** (nie IM): `ffmpeg -pattern_type sequence -start_number 1 -i "frames/scene_%03d.jpg" -frames:v 1 -vf "scale=230:-1,tile=5x5:padding=6:margin=6:color=0x222222" sheet.jpg`. Czytaj sheety → potem pojedyncze klatki full-res kluczowych ekranów.
+
+3. **Recon repo = background `Workflow`** (Ultracode = zawsze Workflow). ~8 agentów, 1 na powierzchnię/zagadnienie (kolory→dokładne heksy, bottom-nav, action-bar, drawer, search, notifications, relays, logo/login) czyta źródło (raw + WebSearch); 1 agent-synteza scala → zapis **verbatim** do `docs/refs/<client>/screen-map.md` (commituj — to autorytatywny spec). Konwertuj komponenty kolorów Swift/Kotlin (0–1 lub 0–255) na hex. Damus: 9 agentów, ~0,5 mln tokenów, dokładne heksy z `DamusColors.swift`.
+
+4. **Reguła [REC vs REPO]:** **recording wygrywa o LAYOUT, repo o dokładny HEX / nazwy ikon-assetów / labelki.** Realne przypadki (Damus): 4-tab bar + osobny compose-FAB (nie center-post z nowszego mastera); ikona person-check, nie network/shield; `7/13` mimo że master pokazuje tylko słupki sygnału.
+
+5. **Weryfikacja (definition of done):** `npm run build` (pokaż output) + `npx tsc --noEmit 2>&1 | grep simulators/<client>` (build NIE jest bramką typów). Live click-through w podglądzie, **0 błędów w konsoli**, live-DOM `document.querySelectorAll('.<client>-simulator button button').length===0` (bufor konsoli podglądu NIE czyści się po reloadzie → ufaj live-DOM, nie staremu logowi). Overlaye (compose/thread/drawer/settings) renderuj w stanie **KOŃCOWYM** (plain div, bez enter-animacji) — podgląd zamraża framer ORAZ CSS `@keyframes` na klatce 0.
+
+6. **Gotcha serwera podglądu:** stały `--port N --strictPort` w `.claude/launch.json` — Vite **ignoruje `PORT`** z harnessu, więc `autoPort` zostawia proxy bez celu → pusty `chrome-error`. 5173 bywa zajęte przez własny `npm run dev` usera — nie przejmuj portu (użyj np. 5180 i przywróć launch.json po weryfikacji). Steruj symulatorem po **konkretnych** selektorach (`.<client>-fab`, `[aria-label="…"]`), nie „pierwszym buttonie" — JS `.click()` omija z-index i trafia w element pod overlayem.
+
 ## Fundament cross-cutting (podnosi wszystkie sim naraz)
 
 - **Lokalne assety (leverage #1).** ~45 plików hotlinkuje `api.dicebear.com`; `getSampleImages` (`src/data/mock/utils.ts:184`) zwraca fake/remote URL-e → pod strict CSP i offline avatary/media znikają, co czyta się jako „fake". Warstwa mocków **ma już** CSP-safe `generateAvatarGradient` (`utils.ts:152`), ale ekrany go omijają. → jeden obowiązkowy `<Avatar>` + zbundlowane obrazy.
