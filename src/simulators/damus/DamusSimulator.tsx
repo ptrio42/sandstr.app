@@ -1,30 +1,29 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useCallback } from 'react';
 import './damus.theme.css';
 import { mockUsers, mockNotes } from '../../data/mock';
 import type { MockUser, MockNote } from '../../data/mock';
-import { LoginScreen } from './screens/LoginScreen';
-import { HomeScreen } from './screens/HomeScreen';
-import { ProfileScreen } from './screens/ProfileScreen';
-import { ComposeScreen } from './screens/ComposeScreen';
-import { SettingsScreen } from './screens/SettingsScreen';
-import { TabBar } from './components/TabBar';
 import { useParentTheme } from '../shared/hooks/useParentTheme';
 import { TourContext } from '../../components/tour';
 
+import { LoginScreen } from './screens/LoginScreen';
+import { HomeScreen } from './screens/HomeScreen';
+import { DMScreen } from './screens/DMScreen';
+import { SearchScreen } from './screens/SearchScreen';
+import { NotificationsScreen } from './screens/NotificationsScreen';
+import { ComposeScreen } from './screens/ComposeScreen';
+import { ThreadScreen } from './screens/ThreadScreen';
+import { ProfileScreen } from './screens/ProfileScreen';
+import { RelaysScreen } from './screens/RelaysScreen';
+import { BookmarksScreen } from './screens/BookmarksScreen';
+import { SettingsScreen } from './screens/SettingsScreen';
+import { SideMenu, type MenuDest } from './screens/SideMenu';
+import { TabBar, type DamusTab } from './components/TabBar';
+
 export type DamusScreen = 'login' | 'home' | 'profile' | 'compose' | 'settings';
 
-// Types for tour command system
 export interface DamusSimulatorCommand {
   type: 'login' | 'navigate' | 'compose' | 'post' | 'viewProfile' | 'back';
   payload?: any;
-}
-
-interface DamusSimulatorState {
-  currentUser: MockUser | null;
-  currentScreen: DamusScreen;
-  selectedProfile: MockUser | null;
-  isAuthenticated: boolean;
-  replyingToNote: MockNote | null;
 }
 
 export interface DamusSimulatorProps {
@@ -33,225 +32,148 @@ export interface DamusSimulatorProps {
   onCommandHandled?: () => void;
 }
 
-export const DamusSimulator: React.FC<DamusSimulatorProps> = ({ 
-  className = '', 
-  tourCommand, 
-  onCommandHandled 
-}) => {
+type Overlay =
+  | { type: 'compose'; replyTo?: MockNote | null }
+  | { type: 'thread'; note: MockNote }
+  | { type: 'profile'; user: MockUser }
+  | { type: 'relays' }
+  | { type: 'bookmarks' }
+  | { type: 'settings' };
+
+export const DamusSimulator: React.FC<DamusSimulatorProps> = ({ className = '', tourCommand, onCommandHandled }) => {
   const parentTheme = useParentTheme();
   const tourContext = useContext(TourContext);
-  const registerAction = (actionType: string) => {
-    if (tourContext?.registerAction) {
-      tourContext.registerAction(actionType);
-    }
-  };
-  const [state, setState] = useState<DamusSimulatorState>({
-    currentUser: null,
-    currentScreen: 'login',
-    selectedProfile: null,
-    isAuthenticated: false,
-    replyingToNote: null,
-  });
+  const registerAction = (a: string) => tourContext?.registerAction?.(a);
 
-  // Handle tour commands
+  const [authed, setAuthed] = useState(false);
+  const [currentUser, setCurrentUser] = useState<MockUser | null>(null);
+  const [tab, setTab] = useState<DamusTab>('home');
+  const [overlays, setOverlays] = useState<Overlay[]>([]);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const push = useCallback((o: Overlay) => setOverlays((s) => [...s, o]), []);
+  const pop = useCallback(() => setOverlays((s) => s.slice(0, -1)), []);
+
+  const goTab = useCallback((t: DamusTab) => { setOverlays([]); setDrawerOpen(false); setTab(t); }, []);
+  const openThread = (note: MockNote) => push({ type: 'thread', note });
+  const openProfile = (user: MockUser) => { registerAction('view_profile'); push({ type: 'profile', user }); };
+  const openCompose = (replyTo?: MockNote | null) => { registerAction('compose'); push({ type: 'compose', replyTo }); };
+  const openRelays = () => push({ type: 'relays' });
+
+  const login = useCallback((user: MockUser) => {
+    setCurrentUser(user); setAuthed(true); setTab('home'); setOverlays([]);
+    registerAction('login'); registerAction('navigate_home');
+  }, []);
+
+  const logout = () => { setAuthed(false); setCurrentUser(null); setOverlays([]); setDrawerOpen(false); };
+
+  const handleMenu = (d: MenuDest) => {
+    setDrawerOpen(false);
+    if (d === 'profile' && currentUser) openProfile(currentUser);
+    else if (d === 'relays') openRelays();
+    else if (d === 'bookmarks') push({ type: 'bookmarks' });
+    else if (d === 'settings') { registerAction('navigate_settings'); push({ type: 'settings' }); }
+    else if (d === 'logout') logout();
+  };
+
+  // Tour command bridge (interface preserved)
   useEffect(() => {
     if (!tourCommand) return;
-    
-    console.log('[DamusSimulator] Processing command:', tourCommand);
-    
     switch (tourCommand.type) {
       case 'login':
-        if (!state.isAuthenticated) {
-          // Simulate login with mock user
-          const mockUser = mockUsers[0];
-          setState(prev => ({
-            ...prev,
-            currentUser: mockUser,
-            isAuthenticated: true,
-            currentScreen: 'home',
-          }));
-          console.log('[Damus] Auto-logged in as:', mockUser.username);
-        }
+        if (!authed) login(mockUsers[0]);
         break;
-        
-      case 'navigate':
-        const screen = tourCommand.payload as DamusScreen;
-        if (['home', 'profile', 'settings'].includes(screen)) {
-          setState(prev => ({ ...prev, currentScreen: screen }));
-          console.log('[Damus] Navigated to:', screen);
-        }
+      case 'navigate': {
+        const s = tourCommand.payload as DamusScreen;
+        if (s === 'home') goTab('home');
+        else if (s === 'profile' && currentUser) { setOverlays([{ type: 'profile', user: currentUser }]); }
+        else if (s === 'settings') { setOverlays([{ type: 'settings' }]); }
         break;
-        
+      }
       case 'compose':
-        setState(prev => ({ ...prev, currentScreen: 'compose' }));
-        console.log('[Damus] Opened compose screen');
+        setOverlays((s) => [...s, { type: 'compose' }]);
         break;
-        
       case 'post':
-        // Simulate posting
-        setState(prev => ({ 
-          ...prev, 
-          currentScreen: 'home',
-          replyingToNote: null 
-        }));
-        console.log('[Damus] Posted content');
+        setOverlays([]); setTab('home');
         break;
-        
       case 'viewProfile':
-        if (state.isAuthenticated) {
-          setState(prev => ({
-            ...prev,
-            selectedProfile: state.currentUser,
-            currentScreen: 'profile',
-          }));
-          console.log('[Damus] Viewing profile');
-        }
+        if (currentUser) setOverlays([{ type: 'profile', user: currentUser }]);
         break;
-        
       case 'back':
-        setState(prev => ({ 
-          ...prev, 
-          currentScreen: 'home',
-          selectedProfile: null 
-        }));
+        setOverlays([]); setDrawerOpen(false); setTab('home');
         break;
     }
-    
-    // Mark command as handled
     onCommandHandled?.();
-  }, [tourCommand, state.isAuthenticated, state.currentUser, onCommandHandled]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tourCommand]);
 
-  const handleLogin = (user: MockUser) => {
-    setState(prev => ({
-      ...prev,
-      currentUser: user,
-      isAuthenticated: true,
-      currentScreen: 'home',
-    }));
-    registerAction('login');
-    registerAction('navigate_home');
-    console.log('[Damus] Logged in as:', user.username);
-  };
-
-  const handleLogout = () => {
-    setState({
-      currentUser: null,
-      currentScreen: 'login',
-      selectedProfile: null,
-      isAuthenticated: false,
-      replyingToNote: null,
-    });
-    console.log('[Damus] Logged out');
-  };
-
-  const navigateTo = (screen: DamusScreen) => {
-    setState(prev => ({ ...prev, currentScreen: screen }));
-    if (screen === 'home') registerAction('navigate_home');
-    if (screen === 'settings') registerAction('navigate_settings');
-    if (screen === 'compose') registerAction('compose');
-    console.log('[Damus] Navigate to:', screen);
-  };
-
-  const navigateToProfile = (user: MockUser) => {
-    setState(prev => ({
-      ...prev,
-      selectedProfile: user,
-      currentScreen: 'profile',
-    }));
-    registerAction('view_profile');
-    console.log('[Damus] View profile:', user.username);
-  };
-
-  const handlePost = (content: string) => {
-    if (state.replyingToNote) {
-      console.log('[Damus] Reply to', state.replyingToNote.id.slice(0, 8), ':', content);
-    } else {
-      console.log('[Damus] New post:', content);
-    }
-    registerAction('post');
-    setState(prev => ({ 
-      ...prev, 
-      currentScreen: 'home',
-      replyingToNote: null 
-    }));
-  };
-
-  const handleReply = (note: MockNote) => {
-    setState(prev => ({
-      ...prev,
-      replyingToNote: note,
-      currentScreen: 'compose',
-    }));
-    console.log('[Damus] Replying to note:', note.id.slice(0, 8));
-  };
-
-  const renderScreen = () => {
-    switch (state.currentScreen) {
-      case 'login':
-        return <LoginScreen onLogin={handleLogin} />;
+  const renderTab = () => {
+    const common = {
+      currentUser, users: mockUsers,
+      onOpenDrawer: () => setDrawerOpen(true),
+      onViewProfile: openProfile,
+    };
+    switch (tab) {
       case 'home':
-        return (
-          <HomeScreen
-            currentUser={state.currentUser}
-            notes={mockNotes}
-            users={mockUsers}
-            onNavigate={navigateTo}
-            onViewProfile={navigateToProfile}
-            onReply={handleReply}
-          />
-        );
-      case 'profile':
-        return (
-          <ProfileScreen
-            user={state.selectedProfile || state.currentUser}
-            currentUser={state.currentUser}
-            notes={mockNotes}
-            onNavigate={navigateTo}
-            onViewProfile={navigateToProfile}
-          />
-        );
-      case 'compose':
-        return (
-          <ComposeScreen
-            currentUser={state.currentUser}
-            onPost={handlePost}
-            onCancel={() => {
-              setState(prev => ({ ...prev, replyingToNote: null }));
-              navigateTo('home');
-            }}
-            replyTo={state.replyingToNote}
-          />
-        );
-      case 'settings':
-        return (
-          <SettingsScreen
-            currentUser={state.currentUser}
-            onLogout={handleLogout}
-            onNavigate={navigateTo}
-          />
-        );
-      default:
-        return <LoginScreen onLogin={handleLogin} />;
+        return <HomeScreen {...common} notes={mockNotes} onOpenThread={openThread} onReply={openCompose} onOpenRelays={openRelays} />;
+      case 'dms':
+        return <DMScreen {...common} />;
+      case 'search':
+        return <SearchScreen {...common} />;
+      case 'notifications':
+        return <NotificationsScreen {...common} notes={mockNotes} onOpenThread={openThread} onReply={openCompose} />;
     }
   };
+
+  const top = overlays[overlays.length - 1];
+  const showTabBar = authed && overlays.length === 0 && !drawerOpen;
 
   return (
-    <div 
-      className={`damus-simulator h-full ${parentTheme === 'dark' ? 'dark' : ''} ${className}`}
-      data-theme={parentTheme}
-    >
-      <div className="damus-content h-full pb-20">
-        {renderScreen()}
-      </div>
-      {state.isAuthenticated && state.currentScreen !== 'compose' && (
-        <TabBar
-          activeTab={state.currentScreen}
-          onNavigate={navigateTo}
-          onCompose={() => navigateTo('compose')}
-        />
+    <div className={`damus-simulator ${parentTheme === 'dark' ? 'dark' : ''} ${className}`} data-theme={parentTheme}>
+      {!authed ? (
+        <LoginScreen onLogin={login} />
+      ) : (
+        <>
+          <div className="damus-content">{renderTab()}</div>
+
+          {overlays.map((o, i) => (
+            <React.Fragment key={i}>
+              {i === overlays.length - 1 && renderOverlay(o)}
+            </React.Fragment>
+          ))}
+
+          {drawerOpen && (
+            <SideMenu currentUser={currentUser} onClose={() => setDrawerOpen(false)} onNav={handleMenu} />
+          )}
+
+          {showTabBar && (
+            <TabBar activeTab={tab} onNavigate={goTab} onCompose={() => openCompose()} />
+          )}
+        </>
       )}
     </div>
   );
+
+  function renderOverlay(o: Overlay) {
+    const noteFeedProps = {
+      notes: mockNotes, users: mockUsers,
+      onOpenThread: openThread, onViewProfile: openProfile, onReply: openCompose,
+    };
+    switch (o.type) {
+      case 'compose':
+        return <ComposeScreen currentUser={currentUser} users={mockUsers} replyTo={o.replyTo} onPost={() => { registerAction('post'); pop(); }} onCancel={pop} />;
+      case 'thread':
+        return <ThreadScreen note={o.note} currentUser={currentUser} {...noteFeedProps} onBack={pop} />;
+      case 'profile':
+        return <ProfileScreen user={o.user} currentUser={currentUser} {...noteFeedProps} onBack={pop} />;
+      case 'relays':
+        return <RelaysScreen onBack={pop} />;
+      case 'bookmarks':
+        return <BookmarksScreen {...noteFeedProps} onBack={pop} />;
+      case 'settings':
+        return <SettingsScreen currentUser={currentUser} onBack={pop} onLogout={logout} onOpenRelays={openRelays} />;
+    }
+  }
 };
 
 export default DamusSimulator;

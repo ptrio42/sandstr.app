@@ -15,8 +15,8 @@ export const damusConfig: SimulatorConfig = {
   name: 'Damus',
   description: 'The Nostr client for iOS. Clean, fast, and private.',
   platform: 'ios',
-  primaryColor: '#8B5CF6', // Purple
-  secondaryColor: '#A78BFA',
+  primaryColor: '#CC43C5', // DamusPurple (real brand accent)
+  secondaryColor: '#F869B6', // PinkGradient stop 2
   icon: '/icons/damus.png',
   supportedFeatures: [
     SimulatorFeature.DM,

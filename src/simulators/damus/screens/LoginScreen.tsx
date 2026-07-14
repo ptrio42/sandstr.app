@@ -1,200 +1,69 @@
 import React, { useState } from 'react';
 import type { MockUser } from '../../../data/mock';
 import { getRandomUsers } from '../../../data/mock';
+import { DamusLogo } from '../components/DamusLogo';
+import { CopyIcon } from '../components/icons';
 
-interface LoginScreenProps {
+interface Props {
   onLogin: (user: MockUser) => void;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
-  const [npubInput, setNpubInput] = useState('');
-  const [nsecInput, setNsecInput] = useState('');
-  const [activeTab, setActiveTab] = useState<'login' | 'generate'>('login');
-  const [generatedKeys, setGeneratedKeys] = useState<{ npub: string; nsec: string } | null>(null);
+export const LoginScreen: React.FC<Props> = ({ onLogin }) => {
+  const [view, setView] = useState<'home' | 'create'>('home');
+  const nsec = 'nsec1' + 'q7x9c2vk8m4n6p0'.repeat(1).slice(0, 52);
 
-  const handleLogin = () => {
-    // For demo, pick a random user
-    const randomUser = getRandomUsers(1)[0];
-    onLogin(randomUser);
-  };
-
-  const handleGenerateKeys = () => {
-    // Generate mock keys
-    const mockNpub = 'npub1' + Array(64).fill(0).map(() => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
-    const mockNsec = 'nsec1' + Array(64).fill(0).map(() => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
-    setGeneratedKeys({ npub: mockNpub, nsec: mockNsec });
-  };
-
-  const handleCopy = (text: string, type: string) => {
-    navigator.clipboard.writeText(text);
-    console.log(`[Damus] Copied ${type} to clipboard`);
-    alert(`${type} copied to clipboard!`);
-  };
-
-  const handleGeneratedLogin = () => {
-    if (generatedKeys) {
-      // Create a new user from generated keys
-      const newUser: MockUser = {
-        pubkey: generatedKeys.npub,
-        displayName: 'New User',
-        username: 'newuser',
-        avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${generatedKeys.npub}`,
-        bio: 'Just joined Nostr!',
-        followersCount: 0,
-        followingCount: 0,
-        createdAt: Math.floor(Date.now() / 1000),
-        lastActive: Math.floor(Date.now() / 1000),
-      };
-      onLogin(newUser);
-    }
-  };
+  const signIn = () => onLogin(getRandomUsers(1)[0]);
 
   return (
-    <div className="min-h-screen bg-[var(--damus-bg)] flex flex-col damus-safe-top damus-safe-bottom" data-tour="damus-login">
-      {/* Header */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
-        {/* Logo */}
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center mb-8 shadow-lg">
-          <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-          </svg>
+    <div className="absolute inset-0 z-[65] flex flex-col items-center justify-between bg-[var(--damus-bg)] px-7 pt-16 pb-10" data-tour="damus-login">
+      <div className="flex-1 flex flex-col items-center justify-center text-center">
+        <div style={{ filter: 'drop-shadow(0 0 3px rgba(204,67,197,0.7))' }}>
+          <DamusLogo className="w-16 h-16" />
         </div>
-        
-        <h1 className="text-3xl font-bold text-[var(--damus-text)] mb-2">Damus</h1>
-        <p className="text-[var(--damus-text-secondary)] text-center mb-12">The decentralized social network</p>
+        <h1
+          className="text-[32px] font-extrabold mt-5 tracking-tight text-transparent bg-clip-text"
+          style={{ backgroundImage: 'linear-gradient(90deg, #30B3F1 0%, #C539F9 100%)' }}
+        >
+          Welcome to Damus
+        </h1>
+        <p className="text-[17px] text-[var(--damus-text-secondary)] mt-2">The social network you control</p>
 
-        {/* Tabs */}
-        <div className="flex w-full max-w-sm mb-8 bg-[var(--damus-bg-secondary)] rounded-xl p-1">
-          <button
-            className={`flex-1 py-3 text-sm font-medium rounded-lg transition-all ${
-              activeTab === 'login' ? 'bg-[var(--damus-bg)] text-purple-600 shadow-sm' : 'text-[var(--damus-text-secondary)]'
-            }`}
-            onClick={() => setActiveTab('login')}
-          >
-            Sign In
-          </button>
-          <button
-            className={`flex-1 py-3 text-sm font-medium rounded-lg transition-all ${
-              activeTab === 'generate' ? 'bg-[var(--damus-bg)] text-purple-600 shadow-sm' : 'text-[var(--damus-text-secondary)]'
-            }`}
-            onClick={() => setActiveTab('generate')}
-          >
-            Create Account
-          </button>
-        </div>
-
-        {/* Login Form */}
-        {activeTab === 'login' && (
-          <div className="w-full max-w-sm space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-[var(--damus-text-secondary)] mb-2">
-                Public Key (npub)
-              </label>
-              <input
-                type="text"
-                value={npubInput}
-                onChange={(e) => setNpubInput(e.target.value)}
-                placeholder="npub1..."
-                className="damus-input"
-              />
+        {view === 'create' && (
+          <div className="w-full mt-8 text-left">
+            <div className="text-[13px] font-semibold uppercase tracking-wide text-[var(--damus-text-secondary)] mb-1">Your secret key (nsec)</div>
+            <div className="flex items-center gap-2 px-3 py-3 rounded-xl bg-[var(--damus-bg-secondary)]">
+              <code className="flex-1 text-[13px] text-[var(--damus-text)] break-all font-mono">{nsec}</code>
+              <CopyIcon className="w-5 h-5 text-[var(--damus-purple)] shrink-0" />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-[var(--damus-text-secondary)] mb-2">
-                Private Key (nsec)
-              </label>
-              <input
-                type="password"
-                value={nsecInput}
-                onChange={(e) => setNsecInput(e.target.value)}
-                placeholder="nsec1..."
-                className="damus-input"
-              />
-            </div>
-            <button
-              onClick={handleLogin}
-              className="damus-btn damus-btn-primary w-full mt-6"
-            >
-              Sign In
-            </button>
-            <p className="text-xs text-[var(--damus-text-tertiary)] text-center mt-4">
-              Demo: Click "Sign In" to use a mock account
-            </p>
-          </div>
-        )}
-
-        {/* Generate Keys Form */}
-        {activeTab === 'generate' && (
-          <div className="w-full max-w-sm">
-            {!generatedKeys ? (
-              <div className="text-center">
-                <p className="text-[var(--damus-text-secondary)] mb-6">
-                  Create a new Nostr identity with a public/private key pair.
-                </p>
-                <button
-                  onClick={handleGenerateKeys}
-                  className="damus-btn damus-btn-primary w-full"
-                >
-                  Generate New Keys
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-[var(--damus-text-secondary)] mb-2">
-                    Public Key (npub)
-                  </label>
-                  <div className="damus-key-display">
-                    <span className="text-[var(--damus-text-secondary)]">{generatedKeys.npub}</span>
-                    <button
-                      onClick={() => handleCopy(generatedKeys.npub, 'Public key')}
-                      className="copy-btn text-purple-600 hover:text-purple-700"
-                    >
-                      Copy
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[var(--damus-text-secondary)] mb-2">
-                    Private Key (nsec) - Keep Secret!
-                  </label>
-                  <div className="damus-key-display bg-red-50 border-red-200">
-                    <span className="text-[var(--damus-text-secondary)]">{generatedKeys.nsec}</span>
-                    <button
-                      onClick={() => handleCopy(generatedKeys.nsec, 'Private key')}
-                      className="copy-btn text-purple-600 hover:text-purple-700"
-                    >
-                      Copy
-                    </button>
-                  </div>
-                  <p className="text-xs text-red-500 mt-2">
-                    ⚠️ Save this somewhere safe! It cannot be recovered.
-                  </p>
-                </div>
-                <div className="flex gap-3 mt-6">
-                  <button
-                    onClick={() => setGeneratedKeys(null)}
-                    className="damus-btn damus-btn-secondary flex-1"
-                  >
-                    Back
-                  </button>
-                  <button
-                    onClick={handleGeneratedLogin}
-                    className="damus-btn damus-btn-primary flex-1"
-                  >
-                    Continue
-                  </button>
-                </div>
-              </div>
-            )}
+            <p className="text-[13px] text-[var(--damus-danger)] mt-2">⚠️ This is your password. Save it — it can never be recovered.</p>
           </div>
         )}
       </div>
 
-      {/* Footer */}
-      <div className="px-6 py-4 text-center">
-        <p className="text-xs text-[var(--damus-text-tertiary)]">
-          By signing in, you agree to the Terms of Service
-        </p>
+      <div className="w-full space-y-3">
+        {view === 'home' ? (
+          <>
+            <button onClick={() => setView('create')} className="damus-btn damus-btn-gradient w-full py-3.5 text-[17px]">
+              Create Account
+            </button>
+            <button onClick={signIn} className="damus-btn damus-btn-gradient w-full py-3.5 text-[17px]">
+              Sign In
+            </button>
+            <p className="text-[13px] text-[var(--damus-text-secondary)] text-center pt-1">
+              By continuing, you agree to our <span className="text-[var(--damus-purple)]">EULA</span>
+            </p>
+          </>
+        ) : (
+          <>
+            <button onClick={signIn} className="damus-btn damus-btn-gradient w-full py-3.5 text-[17px]" data-tour="damus-post">
+              Let's go
+            </button>
+            <button onClick={() => setView('home')} className="damus-btn damus-btn-pill w-full py-3.5 text-[17px]">
+              Back
+            </button>
+          </>
+        )}
+        <p className="text-[12px] text-[var(--damus-text-tertiary)] text-center pt-1">Simulation · mock keys · not the real network</p>
       </div>
     </div>
   );

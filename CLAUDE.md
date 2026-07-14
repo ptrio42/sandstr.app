@@ -75,12 +75,18 @@ kodu klienta. **„Sandstr" to nazwa robocza** — trywialna do zmiany.
 
 ## Liderzy vs reszta
 
-- **Wzorzec wierności:** **Amethyst** — głęboki, zweryfikowany referencyjnie flagowiec/szablon (8 powierzchni,
-  inline-SVG robohash avatary, lokalne media postów jako `data:`-URI, offline/CSP-safe). Do niego równamy.
-- **Dopieszczeni 2026-07-14 (wierność):** **Snort, Amethyst, YakiHonne** (+ Nostr Kitten jako opcjonalny
-  easter-egg, nie lider).
-- **Druga fala** (odłożone: słabsza wierność / bugi): Damus (defer, **nie cut** — dobry motyw iOS),
-  Primal, Keychat, Olas, Coracle, Gossip.
+- **Wzorzec wierności:** **Amethyst** i **Damus** — głębokie, zweryfikowane referencyjnie flagowce/szablony
+  (Amethyst 8 powierzchni; Damus 11) — inline-SVG robohash avatary, lokalne media postów jako `data:`-URI,
+  offline/CSP-safe, tokeny z repo klienta + weryfikacja side-by-side z realnym recordingiem. Do nich równamy.
+- **Dopieszczeni 2026-07-14 (wierność):** **Amethyst, Damus, Snort, YakiHonne** (+ Nostr Kitten jako
+  opcjonalny easter-egg, nie lider).
+- **Druga fala** (odłożone: słabsza wierność / bugi): Primal, Keychat, Olas, Coracle, Gossip.
+- **Damus (ZROBIONE 2026-07-14):** pełny rebuild z recordingu + recon repo → `docs/refs/damus/screen-map.md`
+  (autorytatywny spec: hexy DamusColors.swift, MainTabView, EventActionBar, SideMenu, Search/Notif/Relays).
+  OLED-dark; DamusPurple `#CC43C5` + **PinkGradient `#D34CD9→#F869B6`** (marka: CTA/Post/banner) +
+  **LINEAR_GRADIENT `#CC43C5→#4B4DFF`** (mechanika: FAB/underline/like) — dwa akcenty współistnieją.
+  4 taby (Home/DMs/Search/Notifications) + osobny gradientowy compose-FAB; akcje **reply→repost→shaka(🤙,
+  domyślny „like", NIE serce)→zap→share**; follow = monochromatyczny; drawer z magenta „Purple" (struś).
 
 ## Gotchas
 

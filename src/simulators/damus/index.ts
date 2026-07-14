@@ -1,26 +1,19 @@
 /**
- * Damus Simulator - iOS Nostr Client Simulation
- * 
- * A visual simulation of the Damus iOS app for educational purposes.
- * This is a UI-only simulator with mock data - no real Nostr protocol.
+ * Damus Simulator — iOS Nostr client reproduction
+ *
+ * Reference-verified reproduction (recording in docs/refs/damus/shots + damus-io/damus
+ * source; see docs/refs/damus/screen-map.md). UI-only, mock data, no real Nostr protocol.
  */
 
 // Main Simulator
 export { DamusSimulator } from './DamusSimulator';
-export type { DamusScreen } from './DamusSimulator';
-
-// Screens
-export { LoginScreen } from './screens/LoginScreen';
-export { HomeScreen } from './screens/HomeScreen';
-export { ProfileScreen } from './screens/ProfileScreen';
-export { ComposeScreen } from './screens/ComposeScreen';
-export { SettingsScreen } from './screens/SettingsScreen';
+export type { DamusScreen, DamusSimulatorCommand } from './DamusSimulator';
 
 // Components
 export { Avatar } from './components/Avatar';
 export { TabBar } from './components/TabBar';
 export { NoteCard } from './components/NoteCard';
-export { ProfileHeader } from './components/ProfileHeader';
+export { DamusLogo } from './components/DamusLogo';
 
 // Theme
 import './damus.theme.css';

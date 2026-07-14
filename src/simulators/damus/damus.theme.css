@@ -1,530 +1,256 @@
 /**
- * Damus Theme - iOS Minimal Style
- * Purple accent (#8B5CF6), clean white backgrounds, San Francisco fonts
+ * Damus Theme — native iOS, dark-first (OLED)
+ *
+ * Ground truth: damus-io/damus (Swift, GPL-3.0) DamusColors.swift + Assets.xcassets/Colors,
+ * verified side-by-side against a 2026 screen recording (docs/refs/damus/shots).
+ * Signature = DamusPurple magenta accent (#CC43C5) + purple→pink gradient on the compose FAB /
+ * Post button / banners, pure-black OLED surfaces, SF Pro type, custom bundled action icons
+ * (reply · repost · shaka-like · zap · share), 4-tab bar + floating compose button.
  */
 
 .damus-simulator {
-  --damus-purple: #8B5CF6;
-  --damus-purple-dark: #7C3AED;
-  --damus-purple-light: #A78BFA;
+  /* Brand (from DamusColors.swift) */
+  --damus-purple: #CC43C5;        /* DamusPurple — THE accent */
+  --damus-deep-purple: #BF26ED;   /* DamusDeepPurple */
+  --damus-blue: #4B4DFF;          /* DamusBlue */
+  --damus-green: #66C34F;         /* reposted */
+  --damus-bitcoin: #F7931A;       /* BitcoinOrange — zaps (always orange) */
+  --damus-like: #8B49E8;          /* liked shaka = LINEAR_GRADIENT purple→blue (blended) */
+  --damus-adorable-purple: #EF5FE8;
+
+  /* Signature gradients (from DamusColors.swift) */
+  --damus-pink-gradient: linear-gradient(160deg, #D34CD9 0%, #F869B6 100%);      /* PinkGradient — CTAs / banner / PFP ring */
+  --damus-linear-gradient: linear-gradient(150deg, #CC43C5 0%, #4B4DFF 100%);    /* LINEAR_GRADIENT purple→blue — FAB / underline / liked */
+  --damus-fab-gradient: linear-gradient(150deg, #CC43C5 0%, #4B4DFF 100%);       /* compose FAB fill */
+
+  /* Surfaces (light default; .dark overrides to OLED) */
   --damus-bg: #FFFFFF;
+  --damus-bg-elevated: #FFFFFF;
   --damus-bg-secondary: #F2F2F7;
   --damus-bg-tertiary: #E5E5EA;
   --damus-text: #000000;
   --damus-text-secondary: #8E8E93;
   --damus-text-tertiary: #C7C7CC;
-  --damus-border: #E5E5EA;
-  --damus-border-light: #F2F2F7;
+  --damus-border: rgba(60, 60, 67, 0.12);
+  --damus-separator: rgba(60, 60, 67, 0.14);
   --damus-danger: #FF3B30;
-  --damus-success: #34C759;
-  --damus-warning: #FF9500;
-  --damus-blue: #007AFF;
-  --damus-ios-radius: 10px;
-  --damus-ios-radius-lg: 12px;
-  --damus-ios-radius-sm: 8px;
-  --damus-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --damus-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
-  
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+  --damus-warning: #C08A2E;
+
+  --damus-radius: 10px;
+  --damus-radius-lg: 14px;
+  --damus-radius-sm: 8px;
+
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
 
-/* iOS-style buttons */
-.damus-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 20px;
-  border-radius: var(--damus-ios-radius-lg);
-  font-size: 17px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  border: none;
-  outline: none;
-}
-
-.damus-btn-primary {
-  background: var(--damus-purple);
-  color: white;
-}
-
-.damus-btn-primary:active {
-  background: var(--damus-purple-dark);
-  transform: scale(0.98);
-}
-
-.damus-btn-secondary {
-  background: var(--damus-bg-secondary);
-  color: var(--damus-text);
-}
-
-.damus-btn-secondary:active {
-  background: var(--damus-bg-tertiary);
-}
-
-.damus-btn-outline {
-  background: transparent;
-  border: 1px solid var(--damus-purple);
-  color: var(--damus-purple);
-}
-
-.damus-btn-outline:active {
-  background: rgba(139, 92, 246, 0.1);
-}
-
-.damus-btn-ghost {
-  background: transparent;
-  color: var(--damus-purple);
-  padding: 8px 12px;
-}
-
-.damus-btn-ghost:active {
-  background: rgba(139, 92, 246, 0.1);
-}
-
-/* iOS-style inputs */
-.damus-input {
-  width: 100%;
-  padding: 14px 16px;
-  border-radius: var(--damus-ios-radius);
-  border: 1px solid var(--damus-border);
-  background: var(--damus-bg);
-  font-size: 17px;
-  font-family: inherit;
-  transition: all 0.2s ease;
-}
-
-.damus-input:focus {
-  outline: none;
-  border-color: var(--damus-purple);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
-}
-
-.damus-textarea {
-  width: 100%;
-  min-height: 120px;
-  padding: 14px 16px;
-  border-radius: var(--damus-ios-radius);
-  border: 1px solid var(--damus-border);
-  background: var(--damus-bg);
-  font-size: 17px;
-  font-family: inherit;
-  resize: vertical;
-  transition: all 0.2s ease;
-}
-
-.damus-textarea:focus {
-  outline: none;
-  border-color: var(--damus-purple);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
-}
-
-/* iOS-style cards */
-.damus-card {
-  background: var(--damus-bg);
-  border-radius: var(--damus-ios-radius-lg);
-  overflow: hidden;
-  box-shadow: var(--damus-shadow);
-}
-
-.damus-card-flat {
-  background: var(--damus-bg);
-  border-radius: 0;
-  box-shadow: none;
-  border-bottom: 1px solid var(--damus-border);
-}
-
-/* Avatar styles */
-.damus-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: var(--damus-bg-secondary);
-}
-
-.damus-avatar-lg {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 4px solid white;
-  object-fit: cover;
-}
-
-/* Banner styles */
-.damus-banner {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-  background: linear-gradient(135deg, var(--damus-purple-light), var(--damus-purple));
-}
-
-/* iOS-style navigation */
-.damus-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: var(--damus-bg);
-  border-bottom: 1px solid var(--damus-border);
-}
-
-.damus-nav-title {
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--damus-text);
-}
-
-/* iOS-style list */
-.damus-list {
-  background: var(--damus-bg);
-  border-radius: var(--damus-ios-radius-lg);
-  overflow: hidden;
-  margin: 16px;
-}
-
-.damus-list-item {
-  display: flex;
-  align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid var(--damus-border);
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.damus-list-item:last-child {
-  border-bottom: none;
-}
-
-.damus-list-item:active {
-  background: var(--damus-bg-secondary);
-}
-
-.damus-list-item-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: var(--damus-bg-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12px;
-  color: var(--damus-purple);
-}
-
-.damus-list-item-content {
-  flex: 1;
-}
-
-.damus-list-item-title {
-  font-size: 17px;
-  font-weight: 400;
-  color: var(--damus-text);
-}
-
-.damus-list-item-subtitle {
-  font-size: 15px;
-  color: var(--damus-text-secondary);
-  margin-top: 2px;
-}
-
-.damus-list-item-chevron {
-  color: var(--damus-text-tertiary);
-  font-size: 20px;
-}
-
-/* Tab bar */
-.damus-tab-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 8px 0 24px;
-  background: var(--damus-bg);
-  border-top: 1px solid var(--damus-border);
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-}
-
-.damus-tab-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 16px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.damus-tab-item.active {
-  color: var(--damus-purple);
-}
-
-.damus-tab-item:not(.active) {
-  color: var(--damus-text-secondary);
-}
-
-.damus-tab-icon {
-  width: 24px;
-  height: 24px;
-}
-
-.damus-tab-label {
-  font-size: 11px;
-  font-weight: 500;
-}
-
-/* FAB */
-.damus-fab {
-  position: fixed;
-  bottom: 90px;
-  right: 16px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--damus-purple);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--damus-shadow-lg);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
-  z-index: 50;
-}
-
-.damus-fab:active {
-  transform: scale(0.95);
-  background: var(--damus-purple-dark);
-}
-
-/* Action buttons for notes */
-.damus-action-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  border-radius: 20px;
-  background: transparent;
-  border: none;
-  color: var(--damus-text-secondary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.damus-action-btn:hover {
-  color: var(--damus-purple);
-  background: rgba(139, 92, 246, 0.1);
-}
-
-.damus-action-btn.active {
-  color: var(--damus-purple);
-}
-
-.damus-action-btn svg {
-  width: 18px;
-  height: 18px;
-}
-
-/* Stats display */
-.damus-stats {
-  display: flex;
-  gap: 16px;
-}
-
-.damus-stat {
-  text-align: center;
-}
-
-.damus-stat-value {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--damus-text);
-}
-
-.damus-stat-label {
-  font-size: 13px;
-  color: var(--damus-text-secondary);
-}
-
-/* Modal overlay */
-.damus-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  z-index: 1000;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.damus-modal-overlay.active {
-  opacity: 1;
-}
-
-.damus-modal {
-  background: var(--damus-bg);
-  border-radius: var(--damus-ios-radius-lg) var(--damus-ios-radius-lg) 0 0;
-  width: 100%;
-  max-width: 500px;
-  max-height: 80vh;
-  transform: translateY(100%);
-  transition: transform 0.3s ease;
-}
-
-.damus-modal-overlay.active .damus-modal {
-  transform: translateY(0);
-}
-
-/* Toggle switch */
-.damus-toggle {
-  position: relative;
-  width: 51px;
-  height: 31px;
-  background: var(--damus-bg-tertiary);
-  border-radius: 15.5px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.damus-toggle.active {
-  background: var(--damus-purple);
-}
-
-.damus-toggle-thumb {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 27px;
-  height: 27px;
-  background: white;
-  border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s ease;
-}
-
-.damus-toggle.active .damus-toggle-thumb {
-  transform: translateX(20px);
-}
-
-/* Key display */
-.damus-key-display {
-  background: var(--damus-bg-secondary);
-  border-radius: var(--damus-ios-radius);
-  padding: 12px;
-  font-family: 'SF Mono', Monaco, monospace;
-  font-size: 13px;
-  word-break: break-all;
-  position: relative;
-}
-
-.damus-key-display .copy-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  padding: 6px 10px;
-  font-size: 13px;
-  background: var(--damus-bg);
-  border: 1px solid var(--damus-border);
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-/* Safe area spacing */
-.damus-safe-top {
-  padding-top: env(safe-area-inset-top, 44px);
-}
-
-.damus-safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 34px);
-}
-
-/* Animation for pull to refresh */
-@keyframes damus-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.damus-spin {
-  animation: damus-spin 1s linear infinite;
-}
-
-/* Simulator Container */
-.damus-simulator {
   position: relative;
   width: 100%;
   height: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  background: var(--damus-bg);
+  color: var(--damus-text);
 }
 
-/* Main content area - Scrollable */
+/* Dark = the shipping OLED look from the recording */
+.damus-simulator.dark {
+  --damus-bg: #000000;
+  --damus-bg-elevated: #0E0E0F;
+  --damus-bg-secondary: #16161A;
+  --damus-bg-tertiary: #1F1F24;
+  --damus-text: #FFFFFF;
+  --damus-text-secondary: #8E8E93;
+  --damus-text-tertiary: #5A5A5F;
+  --damus-border: rgba(255, 255, 255, 0.09);
+  --damus-separator: rgba(255, 255, 255, 0.10);
+}
+
+/* Scrollable content column */
 .damus-content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
+  -webkit-overflow-scrolling: touch;
+}
+.damus-content::-webkit-scrollbar { width: 0; height: 0; }
+
+/* ---- Buttons ---- */
+.damus-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  color: #fff;
+}
+.damus-btn:active { transform: scale(0.97); }
+.damus-btn-gradient { background-image: var(--damus-pink-gradient); }
+.damus-btn-pill {
+  background: var(--damus-bg-tertiary);
+  color: var(--damus-text);
+}
+.damus-btn-outline {
+  background: transparent;
+  border: 1px solid var(--damus-text);
+  color: var(--damus-text);
+  padding: 7px 18px;
+  font-weight: 600;
 }
 
-/* FAB - Fixed position */
-.damus-fab {
+/* ---- Inputs ---- */
+.damus-search {
+  width: 100%;
+  padding: 11px 14px 11px 40px;
+  border-radius: 12px;
+  border: none;
+  background: var(--damus-bg-secondary);
+  color: var(--damus-text);
+  font-size: 17px;
+  font-family: inherit;
+}
+.damus-search::placeholder { color: var(--damus-text-secondary); }
+.damus-search:focus { outline: none; }
+
+/* ---- Segmented control (My relays / Recommended) ---- */
+.damus-segment {
+  display: inline-flex;
+  background: var(--damus-bg-secondary);
+  border-radius: 999px;
+  padding: 3px;
+}
+.damus-segment button {
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--damus-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.damus-segment button.active {
+  color: var(--damus-text);
+  background: var(--damus-bg-tertiary);
+}
+
+/* ---- Note action row ---- */
+.damus-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--damus-text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px;
+  transition: color 0.12s ease;
+}
+.damus-action svg { width: 20px; height: 20px; }
+.damus-action.is-reply.active,
+.damus-action.is-reply:active { color: var(--damus-purple); }
+.damus-action.is-repost.active { color: var(--damus-green); }
+.damus-action.is-like.active { color: var(--damus-like); }
+.damus-action.is-zap.active { color: var(--damus-bitcoin); }
+
+/* ---- Bottom tab bar (4 icon tabs, no labels) ---- */
+.damus-tabbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 10px 22px calc(10px + env(safe-area-inset-bottom, 16px));
+  background: color-mix(in srgb, var(--damus-bg) 88%, transparent);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-top: 1px solid var(--damus-separator);
   position: absolute;
-  bottom: 90px;
-  right: 16px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--damus-purple);
-  color: white;
+  bottom: 0; left: 0; right: 0;
+  z-index: 40;
+}
+.damus-tab {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--damus-shadow-lg);
-  cursor: pointer;
-  transition: all 0.2s ease;
+  width: 44px; height: 30px;
+  background: transparent;
   border: none;
-  z-index: 50;
+  cursor: pointer;
+  position: relative;
+  color: var(--damus-text-secondary);
 }
+.damus-tab.active { color: var(--damus-text); }
+.damus-tab svg { width: 26px; height: 26px; }
 
-.damus-fab:active {
-  transform: scale(0.95);
-  background: var(--damus-purple-dark);
+/* ---- Floating compose button (separate from the tab bar) ---- */
+.damus-fab {
+  position: absolute;
+  right: 16px;
+  bottom: calc(78px + env(safe-area-inset-bottom, 16px));
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  background-image: var(--damus-fab-gradient);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 22px rgba(122, 56, 240, 0.45);
+  cursor: pointer;
+  border: none;
+  z-index: 45;
+  transition: transform 0.14s ease;
 }
+.damus-fab:active { transform: scale(0.94); }
 
-/* Mobile Phone Frame Context */
-.mobile-phone-frame-wrapper .damus-simulator {
-  border-radius: 40px;
-  height: 100%;
+/* ---- Relay connection status pills ---- */
+.damus-pill {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
 }
+.damus-pill.online { color: #03BF64; background: #0A331F; border-color: #125C38; }
+.damus-pill.connecting { color: #FCB52C; background: #33250A; border-color: #5C4312; }
+.damus-pill.error { color: #F8206E; background: #8B0435; border-color: #611320; }
 
-/* Responsive adjustments */
-@media (min-width: 768px) {
-  .damus-simulator {
-    border-radius: 40px;
-  }
-}
+/* selected-tab underline — LINEAR_GRADIENT purple→blue bar (h 2.5, radius 2.5) */
+.damus-underline { background-image: linear-gradient(90deg, #CC43C5 0%, #4B4DFF 100%); }
 
-/* Dark mode support */
-.damus-simulator.dark {
-  --damus-bg: #000000;
-  --damus-bg-secondary: #1C1C1E;
-  --damus-bg-tertiary: #2C2C2E;
-  --damus-text: #FFFFFF;
-  --damus-text-secondary: #8E8E93;
-  --damus-text-tertiary: #636366;
-  --damus-border: #38383A;
-  --damus-border-light: #2C2C2E;
+/* ---- Toggle switch (settings) ---- */
+.damus-toggle {
+  position: relative;
+  width: 51px; height: 31px;
+  background: var(--damus-bg-tertiary);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
 }
+.damus-toggle.active { background: #34C759; }
+.damus-toggle-thumb {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 27px; height: 27px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease;
+}
+.damus-toggle.active .damus-toggle-thumb { transform: translateX(20px); }
+
+/* Frame integration */
+.mobile-phone-frame-wrapper .damus-simulator { border-radius: 40px; height: 100%; }
+@media (min-width: 768px) { .damus-simulator { border-radius: 40px; } }
+
+/* Links / hashtags rendered inline in note content */
+.damus-link { color: var(--damus-purple); }

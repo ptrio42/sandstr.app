@@ -1,212 +1,97 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import type { MockUser, MockNote } from '../../../data/mock';
+import { getUserByPubkey } from '../../../data/mock';
 import { Avatar } from '../components/Avatar';
+import { renderContent, Nip05Check } from '../components/NoteCard';
+import { ChevronLeft, EllipsisIcon } from '../components/icons';
 
 interface ComposeScreenProps {
   currentUser: MockUser | null;
+  users: MockUser[];
+  replyTo?: MockNote | null;
   onPost: (content: string) => void;
   onCancel: () => void;
-  replyTo?: MockNote | null;
 }
 
-export const ComposeScreen: React.FC<ComposeScreenProps> = ({
-  currentUser,
-  onPost,
-  onCancel,
-  replyTo,
-}) => {
+// Damus new-note screen. Full-screen (not a sheet). Post button turns magenta when there's
+// content. NO character limit / progress ring — Nostr notes are uncapped.
+export const ComposeScreen: React.FC<ComposeScreenProps> = ({ currentUser, users, replyTo, onPost, onCancel }) => {
   const [content, setContent] = useState('');
-  const [isPosting, setIsPosting] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const maxChars = 280;
-  const charCount = content.length;
-  const isOverLimit = charCount > maxChars;
-  const isReply = !!replyTo;
-
-  useEffect(() => {
-    // Auto-focus textarea
-    textareaRef.current?.focus();
-  }, []);
-
-  const handleSubmit = () => {
-    if (!content.trim() || isOverLimit) return;
-    
-    setIsPosting(true);
-    
-    // Simulate posting delay
-    setTimeout(() => {
-      onPost(content.trim());
-      setIsPosting(false);
-      console.log('[Damus] Posted:', content);
-    }, 500);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-      handleSubmit();
-    }
-  };
+  const canPost = content.trim().length > 0;
+  const parentAuthor = replyTo ? getUserByPubkey(replyTo.pubkey) || users[0] : null;
 
   return (
-    <div className="min-h-screen bg-[var(--damus-bg)] flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--damus-border)]">
+    <div className="absolute inset-0 z-[55] flex flex-col bg-[var(--damus-bg)]">
+      {/* Cancel / Post */}
+      <div className="flex items-center justify-between px-4 pt-3 pb-3">
+        <button onClick={onCancel} className="damus-btn damus-btn-pill px-5 py-2 text-[16px]">Cancel</button>
         <button
-          onClick={onCancel}
-          className="text-[var(--damus-text-secondary)] hover:text-[var(--damus-text)] font-medium"
-        >
-          Cancel
-        </button>
-        
-        <button
-          onClick={handleSubmit}
-          disabled={!content.trim() || isOverLimit || isPosting}
-          className={`damus-btn ${
-            content.trim() && !isOverLimit && !isPosting
-              ? 'damus-btn-primary'
-              : 'bg-purple-300 text-white cursor-not-allowed'
-          } px-6`}
+          onClick={() => canPost && onPost(content.trim())}
+          disabled={!canPost}
           data-tour="damus-post"
+          className={`damus-btn px-6 py-2 text-[16px] ${canPost ? 'damus-btn-gradient' : 'bg-[var(--damus-bg-tertiary)] text-[var(--damus-text-secondary)]'}`}
         >
-          {isPosting ? (
-            <svg className="w-5 h-5 damus-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-          ) : (
-            isReply ? 'Reply' : 'Post'
-          )}
+          Post
         </button>
       </div>
+      <div className="h-px bg-[var(--damus-separator)]" />
 
-      {/* Reply Context */}
-      {isReply && replyTo && (
-        <div className="px-4 py-3 bg-[var(--damus-bg-secondary)] border-b border-[var(--damus-border)]">
-          <p className="text-sm text-[var(--damus-text-secondary)]">
-            Replying to <span className="text-purple-600 font-medium">@{replyTo.author?.username || 'user'}</span>
-          </p>
-          <p className="text-sm text-[var(--damus-text-tertiary)] truncate mt-1">
-            {replyTo.content.slice(0, 100)}{replyTo.content.length > 100 ? '...' : ''}
-          </p>
-        </div>
-      )}
+      <div className="flex-1 overflow-y-auto px-4 pt-4">
+        {replyTo && parentAuthor && (
+          <div className="flex gap-3">
+            <div className="flex flex-col items-center shrink-0">
+              <Avatar seed={parentAuthor.username} className="w-11 h-11" zap={!!parentAuthor.lightningAddress} />
+              <div className="w-0.5 flex-1 my-1 bg-[var(--damus-separator)]" />
+            </div>
+            <div className="flex-1 min-w-0 pb-2">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="font-bold text-[var(--damus-text)]">{parentAuthor.displayName}</span>
+                <span className="text-[var(--damus-text-secondary)] text-[15px]">@{parentAuthor.username}</span>
+                {parentAuthor.nip05 && <Nip05Check />}
+                <span className="text-[var(--damus-text-secondary)]">· 1h</span>
+                <span className="ml-auto text-[var(--damus-text-secondary)]"><EllipsisIcon className="w-5 h-5" /></span>
+              </div>
+              <div className="text-[var(--damus-text)] text-[17px] leading-snug whitespace-pre-wrap mt-0.5">
+                {renderContent(replyTo.content.slice(0, 240))}
+              </div>
+              <div className="text-[14px] text-[var(--damus-text-secondary)] mt-2">
+                Replying to <span className="text-[var(--damus-purple)]">@{parentAuthor.username}</span>
+              </div>
+            </div>
+          </div>
+        )}
 
-      {/* Compose Area */}
-      <div className="flex-1 flex gap-4 p-4">
-        {/* Avatar */}
-        <div className="flex-shrink-0">
-          <Avatar
-            src={currentUser?.avatar}
-            alt="Profile"
-            size="md"
-            className="damus-avatar"
-          />
-        </div>
-
-        {/* Text Area */}
-        <div className="flex-1">
+        {/* your reply / new note */}
+        <div className="flex gap-3 mt-1">
+          <Avatar seed={currentUser?.username || 'pitiunited'} className="w-11 h-11" zap={!!currentUser?.lightningAddress} />
           <textarea
-            ref={textareaRef}
+            autoFocus
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={isReply ? "Add your reply..." : "What's on your mind?"}
-            className="w-full h-full min-h-[200px] resize-none border-0 focus:outline-none text-lg text-[var(--damus-text)] placeholder-[var(--damus-text-tertiary)]"
-            style={{ fontFamily: 'inherit' }}
+            placeholder="Type your note here..."
+            className="flex-1 bg-transparent resize-none border-0 focus:outline-none text-[18px] text-[var(--damus-text)] placeholder-[var(--damus-text-secondary)] min-h-[160px] pt-1.5"
           />
         </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="border-t border-[var(--damus-border)] px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {/* Image Upload */}
-            <button
-              onClick={() => console.log('[Damus] Add image')}
-              className="text-purple-600 hover:text-purple-700 p-2 -ml-2 rounded-full hover:bg-purple-50"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </button>
-
-            {/* GIF */}
-            <button
-              onClick={() => console.log('[Damus] Add GIF')}
-              className="text-purple-600 hover:text-purple-700 p-2 rounded-full hover:bg-purple-50"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-
-            {/* Emoji */}
-            <button
-              onClick={() => console.log('[Damus] Add emoji')}
-              className="text-purple-600 hover:text-purple-700 p-2 rounded-full hover:bg-purple-50"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-
-            {/* Poll */}
-            <button
-              onClick={() => console.log('[Damus] Add poll')}
-              className="text-purple-600 hover:text-purple-700 p-2 rounded-full hover:bg-purple-50"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Character Count */}
-          <div className="flex items-center gap-3">
-            <div className={`text-sm ${
-              isOverLimit ? 'text-red-500' : charCount > maxChars * 0.8 ? 'text-yellow-500' : 'text-[var(--damus-text-tertiary)]'
-            }`}>
-              {charCount}/{maxChars}
-            </div>
-            
-            {/* Progress Circle for character limit */}
-            {charCount > 0 && (
-              <div className="relative w-6 h-6">
-                <svg className="w-6 h-6 transform -rotate-90">
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    fill="none"
-                    stroke="#E5E5EA"
-                    strokeWidth="2"
-                  />
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    fill="none"
-                    stroke={isOverLimit ? '#FF3B30' : '#8B5CF6'}
-                    strokeWidth="2"
-                    strokeDasharray={`${Math.min((charCount / maxChars) * 62.8, 62.8)} 62.8`}
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Keyboard hint */}
-      <div className="bg-[var(--damus-bg-secondary)] px-4 py-2 text-xs text-[var(--damus-text-tertiary)] text-center">
-        Press Cmd+Enter to post
+      {/* Compose toolbar */}
+      <div className="flex items-center gap-6 px-5 py-3 border-t border-[var(--damus-separator)] text-[var(--damus-purple)]">
+        <ToolbarIcon path="M4 16l4.6-4.6a2 2 0 0 1 2.8 0L16 16m-2-2 1.6-1.6a2 2 0 0 1 2.8 0L20 14M4 6h16v12H4z" />
+        <ToolbarIcon path="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />
+        <ToolbarIcon path="M14.8 11.2 11.6 9A1 1 0 0 0 10 9.9v4.3a1 1 0 0 0 1.6.8l3.2-2.1a1 1 0 0 0 0-1.7z M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
+        <ToolbarIcon path="M3 6h18M7 12h10M10 18h4" />
+        <ToolbarIcon path="M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2 M12 4v16 M9 20h6" />
       </div>
     </div>
   );
 };
+
+function ToolbarIcon({ path }: { path: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+      {path.split(' M').map((d, i) => <path key={i} d={(i === 0 ? d : 'M' + d)} />)}
+    </svg>
+  );
+}
 
 export default ComposeScreen;

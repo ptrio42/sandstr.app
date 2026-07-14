@@ -1,50 +1,72 @@
 import React from 'react';
 
-interface AvatarProps {
-  src?: string;
-  alt: string;
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
+// Deterministic FNV-1a hash → same seed always yields the same robot.
+function hashSeed(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
 }
 
-export const Avatar: React.FC<AvatarProps> = ({ 
-  src, 
-  alt, 
-  size = 'md',
-  className = '' 
-}) => {
-  // Check if src is a gradient class (contains 'from-', 'to-', etc.)
-  const isGradient = src && (src.includes('from-') || src.includes('gradient'));
-  
-  const sizeClasses = {
-    sm: 'w-8 h-8',
-    md: 'w-10 h-10',
-    lg: 'w-20 h-20',
-  };
+interface AvatarProps {
+  seed: string;
+  /** Tailwind size/shape classes for the container, e.g. "w-11 h-11". */
+  className?: string;
+  /** Orange lightning badge (zap-enabled / has a lightning address). */
+  zap?: boolean;
+}
 
-  if (isGradient) {
-    // Use the gradient classes directly
-    const gradientClass = src || 'from-purple-500 to-blue-500';
-    return (
-      <div 
-        className={`${sizeClasses[size]} rounded-full bg-gradient-to-br ${gradientClass} flex items-center justify-center ${className}`}
-        title={alt}
-      >
-        <span className="text-white font-bold text-lg">
-          {alt.charAt(0).toUpperCase()}
-        </span>
-      </div>
-    );
-  }
+// CSP-safe, offline, deterministic robohash-style avatar. Damus renders robohash robots
+// for pubkeys without a picture too; here it replaces the old DiceBear hotlink entirely.
+export function Avatar({ seed, className = 'w-11 h-11', zap = false }: AvatarProps) {
+  const h = hashSeed(seed || 'anon');
+  const bg = h % 360;
+  const bg2 = (bg + 45) % 360;
+  const headHue = (h >> 9) % 360;
+  const eyeType = (h >> 4) & 3;
+  const mouthType = (h >> 6) & 3;
+  const bigAntenna = ((h >> 11) & 1) === 1;
 
-  // Use as image URL
+  const headFill = `hsl(${headHue} 22% ${65 + (h % 20)}%)`;
+  const detail = `hsl(${(headHue + 200) % 360} 55% 28%)`;
+  const eye = `hsl(${bg2} 75% 48%)`;
+  const gid = `drob${h.toString(36)}`;
+
   return (
-    <img
-      src={src || `https://api.dicebear.com/7.x/bottts/svg?seed=${alt}`}
-      alt={alt}
-      className={`${sizeClasses[size]} rounded-full object-cover bg-gray-100 ${className}`}
-    />
+    <div className={`${className} relative shrink-0`}>
+      <div className="w-full h-full rounded-full overflow-hidden">
+        <svg viewBox="0 0 100 100" className="w-full h-full" role="img" aria-label="avatar">
+          <defs>
+            <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor={`hsl(${bg} 62% 56%)`} />
+              <stop offset="1" stopColor={`hsl(${bg2} 66% 42%)`} />
+            </linearGradient>
+          </defs>
+          <rect width="100" height="100" fill={`url(#${gid})`} />
+          <line x1="50" y1="30" x2="50" y2="15" stroke={detail} strokeWidth="3" strokeLinecap="round" />
+          <circle cx="50" cy="12" r={bigAntenna ? 5 : 3.5} fill={eye} />
+          <rect x="15" y="45" width="8" height="16" rx="3" fill={headFill} />
+          <rect x="77" y="45" width="8" height="16" rx="3" fill={headFill} />
+          <rect x="24" y="28" width="52" height="50" rx="13" fill={headFill} />
+          {eyeType === 0 && (<><circle cx="39" cy="48" r="6" fill={detail} /><circle cx="61" cy="48" r="6" fill={detail} /></>)}
+          {eyeType === 1 && (<><rect x="33" y="43" width="12" height="10" rx="4" fill={eye} /><rect x="55" y="43" width="12" height="10" rx="4" fill={eye} /></>)}
+          {eyeType === 2 && (<><circle cx="39" cy="48" r="7" fill={detail} /><circle cx="61" cy="48" r="7" fill={detail} /><circle cx="41" cy="46" r="2" fill="#fff" /><circle cx="63" cy="46" r="2" fill="#fff" /></>)}
+          {eyeType === 3 && (<><rect x="31" y="43" width="38" height="11" rx="5" fill={detail} /><circle cx="42" cy="48.5" r="3" fill={eye} /><circle cx="58" cy="48.5" r="3" fill={eye} /></>)}
+          {mouthType === 0 && (<rect x="38" y="63" width="24" height="4" rx="2" fill={detail} />)}
+          {mouthType === 1 && (<g fill={detail}>{[0, 1, 2, 3].map((i) => (<rect key={i} x={38 + i * 6} y="61" width="4" height="7" rx="1" />))}</g>)}
+          {mouthType === 2 && (<rect x="40" y="61" width="20" height="8" rx="3" fill={detail} />)}
+          {mouthType === 3 && (<path d="M40 62 Q50 71 60 62" stroke={detail} strokeWidth="3" fill="none" strokeLinecap="round" />)}
+        </svg>
+      </div>
+      {zap && (
+        <div className="absolute -bottom-0.5 -right-0.5 w-[42%] h-[42%] rounded-full bg-[#F7931A] flex items-center justify-center ring-2 ring-[var(--damus-bg)]">
+          <svg viewBox="0 0 24 24" className="w-[62%] h-[62%]" fill="#fff"><path d="M13 2 4.5 13.2a.6.6 0 0 0 .5 1H11l-1 7.8 8.5-11.2a.6.6 0 0 0-.5-1H12z" /></svg>
+        </div>
+      )}
+    </div>
   );
-};
+}
 
 export default Avatar;

@@ -1,220 +1,107 @@
 import React, { useState } from 'react';
 import type { MockUser, MockNote } from '../../../data/mock';
-import type { DamusScreen } from '../DamusSimulator';
-import { NoteCard } from '../components/NoteCard';
+import { getUserByPubkey } from '../../../data/mock';
 import { Avatar } from '../components/Avatar';
-import { getNotesByAuthor } from '../../../data/mock';
+import { NoteCard, Nip05Check } from '../components/NoteCard';
+import { ChevronLeft, EllipsisIcon, ZapIcon, MailIcon, QrIcon, CopyIcon } from '../components/icons';
 
-interface ProfileScreenProps {
+interface Props {
   user: MockUser | null;
   currentUser: MockUser | null;
   notes: MockNote[];
-  onNavigate: (screen: DamusScreen) => void;
-  onViewProfile: (user: MockUser) => void;
+  users: MockUser[];
+  onBack: () => void;
+  onOpenThread: (n: MockNote) => void;
+  onViewProfile: (u: MockUser) => void;
+  onReply: (n: MockNote) => void;
 }
 
-export const ProfileScreen: React.FC<ProfileScreenProps> = ({
-  user,
-  currentUser,
-  notes,
-  onNavigate,
-  onViewProfile,
-}) => {
-  const [activeTab, setActiveTab] = useState<'posts' | 'replies' | 'likes'>('posts');
-  const [isFollowing, setIsFollowing] = useState(false);
+export const ProfileScreen: React.FC<Props> = ({ user, currentUser, notes, users, onBack, onOpenThread, onViewProfile, onReply }) => {
+  const u = user || currentUser || users[0];
+  const isMe = !!currentUser && u.username === currentUser.username;
+  const [following, setFollowing] = useState(!isMe);
+  const [tab, setTab] = useState<'notes' | 'replies'>('notes');
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--damus-bg)]">
-        <p className="text-[var(--damus-text-secondary)]">User not found</p>
-      </div>
-    );
-  }
-
-  const isOwnProfile = currentUser?.pubkey === user.pubkey;
-  const userNotes = getNotesByAuthor(user.pubkey).slice(0, 20);
-
-  const handleFollow = () => {
-    setIsFollowing(!isFollowing);
-    console.log(`[Damus] ${isFollowing ? 'Unfollowed' : 'Followed'} ${user.username}`);
-  };
-
-  const formatNumber = (num: number): string => {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-    return num.toString();
-  };
+  const npub = 'npub1' + u.username.padEnd(6, 'x').slice(0, 6) + '…' + (u.pubkey || '').slice(-6);
+  const userNotes = notes.filter((n) => n.pubkey === u.pubkey);
+  const feed = (userNotes.length ? userNotes : notes.slice(0, 8)).map((n) => ({ n, a: getUserByPubkey(n.pubkey) || u }));
 
   return (
-    <div className="min-h-screen bg-[var(--damus-bg)] pb-24" data-tour="damus-profile">
-      {/* Navigation Header */}
-      <div className="sticky top-0 z-50 bg-[var(--damus-bg)]/95 backdrop-blur-md border-b border-[var(--damus-border)]">
-        <div className="flex items-center justify-between px-4 py-3">
-          <button
-            onClick={() => onNavigate('home')}
-            className="p-2 -ml-2 text-[var(--damus-text-secondary)] hover:text-[var(--damus-text)]"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
+    <div className="absolute inset-0 z-[50] flex flex-col bg-[var(--damus-bg)]" data-tour="damus-profile">
+      <div className="flex-1 overflow-y-auto">
+        {/* banner */}
+        <div className="relative h-32" style={{ backgroundImage: 'var(--damus-pink-gradient)' }}>
+          <button onClick={onBack} className="absolute top-3 left-3 w-9 h-9 rounded-full bg-black/35 backdrop-blur flex items-center justify-center">
+            <ChevronLeft className="w-5 h-5 text-white" />
           </button>
-          <span className="font-semibold text-[var(--damus-text)]">{user.displayName}</span>
-          <button
-            onClick={() => onNavigate('settings')}
-            className="p-2 -mr-2 text-[var(--damus-text-secondary)] hover:text-[var(--damus-text)]"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
+          <button className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/35 backdrop-blur flex items-center justify-center">
+            <EllipsisIcon className="w-5 h-5 text-white" />
           </button>
         </div>
-      </div>
 
-      {/* Banner */}
-      <div className="damus-banner" />
-
-      {/* Profile Info */}
-      <div className="px-4 pb-4">
-        {/* Avatar and Actions */}
-        <div className="flex justify-between items-end -mt-10 mb-4">
-          <Avatar
-            src={user.avatar}
-            alt={user.displayName}
-            size="lg"
-            className="damus-avatar-lg border-4 border-[var(--damus-bg)] shadow-md"
-          />
-          {isOwnProfile ? (
-            <button
-              onClick={() => onNavigate('settings')}
-              className="damus-btn damus-btn-outline mb-2"
-            >
-              Edit Profile
-            </button>
-          ) : (
-            <button
-              onClick={handleFollow}
-              className={`damus-btn mb-2 ${
-                isFollowing ? 'damus-btn-secondary' : 'damus-btn-primary'
-              }`}
-              data-tour="damus-follow"
-            >
-              {isFollowing ? 'Following' : 'Follow'}
-            </button>
-          )}
-        </div>
-
-        {/* Name and Handle */}
-        <div className="mb-4">
-          <h1 className="text-xl font-bold text-[var(--damus-text)]">{user.displayName}</h1>
-          <p className="text-[var(--damus-text-secondary)]">@{user.username}</p>
-          {user.nip05 && (
-            <div className="flex items-center gap-1 mt-1">
-              <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm text-[var(--damus-text-secondary)]">{user.nip05}</span>
+        <div className="px-4">
+          {/* avatar + actions */}
+          <div className="flex items-end justify-between -mt-10">
+            <div className="rounded-full ring-4 ring-[var(--damus-bg)]">
+              <Avatar seed={u.username} className="w-[84px] h-[84px]" zap={!!u.lightningAddress} />
             </div>
-          )}
-        </div>
-
-        {/* Bio */}
-        {user.bio && (
-          <p className="text-[var(--damus-text)] mb-4 whitespace-pre-wrap">{user.bio}</p>
-        )}
-
-        {/* Location & Website */}
-        <div className="flex flex-wrap gap-4 mb-4 text-sm text-[var(--damus-text-secondary)]">
-          {user.location && (
-            <div className="flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span>{user.location}</span>
+            <div className="flex items-center gap-2 mb-1">
+              <ActionCircle><QrIcon className="w-5 h-5" /></ActionCircle>
+              <ActionCircle><ZapIcon className="w-5 h-5" /></ActionCircle>
+              <ActionCircle><MailIcon className="w-5 h-5" /></ActionCircle>
+              <button
+                data-tour="damus-follow"
+                onClick={() => setFollowing((f) => !f)}
+                className={`damus-btn text-[15px] px-5 py-2 ${following ? 'damus-btn-outline' : 'bg-[var(--damus-text)] text-[var(--damus-bg)]'}`}
+              >
+                {following ? 'Following' : 'Follow'}
+              </button>
             </div>
-          )}
-          {user.website && (
-            <a
-              href={user.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-purple-600 hover:underline"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-              </svg>
-              <span>{user.website.replace(/^https?:\/\//, '')}</span>
-            </a>
-          )}
-          {user.lightningAddress && (
-            <div className="flex items-center gap-1">
-              <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-              </svg>
-              <span>{user.lightningAddress}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Stats */}
-        <div className="flex gap-6 mb-4">
-          <div className="flex gap-1">
-            <span className="font-bold text-[var(--damus-text)]">{formatNumber(user.followingCount)}</span>
-            <span className="text-[var(--damus-text-secondary)]">Following</span>
           </div>
-          <div className="flex gap-1">
-            <span className="font-bold text-[var(--damus-text)]">{formatNumber(user.followersCount)}</span>
-            <span className="text-[var(--damus-text-secondary)]">Followers</span>
+
+          {/* identity */}
+          <div className="mt-2">
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-[22px] text-[var(--damus-text)]">{u.displayName}</span>
+              {u.nip05 && <Nip05Check className="w-[18px] h-[18px]" />}
+            </div>
+            <div className="text-[15px] text-[var(--damus-text-secondary)]">@{u.username}</div>
+            <button className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--damus-bg-secondary)] text-[13px] text-[var(--damus-text-secondary)]">
+              {npub} <CopyIcon className="w-4 h-4" />
+            </button>
+            {u.nip05 && <div className="text-[15px] text-[var(--damus-purple)] mt-2">{u.nip05}</div>}
+            {u.lightningAddress && <div className="text-[15px] text-[var(--damus-bitcoin)] mt-1">⚡ {u.lightningAddress}</div>}
+            <p className="text-[16px] text-[var(--damus-text)] leading-snug mt-2 whitespace-pre-wrap">{u.bio}</p>
+            <div className="flex gap-4 text-[15px] mt-3">
+              <span className="text-[var(--damus-text)]"><b>{u.followingCount.toLocaleString()}</b> <span className="text-[var(--damus-text-secondary)]">Following</span></span>
+              <span className="text-[var(--damus-text)]"><b>{u.followersCount.toLocaleString()}</b> <span className="text-[var(--damus-text-secondary)]">Followers</span></span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="border-b border-[var(--damus-border)]">
-        <div className="flex">
-          {(['posts', 'replies', 'likes'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-3 text-sm font-medium capitalize transition-colors relative ${
-                activeTab === tab
-                  ? 'text-purple-600'
-                  : 'text-[var(--damus-text-secondary)] hover:text-[var(--damus-text)]'
-              }`}
-            >
-              {tab}
-              {activeTab === tab && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600" />
-              )}
+        {/* tabs */}
+        <div className="flex mt-4 border-b border-[var(--damus-separator)]">
+          {([['notes', 'Notes'], ['replies', 'Notes & Replies']] as const).map(([id, label]) => (
+            <button key={id} onClick={() => setTab(id)} className="flex-1 py-3 relative text-[15px] font-semibold">
+              <span className={tab === id ? 'text-[var(--damus-text)]' : 'text-[var(--damus-text-secondary)]'}>{label}</span>
+              {tab === id && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-9 h-[3px] rounded-full damus-underline" />}
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="pb-20">
-        {activeTab === 'posts' && userNotes.length > 0 ? (
-          userNotes.map((note) => (
-            <NoteCard
-              key={note.id}
-              note={note}
-              author={user}
-              onViewProfile={() => {}}
-            />
-          ))
-        ) : activeTab === 'posts' ? (
-          <div className="py-12 text-center">
-            <p className="text-[var(--damus-text-secondary)]">No posts yet</p>
-          </div>
-        ) : (
-          <div className="py-12 text-center">
-            <p className="text-[var(--damus-text-secondary)]">Coming soon</p>
-          </div>
-        )}
+        <div>
+          {feed.map(({ n, a }) => (
+            <NoteCard key={n.id} note={n} author={a} onOpenThread={() => onOpenThread(n)} onViewProfile={() => onViewProfile(a)} onReply={() => onReply(n)} />
+          ))}
+          <div className="h-24" />
+        </div>
       </div>
     </div>
   );
 };
+
+function ActionCircle({ children }: { children: React.ReactNode }) {
+  return <button className="w-9 h-9 rounded-full border border-[var(--damus-border)] flex items-center justify-center text-[var(--damus-text)]">{children}</button>;
+}
 
 export default ProfileScreen;

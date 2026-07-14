@@ -1,132 +1,76 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import type { MockUser, MockNote } from '../../../data/mock';
-import type { DamusScreen } from '../DamusSimulator';
+import { getUserByPubkey } from '../../../data/mock';
 import { NoteCard } from '../components/NoteCard';
 import { Avatar } from '../components/Avatar';
-import { getUserByPubkey } from '../../../data/mock';
+import { DamusLogo } from '../components/DamusLogo';
 
 interface HomeScreenProps {
   currentUser: MockUser | null;
   notes: MockNote[];
   users: MockUser[];
-  onNavigate: (screen: DamusScreen) => void;
+  onOpenDrawer: () => void;
+  onOpenThread: (note: MockNote) => void;
   onViewProfile: (user: MockUser) => void;
-  onReply?: (note: MockNote) => void;
+  onReply: (note: MockNote) => void;
+  onOpenRelays: () => void;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
-  currentUser,
-  notes,
-  users,
-  onNavigate,
-  onViewProfile,
-  onReply,
+  currentUser, notes, users, onOpenDrawer, onOpenThread, onViewProfile, onReply, onOpenRelays,
 }) => {
-  const [refreshing, setRefreshing] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<'feed' | 'global'>('feed');
+  const [tab, setTab] = useState<'notes' | 'replies'>('notes');
 
-  const handleRefresh = useCallback(() => {
-    setRefreshing(true);
-    // Simulate refresh
-    setTimeout(() => {
-      setRefreshing(false);
-      console.log('[Damus] Feed refreshed');
-    }, 1000);
-  }, []);
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop } = e.currentTarget;
-    if (scrollTop < -50 && !refreshing) {
-      handleRefresh();
-    }
-  };
-
-  // Get author info for each note
-  const notesWithAuthors = notes.slice(0, 20).map(note => ({
+  const feed = notes.slice(0, 25).map((note) => ({
     note,
     author: getUserByPubkey(note.pubkey) || users[0],
+    reposter: note.isRepost && note.repostedBy ? getUserByPubkey(note.repostedBy) : null,
   }));
 
   return (
-    <div className="min-h-screen bg-[var(--damus-bg)] pb-24" data-tour="damus-home">
-      {/* Navigation Header */}
-      <div className="sticky top-0 z-50 bg-[var(--damus-bg)]/95 backdrop-blur-md border-b border-[var(--damus-border)]">
-        <div className="flex items-center justify-between px-4 py-3">
-          <button
-            onClick={() => onNavigate('profile')}
-            className="w-8 h-8 rounded-full overflow-hidden"
-          >
-            <Avatar
-              src={currentUser?.avatar}
-              alt="Profile"
-              size="sm"
-              className="w-full h-full"
-            />
+    <div className="min-h-full bg-[var(--damus-bg)]" data-tour="damus-home">
+      {/* Top bar: avatar (drawer) · Damus logo · relay count */}
+      <header className="sticky top-0 z-30 bg-[var(--damus-bg)]/85 backdrop-blur-xl">
+        <div className="flex items-center justify-between px-4 pt-2 pb-1.5">
+          <button onClick={onOpenDrawer} aria-label="Open menu">
+            <Avatar seed={currentUser?.username || 'pitiunited'} className="w-9 h-9" />
           </button>
-          
-          <div className="flex items-center gap-1 bg-[var(--damus-bg-secondary)] rounded-lg p-1">
-            <button
-              onClick={() => setActiveFilter('feed')}
-              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
-                activeFilter === 'feed'
-                  ? 'bg-[var(--damus-bg)] text-[var(--damus-text)] shadow-sm'
-                  : 'text-[var(--damus-text-secondary)]'
-              }`}
-            >
-              Following
-            </button>
-            <button
-              onClick={() => setActiveFilter('global')}
-              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
-                activeFilter === 'global'
-                  ? 'bg-[var(--damus-bg)] text-[var(--damus-text)] shadow-sm'
-                  : 'text-[var(--damus-text-secondary)]'
-              }`}
-            >
-              Global
-            </button>
-          </div>
-          
-          <div className="w-8" /> {/* Spacer for balance */}
+          <DamusLogo className="w-8 h-8" />
+          <button onClick={onOpenRelays} className="text-[15px] text-[var(--damus-text-secondary)] font-medium w-9 text-right">
+            7/13
+          </button>
         </div>
-      </div>
 
-      {/* Pull to Refresh Indicator */}
-      {refreshing && (
-        <div className="flex items-center justify-center py-4">
-          <svg className="w-5 h-5 text-purple-600 damus-spin" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-          </svg>
-          <span className="ml-2 text-sm text-[var(--damus-text-secondary)]">Refreshing...</span>
+        {/* Notes / Notes & Replies */}
+        <div className="flex">
+          {([['notes', 'Notes'], ['replies', 'Notes & Replies']] as const).map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setTab(id)}
+              className="flex-1 py-2.5 relative text-[16px] font-semibold"
+            >
+              <span className={tab === id ? 'text-[var(--damus-text)]' : 'text-[var(--damus-text-secondary)]'}>{label}</span>
+              {tab === id && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-9 h-[3px] rounded-full damus-underline" />}
+            </button>
+          ))}
         </div>
-      )}
+        <div className="h-px bg-[var(--damus-separator)]" />
+      </header>
 
       {/* Feed */}
-      <div 
-        className="overflow-y-auto"
-        onScroll={handleScroll}
-        style={{ height: 'calc(100% - 140px)' }}
-      >
-        {notesWithAuthors.map(({ note, author }) => (
+      <div>
+        {feed.map(({ note, author, reposter }) => (
           <NoteCard
             key={note.id}
             note={note}
             author={author}
+            reposter={reposter}
+            onOpenThread={() => onOpenThread(note)}
             onViewProfile={() => onViewProfile(author)}
-            onReply={() => onReply?.(note)}
+            onReply={() => onReply(note)}
           />
         ))}
-        
-        {/* Load More */}
-        <div className="py-6 text-center">
-          <button
-            onClick={() => console.log('[Damus] Load more posts')}
-            className="text-sm text-purple-600 hover:text-purple-700 font-medium"
-          >
-            Load more posts
-          </button>
-        </div>
+        <div className="h-24" />
       </div>
     </div>
   );
