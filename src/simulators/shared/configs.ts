@@ -90,15 +90,15 @@ export const primalConfig: SimulatorConfig = {
 
 /**
  * Snort - Web Nostr client
- * Minimalist web client with teal accents
+ * Minimalist web client with purple accents
  */
 export const snortConfig: SimulatorConfig = {
   id: SimulatorClient.SNORT,
   name: 'Snort',
   description: 'Simple, fast web Nostr client.',
   platform: 'web',
-  primaryColor: '#14B8A6', // Teal
-  secondaryColor: '#5EEAD4',
+  primaryColor: '#7C3AED', // Purple (Snort brand)
+  secondaryColor: '#8B5CF6',
   icon: '/icons/snort.png',
   supportedFeatures: [
     SimulatorFeature.DM,
@@ -114,15 +114,15 @@ export const snortConfig: SimulatorConfig = {
 
 /**
  * YakiHonne - Mobile-first Nostr client
- * Japanese-inspired design with pink accents
+ * Long-form-first client with purple/violet accents
  */
 export const yakihonneConfig: SimulatorConfig = {
   id: SimulatorClient.YAKIHONNE,
   name: 'YakiHonne',
   description: 'Mobile-first Nostr client with unique social features.',
   platform: 'ios',
-  primaryColor: '#EC4899', // Pink
-  secondaryColor: '#F472B6',
+  primaryColor: '#7C3AED', // Purple/violet (YakiHonne brand)
+  secondaryColor: '#8B5CF6',
   icon: '/icons/yakihonne.svg',
   supportedFeatures: [
     SimulatorFeature.DM,

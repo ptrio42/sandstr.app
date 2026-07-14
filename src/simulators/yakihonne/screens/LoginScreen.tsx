@@ -67,7 +67,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, isDarkMode = 
             initial={{ scale: 0.8, rotate: -10 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 200 }}
-            className="w-24 h-24 mx-auto mb-5 rounded-3xl bg-gradient-to-br from-[#F7931A] to-[#C7760D] flex items-center justify-center shadow-xl"
+            className="w-24 h-24 mx-auto mb-5 rounded-3xl bg-gradient-to-br from-[#7C3AED] to-[#6D28D9] flex items-center justify-center shadow-xl"
           >
             <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
@@ -81,7 +81,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, isDarkMode = 
         {/* Decorative Line */}
         <div className="flex items-center justify-center gap-2 mb-8">
           <div className="w-12 h-0.5 bg-[#E0E0E0]" />
-          <div className="w-2 h-2 rounded-full bg-[#F7931A]" />
+          <div className="w-2 h-2 rounded-full bg-[#7C3AED]" />
           <div className="w-12 h-0.5 bg-[#E0E0E0]" />
         </div>
 
@@ -91,7 +91,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, isDarkMode = 
             onClick={() => setActiveTab('login')}
             className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${
               activeTab === 'login'
-                ? 'bg-[#F7931A] text-white shadow-md'
+                ? 'bg-[#7C3AED] text-white shadow-md'
                 : 'text-[#5F6368] hover:text-[#1A1A1A]'
             }`}
           >
@@ -101,7 +101,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, isDarkMode = 
             onClick={() => setActiveTab('generate')}
             className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${
               activeTab === 'generate'
-                ? 'bg-[#F7931A] text-white shadow-md'
+                ? 'bg-[#7C3AED] text-white shadow-md'
                 : 'text-[#5F6368] hover:text-[#1A1A1A]'
             }`}
           >
@@ -127,7 +127,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, isDarkMode = 
                   value={nsecInput}
                   onChange={(e) => setNsecInput(e.target.value)}
                   placeholder="nsec1..."
-                  className="w-full px-4 py-3 bg-[#F8F9FA] border border-[#E0E0E0] rounded-xl text-[#1A1A1A] placeholder-[#9AA0A6] focus:outline-none focus:border-[#F7931A] focus:ring-2 focus:ring-[#F7931A]/20 transition-all"
+                  className="w-full px-4 py-3 bg-[#F8F9FA] border border-[#E0E0E0] rounded-xl text-[#1A1A1A] placeholder-[#9AA0A6] focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
                 />
               </div>
 
@@ -143,7 +143,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, isDarkMode = 
 
               {/* Browser Extension Button */}
               <button className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-[#F8F9FA] hover:bg-[#F1F3F4] border border-[#E0E0E0] rounded-xl text-[#1A1A1A] font-semibold transition-colors">
-                <svg className="w-5 h-5 text-[#F7931A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 text-[#7C3AED]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
                 Use Extension
@@ -152,7 +152,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, isDarkMode = 
               {/* Demo Login Button */}
               <button
                 onClick={handleLogin}
-                className="w-full py-3.5 bg-[#F7931A] hover:bg-[#C7760D] text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
+                className="w-full py-3.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
               >
                 Sign In
               </button>
@@ -175,19 +175,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, isDarkMode = 
           >
             {!generatedKeys ? (
               <div className="bg-white rounded-2xl p-5 text-center shadow-sm border border-[#E0E0E0]">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-[#F7931A]/20 to-[#C7760D]/20 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-[#F7931A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-[#7C3AED]/20 to-[#6D28D9]/20 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-[#7C3AED]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                   </svg>
                 </div>
                 <h3 className="text-lg font-bold text-[#1A1A1A] mb-2">Generate Keys</h3>
                 <p className="text-[#5F6368] mb-5 text-sm leading-relaxed">
                   Create your Nostr identity with a unique key pair. 
-                  <span className="text-[#F7931A] font-semibold"> Save your private key securely!</span>
+                  <span className="text-[#7C3AED] font-semibold"> Save your private key securely!</span>
                 </p>
                 <button
                   onClick={handleGenerateKeys}
-                  className="w-full py-3.5 bg-[#F7931A] hover:bg-[#C7760D] text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
+                  className="w-full py-3.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
                 >
                   Create Keys
                 </button>
@@ -209,7 +209,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, isDarkMode = 
                     </div>
                     <button
                       onClick={() => handleCopy(generatedKeys.npub)}
-                      className="px-3 py-2.5 bg-[#F8F9FA] hover:bg-[#F1F3F4] border border-[#E0E0E0] rounded-xl text-[#F7931A] transition-colors"
+                      className="px-3 py-2.5 bg-[#F8F9FA] hover:bg-[#F1F3F4] border border-[#E0E0E0] rounded-xl text-[#7C3AED] transition-colors"
                     >
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -254,7 +254,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, isDarkMode = 
                   </button>
                   <button
                     onClick={handleGeneratedLogin}
-                    className="flex-1 py-3 bg-[#F7931A] hover:bg-[#C7760D] text-white font-bold rounded-xl shadow-md transition-colors"
+                    className="flex-1 py-3 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold rounded-xl shadow-md transition-colors"
                   >
                     Continue
                   </button>

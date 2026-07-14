@@ -8,85 +8,50 @@ import type { SimulatorUser, SimulatorFeedItem } from '../../shared/types';
 interface ProfileScreenProps {
   user: SimulatorUser;
   onOpenSettings: () => void;
+  /** Posts composed by the logged-in user during this session. */
+  composedPosts?: SimulatorFeedItem[];
 }
 
-// Mock user's posts
-const mockUserPosts: SimulatorFeedItem[] = [
+/**
+ * Base mock posts for the profile. Authorship is filled in at render time from
+ * the logged-in user so identity stays consistent (no hardcoded "Satoshi").
+ */
+const baseUserPosts: Array<{
+  id: string;
+  content: string;
+  ageSeconds: number;
+  likes: number;
+  reposts: number;
+  replies: number;
+  zaps: number;
+  zapAmount: number;
+  hashtags: string[];
+}> = [
   {
     id: 'post1',
-    type: 'note',
-    note: {
-      id: 'post1',
-      pubkey: 'user1',
-      created_at: Date.now() / 1000 - 3600,
-      kind: 1,
-      tags: [],
-      content: 'Working on something big for the Bitcoin community. Stay tuned! 🚀',
-      sig: 'sig1',
-      likes: 234,
-      reposts: 45,
-      replies: 23,
-      zaps: 56,
-      zapAmount: 10000,
-      images: [],
-      hashtags: ['Bitcoin'],
-      category: 'bitcoin' as const,
-    },
-    author: {
-      pubkey: 'user1',
-      npub: 'npub1user',
-      displayName: 'Satoshi Nakamoto',
-      username: 'satoshi',
-      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=satoshi',
-      bio: 'Bitcoin creator',
-      followersCount: 21000000,
-      followingCount: 21,
-      notesCount: 42,
-      createdAt: Date.now() / 1000 - 86400 * 5000,
-      isVerified: true,
-    },
-    isRead: false,
-    timestamp: Date.now() / 1000 - 3600,
+    content: 'Working on something big for the Nostr community. Stay tuned! 🚀',
+    ageSeconds: 3600,
+    likes: 234,
+    reposts: 45,
+    replies: 23,
+    zaps: 56,
+    zapAmount: 10000,
+    hashtags: ['Nostr'],
   },
   {
     id: 'post2',
-    type: 'note',
-    note: {
-      id: 'post2',
-      pubkey: 'user1',
-      created_at: Date.now() / 1000 - 86400,
-      kind: 1,
-      tags: [],
-      content: 'The Times 03/Jan/2009 Chancellor on brink of second bailout for banks. #Genesis',
-      sig: 'sig2',
-      likes: 10000,
-      reposts: 5000,
-      replies: 1000,
-      zaps: 2100,
-      zapAmount: 1000000,
-      images: [],
-      hashtags: ['Genesis'],
-      category: 'bitcoin' as const,
-    },
-    author: {
-      pubkey: 'user1',
-      npub: 'npub1user',
-      displayName: 'Satoshi Nakamoto',
-      username: 'satoshi',
-      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=satoshi',
-      bio: 'Bitcoin creator',
-      followersCount: 21000000,
-      followingCount: 21,
-      notesCount: 42,
-      createdAt: Date.now() / 1000 - 86400 * 5000,
-      isVerified: true,
-    },
-    isRead: false,
-    timestamp: Date.now() / 1000 - 86400,
+    content: 'Just published a new long-form piece on YakiHonne. Owning your content feels good. #Nostr #Writing',
+    ageSeconds: 86400,
+    likes: 512,
+    reposts: 88,
+    replies: 41,
+    zaps: 120,
+    zapAmount: 42000,
+    hashtags: ['Nostr', 'Writing'],
   },
 ];
 
-export function ProfileScreen({ user, onOpenSettings }: ProfileScreenProps) {
+export function ProfileScreen({ user, onOpenSettings, composedPosts = [] }: ProfileScreenProps) {
   const [activeTab, setActiveTab] = useState<'posts' | 'articles' | 'media' | 'likes'>('posts');
   const [isFollowing, setIsFollowing] = useState(false);
   const [likedNotes, setLikedNotes] = useState<Set<string>>(new Set());
@@ -108,6 +73,34 @@ export function ProfileScreen({ user, onOpenSettings }: ProfileScreenProps) {
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
     return num.toString();
   };
+
+  // Build the logged-in user's own posts so authorship reflects who is logged in.
+  const ownPosts: SimulatorFeedItem[] = baseUserPosts.map((p) => ({
+    id: p.id,
+    type: 'note',
+    note: {
+      id: p.id,
+      pubkey: user.pubkey,
+      created_at: Date.now() / 1000 - p.ageSeconds,
+      kind: 1,
+      tags: [],
+      content: p.content,
+      sig: `sig-${p.id}`,
+      likes: p.likes,
+      reposts: p.reposts,
+      replies: p.replies,
+      zaps: p.zaps,
+      zapAmount: p.zapAmount,
+      images: [],
+      hashtags: p.hashtags,
+      category: 'nostr' as const,
+    },
+    author: user,
+    isRead: false,
+    timestamp: Date.now() / 1000 - p.ageSeconds,
+  }));
+
+  const userPosts: SimulatorFeedItem[] = [...composedPosts, ...ownPosts];
 
   return (
     <div className="flex flex-col h-full" data-tour="yakihonne-profile">
@@ -223,7 +216,7 @@ export function ProfileScreen({ user, onOpenSettings }: ProfileScreenProps) {
         <div className="p-3">
           {activeTab === 'posts' && (
             <div className="space-y-3">
-              {mockUserPosts.map((item) => (
+              {userPosts.map((item) => (
                 <motion.div
                   key={item.id}
                   initial={{ opacity: 0, y: 20 }}

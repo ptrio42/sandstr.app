@@ -31,10 +31,14 @@ export interface AmethystSimulatorProps {
   onCommandHandled?: () => void;
 }
 
+// Valid bottom-nav / main tabs
+const TABS: TabId[] = ['home', 'search', 'video', 'notifications', 'messages', 'profile'];
+
 export function AmethystSimulator({ className = '', tourCommand, onCommandHandled }: AmethystSimulatorProps) {
   const [activeTab, setActiveTab] = useState<TabId>('home');
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsSection, setSettingsSection] = useState<string | null>('relays');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const parentTheme = useParentTheme();
   const tourContext = useContext(TourContext);
@@ -69,6 +73,31 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       if (tab === 'home') registerAction('navigate_home');
       if (tab === 'profile') registerAction('view_profile');
     }
+  }, [registerAction]);
+
+  // Handle drawer navigation. Some drawer items (relays/security) are sections
+  // inside Settings rather than standalone screens, and bookmarks lives on the
+  // profile — route those so every drawer item lands on a real destination.
+  const handleDrawerNavigate = useCallback((id: string) => {
+    if (TABS.includes(id as TabId)) {
+      setActiveTab(id as TabId);
+      if (id === 'home') registerAction('navigate_home');
+      if (id === 'profile') registerAction('view_profile');
+    } else if (id === 'relays') {
+      setSettingsSection('relays');
+      setIsSettingsOpen(true);
+      registerAction('navigate_settings');
+    } else if (id === 'security') {
+      setSettingsSection('privacy');
+      setIsSettingsOpen(true);
+      registerAction('navigate_settings');
+    } else if (id === 'bookmarks') {
+      setActiveTab('profile');
+      registerAction('view_profile');
+    } else {
+      setActiveTab('home');
+    }
+    setIsDrawerOpen(false);
   }, [registerAction]);
 
   // Handle new post
@@ -174,9 +203,10 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
     switch (activeTab) {
       case 'home':
         return (
-          <HomeScreen 
-            key="home" 
-            onOpenCompose={() => setIsComposeOpen(true)} 
+          <HomeScreen
+            key="home"
+            onOpenCompose={() => setIsComposeOpen(true)}
+            onOpenDrawer={() => setIsDrawerOpen(true)}
           />
         );
       case 'search':
@@ -221,11 +251,9 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         activeTab={activeTab}
-        onTabChange={(tab) => {
-          setActiveTab(tab as TabId);
-          setIsDrawerOpen(false);
-        }}
+        onTabChange={handleDrawerNavigate}
         onOpenSettings={() => {
+          setSettingsSection('relays');
           setIsSettingsOpen(true);
           setIsDrawerOpen(false);
         }}
@@ -267,8 +295,8 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         )}
       </AnimatePresence>
 
-      {/* Bottom Navigation - Only show on main tabs */}
-      {activeTab !== 'profile' && activeTab !== 'video' && (
+      {/* Bottom Navigation - Only show on main tabs (Profile is full-screen with its own back button) */}
+      {activeTab !== 'profile' && (
         <BottomNav 
           activeTab={activeTab} 
           onTabChange={handleTabChange}
@@ -300,7 +328,10 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
               className="absolute right-0 top-0 bottom-0 w-full max-w-md bg-[var(--md-background)]"
               onClick={(e) => e.stopPropagation()}
             >
-              <SettingsScreen onBack={() => setIsSettingsOpen(false)} />
+              <SettingsScreen
+                onBack={() => setIsSettingsOpen(false)}
+                initialSection={settingsSection}
+              />
             </motion.div>
           </motion.div>
         )}

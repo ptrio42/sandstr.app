@@ -1,14 +1,14 @@
 /**
- * YakiHonne Theme - Bitcoin Orange Accent
- * Cross-platform design with orange Bitcoin accents (#F7931A)
+ * YakiHonne Theme - Purple/Violet Brand Accent
+ * Cross-platform design matching the real YakiHonne purple brand (#7C3AED / #8B5CF6)
  */
 
-/* Bitcoin Orange Color System */
+/* Purple/Violet Color System */
 :root {
-  /* Primary - Bitcoin Orange */
-  --yh-primary: #F7931A;
-  --yh-primary-light: #FFB84D;
-  --yh-primary-dark: #C7760D;
+  /* Primary - YakiHonne Purple */
+  --yh-primary: #7C3AED;
+  --yh-primary-light: #A78BFA;
+  --yh-primary-dark: #6D28D9;
   --yh-on-primary: #FFFFFF;
   
   /* Secondary - Dark Gray */
@@ -43,7 +43,7 @@
   --yh-text-primary: #1A1A1A;
   --yh-text-secondary: #5F6368;
   --yh-text-tertiary: #9AA0A6;
-  --yh-text-link: #F7931A;
+  --yh-text-link: #7C3AED;
   
   /* Status Colors */
   --yh-success: #10B981;

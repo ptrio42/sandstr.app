@@ -28,6 +28,7 @@ interface SnortSimulatorState {
   selectedNote: MockNote | null;
   isAuthenticated: boolean;
   isComposeOpen: boolean;
+  theme: 'dark' | 'light';
 }
 
 // Mock data loader - only loads on client
@@ -85,6 +86,7 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
     selectedNote: null,
     isAuthenticated: false,
     isComposeOpen: false,
+    theme: 'dark',
   });
 
   const [mockData, setMockData] = useState<{
@@ -329,13 +331,13 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
   ] as const;
 
   return (
-    <div className={`snort-simulator ${parentTheme}`} data-theme={parentTheme}>
+    <div className={`snort-simulator ${parentTheme}`} data-theme={parentTheme} data-snort-theme={state.theme}>
       <div className="snort-layout">
         {/* Left Sidebar - Navigation */}
         <aside className="snort-sidebar snort-left-sidebar">
           <div className="snort-sidebar-header">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-teal-500 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-violet-500 flex items-center justify-center">
                 <svg className="w-6 h-6 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
@@ -401,7 +403,7 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
                   key={tag}
                   className="py-2 px-3 rounded-lg hover:bg-slate-800 cursor-pointer transition-colors"
                 >
-                  <p className="text-teal-400 font-medium">{tag}</p>
+                  <p className="text-violet-400 font-medium">{tag}</p>
                   <p className="text-xs text-slate-500">{Math.floor(Math.random() * 1000)} posts</p>
                 </div>
               ))}

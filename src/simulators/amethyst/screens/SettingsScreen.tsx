@@ -25,11 +25,12 @@ import '../amethyst.theme.css';
 
 interface SettingsScreenProps {
   onBack?: () => void;
+  initialSection?: string | null;
 }
 
-export function SettingsScreen({ onBack }: SettingsScreenProps) {
+export function SettingsScreen({ onBack, initialSection = 'relays' }: SettingsScreenProps) {
   const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('auto');
-  const [expandedSection, setExpandedSection] = useState<string | null>('relays');
+  const [expandedSection, setExpandedSection] = useState<string | null>(initialSection);
   const [notifications, setNotifications] = useState({
     likes: true,
     mentions: true,

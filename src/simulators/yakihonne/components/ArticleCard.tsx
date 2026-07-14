@@ -22,9 +22,10 @@ interface ArticleCardProps {
   };
   isBookmarked: boolean;
   onBookmark: () => void;
+  onOpen?: () => void;
 }
 
-export function ArticleCard({ article, isBookmarked, onBookmark }: ArticleCardProps) {
+export function ArticleCard({ article, isBookmarked, onBookmark, onOpen }: ArticleCardProps) {
   const formatDate = (dateStr: string): string => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { 
@@ -46,6 +47,8 @@ export function ArticleCard({ article, isBookmarked, onBookmark }: ArticleCardPr
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+      onClick={onOpen}
+      role="button"
     >
       {/* Cover Image */}
       <div className="relative overflow-hidden">
@@ -101,7 +104,7 @@ export function ArticleCard({ article, isBookmarked, onBookmark }: ArticleCardPr
       </div>
 
       {/* Action Bar */}
-      <div className="yakihonne-card-footer">
+      <div className="yakihonne-card-footer" onClick={(e) => e.stopPropagation()}>
         <div className="yakihonne-actions">
           <button className="yakihonne-action hover:text-red-500">
             <Heart className="w-4 h-4" />
@@ -116,9 +119,9 @@ export function ArticleCard({ article, isBookmarked, onBookmark }: ArticleCardPr
             <span>{formatNumber(article.zaps)}</span>
           </button>
         </div>
-        
+
         <div className="flex items-center gap-2">
-          <button 
+          <button
             onClick={(e) => {
               e.stopPropagation();
               onBookmark();

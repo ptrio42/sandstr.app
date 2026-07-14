@@ -19,11 +19,12 @@
   --snort-border: #334155;
   --snort-border-subtle: #1e293b;
   
-  /* Accent Colors */
-  --snort-accent: #14b8a6;
-  --snort-accent-hover: #0d9488;
-  --snort-accent-light: #5eead4;
-  --snort-accent-dark: #0f766e;
+  /* Accent Colors - Snort purple/violet */
+  --snort-accent: #7c3aed;
+  --snort-accent-hover: #6d28d9;
+  --snort-accent-light: #8b5cf6;
+  --snort-accent-dark: #5b21b6;
+  --snort-accent-soft: rgba(124, 58, 237, 0.12);
   
   /* Status Colors */
   --snort-success: #22c55e;
@@ -68,6 +69,60 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   background-color: var(--snort-bg-primary);
   color: var(--snort-text-primary);
+}
+
+/* Light Theme - re-skins the client when the Dark Mode toggle is off.
+   Scoped to the simulator root via data-snort-theme="light" so it only
+   affects this simulator. Overrides the same --snort-* tokens the whole
+   UI is built on, keeping the purple accent with light-mode contrast. */
+.snort-simulator[data-snort-theme='light'] {
+  --snort-bg-primary: #ffffff;
+  --snort-bg-secondary: #f4f4f7;
+  --snort-bg-tertiary: #e6e6ee;
+  --snort-bg-elevated: #ffffff;
+
+  --snort-text-primary: #1a1523;
+  --snort-text-secondary: #52525b;
+  --snort-text-tertiary: #71717a;
+  --snort-text-muted: #a1a1aa;
+
+  --snort-border: #e0e0e8;
+  --snort-border-subtle: #ececef;
+
+  /* Accent stays Snort purple, tuned slightly for light backgrounds */
+  --snort-accent: #7c3aed;
+  --snort-accent-hover: #6d28d9;
+  --snort-accent-light: #8b5cf6;
+  --snort-accent-dark: #5b21b6;
+  --snort-accent-soft: rgba(124, 58, 237, 0.1);
+
+  --snort-shadow-sm: 0 1px 2px 0 rgba(24, 24, 27, 0.06);
+  --snort-shadow: 0 4px 6px -1px rgba(24, 24, 27, 0.1);
+  --snort-shadow-lg: 0 10px 15px -3px rgba(24, 24, 27, 0.12);
+
+  background-color: var(--snort-bg-primary);
+  color: var(--snort-text-primary);
+}
+
+/* Light-theme overrides for the hardcoded Tailwind utility classes used on
+   always-visible chrome (sidebars, headers, quick-compose). Without these the
+   dark-tuned text/background utilities would render low-contrast on a light
+   background. Scoped to the simulator root so no global Tailwind is touched. */
+.snort-simulator[data-snort-theme='light'] .text-white {
+  color: var(--snort-text-primary);
+}
+.snort-simulator[data-snort-theme='light'] .text-slate-400,
+.snort-simulator[data-snort-theme='light'] .text-slate-500 {
+  color: var(--snort-text-secondary);
+}
+.snort-simulator[data-snort-theme='light'] .border-slate-700 {
+  border-color: var(--snort-border);
+}
+.snort-simulator[data-snort-theme='light'] .bg-slate-900 {
+  background-color: var(--snort-bg-secondary);
+}
+.snort-simulator[data-snort-theme='light'] .hover\:bg-slate-800:hover {
+  background-color: var(--snort-bg-tertiary);
 }
 
 /* Layout */
@@ -891,7 +946,7 @@
 
 .snort-tab.active {
   color: var(--snort-accent);
-  background: rgba(20, 184, 166, 0.1);
+  background: var(--snort-accent-soft);
 }
 
 /* Search */
@@ -1079,7 +1134,7 @@
 .snort-zap-amount:hover,
 .snort-zap-amount.selected {
   border-color: var(--snort-accent);
-  background: rgba(20, 184, 166, 0.1);
+  background: var(--snort-accent-soft);
 }
 
 .snort-zap-amount-value {

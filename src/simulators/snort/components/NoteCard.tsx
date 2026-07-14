@@ -160,7 +160,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
             href={match.content}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-teal-400 hover:underline"
+            className="text-violet-400 hover:underline"
             onClick={(e) => e.stopPropagation()}
           >
             {match.content}
@@ -170,7 +170,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         parts.push(
           <span
             key={match.index}
-            className="text-teal-400 font-mono cursor-pointer hover:underline"
+            className="text-violet-400 font-mono cursor-pointer hover:underline"
             onClick={(e) => {
               e.stopPropagation();
               console.log('[Snort] Open:', match.content);
@@ -183,7 +183,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         parts.push(
           <span
             key={match.index}
-            className="text-teal-400 cursor-pointer hover:underline"
+            className="text-violet-400 cursor-pointer hover:underline"
             onClick={(e) => {
               e.stopPropagation();
               console.log('[Snort] Search hashtag:', match.content);
@@ -373,7 +373,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                 <input
                   type="text"
                   placeholder="Custom amount..."
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-violet-500"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       const amount = parseInt((e.target as HTMLInputElement).value);

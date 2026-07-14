@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Bell, Zap } from 'lucide-react';
+import { Search, Bell, Zap, X, Heart, MessageCircle, UserPlus } from 'lucide-react';
 import { NoteCard } from '../../../simulators/shared/components/NoteCard';
 import { ContentTabs } from '../components/ContentTabs';
 import { formatRelativeTime } from '../../shared/utils/mockEvents';
@@ -9,6 +9,8 @@ import type { SimulatorFeedItem, SimulatorUser } from '../../shared/types';
 interface FeedScreenProps {
   onOpenCompose: () => void;
   onZap: (amount: number) => void;
+  /** Posts composed by the logged-in user this session, shown at the top of the feed. */
+  composedPosts?: SimulatorFeedItem[];
 }
 
 // Mock feed items
@@ -210,11 +212,21 @@ const mockFeedItems: SimulatorFeedItem[] = [
   },
 ];
 
-export function FeedScreen({ onOpenCompose, onZap }: FeedScreenProps) {
+const mockNotifications = [
+  { id: 'n1', icon: Heart, color: 'text-red-500', text: 'Alice Nakamoto liked your post', time: '2m' },
+  { id: 'n2', icon: Zap, color: 'text-yellow-500', text: 'Eve Lightning zapped you 2,100 sats', time: '18m' },
+  { id: 'n3', icon: UserPlus, color: 'text-[var(--yh-primary)]', text: 'Bob Builder started following you', time: '1h' },
+  { id: 'n4', icon: MessageCircle, color: 'text-blue-500', text: 'Carol Runner replied to your note', time: '3h' },
+];
+
+export function FeedScreen({ onOpenCompose, onZap, composedPosts = [] }: FeedScreenProps) {
   const [activeTab, setActiveTab] = useState<'all' | 'following' | 'zapped'>('all');
   const [likedNotes, setLikedNotes] = useState<Set<string>>(new Set());
   const [repostedNotes, setRepostedNotes] = useState<Set<string>>(new Set());
   const [zappedNotes, setZappedNotes] = useState<Set<string>>(new Set());
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const handleLike = useCallback((noteId: string) => {
     setLikedNotes(prev => {
@@ -251,9 +263,21 @@ export function FeedScreen({ onOpenCompose, onZap }: FeedScreenProps) {
     });
   }, [onZap]);
 
-  const filteredItems = mockFeedItems.filter(item => {
-    if (activeTab === 'following') return true; // Mock: all are following
-    if (activeTab === 'zapped') return item.note.zaps > 10;
+  const allItems = [...composedPosts, ...mockFeedItems];
+  const filteredItems = allItems.filter(item => {
+    if (activeTab === 'zapped' && !(item.note.zaps > 10)) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const haystack = [
+        item.note.content,
+        item.author.displayName,
+        item.author.username,
+        ...(item.note.hashtags || []),
+      ]
+        .join(' ')
+        .toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
     return true;
   });
 
@@ -266,15 +290,110 @@ export function FeedScreen({ onOpenCompose, onZap }: FeedScreenProps) {
           <span className="text-xl font-bold">YakiHonne</span>
         </div>
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            <Search className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          <button
+            onClick={() => {
+              setShowSearch(v => !v);
+              if (showSearch) setSearchQuery('');
+              setShowNotifications(false);
+            }}
+            aria-label="Search feed"
+            className={`p-2 rounded-full transition-colors ${
+              showSearch
+                ? 'bg-[var(--yh-primary)]/10 text-[var(--yh-primary)]'
+                : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400'
+            }`}
+          >
+            <Search className="w-5 h-5" />
           </button>
-          <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative">
-            <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-[var(--yh-primary)] rounded-full" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => {
+                setShowNotifications(v => !v);
+                setShowSearch(false);
+              }}
+              aria-label="Notifications"
+              className={`p-2 rounded-full transition-colors relative ${
+                showNotifications
+                  ? 'bg-[var(--yh-primary)]/10 text-[var(--yh-primary)]'
+                  : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400'
+              }`}
+            >
+              <Bell className="w-5 h-5" />
+              {!showNotifications && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-[var(--yh-primary)] rounded-full" />
+              )}
+            </button>
+
+            <AnimatePresence>
+              {showNotifications && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                  className="absolute right-0 top-11 z-50 w-64 bg-[var(--yh-surface)] rounded-xl shadow-[var(--yh-shadow-lg)] border border-[var(--yh-border)] overflow-hidden"
+                >
+                  <div className="px-3 py-2 text-sm font-semibold text-[var(--yh-text-primary)] border-b border-[var(--yh-border-light)]">
+                    Notifications
+                  </div>
+                  <div className="max-h-64 overflow-y-auto">
+                    {mockNotifications.map((n) => {
+                      const NIcon = n.icon;
+                      return (
+                        <div
+                          key={n.id}
+                          className="flex items-start gap-2 px-3 py-2 hover:bg-[var(--yh-surface-variant)] transition-colors"
+                        >
+                          <NIcon className={`w-4 h-4 mt-0.5 shrink-0 ${n.color}`} />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-[var(--yh-text-primary)] leading-snug">
+                              {n.text}
+                            </p>
+                            <p className="text-[11px] text-[var(--yh-text-tertiary)]">{n.time} ago</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
+
+      {/* Search bar */}
+      <AnimatePresence initial={false}>
+        {showSearch && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden bg-[var(--yh-surface)] border-b border-[var(--yh-border)]"
+          >
+            <div className="p-3 flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--yh-text-tertiary)]" />
+                <input
+                  autoFocus
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search posts, people, tags..."
+                  className="yakihonne-input pl-9"
+                />
+              </div>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Clear search"
+                  className="p-2 rounded-full hover:bg-[var(--yh-surface-variant)] text-[var(--yh-text-tertiary)]"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Content Type Tabs */}
       <ContentTabs
@@ -320,11 +439,22 @@ export function FeedScreen({ onOpenCompose, onZap }: FeedScreenProps) {
             </motion.div>
           ))}
         </AnimatePresence>
-        
+
+        {filteredItems.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Search className="w-14 h-14 text-gray-300 mb-3" />
+            <p className="text-sm text-[var(--yh-text-tertiary)]">
+              {searchQuery.trim() ? `No posts match “${searchQuery.trim()}”` : 'No posts yet'}
+            </p>
+          </div>
+        )}
+
         {/* End of Feed */}
-        <div className="text-center py-6 text-sm" style={{ color: 'var(--yh-text-tertiary)' }}>
-          You've reached the end
-        </div>
+        {filteredItems.length > 0 && (
+          <div className="text-center py-6 text-sm" style={{ color: 'var(--yh-text-tertiary)' }}>
+            You've reached the end
+          </div>
+        )}
       </div>
     </div>
   );

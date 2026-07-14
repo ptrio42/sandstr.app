@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Search, TrendingUp, Clock, Bookmark } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, TrendingUp, Clock, Bookmark, X } from 'lucide-react';
 import { ArticleCard } from '../components/ArticleCard';
+import { ArticleReader } from '../components/ArticleReader';
 import { ContentTabs } from '../components/ContentTabs';
 
 interface ArticlesScreenProps {
   onOpenCompose: () => void;
+  onZap?: (amount: number) => void;
 }
 
 // Mock articles data
@@ -97,9 +99,12 @@ const mockArticles = [
   },
 ];
 
-export function ArticlesScreen({ onOpenCompose }: ArticlesScreenProps) {
+export function ArticlesScreen({ onOpenCompose, onZap }: ArticlesScreenProps) {
   const [activeTab, setActiveTab] = useState<'trending' | 'latest' | 'bookmarked'>('trending');
   const [bookmarkedArticles, setBookmarkedArticles] = useState<Set<string>>(new Set());
+  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleBookmark = (articleId: string) => {
     setBookmarkedArticles(prev => {
@@ -114,9 +119,38 @@ export function ArticlesScreen({ onOpenCompose }: ArticlesScreenProps) {
   };
 
   const filteredArticles = mockArticles.filter(article => {
-    if (activeTab === 'bookmarked') return bookmarkedArticles.has(article.id);
+    if (activeTab === 'bookmarked' && !bookmarkedArticles.has(article.id)) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const haystack = [
+        article.title,
+        article.summary,
+        article.author.name,
+        ...article.tags,
+      ]
+        .join(' ')
+        .toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
     return true;
   });
+
+  const selectedArticle = selectedArticleId
+    ? mockArticles.find(a => a.id === selectedArticleId) ?? null
+    : null;
+
+  // Article reader / detail view
+  if (selectedArticle) {
+    return (
+      <ArticleReader
+        article={selectedArticle}
+        isBookmarked={bookmarkedArticles.has(selectedArticle.id)}
+        onBookmark={() => handleBookmark(selectedArticle.id)}
+        onBack={() => setSelectedArticleId(null)}
+        onZap={onZap}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -124,11 +158,56 @@ export function ArticlesScreen({ onOpenCompose }: ArticlesScreenProps) {
       <div className="yakihonne-header">
         <span className="yakihonne-header-title">Articles</span>
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            <Search className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          <button
+            onClick={() => {
+              setShowSearch(v => !v);
+              if (showSearch) setSearchQuery('');
+            }}
+            aria-label="Search articles"
+            className={`p-2 rounded-full transition-colors ${
+              showSearch
+                ? 'bg-[var(--yh-primary)]/10 text-[var(--yh-primary)]'
+                : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400'
+            }`}
+          >
+            <Search className="w-5 h-5" />
           </button>
         </div>
       </div>
+
+      {/* Search bar */}
+      <AnimatePresence initial={false}>
+        {showSearch && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden bg-[var(--yh-surface)] border-b border-[var(--yh-border)]"
+          >
+            <div className="p-3 flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--yh-text-tertiary)]" />
+                <input
+                  autoFocus
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search articles, authors, tags..."
+                  className="yakihonne-input pl-9"
+                />
+              </div>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Clear search"
+                  className="p-2 rounded-full hover:bg-[var(--yh-surface-variant)] text-[var(--yh-text-tertiary)]"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Content Type Tabs */}
       <ContentTabs
@@ -145,13 +224,27 @@ export function ArticlesScreen({ onOpenCompose }: ArticlesScreenProps) {
       <div className="flex-1 overflow-y-auto p-3 space-y-4">
         {filteredArticles.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Bookmark className="w-16 h-16 text-gray-300 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-400">
-              No saved articles
-            </h3>
-            <p className="text-sm text-gray-500 mt-2">
-              Bookmark articles to read them later
-            </p>
+            {searchQuery.trim() ? (
+              <>
+                <Search className="w-16 h-16 text-gray-300 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-400">
+                  No results
+                </h3>
+                <p className="text-sm text-gray-500 mt-2">
+                  Nothing matches “{searchQuery.trim()}”
+                </p>
+              </>
+            ) : (
+              <>
+                <Bookmark className="w-16 h-16 text-gray-300 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-400">
+                  No saved articles
+                </h3>
+                <p className="text-sm text-gray-500 mt-2">
+                  Bookmark articles to read them later
+                </p>
+              </>
+            )}
           </div>
         ) : (
           filteredArticles.map((article, index) => (
@@ -170,6 +263,7 @@ export function ArticlesScreen({ onOpenCompose }: ArticlesScreenProps) {
                 article={article}
                 isBookmarked={bookmarkedArticles.has(article.id)}
                 onBookmark={() => handleBookmark(article.id)}
+                onOpen={() => setSelectedArticleId(article.id)}
               />
             </motion.div>
           ))

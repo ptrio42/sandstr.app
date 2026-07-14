@@ -156,6 +156,28 @@
   letter-spacing: 5px;
 }
 
+/* Self-rendered odometer / hit counter (digit boxes) */
+.odometer {
+  display: inline-flex;
+  gap: 3px;
+  vertical-align: middle;
+}
+
+.odometer-digit {
+  display: inline-block;
+  min-width: 20px;
+  padding: 3px 4px;
+  background: linear-gradient(180deg, #1a1a1a 0%, #000 50%, #1a1a1a 100%);
+  color: #0f0;
+  font-family: 'Courier New', monospace;
+  font-size: 22px;
+  font-weight: bold;
+  line-height: 1;
+  text-align: center;
+  border: 2px inset #444;
+  text-shadow: 0 0 4px #0f0;
+}
+
 /* Browser Badge */
 .browser-badge {
   background: #c0c0c0;
@@ -391,6 +413,20 @@
   border-style: inset;
 }
 
+.action-btn.action-btn-on {
+  background: linear-gradient(180deg, #ffff66, #ffcc00);
+  border-style: inset;
+  color: #000;
+  font-weight: bold;
+}
+
+.post-btn:disabled,
+.gb-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+}
+
 .new-note-box {
   background: #2f4f4f;
   border: 3px groove #00ff00;
@@ -622,6 +658,16 @@
 
 .hit-counter {
   margin-top: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hit-counter-label {
+  color: #00ffff;
+  font-size: 12px;
 }
 
 /* Floating Elements */

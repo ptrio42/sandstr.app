@@ -72,7 +72,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               onClick={() => setActiveSection(section.id)}
               className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
                 activeSection === section.id
-                  ? 'text-teal-400 border-b-2 border-teal-400'
+                  ? 'text-violet-400 border-b-2 border-violet-400'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -206,7 +206,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               <div className="p-4">
                 <p className="text-sm text-slate-400 mb-2">Your public key (npub) can be shared with others.</p>
                 <div className="flex gap-2">
-                  <code className="flex-1 p-3 bg-gray-100 dark:bg-slate-900 rounded-lg text-sm text-teal-600 dark:text-teal-400 break-all font-mono">
+                  <code className="flex-1 p-3 bg-gray-100 dark:bg-slate-900 rounded-lg text-sm text-violet-600 dark:text-violet-400 break-all font-mono">
                     {currentUser.pubkey}
                   </code>
                   <button
@@ -333,7 +333,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               <div className="snort-settings-header">About Snort</div>
               <div className="p-4">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-teal-500 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-violet-500 flex items-center justify-center">
                     <svg className="w-7 h-7 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
@@ -352,13 +352,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <div className="snort-settings-group">
               <div className="snort-settings-header">Links</div>
               <div className="p-4 space-y-2">
-                <a href="https://snort.social" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between text-teal-400 hover:underline">
+                <a href="https://snort.social" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between text-violet-400 hover:underline">
                   <span>Official Website</span>
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
                 </a>
-                <a href="https://github.com/v0l/snort" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between text-teal-400 hover:underline">
+                <a href="https://github.com/v0l/snort" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between text-violet-400 hover:underline">
                   <span>GitHub Repository</span>
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />

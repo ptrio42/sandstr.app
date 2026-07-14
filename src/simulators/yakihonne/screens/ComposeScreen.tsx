@@ -12,15 +12,18 @@ import {
   Globe
 } from 'lucide-react';
 import { ContentTabs } from '../components/ContentTabs';
+import type { SimulatorUser } from '../../shared/types';
 
 interface ComposeScreenProps {
   isOpen: boolean;
   onClose: () => void;
   onPost: (content: string, type: 'post' | 'article' | 'media') => void;
   initialType?: 'post' | 'article' | 'media';
+  /** The logged-in user composing the post, shown in the header. */
+  author?: SimulatorUser;
 }
 
-export function ComposeScreen({ isOpen, onClose, onPost, initialType = 'post' }: ComposeScreenProps) {
+export function ComposeScreen({ isOpen, onClose, onPost, initialType = 'post', author }: ComposeScreenProps) {
   const [content, setContent] = useState('');
   const [postType, setPostType] = useState<'post' | 'article' | 'media'>(initialType);
   const [articleTitle, setArticleTitle] = useState('');
@@ -69,6 +72,24 @@ export function ComposeScreen({ isOpen, onClose, onPost, initialType = 'post' }:
     ];
     const randomImage = mockImages[Math.floor(Math.random() * mockImages.length)];
     setSelectedImages(prev => [...prev, randomImage]);
+  };
+
+  // Insert a snippet at the caret (or append) and refocus the editor.
+  const insertSnippet = (snippet: string) => {
+    const el = textareaRef.current;
+    if (!el) {
+      setContent(prev => prev + snippet);
+      return;
+    }
+    const start = el.selectionStart ?? content.length;
+    const end = el.selectionEnd ?? content.length;
+    const next = content.slice(0, start) + snippet + content.slice(end);
+    setContent(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      const caret = start + snippet.length;
+      el.setSelectionRange(caret, caret);
+    });
   };
 
   return (
@@ -136,6 +157,25 @@ export function ComposeScreen({ isOpen, onClose, onPost, initialType = 'post' }:
 
             {/* Content Area */}
             <div className="flex-1 overflow-y-auto p-4">
+              {/* Author identity */}
+              {author && (
+                <div className="flex items-center gap-3 mb-4">
+                  <img
+                    src={author.avatar}
+                    alt={author.displayName}
+                    className="yakihonne-avatar yakihonne-avatar-md"
+                  />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm text-[var(--yh-text-primary)] truncate">
+                      {author.displayName}
+                    </p>
+                    <p className="text-xs text-[var(--yh-text-tertiary)] truncate">
+                      @{author.username}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Article Title Input */}
               {postType === 'article' && (
                 <input
@@ -184,13 +224,25 @@ export function ComposeScreen({ isOpen, onClose, onPost, initialType = 'post' }:
               >
                 <ImageIcon className="w-5 h-5" />
               </button>
-              <button className="yakihonne-toolbar-btn" title="Add Link">
+              <button
+                onClick={() => insertSnippet('https://')}
+                className="yakihonne-toolbar-btn"
+                title="Add Link"
+              >
                 <Link className="w-5 h-5" />
               </button>
-              <button className="yakihonne-toolbar-btn" title="Add Hashtag">
+              <button
+                onClick={() => insertSnippet('#')}
+                className="yakihonne-toolbar-btn"
+                title="Add Hashtag"
+              >
                 <Hash className="w-5 h-5" />
               </button>
-              <button className="yakihonne-toolbar-btn" title="Mention User">
+              <button
+                onClick={() => insertSnippet('@')}
+                className="yakihonne-toolbar-btn"
+                title="Mention User"
+              >
                 <AtSign className="w-5 h-5" />
               </button>
             </div>

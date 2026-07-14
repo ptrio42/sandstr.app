@@ -191,7 +191,7 @@ export const RelaysScreen: React.FC<RelaysScreenProps> = ({ onBack }) => {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 p-4 border-b border-slate-700">
         <div className="bg-slate-800 rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-teal-400">{connectedCount}</p>
+          <p className="text-2xl font-bold text-violet-400">{connectedCount}</p>
           <p className="text-xs text-slate-400">Connected</p>
         </div>
         <div className="bg-slate-800 rounded-lg p-3 text-center">
@@ -215,7 +215,7 @@ export const RelaysScreen: React.FC<RelaysScreenProps> = ({ onBack }) => {
               value={newRelayUrl}
               onChange={(e) => setNewRelayUrl(e.target.value)}
               placeholder="wss://relay.example.com"
-              className="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
+              className="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-violet-500"
             />
             <button
               onClick={handleAddRelay}

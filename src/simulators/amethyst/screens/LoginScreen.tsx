@@ -145,7 +145,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </div>
             <button
               onClick={handleLogin}
-              className="md-btn md-btn-primary w-full mt-6"
+              className="md-button md-button-filled w-full mt-6"
             >
               Sign In
             </button>
@@ -174,7 +174,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                 </p>
                 <button
                   onClick={handleGenerateKeys}
-                  className="md-btn md-btn-primary w-full"
+                  className="md-button md-button-filled w-full"
                 >
                   Generate New Keys
                 </button>
@@ -222,13 +222,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                 <div className="flex gap-3 mt-6">
                   <button
                     onClick={() => setGeneratedKeys(null)}
-                    className="md-btn md-btn-secondary flex-1"
+                    className="md-button md-button-outlined flex-1"
                   >
                     Back
                   </button>
                   <button
                     onClick={handleGeneratedLogin}
-                    className="md-btn md-btn-primary flex-1"
+                    className="md-button md-button-filled flex-1"
                   >
                     Continue
                   </button>

@@ -20,8 +20,30 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { ComposeScreen } from './screens/ComposeScreen';
 import { useParentTheme } from '../shared/hooks/useParentTheme';
 import type { MockUser } from '../../data/mock';
+import type { SimulatorUser, SimulatorFeedItem } from '../shared/types';
 import { TourContext } from '../../components/tour';
 import './yakihonne.theme.css';
+
+/** Normalize a logged-in MockUser into the SimulatorUser shape the screens expect. */
+function toSimulatorUser(user: MockUser): SimulatorUser {
+  return {
+    pubkey: user.pubkey,
+    npub: user.pubkey.startsWith('npub') ? user.pubkey : `npub1${user.pubkey}`,
+    displayName: user.displayName,
+    username: user.username,
+    avatar: user.avatar,
+    bio: user.bio,
+    website: user.website,
+    location: user.location,
+    lightningAddress: user.lightningAddress,
+    nip05: user.nip05,
+    followersCount: user.followersCount,
+    followingCount: user.followingCount,
+    notesCount: 0,
+    createdAt: user.createdAt,
+    isVerified: user.isVerified ?? false,
+  };
+}
 
 export type TabId = 'feed' | 'articles' | 'media' | 'profile' | 'wallet' | 'settings';
 
@@ -49,6 +71,7 @@ export function YakiHonneSimulator({ className = '', tourCommand, onCommandHandl
   const [composeType, setComposeType] = useState<'post' | 'article' | 'media'>('post');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<MockUser | null>(null);
+  const [composedPosts, setComposedPosts] = useState<SimulatorFeedItem[]>([]);
   const [toast, setToast] = useState<{
     message: string;
     isVisible: boolean;
@@ -88,17 +111,50 @@ export function YakiHonneSimulator({ className = '', tourCommand, onCommandHandl
     registerAction('compose');
   }, [registerAction]);
 
-  // Handle new post
+  // Handle new post — thread the composed post into the feed under the logged-in identity.
   const handleNewPost = useCallback((content: string, type: 'post' | 'article' | 'media') => {
     registerAction('post');
+
+    if (currentUser && content.trim()) {
+      const author = toSimulatorUser(currentUser);
+      const now = Date.now() / 1000;
+      const id = `composed-${Date.now()}`;
+      const hashtags = (content.match(/#(\w+)/g) || []).map((t) => t.slice(1));
+      const newItem: SimulatorFeedItem = {
+        id,
+        type: type === 'article' ? 'long_form' : 'note',
+        note: {
+          id,
+          pubkey: author.pubkey,
+          created_at: now,
+          kind: type === 'article' ? 30023 : 1,
+          tags: [],
+          content: content.trim(),
+          sig: `sig-${id}`,
+          likes: 0,
+          reposts: 0,
+          replies: 0,
+          zaps: 0,
+          zapAmount: 0,
+          images: [],
+          hashtags,
+          category: 'nostr' as const,
+        },
+        author,
+        isRead: true,
+        timestamp: now,
+      };
+      setComposedPosts((prev) => [newItem, ...prev]);
+    }
+
     showToast(
-      type === 'article' ? 'Article published! 📝' : 
-      type === 'media' ? 'Media shared! 📸' : 
-      'Post published! 🎉', 
+      type === 'article' ? 'Article published! 📝' :
+      type === 'media' ? 'Media shared! 📸' :
+      'Post published! 🎉',
       'success'
     );
     setIsComposeOpen(false);
-  }, [showToast, registerAction]);
+  }, [showToast, registerAction, currentUser]);
 
   // Handle zap
   const handleZap = useCallback((amount: number) => {
@@ -175,20 +231,23 @@ export function YakiHonneSimulator({ className = '', tourCommand, onCommandHandl
 
   // Render active screen
   const renderScreen = () => {
+    const sessionUser = currentUser ? toSimulatorUser(currentUser) : null;
     switch (activeTab) {
       case 'feed':
         return (
-          <FeedScreen 
-            key="feed" 
+          <FeedScreen
+            key="feed"
             onOpenCompose={() => handleOpenCompose('post')}
             onZap={handleZap}
+            composedPosts={composedPosts}
           />
         );
       case 'articles':
         return (
-          <ArticlesScreen 
+          <ArticlesScreen
             key="articles"
             onOpenCompose={() => handleOpenCompose('article')}
+            onZap={handleZap}
           />
         );
       case 'media':
@@ -199,11 +258,13 @@ export function YakiHonneSimulator({ className = '', tourCommand, onCommandHandl
           />
         );
       case 'profile':
+        if (!sessionUser) return null;
         return (
-          <ProfileScreen 
+          <ProfileScreen
             key="profile"
-            user={currentUser || undefined}
+            user={sessionUser}
             onOpenSettings={() => setActiveTab('settings')}
+            composedPosts={composedPosts}
           />
         );
       case 'wallet':
@@ -311,6 +372,7 @@ export function YakiHonneSimulator({ className = '', tourCommand, onCommandHandl
         onClose={() => setIsComposeOpen(false)}
         onPost={handleNewPost}
         initialType={composeType}
+        author={currentUser ? toSimulatorUser(currentUser) : undefined}
       />
 
       {/* Toast Notification */}

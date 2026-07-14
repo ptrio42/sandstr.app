@@ -133,7 +133,10 @@ export function WalletScreen({ balance, onZap, onReceive }: WalletScreenProps) {
               <span className="text-sm font-medium text-[var(--yh-text-primary)]">Send</span>
             </button>
             
-            <button className="flex flex-col items-center gap-2 p-4 bg-[var(--yh-surface)] rounded-xl hover:bg-[var(--yh-surface-variant)] transition-colors">
+            <button
+              onClick={() => setShowReceiveModal(true)}
+              className="flex flex-col items-center gap-2 p-4 bg-[var(--yh-surface)] rounded-xl hover:bg-[var(--yh-surface-variant)] transition-colors"
+            >
               <div className="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
                 <QrCode className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
               </div>

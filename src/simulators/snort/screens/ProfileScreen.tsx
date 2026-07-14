@@ -131,7 +131,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <p className="snort-profile-handle">
             @{user.username}
             {user.nip05 && (
-              <span className="ml-2 text-teal-400 text-sm">✓ {user.nip05}</span>
+              <span className="ml-2 text-violet-400 text-sm">✓ {user.nip05}</span>
             )}
           </p>
 
@@ -154,7 +154,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 href={user.website} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-teal-400 hover:underline"
+                className="flex items-center gap-1 text-violet-400 hover:underline"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />

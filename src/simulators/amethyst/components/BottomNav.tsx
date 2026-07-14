@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Home, Search, Bell, Mail, User } from 'lucide-react';
+import { Home, Search, Video, Bell, Mail, User } from 'lucide-react';
 import '../amethyst.theme.css';
 
 interface BottomNavItem {
@@ -18,6 +18,7 @@ interface BottomNavProps {
 const navItems: BottomNavItem[] = [
   { id: 'home', label: 'Home', icon: <Home className="w-6 h-6" /> },
   { id: 'search', label: 'Search', icon: <Search className="w-6 h-6" /> },
+  { id: 'video', label: 'Video', icon: <Video className="w-6 h-6" /> },
   { id: 'notifications', label: 'Notifications', icon: <Bell className="w-6 h-6" />, badge: 3 },
   { id: 'messages', label: 'Messages', icon: <Mail className="w-6 h-6" />, badge: 1 },
   { id: 'profile', label: 'Profile', icon: <User className="w-6 h-6" /> },

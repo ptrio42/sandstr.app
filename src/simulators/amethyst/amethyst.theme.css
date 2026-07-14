@@ -382,15 +382,25 @@
   flex-direction: column;
   align-items: center;
   gap: var(--md-space-1);
-  padding: var(--md-space-1) var(--md-space-3);
+  padding: var(--md-space-1) var(--md-space-1);
   color: var(--md-on-surface-variant);
   font: var(--md-font-label-medium);
   cursor: pointer;
   border-radius: var(--md-radius-full);
   transition: all var(--md-duration-short) var(--md-easing-standard);
   position: relative;
-  min-width: 64px;
+  flex: 1 1 0;
+  min-width: 0;
   min-height: 44px;
+}
+
+/* Keep the label on a single line and let it truncate on narrow frames
+   so all six primary destinations fit without horizontal overflow. */
+.md-bottom-nav-item > span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .md-bottom-nav-item.active {
@@ -403,7 +413,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 64px;
+  width: 56px;
   height: 32px;
   background-color: var(--md-secondary-container);
   border-radius: var(--md-radius-full);

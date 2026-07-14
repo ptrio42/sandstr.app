@@ -7,7 +7,7 @@
  * - Long-form article publishing
  * - Media gallery with photo/video grid
  * - Wallet with balance and transaction history
- * - Bitcoin orange theme (#F7931A)
+ * - Purple/violet brand theme (#7C3AED)
  * - Content type switching
  * - Zap integration
  * 

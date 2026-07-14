@@ -103,7 +103,7 @@ export const ComposeScreen: React.FC<ComposeScreenProps> = ({
         <div className="snort-modal-content">
           {/* Reply Reference */}
           {replyTo && (
-            <div className="mb-4 p-3 bg-slate-800/50 rounded-lg border-l-2 border-teal-500">
+            <div className="mb-4 p-3 bg-slate-800/50 rounded-lg border-l-2 border-violet-500">
               <p className="text-sm text-slate-400">Replying to @{replyTo.author}</p>
               <p className="text-sm text-slate-300 mt-1 line-clamp-2">{replyTo.content}</p>
             </div>

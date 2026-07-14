@@ -46,13 +46,40 @@ export const TimelineScreen: React.FC<TimelineScreenProps> = ({
     return map;
   }, [users]);
 
+  // Apply the active feed filter to the notes before slicing/rendering.
+  // - following: a stable subset of authors (mimics a follow list)
+  // - global: every note, most recent first
+  // - trending: sorted by engagement (zaps + likes + reposts)
+  const filteredNotes = useMemo(() => {
+    if (activeFilter === 'trending') {
+      const engagement = (n: MockNote) =>
+        (n.zaps || 0) * 3 + (n.likes || 0) + (n.reposts || 0) * 2;
+      return [...notes].sort((a, b) => engagement(b) - engagement(a));
+    }
+
+    if (activeFilter === 'following') {
+      // Derive a deterministic "following" set: roughly the first third of
+      // known authors, so the tab visibly narrows the feed.
+      const authorPubkeys = Array.from(new Set(notes.map(n => n.pubkey)));
+      const followedCount = Math.max(1, Math.ceil(authorPubkeys.length / 3));
+      const followed = new Set(authorPubkeys.slice(0, followedCount));
+      return notes.filter(n => followed.has(n.pubkey));
+    }
+
+    // global: everything, most recent first
+    return [...notes].sort((a, b) => b.created_at - a.created_at);
+  }, [notes, activeFilter]);
+
   // Get notes with authors
   const notesWithAuthors = useMemo(() => {
-    return notes.slice(0, 25).map(note => ({
+    return filteredNotes.slice(0, 25).map(note => ({
       note,
       author: userMap.get(note.pubkey),
     })).filter(item => item.author); // Only include notes with valid authors
-  }, [notes, userMap]);
+  }, [filteredNotes, userMap]);
+
+  // Genuinely loading only while no data has arrived yet.
+  const isLoading = notes.length === 0;
 
   return (
     <div className="flex flex-col h-full" data-tour="snort-feed">
@@ -113,7 +140,7 @@ export const TimelineScreen: React.FC<TimelineScreenProps> = ({
             <div className="flex-1">
               <button
                 onClick={onOpenCompose}
-                className="w-full text-left px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-slate-500 hover:border-teal-500/50 hover:text-slate-400 transition-colors"
+                className="w-full text-left px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-slate-500 hover:border-violet-500/50 hover:text-slate-400 transition-colors"
               >
                 What's on your mind?
               </button>
@@ -156,12 +183,19 @@ export const TimelineScreen: React.FC<TimelineScreenProps> = ({
           </div>
         )}
 
-        {notes.length === 0 ? (
+        {isLoading ? (
           <div className="snort-empty">
             <svg className="snort-empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
             <p>Loading timeline...</p>
+          </div>
+        ) : notesWithAuthors.length === 0 ? (
+          <div className="snort-empty">
+            <svg className="snort-empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <p>No posts in this feed yet.</p>
           </div>
         ) : (
           <>

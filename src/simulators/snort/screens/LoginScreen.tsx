@@ -63,7 +63,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200 }}
-            className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-teal-500 flex items-center justify-center shadow-lg"
+            className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-violet-500 flex items-center justify-center shadow-lg"
           >
             <svg className="w-10 h-10 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -79,7 +79,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             onClick={() => setActiveTab('login')}
             className={`flex-1 py-3 text-sm font-semibold rounded-lg transition-all ${
               activeTab === 'login'
-                ? 'bg-teal-500 text-slate-900'
+                ? 'bg-violet-500 text-slate-900'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -89,7 +89,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             onClick={() => setActiveTab('generate')}
             className={`flex-1 py-3 text-sm font-semibold rounded-lg transition-all ${
               activeTab === 'generate'
-                ? 'bg-teal-500 text-slate-900'
+                ? 'bg-violet-500 text-slate-900'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -115,7 +115,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                   value={nsecInput}
                   onChange={(e) => setNsecInput(e.target.value)}
                   placeholder="nsec1..."
-                  className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition-colors"
+                  className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 transition-colors"
                 />
               </div>
 
@@ -140,7 +140,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
               {/* Demo Login Button */}
               <button
                 onClick={handleLogin}
-                className="w-full py-3 bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold rounded-lg transition-colors"
+                className="w-full py-3 bg-violet-500 hover:bg-violet-400 text-slate-900 font-bold rounded-lg transition-colors"
               >
                 Sign In
               </button>
@@ -164,18 +164,18 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             {!generatedKeys ? (
               <div className="bg-slate-800 rounded-xl p-6 text-center">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-700 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-8 h-8 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                   </svg>
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-2">Create Your Keys</h3>
                 <p className="text-slate-400 mb-6">
                   We'll generate a secure public/private key pair. Your private key is like a password - 
-                  <span className="text-teal-400"> keep it safe!</span>
+                  <span className="text-violet-400"> keep it safe!</span>
                 </p>
                 <button
                   onClick={handleGenerateKeys}
-                  className="w-full py-3 bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold rounded-lg transition-colors"
+                  className="w-full py-3 bg-violet-500 hover:bg-violet-400 text-slate-900 font-bold rounded-lg transition-colors"
                 >
                   Generate New Keys
                 </button>
@@ -197,7 +197,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                     </div>
                     <button
                       onClick={() => handleCopy(generatedKeys.npub)}
-                      className="px-4 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-teal-400 transition-colors"
+                      className="px-4 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-violet-400 transition-colors"
                     >
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -242,7 +242,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                   </button>
                   <button
                     onClick={handleGeneratedLogin}
-                    className="flex-1 py-3 bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold rounded-lg transition-colors"
+                    className="flex-1 py-3 bg-violet-500 hover:bg-violet-400 text-slate-900 font-bold rounded-lg transition-colors"
                   >
                     Continue
                   </button>
@@ -266,7 +266,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           exit={{ opacity: 0 }}
           className="fixed bottom-6 left-1/2 -translate-x-1/2"
         >
-          <div className="px-4 py-2 bg-slate-800 text-teal-400 rounded-lg shadow-lg text-sm font-medium">
+          <div className="px-4 py-2 bg-slate-800 text-violet-400 rounded-lg shadow-lg text-sm font-medium">
             Copied to clipboard!
           </div>
         </motion.div>

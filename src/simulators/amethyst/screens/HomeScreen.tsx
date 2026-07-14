@@ -8,6 +8,7 @@ import '../amethyst.theme.css';
 
 interface HomeScreenProps {
   onOpenCompose: () => void;
+  onOpenDrawer?: () => void;
 }
 
 interface Story {
@@ -18,7 +19,7 @@ interface Story {
   isLive?: boolean;
 }
 
-export function HomeScreen({ onOpenCompose }: HomeScreenProps) {
+export function HomeScreen({ onOpenCompose, onOpenDrawer }: HomeScreenProps) {
   const [activeTab, setActiveTab] = useState<'following' | 'global'>('following');
   const [refreshing, setRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
@@ -137,6 +138,8 @@ export function HomeScreen({ onOpenCompose }: HomeScreenProps) {
         <motion.button
           whileTap={{ scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+          onClick={onOpenDrawer}
+          aria-label="Open navigation drawer"
           className="md-app-bar-icon-btn"
         >
           <Menu className="w-6 h-6 text-[var(--md-on-surface)]" />
