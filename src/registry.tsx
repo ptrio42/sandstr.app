@@ -4,6 +4,8 @@ import type { SimulatorConfig } from './simulators/shared/types';
 
 export type Frame = 'ios' | 'android' | null;
 
+type Loader = () => Promise<{ default: ComponentType<any> }>;
+
 export interface ClientEntry {
   id: string;
   name: string;
@@ -20,15 +22,25 @@ export interface ClientEntry {
   lead?: boolean;
   className?: string;
   Component: LazyExoticComponent<ComponentType<any>>;
+  /**
+   * Warms the lazy chunk ahead of navigation (idempotent). Shares the exact
+   * loader reference `Component` was built from, so `preload()` and the later
+   * lazy render resolve the identical Vite chunk — the in-place switch lands
+   * without the Suspense fallback flashing.
+   */
+  preload: () => Promise<unknown>;
+}
+
+/** Fire a loader at most once; later calls return the same in-flight/settled promise. */
+function once(fn: Loader): () => Promise<unknown> {
+  let p: Promise<unknown> | undefined;
+  return () => (p ??= fn());
 }
 
 // How each simulator is mounted, mirroring the original Astro pages exactly:
 // mobile clients (ios/android) render inside MobilePhoneFrame; web/desktop render direct.
 // *WithTour wrappers are default exports; bare simulators are named exports.
-const MOUNTS: Record<
-  string,
-  { frame: Frame; tour: boolean; className?: string; load: () => Promise<{ default: ComponentType<any> }> }
-> = {
+const MOUNTS: Record<string, { frame: Frame; tour: boolean; className?: string; load: Loader }> = {
   damus: { frame: 'ios', tour: true, load: () => import('./simulators/damus/DamusSimulatorWithTour') },
   amethyst: { frame: 'android', tour: true, load: () => import('./simulators/amethyst/AmethystSimulatorWithTour') },
   keychat: { frame: 'android', tour: true, load: () => import('./simulators/keychat/KeychatSimulatorWithTour') },
@@ -52,6 +64,9 @@ const MOUNTS: Record<
 const LEADS = new Set(['snort', 'amethyst', 'nostr-kitten', 'yakihonne']);
 
 // Nostr Kitten is an ORIGINAL, trademark-safe client (not in the shared configs).
+const kittenLoad: Loader = () =>
+  import('./simulators/nostr-kitten/NostrKittenSimulator').then((m) => ({ default: m.NostrKittenSimulator }));
+
 const nostrKitten: ClientEntry = {
   id: 'nostr-kitten',
   name: 'Nostr Kitten',
@@ -64,9 +79,8 @@ const nostrKitten: ClientEntry = {
   hasTour: false,
   lead: true,
   className: 'h-full',
-  Component: lazy(() =>
-    import('./simulators/nostr-kitten/NostrKittenSimulator').then((m) => ({ default: m.NostrKittenSimulator })),
-  ),
+  Component: lazy(kittenLoad),
+  preload: once(kittenLoad),
 };
 
 const branded: ClientEntry[] = Object.values(allSimulatorConfigs).map((cfg) => {
@@ -85,6 +99,7 @@ const branded: ClientEntry[] = Object.values(allSimulatorConfigs).map((cfg) => {
     lead: LEADS.has(cfg.id),
     className: mount.className,
     Component: lazy(mount.load),
+    preload: once(mount.load),
   } satisfies ClientEntry;
 });
 

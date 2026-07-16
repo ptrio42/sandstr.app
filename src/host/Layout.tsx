@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
+import ClientSwitcher from './ClientSwitcher';
 
 function useTheme() {
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
@@ -44,6 +45,9 @@ export default function Layout() {
       <footer className="border-t border-gray-200 py-8 text-center text-xs text-gray-400 dark:border-gray-800">
         Sandstr — interactive simulations for learning. Not affiliated with any client. Mock data only.
       </footer>
+
+      {/* Persistent in-place client switcher — only paints on /c/:id. */}
+      <ClientSwitcher />
     </div>
   );
 }
