@@ -31,51 +31,42 @@ export function MobilePhoneFrame({
 }: MobilePhoneFrameProps) {
   return (
     <div className="mobile-phone-frame-wrapper flex items-center justify-center h-full w-full p-4">
-      {/* Phone Frame Container */}
+      {/* Phone bezel */}
       <div
         className={cn(
-          // Phone bezel/frame
           'relative',
-          'w-full max-w-[375px]',
-          'bg-gray-900',
-          'rounded-[50px]',
-          'p-3',
-          'shadow-2xl',
-          'border-4 border-gray-800',
-          
-          // Fixed aspect ratio (9:19.5 for modern phones)
-          'aspect-[9/19.5]',
-          'max-h-[80vh]',
-          
-          // Prevent scrolling of the frame itself
+          // Height-driven so the 9:19.5 ratio is always preserved (width follows
+          // from the height); caps keep it sane on huge/short viewports and it
+          // never overflows. Sizing off max-width used to squash the ratio.
+          'h-[80vh] max-h-[820px] aspect-[9/19.5] max-w-[92vw]',
+          // Thin, modern bezel (~8px) with a subtle metal rim + soft drop shadow.
+          'rounded-[48px] p-[8px]',
+          'bg-neutral-900',
+          'shadow-[0_24px_60px_-15px_rgba(0,0,0,0.55)] ring-1 ring-white/10',
           'overflow-hidden',
-          
           className
         )}
       >
-        {/* Screen Container */}
-        <div className="relative w-full h-full bg-white dark:bg-gray-900 rounded-[40px] overflow-hidden">
-          {/* Notch (iOS) or Punch Hole (Android) */}
+        {/* Screen */}
+        <div className="relative h-full w-full overflow-hidden rounded-[40px] bg-white dark:bg-gray-900">
+          {/* Dynamic Island (iOS) or centered punch-hole (Android) */}
           {platform === 'ios' ? (
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120px] h-[35px] bg-black rounded-b-[20px] z-50" />
+            <div className="absolute left-1/2 top-[11px] z-50 h-[26px] w-[86px] -translate-x-1/2 rounded-full bg-black" />
           ) : (
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[8px] h-[8px] bg-gray-800 rounded-full z-50" />
+            <div className="absolute left-1/2 top-[10px] z-50 h-[9px] w-[9px] -translate-x-1/2 rounded-full bg-black ring-2 ring-black/25" />
           )}
 
           {/* Status Bar */}
           {showStatusBar && (
             <div
               className={cn(
-                'absolute top-0 left-0 right-0 h-[44px] z-40',
-                'flex items-center justify-between px-6',
-                'text-xs font-semibold',
-                platform === 'ios' 
-                  ? 'text-black dark:text-white pt-2' 
-                  : 'text-black dark:text-white'
+                'absolute left-0 right-0 top-0 z-40 h-[44px]',
+                'flex items-center justify-between px-7 pt-2',
+                'text-xs font-semibold text-black dark:text-white'
               )}
             >
               <span>9:41</span>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                 </svg>
@@ -87,7 +78,7 @@ export function MobilePhoneFrame({
           )}
 
           {/* Content Area - Scrollable */}
-          <div 
+          <div
             className={cn(
               'absolute inset-0',
               'overflow-y-auto overflow-x-hidden',
@@ -99,14 +90,8 @@ export function MobilePhoneFrame({
           </div>
 
           {/* Home Indicator */}
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[134px] h-[5px] bg-gray-400/50 dark:bg-gray-600/50 rounded-full z-40" />
+          <div className="absolute bottom-2 left-1/2 z-40 h-[5px] w-[120px] -translate-x-1/2 rounded-full bg-black/25 dark:bg-white/35" />
         </div>
-
-        {/* Side Buttons (Visual only) */}
-        <div className="absolute -left-1 top-[120px] w-1 h-8 bg-gray-700 rounded-l" />
-        <div className="absolute -left-1 top-[180px] w-1 h-12 bg-gray-700 rounded-l" />
-        <div className="absolute -left-1 top-[220px] w-1 h-12 bg-gray-700 rounded-l" />
-        <div className="absolute -right-1 top-[160px] w-1 h-16 bg-gray-700 rounded-r" />
       </div>
     </div>
   );
