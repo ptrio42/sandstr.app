@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Info, Play } from 'lucide-react';
 import MobilePhoneFrame from '../simulators/shared/components/MobilePhoneFrame';
+import { ClientGlyph, platformLabel } from './ClientGlyph';
 import { getClient } from '../registry';
 
 function Disclaimer({ name, real }: { name: string; real: boolean }) {
@@ -69,16 +70,23 @@ export default function ClientView() {
   );
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-28 pt-8">
-      <h1 className="mb-1 text-2xl font-bold">{entry.name}</h1>
-      <p className="mb-3 max-w-xl text-center text-sm text-gray-500 dark:text-gray-400">{entry.description}</p>
-      <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
+    <main className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-28 pt-5">
+      {/* One compact row instead of three stacked lines, so the sim gets the room.
+          The full description survives as a hover title; the disclaimer stays visible. */}
+      <div className="mb-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+        <div className="flex items-center gap-2" title={entry.description}>
+          <ClientGlyph client={entry} className="h-6 w-6" />
+          <h1 className="text-base font-semibold leading-none">{entry.name}</h1>
+          <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+            {platformLabel(entry.platform)}
+          </span>
+        </div>
         <Disclaimer name={entry.name} real={isReal} />
         {entry.hasTour && (
           <button
             type="button"
             onClick={() => window.dispatchEvent(new Event(`start-${entry.id}-tour`))}
-            className="inline-flex items-center gap-1.5 rounded-full border border-primary-300 bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700 transition-colors hover:bg-primary-100 dark:border-primary-500/40 dark:bg-primary-500/10 dark:text-primary-300 dark:hover:bg-primary-500/20"
+            className="inline-flex items-center gap-1.5 rounded-full border border-primary-300 bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 transition-colors hover:bg-primary-100 dark:border-primary-500/40 dark:bg-primary-500/10 dark:text-primary-300 dark:hover:bg-primary-500/20"
           >
             <Play className="h-3.5 w-3.5" /> Take a tour
           </button>
