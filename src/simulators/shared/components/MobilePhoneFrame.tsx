@@ -34,7 +34,8 @@ export function MobilePhoneFrame({
       {/* Phone bezel */}
       <div
         className={cn(
-          'relative',
+          // Named so the tour engine can keep its tooltip off the phone screen.
+          'mobile-phone-frame-bezel relative',
           // Height-driven so the 9:19.5 ratio is always preserved (width follows
           // from the height); caps keep it sane on huge/short viewports and it
           // never overflows. Sizing off max-width used to squash the ratio.

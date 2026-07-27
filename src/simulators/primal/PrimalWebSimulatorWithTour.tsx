@@ -68,9 +68,9 @@ export function PrimalWebSimulatorWithTour() {
       3: [{ type: 'login' }, { type: 'navigate', payload: 'home' }, { type: 'compose' }], // Compose
       4: [{ type: 'login' }, { type: 'navigate', payload: 'home' }, { type: 'post' }], // Post
       5: [{ type: 'login' }, { type: 'viewProfile' }], // Profile
-      6: [{ type: 'login' }, { type: 'viewProfile' }], // Follow
+      6: [{ type: 'login' }, { type: 'navigate', payload: 'explore' }], // Follow — Explore is the people-discovery surface the copy describes
       7: [{ type: 'login' }, { type: 'navigate', payload: 'home' }], // Interactions
-      8: [{ type: 'login' }, { type: 'navigate', payload: 'home' }], // Settings
+      8: [{ type: 'login' }, { type: 'navigate', payload: 'settings' }], // Settings — was wrongly navigating to home
       9: [], // Complete
     };
     

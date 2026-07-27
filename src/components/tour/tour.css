@@ -232,15 +232,18 @@
   flex: 1;
 }
 
-/* Progress Component */
+/* Progress Component
+   Anchored bottom-LEFT, not centred: the mobile sims render a phone frame in
+   the middle of the viewport, and a centred progress row landed right on top of
+   their bottom nav bar — so "tap the Home icon" steps ate the tap as a
+   jump-to-step-1 click on a progress dot. */
 .tour-progress {
   position: fixed;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 32px;
+  left: 24px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   z-index: 10001;
 }
@@ -377,10 +380,10 @@
   color: #6b7280;
 }
 
-  .tour-controls__btn--ghost:hover:not(:disabled) {
-    background: #374151;
-    color: #e5e7eb;
-  }
+.tour-controls__btn--ghost:hover:not(:disabled) {
+  background: #f3f4f6;
+  color: #374151;
+}
 
   .tour-controls__btn--waiting {
     background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
@@ -456,76 +459,68 @@
   }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .tour-tooltip {
-    background: #1f2937;
-    box-shadow: 
-      0 20px 25px -5px rgba(0, 0, 0, 0.3),
-      0 10px 10px -5px rgba(0, 0, 0, 0.2),
-      0 0 0 1px rgba(255, 255, 255, 0.1);
-  }
+/* Dark mode — keyed off the app's .dark class (the host toggles it on <html>),
+   NOT the OS prefers-color-scheme, so the tour chrome follows the in-app theme
+   toggle instead of the operating system. The overlay is portaled to <body>,
+   which is inside <html class="dark">, so these descendant selectors match. */
+.dark .tour-tooltip {
+  background: #1f2937;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.3),
+    0 10px 10px -5px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+}
 
-  .tour-tooltip__arrow {
-    background: #1f2937;
-  }
+.dark .tour-tooltip__arrow {
+  background: #1f2937;
+}
 
-  .tour-tooltip__title {
-    color: #f9fafb;
-  }
+.dark .tour-tooltip__title {
+  color: #f9fafb;
+}
 
-  .tour-tooltip__text {
-    color: #d1d5db;
-  }
+.dark .tour-tooltip__text {
+  color: #d1d5db;
+}
 
-  .tour-tooltip__action {
-    background: #374151;
-    border-top-color: #4b5563;
-    color: #9ca3af;
-  }
+.dark .tour-tooltip__action {
+  background: #374151;
+  border-top-color: #4b5563;
+  color: #9ca3af;
+}
 
-  .tour-tooltip__action--waiting {
-    background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
-    border-top-color: #fbbf24;
-    color: #fef3c7;
-  }
+.dark .tour-tooltip__action--waiting {
+  background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
+  border-top-color: #fbbf24;
+  color: #fef3c7;
+}
 
-  @keyframes tour-waiting-pulse {
-    0%, 100% {
-      background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
-    }
-    50% {
-      background: linear-gradient(135deg, #92400e 0%, #b45309 100%);
-    }
-  }
+.dark .tour-tooltip__action--next {
+  background: #312e81;
+  border-top-color: #6366f1;
+  color: #c7d2fe;
+}
 
-  .tour-tooltip__action--next {
-    background: #312e81;
-    border-top-color: #6366f1;
-    color: #c7d2fe;
-  }
+.dark .tour-controls {
+  background: rgba(31, 41, 55, 0.95);
+}
 
-  .tour-controls {
-    background: rgba(31, 41, 55, 0.95);
-  }
+.dark .tour-controls__btn--secondary {
+  background: #374151;
+  color: #e5e7eb;
+}
 
-  .tour-controls__btn--secondary {
-    background: #374151;
-    color: #e5e7eb;
-  }
+.dark .tour-controls__btn--secondary:hover:not(:disabled) {
+  background: #4b5563;
+}
 
-  .tour-controls__btn--secondary:hover:not(:disabled) {
-    background: #4b5563;
-  }
+.dark .tour-controls__btn--ghost {
+  color: #9ca3af;
+}
 
-  .tour-controls__btn--ghost {
-    color: #9ca3af;
-  }
-
-  .tour-controls__btn--ghost:hover:not(:disabled) {
-    background: #374151;
-    color: #e5e7eb;
-  }
+.dark .tour-controls__btn--ghost:hover:not(:disabled) {
+  background: #374151;
+  color: #e5e7eb;
 }
 
 /* High contrast mode */

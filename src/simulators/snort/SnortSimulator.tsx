@@ -204,7 +204,8 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
       case 'navigate':
         const screen = tourCommand.payload as SnortScreen;
         if (['login', 'timeline', 'thread', 'profile', 'relays', 'settings'].includes(screen)) {
-          setState(prev => ({ ...prev, currentScreen: screen }));
+          // Close any open composer when navigating so it doesn't linger over later steps.
+          setState(prev => ({ ...prev, currentScreen: screen, isComposeOpen: false }));
         }
         break;
 
@@ -227,10 +228,17 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
 
       case 'viewProfile':
         if (state.isAuthenticated) {
+          // payload 'other' → show a different user's profile so the Follow
+          // button (which only renders on non-own profiles) is available.
+          const profileUser =
+            tourCommand.payload === 'other'
+              ? mockData.users.find((u) => u.pubkey !== state.currentUser?.pubkey) ?? state.currentUser
+              : state.currentUser;
           setState(prev => ({
             ...prev,
-            selectedProfile: state.currentUser,
+            selectedProfile: profileUser,
             currentScreen: 'profile',
+            isComposeOpen: false,
           }));
         }
         break;
@@ -238,7 +246,7 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
 
     // Mark command as handled
     onCommandHandled?.();
-  }, [tourCommand, state.isAuthenticated, state.currentUser, handleLogin, handlePost, onCommandHandled]);
+  }, [tourCommand, state.isAuthenticated, state.currentUser, mockData.users, handleLogin, handlePost, onCommandHandled]);
 
   const toggleTheme = useCallback(() => {
     setState(prev => ({

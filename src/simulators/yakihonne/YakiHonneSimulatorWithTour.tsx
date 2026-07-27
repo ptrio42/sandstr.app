@@ -65,8 +65,8 @@ export function YakiHonneSimulatorWithTour() {
       0: [], // Welcome
       1: [], // Login - manual
       2: [{ type: 'login' }, { type: 'navigate', payload: 'feed' }], // Home feed
-      3: [{ type: 'login' }, { type: 'navigate', payload: 'feed' }, { type: 'compose' }], // Compose
-      4: [{ type: 'login' }, { type: 'navigate', payload: 'feed' }, { type: 'post' }], // Post
+      3: [{ type: 'login' }, { type: 'navigate', payload: 'feed' }], // Compose — keep FAB (its own target) mounted
+      4: [{ type: 'login' }, { type: 'compose' }], // Post — open composer (overlay) so the Send button (target) is present; 2 cmds avoids the queue's 3-command race
       5: [{ type: 'login' }, { type: 'viewProfile' }], // Profile
       6: [{ type: 'login' }, { type: 'viewProfile' }], // Follow
       7: [{ type: 'login' }, { type: 'navigate', payload: 'feed' }], // Interactions

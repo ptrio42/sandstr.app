@@ -16,7 +16,7 @@ const amethystTourSteps: TourStep[] = [
   },
   {
     id: 'amethyst-login',
-    target: '.amethyst-login, [data-tour="amethyst-keys"]',
+    target: '[data-tour="amethyst-login"]',
     title: 'Keys: Your Digital Identity',
     content: 'On Nostr, you are identified by cryptographic keys. Amethyst generates these for you or imports existing ones. Your nsec (private key) is your password - guard it carefully! Extensions are the safest option.',
     position: 'bottom',

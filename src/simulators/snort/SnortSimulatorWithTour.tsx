@@ -65,10 +65,10 @@ export function SnortSimulatorWithTour() {
       0: [], // Welcome
       1: [], // Login - manual
       2: [{ type: 'login' }, { type: 'navigate', payload: 'timeline' }], // Home feed
-      3: [{ type: 'login' }, { type: 'navigate', payload: 'timeline' }, { type: 'compose' }], // Compose
-      4: [{ type: 'login' }, { type: 'navigate', payload: 'timeline' }, { type: 'post' }], // Post
-      5: [{ type: 'login' }, { type: 'viewProfile' }], // Profile
-      6: [{ type: 'login' }, { type: 'viewProfile' }], // Follow
+      3: [{ type: 'login' }, { type: 'navigate', payload: 'timeline' }], // Compose — highlight the timeline compose header; do NOT open the modal (it would cover the target)
+      4: [{ type: 'login' }, { type: 'compose' }], // Post — open composer (a modal) so the Post button (target) is present; 2 cmds avoids the queue's 3-command race
+      5: [{ type: 'login' }, { type: 'viewProfile' }], // Profile (own)
+      6: [{ type: 'login' }, { type: 'viewProfile', payload: 'other' }], // Follow — view another user so the Follow button renders
       7: [{ type: 'login' }, { type: 'navigate', payload: 'timeline' }], // Interactions
       8: [{ type: 'login' }, { type: 'navigate', payload: 'settings' }], // Settings
       9: [], // Complete

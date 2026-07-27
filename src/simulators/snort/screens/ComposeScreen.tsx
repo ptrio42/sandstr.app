@@ -211,6 +211,7 @@ export const ComposeScreen: React.FC<ComposeScreenProps> = ({
             </span>
             <button
               onClick={handleSubmit}
+              data-tour="snort-post"
               disabled={!content.trim() || isOverLimit || isPosting}
               className="snort-btn snort-btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >

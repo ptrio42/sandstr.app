@@ -65,8 +65,8 @@ export function AmethystSimulatorWithTour() {
       0: [], // Welcome
       1: [{ type: 'back' }], // Login - ensure not authenticated
       2: [{ type: 'login' }, { type: 'navigate', payload: 'home' }], // Home feed
-      3: [{ type: 'login' }, { type: 'navigate', payload: 'home' }, { type: 'compose' }], // Compose
-      4: [{ type: 'login' }, { type: 'navigate', payload: 'home' }, { type: 'post' }], // Post
+      3: [{ type: 'login' }, { type: 'navigate', payload: 'home' }], // Compose — keep FAB mounted (its own target)
+      4: [{ type: 'login' }, { type: 'compose' }], // Post — open composer (modal) so the Send button (target) is present; 2 cmds avoids the queue's 3-command race
       5: [{ type: 'login' }, { type: 'viewProfile' }], // Profile
       6: [{ type: 'login' }, { type: 'viewProfile' }], // Follow (same as profile)
       7: [{ type: 'login' }, { type: 'navigate', payload: 'home' }], // Interactions

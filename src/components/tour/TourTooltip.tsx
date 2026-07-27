@@ -3,7 +3,7 @@
  * Displays tour step information with auto-positioning
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTour } from './TourProvider';
 import { useTourElement } from './useTourElement';
 import { X, MousePointer, ArrowRight } from 'lucide-react';
@@ -11,12 +11,26 @@ import { X, MousePointer, ArrowRight } from 'lucide-react';
 export function TourTooltip() {
   const { state, currentStepData, endTour } = useTour();
   const [isVisible, setIsVisible] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
 
   const targetSelector = currentStepData?.target ?? '';
   const position = currentStepData?.position ?? 'bottom';
   const padding = currentStepData?.spotlightPadding ?? 8;
 
-  const { tooltipRect, targetCenter } = useTourElement(targetSelector, position, padding);
+  const { tooltipRect, targetCenter } = useTourElement(targetSelector, position, padding, size);
+
+  // Feed the card's real size back into the placement math. Step copy varies in
+  // length, so the height is only knowable after render; the 150ms fade-in below
+  // means the corrected position lands before the card is visible.
+  useLayoutEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const { width, height } = el.getBoundingClientRect();
+    if (!size || Math.abs(size.height - height) > 1 || Math.abs(size.width - width) > 1) {
+      setSize({ width, height });
+    }
+  });
 
   // Animation delay
   useEffect(() => {
@@ -39,6 +53,7 @@ export function TourTooltip() {
 
   return (
     <div
+      ref={cardRef}
       className={`tour-tooltip tour-tooltip--${position} ${isVisible ? 'tour-tooltip--visible' : ''}`}
       style={{
         position: 'absolute',

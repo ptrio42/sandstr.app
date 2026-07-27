@@ -16,7 +16,7 @@ const snortTourSteps: TourStep[] = [
   },
   {
     id: 'snort-login',
-    target: '.snort-login, [data-tour="snort-keys"]',
+    target: '[data-tour="snort-login"]',
     title: 'Login Options',
     content: 'Snort supports multiple login methods: browser extension (like nos2x or Alby), private key paste, or key generation. Extensions are recommended for better security. Your keys are your identity on Nostr!',
     position: 'bottom',

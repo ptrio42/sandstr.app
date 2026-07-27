@@ -159,6 +159,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         const tab = tourCommand.payload as TabId;
         if (['home', 'search', 'video', 'notifications', 'messages', 'profile'].includes(tab)) {
           setActiveTab(tab);
+          setIsComposeOpen(false); // don't let an open composer linger over later steps
         }
         break;
         
@@ -182,12 +183,14 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       case 'viewProfile':
         if (isAuthenticated) {
           setActiveTab('profile');
+          setIsComposeOpen(false);
         }
         break;
-        
+
       case 'openSettings':
         if (isAuthenticated) {
           setIsSettingsOpen(true);
+          setIsComposeOpen(false);
         }
         break;
         

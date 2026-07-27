@@ -73,8 +73,9 @@ export function DamusSimulatorWithTour() {
       2: [{ type: 'login' }, { type: 'navigate', payload: 'home' }],
       // Step 3: Compose button - login + navigate to home (compose shown in home)
       3: [{ type: 'login' }, { type: 'navigate', payload: 'home' }],
-      // Step 4: Post - login + navigate to home
-      4: [{ type: 'login' }, { type: 'navigate', payload: 'home' }],
+      // Step 4: Post - login + open the composer (a modal) so the post button (target) is mounted.
+      // 2 commands avoids the queue's unreliable 3-command handoff.
+      4: [{ type: 'login' }, { type: 'compose' }],
       // Step 5: Profile - login + view profile
       5: [{ type: 'login' }, { type: 'viewProfile' }],
       // Step 6: Follow - login + view profile
