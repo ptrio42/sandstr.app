@@ -11,6 +11,8 @@ import '../amethyst.theme.css';
 
 interface ProfileScreenProps {
   onBack?: () => void;
+  /** Reported so the guided tour's follow step can complete. */
+  onFollowToggle?: () => void;
 }
 
 // Real Amethyst profile (ProfileScreen.kt, verified vs shots/profile.png):
@@ -30,7 +32,7 @@ const profile = {
 
 const badgeHues = [275, 45, 30, 200, 320, 160, 260];
 
-export function ProfileScreen({ onBack }: ProfileScreenProps) {
+export function ProfileScreen({ onBack, onFollowToggle }: ProfileScreenProps) {
   const [activeTab, setActiveTab] = useState<'notes' | 'replies' | 'yours' | 'gallery'>('notes');
   const [isFollowing, setIsFollowing] = useState(true);
 
@@ -76,7 +78,10 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
               <ActionIconButton label="Edit"><SquarePen className="w-5 h-5" /></ActionIconButton>
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setIsFollowing((f) => !f)}
+                onClick={() => {
+                  setIsFollowing((f) => !f);
+                  onFollowToggle?.();
+                }}
                 data-tour="amethyst-follow"
                 className="px-5 py-2 rounded-full text-sm font-medium bg-[var(--md-surface-variant)] text-[var(--md-on-surface)]"
               >

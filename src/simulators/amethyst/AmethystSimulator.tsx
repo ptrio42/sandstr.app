@@ -214,6 +214,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
             onOpenCompose={() => setIsComposeOpen(true)}
             onOpenDrawer={() => setIsDrawerOpen(true)}
             onOpenThread={(post) => setThreadPost(post)}
+            onLikePost={() => registerAction('like')}
           />
         );
       case 'search':
@@ -226,9 +227,10 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         return <MessagesScreen key="messages" onOpenDrawer={() => setIsDrawerOpen(true)} />;
       case 'profile':
         return (
-          <ProfileScreen 
-            key="profile" 
+          <ProfileScreen
+            key="profile"
             onBack={() => setActiveTab('home')}
+            onFollowToggle={() => registerAction('follow')}
           />
         );
       default:
@@ -263,6 +265,10 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
           setSettingsSection('preferences');
           setIsSettingsOpen(true);
           setIsDrawerOpen(false);
+          // Same destination as the drawer's relays/security entries, so it has
+          // to report the same tour action — without this the settings step sat
+          // waiting while Settings was already open in front of the user.
+          registerAction('navigate_settings');
         }}
       />
 

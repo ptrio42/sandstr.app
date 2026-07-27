@@ -22,6 +22,7 @@ export function AppTopBar({ onOpenDrawer, center }: AppTopBarProps) {
         transition={{ type: 'spring', stiffness: 500, damping: 30 }}
         onClick={onOpenDrawer}
         aria-label="Open account drawer"
+        data-tour="amethyst-profile-avatar"
         className="md-app-bar-icon-btn"
       >
         <Avatar seed="pitiunited" className="w-9 h-9 ring-1 ring-[var(--md-outline-variant)]" />

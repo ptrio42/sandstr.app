@@ -67,10 +67,16 @@ export function AmethystSimulatorWithTour() {
       2: [{ type: 'login' }, { type: 'navigate', payload: 'home' }], // Home feed
       3: [{ type: 'login' }, { type: 'navigate', payload: 'home' }], // Compose — keep FAB mounted (its own target)
       4: [{ type: 'login' }, { type: 'compose' }], // Post — open composer (modal) so the Send button (target) is present; 2 cmds avoids the queue's 3-command race
-      5: [{ type: 'login' }, { type: 'viewProfile' }], // Profile
-      6: [{ type: 'login' }, { type: 'viewProfile' }], // Follow (same as profile)
+      // Profile — land on home so the top-bar avatar (the step's target) exists.
+      // Must NOT run viewProfile: this step is gated on the user doing exactly
+      // that, and doing it for them left the tour waiting on an action that had
+      // already happened.
+      5: [{ type: 'login' }, { type: 'navigate', payload: 'home' }],
+      6: [{ type: 'login' }, { type: 'viewProfile' }], // Follow — needs a profile open (result of step 5)
       7: [{ type: 'login' }, { type: 'navigate', payload: 'home' }], // Interactions
-      8: [{ type: 'login' }, { type: 'openSettings' }], // Settings
+      // Settings — same rule as step 5: opening Settings here would satisfy
+      // nothing and deadlock the step. Home puts the avatar (drawer) in reach.
+      8: [{ type: 'login' }, { type: 'navigate', payload: 'home' }],
       9: [], // Complete
     };
     

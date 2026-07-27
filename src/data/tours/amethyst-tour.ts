@@ -64,14 +64,18 @@ const amethystTourSteps: TourStep[] = [
   },
   {
     id: 'amethyst-profile',
-    target: '.amethyst-profile, [data-tour="amethyst-profile"]',
+    // Spotlight the top-bar avatar (the thing you actually tap) and fall back to
+    // the profile screen itself when the avatar isn't on screen. The avatar
+    // opens the account drawer — as in the real app — so the step only completes
+    // once "Profile" is picked there, which is what the copy now says.
+    target: '[data-tour="amethyst-profile-avatar"], .amethyst-profile, [data-tour="amethyst-profile"]',
     title: 'Profile Management',
     content: 'Customize your profile with name, picture, bio, and NIP-05 verification. View your posts, followers, and follows. Your profile data is stored on Nostr relays. This is your identity!',
     position: 'bottom',
     trigger: 'action',
     actionType: 'view_profile',
     allowClickThrough: true,
-    action: 'Tap your profile picture to view your profile',
+    action: 'Tap your avatar, then "Profile" in the menu',
     spotlightPadding: 16,
   },
   {
@@ -83,7 +87,9 @@ const amethystTourSteps: TourStep[] = [
     trigger: 'action',
     actionType: 'follow',
     allowClickThrough: true,
-    action: 'Tap "Follow" on any user profile',
+    // The profile opens already-followed, so the control reads "Unfollow" —
+    // name the button, not one of its two labels.
+    action: 'Tap the follow button on this profile',
     spotlightPadding: 8,
   },
   {
@@ -100,14 +106,17 @@ const amethystTourSteps: TourStep[] = [
   },
   {
     id: 'amethyst-settings',
-    target: '.amethyst-settings, [data-tour="amethyst-settings"]',
+    // Settings lives in the account drawer, which the top-bar avatar opens —
+    // there is no settings tab in the bottom nav. Spotlight the avatar, and fall
+    // back to the settings surface once it is open.
+    target: '[data-tour="amethyst-profile-avatar"], .amethyst-settings, [data-tour="amethyst-settings"]',
     title: 'Rich Settings',
     content: 'Amethyst offers extensive customization: themes (light/dark/auto), relay management, notification settings, security options, and key backup. Remember to backup your private key securely!',
     position: 'left',
     trigger: 'action',
     actionType: 'navigate_settings',
     allowClickThrough: true,
-    action: 'Tap the Settings icon to explore options',
+    action: 'Tap your avatar, then "App Preferences"',
     spotlightPadding: 12,
   },
   {

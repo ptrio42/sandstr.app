@@ -11,9 +11,11 @@ interface HomeScreenProps {
   onOpenCompose: () => void;
   onOpenDrawer?: () => void;
   onOpenThread?: (post: PostData) => void;
+  /** Reported so the guided tour's "like a post" step can complete. */
+  onLikePost?: () => void;
 }
 
-export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread }: HomeScreenProps) {
+export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onLikePost }: HomeScreenProps) {
   // Real Amethyst home has TWO switchers: the feed selector in the app bar
   // ("All Follows ▾") and the content sub-tabs below it.
   const [activeTab, setActiveTab] = useState<'new_threads' | 'conversations'>('new_threads');
@@ -96,7 +98,8 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread }: HomeSc
 
   const handleLike = useCallback((id: string) => {
     console.log('Liked post:', id);
-  }, []);
+    onLikePost?.();
+  }, [onLikePost]);
 
   const handleRepost = useCallback((id: string) => {
     console.log('Reposted:', id);
