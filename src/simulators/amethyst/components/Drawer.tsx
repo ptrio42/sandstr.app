@@ -41,8 +41,11 @@ export function Drawer({ isOpen, onClose, onTabChange, onOpenSettings }: DrawerP
   if (!isOpen) return null;
   return (
     <>
-      <div className="absolute inset-0 bg-black/50 z-[55]" onClick={onClose} />
-      <div className="absolute left-0 top-0 bottom-0 w-[86%] max-w-[300px] bg-[var(--md-surface)] z-[56] overflow-y-auto shadow-2xl">
+      {/* Above the bottom nav (z-index 100), as in the real app: at z-55/56 the
+          nav painted over the drawer and swallowed the taps on its last two
+          items ("App Preferences", "User Preferences"). */}
+      <div className="absolute inset-0 bg-black/50 z-[110]" onClick={onClose} />
+      <div className="absolute left-0 top-0 bottom-0 w-[86%] max-w-[300px] bg-[var(--md-surface)] z-[120] overflow-y-auto shadow-2xl">
             {/* Account header */}
             <div className="h-28 bg-gradient-to-br from-[#3a1d6e] via-[#7b2ff7] to-[#c026d3]" />
             <div className="px-4 -mt-8 pb-3 border-b border-[var(--md-outline-variant)]">
