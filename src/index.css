@@ -14,6 +14,45 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* /c/:id is a fixed-height app shell: exactly one viewport, never scrolls, and
+   the simulator is sized from the row that's left over rather than from a `vh`
+   fraction. Written as a class (not `h-[100dvh]`) for two reasons: tailwind-merge
+   would drop one of two competing `h-*` classes on the same element, and a bare
+   dvh with no fallback collapses the whole flex chain to `height:auto` — a
+   zero-height phone — wherever dvh is unsupported. */
+.sandstr-shell {
+  height: 100vh;
+}
+@supports (height: 100dvh) {
+  .sandstr-shell {
+    height: 100dvh;
+  }
+}
+
+/* Referenced by MobilePhoneFrame's content area since the original repo, but
+   never actually defined here and not a plugin in tailwind.config.js — so a
+   native scrollbar painted inside the fake phone. */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* A phone has no visible scrollbar, so nothing drawn on the simulated screen may
+   have one either. The frame's own content area carries .scrollbar-hide, but the
+   simulators nest their own scrollers inside it (Amethyst's feed was painting a
+   20px native bar down the middle of the device). Scoped to the bezel on
+   purpose: a frameless web client is a desktop app and keeps its scrollbar. */
+.mobile-phone-frame-bezel * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.mobile-phone-frame-bezel *::-webkit-scrollbar {
+  display: none;
+}
+
 /* --- Sandstr brand (Palette 3) -------------------------------------------
    Host chrome only. Simulators keep their own client-accurate tokens. */
 :root {

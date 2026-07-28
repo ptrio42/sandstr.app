@@ -1,26 +1,33 @@
-import { useState } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useMatch } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
 import ClientSwitcher from './ClientSwitcher';
 import SandstrLogo from './brand/SandstrLogo';
-
-function useTheme() {
-  const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
-  const toggle = () => {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle('dark', next);
-    localStorage.setItem('sandstr-theme', next ? 'dark' : 'light');
-  };
-  return { dark, toggle };
-}
+import { useTheme } from './useTheme';
+import { cn } from '../utils/cn';
 
 export default function Layout() {
   const { dark, toggle } = useTheme();
+  // A client view is an application surface, not a document: one viewport tall,
+  // never scrolling, with the simulator sized off the leftover row. The gallery
+  // keeps the ordinary scrolling-document treatment.
+  const onClient = !!useMatch('/c/:id');
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-brand-obsidian dark:text-gray-100">
-      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/80 backdrop-blur dark:border-white/10 dark:bg-brand-obsidian/80">
+    <div
+      className={cn(
+        'bg-gray-50 text-gray-900 dark:bg-brand-obsidian dark:text-gray-100',
+        onClient ? 'sandstr-shell flex flex-col overflow-hidden' : 'min-h-screen',
+      )}
+    >
+      <header
+        className={cn(
+          'z-40 shrink-0 border-b border-gray-200 bg-white/80 backdrop-blur dark:border-white/10 dark:bg-brand-obsidian/80',
+          // Nothing scrolls on /c/:id, so `sticky` there bought nothing but a
+          // z-40 lid that buried the top 128px of the phone at max scroll.
+          !onClient && 'sticky top-0',
+          onClient && 'max-sm:hidden',
+        )}
+      >
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-3" aria-label="Sandstr — home">
             <SandstrLogo size={26} />
@@ -40,9 +47,15 @@ export default function Layout() {
 
       <Outlet />
 
-      <footer className="border-t border-gray-200 py-8 text-center text-xs text-gray-400 dark:border-gray-800">
-        Sandstr — interactive simulations for learning. Not affiliated with any client. Mock data only.
-      </footer>
+      {/* Not on /c/:id. It cost 81px there and was never seen (it sat ~121px
+          below the fold at 1440×800), and its text is a strict subset of the
+          Disclaimer that ClientView keeps permanently on screen — so dropping it
+          here strengthens rather than weakens the CLAUDE.md mitigation. */}
+      {!onClient && (
+        <footer className="border-t border-gray-200 py-8 text-center text-xs text-gray-400 dark:border-gray-800">
+          Sandstr — interactive simulations for learning. Not affiliated with any client. Mock data only.
+        </footer>
+      )}
 
       {/* Persistent in-place client switcher — only paints on /c/:id. */}
       <ClientSwitcher />

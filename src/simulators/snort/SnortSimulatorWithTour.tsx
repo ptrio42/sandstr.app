@@ -83,7 +83,7 @@ export function SnortSimulatorWithTour() {
   return (
     <TourWrapper 
       tourConfig={snortTourConfig}
-      autoStart={true}
+      autoStart={false}
       onStepChange={handleStepChange}
       onTourComplete={() => {
         console.log('Snort tour completed!');

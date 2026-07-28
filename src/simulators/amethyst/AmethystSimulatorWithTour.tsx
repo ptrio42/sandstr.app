@@ -89,7 +89,7 @@ export function AmethystSimulatorWithTour() {
   return (
     <TourWrapper 
       tourConfig={amethystTourConfig}
-      autoStart={true}
+      autoStart={false}
       onStepChange={handleStepChange}
       onTourComplete={() => {
         console.log('Amethyst tour completed!');

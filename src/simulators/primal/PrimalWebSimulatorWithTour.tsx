@@ -83,7 +83,7 @@ export function PrimalWebSimulatorWithTour() {
   return (
     <TourWrapper 
       tourConfig={primalTourConfig}
-      autoStart={true}
+      autoStart={false}
       onStepChange={handleStepChange}
       onTourComplete={() => {
         console.log('Primal tour completed!');

@@ -5,6 +5,12 @@
  */
 
 .snort-simulator {
+  /* The root ignores the className the host passes, so the height chain has to
+     be closed here: without a definite height the `height:100%` on .snort-layout
+     below resolves against an auto parent, falls back to content, and the layout
+     sized itself to 1024px inside a 901px card. */
+  height: 100%;
+
   /* Color System - Dark Default */
   --snort-bg-primary: #0f172a;
   --snort-bg-secondary: #1e293b;
@@ -129,7 +135,10 @@
 .snort-layout {
   display: grid;
   grid-template-columns: 260px 1fr 320px;
-  height: 80vh;
+  /* Fill the host card, don't re-guess the viewport. The card used to be 82vh so
+     80vh happened to be close; now it's whatever the app shell has left, and the
+     old value left an 82.8px dead band below the layout at 768x1024. */
+  height: 100%;
   overflow: hidden;
 }
 

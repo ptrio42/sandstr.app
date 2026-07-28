@@ -96,7 +96,7 @@ export function KeychatSimulatorWithTour() {
   return (
     <TourWrapper 
       tourConfig={keychatTourConfig}
-      autoStart={true}
+      autoStart={false}
       onStepChange={handleStepChange}
       onTourComplete={() => {
         console.log('Keychat tour completed!');

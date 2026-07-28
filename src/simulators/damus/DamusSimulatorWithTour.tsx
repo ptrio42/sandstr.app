@@ -97,7 +97,7 @@ export function DamusSimulatorWithTour() {
   return (
     <TourWrapper 
       tourConfig={damusTourConfig}
-      autoStart={true}
+      autoStart={false}
       onStepChange={handleStepChange}
       onTourComplete={() => {
         console.log('Damus tour completed!');

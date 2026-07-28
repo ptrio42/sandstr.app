@@ -6,6 +6,7 @@ import { ChevronDown, LayoutGrid, Search } from 'lucide-react';
 import { clients, getClient, type ClientEntry } from '../registry';
 import { ClientGlyph, platformLabel } from './ClientGlyph';
 import CommandPalette from './CommandPalette';
+import { useMediaQuery, MOBILE_QUERY } from './useMediaQuery';
 import { cn } from '../utils/cn';
 
 /* ------------------------------- hooks ---------------------------------- */
@@ -21,27 +22,6 @@ function useTourActive(): boolean {
     return () => mo.disconnect();
   }, []);
   return active;
-}
-
-function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(() =>
-    typeof window !== 'undefined' ? window.matchMedia(query).matches : false,
-  );
-  useEffect(() => {
-    const mql = window.matchMedia(query);
-    // Re-read on both the MQL change and a plain resize: the latter covers
-    // environments that don't fire MQL change reliably and the layout-not-yet
-    // settled race where innerWidth briefly reads 0 on first paint.
-    const on = () => setMatches(window.matchMedia(query).matches);
-    on();
-    mql.addEventListener('change', on);
-    window.addEventListener('resize', on);
-    return () => {
-      mql.removeEventListener('change', on);
-      window.removeEventListener('resize', on);
-    };
-  }, [query]);
-  return matches;
 }
 
 function isEditableTarget(el: EventTarget | null): boolean {
@@ -136,7 +116,7 @@ export default function ClientSwitcher() {
   const navigate = useNavigate();
   const reduce = !!useReducedMotion();
   const tourActive = useTourActive();
-  const isMobile = useMediaQuery('(max-width: 639px)');
+  const isMobile = useMediaQuery(MOBILE_QUERY);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
@@ -176,6 +156,15 @@ export default function ClientSwitcher() {
       clients[idx + 1]?.preload();
     });
   }, [id]);
+
+  // On phones the sim is full-bleed, so the switcher has no floating pill to
+  // tap — ClientView's compact bar fires this instead. Mirrors the existing
+  // `start-${id}-tour` idiom so the two host surfaces stay decoupled.
+  useEffect(() => {
+    const open = () => setSheetOpen(true);
+    window.addEventListener('sandstr-open-switcher', open);
+    return () => window.removeEventListener('sandstr-open-switcher', open);
+  }, []);
 
   // Global shortcuts: ⌘/Ctrl-K opens the palette, [ / ] cycle prev/next.
   useEffect(() => {
@@ -226,8 +215,11 @@ export default function ClientSwitcher() {
   const leads = clients.filter((c) => c.lead);
   const rest = clients.filter((c) => !c.lead);
   const dimmed = tourActive;
-  // Mobile-frame sims get a vertical rail in the gutter; web sims get a bottom dock.
-  const vertical = !!active.frame;
+  // One desktop orientation for every client: a rail in the left gutter, which
+  // on this layout is empty anyway. The old bottom dock (web sims) was
+  // viewport-fixed and measured 29–58px of overlap onto the card's lower edge —
+  // document padding could never move it off.
+  const vertical = true;
   const orientation: Orientation = vertical ? 'vertical' : 'horizontal';
   const divider = (
     <span
@@ -248,51 +240,17 @@ export default function ClientSwitcher() {
       </div>
 
       {isMobile ? (
-        /* ---------- mobile: collapsed pill ---------- */
-        <div
-          className={cn('fixed left-1/2 z-[3000] -translate-x-1/2', dimClass)}
-          style={{ bottom: 'max(0.75rem, env(safe-area-inset-bottom))', ...dimStyle }}
-        >
-          <motion.div
-            initial={reduce ? false : { y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-            className="flex items-center"
-          >
-            <div className="flex items-center gap-1 rounded-full border border-white/60 bg-white/80 p-1 shadow-[0_6px_28px_rgba(0,0,0,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-gray-900/80">
-              <button
-                type="button"
-                onClick={() => setSheetOpen(true)}
-                className="flex items-center gap-2 rounded-full py-1 pl-1.5 pr-3"
-                aria-label={`Current client: ${active.name}. Tap to switch.`}
-              >
-                <ClientGlyph client={active} className="h-8 w-8" />
-                <span className="text-sm font-semibold">{active.name}</span>
-                <ChevronDown className="h-4 w-4 text-gray-400" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setPaletteOpen(true)}
-                aria-label="Search clients"
-                className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <Search className="h-4 w-4" />
-              </button>
-            </div>
-          </motion.div>
-        </div>
+        /* ---------- mobile: no floating chrome at all ----------
+           The sim is full-bleed here, so anything floating sits ON the client's
+           own tab bar (the old pill measured a 50px band of overlap and clipped
+           Damus's compose FAB). ClientView's compact bar owns the trigger and
+           fires `sandstr-open-switcher`; the bottom sheet below is the surface. */
+        null
       ) : (
-        /* ---------- desktop ---------- */
-        /* Mobile-frame sims → a vertical rail in the empty side gutter (never
-           overlaps the phone or its in-app tab bar). Web sims → a bottom dock
-           floating over the wide card's lower edge (their nav lives left/top). */
+        /* ---------- desktop: a rail in the empty left gutter ---------- */
         <div
-          className={cn(
-            'fixed z-[3000]',
-            vertical ? 'left-3 top-1/2 -translate-y-1/2' : 'left-1/2 -translate-x-1/2',
-            dimClass,
-          )}
-          style={vertical ? dimStyle : { bottom: 'max(1rem, env(safe-area-inset-bottom))', ...dimStyle }}
+          className={cn('fixed left-3 top-1/2 z-[3000] -translate-y-1/2', dimClass)}
+          style={dimStyle}
         >
           <motion.nav
             ref={toolbarRef}
@@ -306,6 +264,18 @@ export default function ClientSwitcher() {
             className={cn(
               'flex gap-1 border border-white/60 bg-white/70 shadow-[0_8px_40px_rgba(0,0,0,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-gray-900/70',
               vertical ? 'flex-col items-center rounded-[20px] p-1.5' : 'items-center rounded-2xl p-1.5',
+              // The rail is 611px tall with all ten chips. Overflow is scoped to
+              // short windows on purpose: each chip's hover tooltip is an
+              // absolutely-positioned child at `left-full`, so ANY overflow value
+              // other than visible turns this into a clipper (measured
+              // scrollWidth 141 vs clientWidth 56 — clipped tooltips plus a stray
+              // horizontal scrollbar). Above 660px tall nothing overflows and the
+              // tooltips stay free; below it, four controls were landing off
+              // screen with nothing to scroll, so a clipped tooltip is the lesser
+              // evil.
+              '[@media(max-height:660px)]:max-h-[calc(100vh-1.5rem)]',
+              '[@media(max-height:660px)]:overflow-y-auto',
+              '[@media(max-height:660px)]:overscroll-contain',
             )}
           >
             <button

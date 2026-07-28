@@ -251,6 +251,12 @@
 /* Frame integration */
 .mobile-phone-frame-wrapper .damus-simulator { border-radius: 40px; height: 100%; }
 @media (min-width: 768px) { .damus-simulator { border-radius: 40px; } }
+/* Below sm the host drops the bezel and the sim goes full-bleed — a screen that
+   reaches the real device edges must not carry a bezel's corner radius. */
+@media (max-width: 639px) {
+  .mobile-phone-frame-wrapper .damus-simulator { border-radius: 0; }
+  .damus-simulator { border-radius: 0; }
+}
 
 /* Links / hashtags rendered inline in note content */
 .damus-link { color: var(--damus-purple); }
