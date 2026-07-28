@@ -17,8 +17,8 @@ interface Props {
 // Damus left drawer opened from the profile avatar. Renders at final position (no slide)
 // because the preview environment freezes enter-animations.
 export const SideMenu: React.FC<Props> = ({ currentUser, onClose, onNav }) => {
-  const name = currentUser?.displayName || 'pitiunited';
-  const handle = currentUser?.username || 'pitiunited';
+  const name = currentUser?.displayName || 'sandy';
+  const handle = currentUser?.username || 'sandy';
   const npub = 'npub1' + handle.padEnd(6, 'x').slice(0, 6) + '…' + (currentUser?.pubkey || '').slice(-6);
 
   const items: { d: MenuDest; label: string; Icon: typeof PersonIcon; special?: boolean; dim?: boolean }[] = [

@@ -63,7 +63,7 @@ export const ComposeScreen: React.FC<ComposeScreenProps> = ({ currentUser, users
 
         {/* your reply / new note */}
         <div className="flex gap-3 mt-1">
-          <Avatar seed={currentUser?.username || 'pitiunited'} className="w-11 h-11" zap={!!currentUser?.lightningAddress} />
+          <Avatar seed={currentUser?.username || 'sandy'} className="w-11 h-11" zap={!!currentUser?.lightningAddress} />
           <textarea
             autoFocus
             value={content}

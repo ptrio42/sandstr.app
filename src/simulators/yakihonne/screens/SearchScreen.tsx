@@ -7,8 +7,8 @@ const TABS = ['People', 'Notes', 'Articles', 'Media'] as const;
 interface Person { name: string; seed: string; handle: string; validated: boolean; }
 
 const people: Person[] = [
-  { name: 'Bitcoin Magazine (NewsBot)', seed: 'btcmag', handle: 'bitcoinmagazine@utxo.one', validated: true },
-  { name: 'UTXO', seed: 'utxo1', handle: 'bashfulopera44@walletofsatoshi.com', validated: false },
+  { name: 'Block Bulletin (NewsBot)', seed: 'blockbulletin', handle: 'blockbulletin@news.example', validated: true },
+  { name: 'UTXOwl', seed: 'utxowl', handle: 'bashfulopera44@wallet.example', validated: false },
   { name: 'UTXOz ⚡', seed: 'utxoz', handle: 'utxoz@cypherflow.ai', validated: true },
   { name: 'RT International (NewsBot)', seed: 'rtintl', handle: 'rt@utxo.one', validated: true },
   { name: 'rektbot', seed: 'rektbot', handle: 'rektbot@utxo.one', validated: true },

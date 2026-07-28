@@ -17,7 +17,7 @@ interface Props {
 
 export const NotificationsScreen: React.FC<Props> = ({ currentUser, notes, users, onOpenDrawer, onOpenThread, onViewProfile, onReply }) => {
   const [tab, setTab] = useState<'all' | 'zaps' | 'mentions'>('all');
-  const me = currentUser?.username || 'pitiunited';
+  const me = currentUser?.username || 'sandy';
 
   const items = notes
     .slice(2, 22)

@@ -109,15 +109,15 @@ export interface YakiActivity {
 }
 
 export const yakiActivity: YakiActivity[] = [
-  { id: 'a1', name: 'Five', seed: 'five', timeAgo: '6 hours ago', kind: 'smart_widget', subtitle: 'Featured Calendar Events' },
-  { id: 'a2', name: 'Five', seed: 'five', timeAgo: '6 hours ago', kind: 'smart_widget', subtitle: 'Community Stream' },
-  { id: 'a3', name: 'DeAllen Young', seed: 'deallen', timeAgo: '1 day ago', kind: 'video', subtitle: '' },
-  { id: 'a4', name: 'MadMunky2140', seed: 'madmunky', timeAgo: '2 days ago', kind: 'curation', subtitle: 'Musical Profile' },
-  { id: 'a5', name: 'ϟtephen', seed: 'stephen', timeAgo: '2 days ago', kind: 'article', subtitle: 'My Nostr Stuff' },
-  { id: 'a6', name: 'stl1988', seed: 'stl1988', timeAgo: '2 days ago', kind: 'video', subtitle: 'Concord Protocol' },
-  { id: 'a7', name: 'Eporediese', seed: 'eporediese', timeAgo: '2 days ago', kind: 'article', subtitle: 'Consensus - Chapter 14' },
-  { id: 'a8', name: 'Eporediese', seed: 'eporediese', timeAgo: '2 days ago', kind: 'article', subtitle: 'Consensus - Chapter 13' },
-  { id: 'a9', name: 'Eporediese', seed: 'eporediese', timeAgo: '2 days ago', kind: 'article', subtitle: 'Consensus - Chapter 12' },
+  { id: 'a1', name: 'Fife', seed: 'fife', timeAgo: '6 hours ago', kind: 'smart_widget', subtitle: 'Featured Calendar Events' },
+  { id: 'a2', name: 'Fife', seed: 'fife', timeAgo: '6 hours ago', kind: 'smart_widget', subtitle: 'Community Stream' },
+  { id: 'a3', name: 'Dallen Older', seed: 'dallen', timeAgo: '1 day ago', kind: 'video', subtitle: '' },
+  { id: 'a4', name: 'MadMonke2141', seed: 'madmonke', timeAgo: '2 days ago', kind: 'curation', subtitle: 'Musical Profile' },
+  { id: 'a5', name: 'ϟtefan', seed: 'stefan', timeAgo: '2 days ago', kind: 'article', subtitle: 'My Nostr Stuff' },
+  { id: 'a6', name: 'stlouie88', seed: 'stlouie88', timeAgo: '2 days ago', kind: 'video', subtitle: 'Concord Protocol' },
+  { id: 'a7', name: 'Eporedano', seed: 'eporedano', timeAgo: '2 days ago', kind: 'article', subtitle: 'Consensus - Chapter 14' },
+  { id: 'a8', name: 'Eporedano', seed: 'eporedano', timeAgo: '2 days ago', kind: 'article', subtitle: 'Consensus - Chapter 13' },
+  { id: 'a9', name: 'Eporedano', seed: 'eporedano', timeAgo: '2 days ago', kind: 'article', subtitle: 'Consensus - Chapter 12' },
 ];
 
 export interface YakiDM {
@@ -130,17 +130,17 @@ export interface YakiDM {
 }
 
 export const yakiDMs: YakiDM[] = [
-  { name: 'Smartflow_dev', seed: 'smartflow', preview: 'Testing followers broadcast (sorry for spam)', time: '3mo', unread: true },
-  { name: 'BitBlik', seed: 'bitblik', preview: "Yes, if it doesn't you need to contact the coor…", time: '3mo', unread: true },
-  { name: 'JesterHodl', seed: 'jesterhodl', preview: 'Cześć, zbudowałem serwis edukacyjny n…', time: '4mo', fromYou: true },
-  { name: 'Bitcoin Makueni 🇰🇪', seed: 'makueni', preview: 'Explore 👇 more about the Bitcoin Makueni ini…', time: '4mo' },
-  { name: 'Nostrich.Love', seed: 'nostrichlove', preview: 'Dm', time: '4mo' },
-  { name: 'PayPerQ', seed: 'payperq', preview: 'It was our provider. Fixed now.', time: '4mo' },
-  { name: 'Aida', seed: 'aida', preview: 'Hey, I hope you will be able to join us for #eur…', time: '5mo' },
-  { name: 'PandaPark', seed: 'pandapark', preview: 'nostr:nevent1qqsz22t953qvst7kccf5frfvu…', time: '5mo', fromYou: true },
+  { name: 'Smoothflow_dev', seed: 'smoothflow', preview: 'Testing followers broadcast (sorry for spam)', time: '3mo', unread: true },
+  { name: 'BitBlick', seed: 'bitblick', preview: "Yes, if it doesn't you need to contact the coor…", time: '3mo', unread: true },
+  { name: 'JokerHodl', seed: 'jokerhodl', preview: 'Cześć, zbudowałem serwis edukacyjny n…', time: '4mo', fromYou: true },
+  { name: 'Bitcoin Baraza 🇰🇪', seed: 'baraza', preview: 'Explore 👇 more about the Bitcoin Baraza ini…', time: '4mo' },
+  { name: 'Ostrich.Post', seed: 'ostrichpost', preview: 'Dm', time: '4mo' },
+  { name: 'PayPerBit', seed: 'payperbit', preview: 'It was our provider. Fixed now.', time: '4mo' },
+  { name: 'Aidra', seed: 'aidra', preview: 'Hey, I hope you will be able to join us for #eur…', time: '5mo' },
+  { name: 'PandaPier', seed: 'pandapier', preview: 'nostr:nevent1qqsz22t953qvst7kccf5frfvu…', time: '5mo', fromYou: true },
   { name: 'Enjoy the ride', seed: 'enjoytheride', preview: '🙏 ✌️ 😊', time: '5mo' },
-  { name: 'Jokes4Sats', seed: 'jokes4sats', preview: 'Test', time: '6mo' },
-  { name: 'Alby', seed: 'alby', preview: 'Piti, can I ask you to fill this short survey, plea…', time: '6mo' },
+  { name: 'Japes4Sats', seed: 'japes4sats', preview: 'Test', time: '6mo' },
+  { name: 'Zapmail', seed: 'zapmail', preview: 'Hey, can I ask you to fill this short survey, plea…', time: '6mo' },
 ];
 
 export interface YakiRelay {
@@ -162,39 +162,39 @@ export const zapPresets = [20, 100, 500, 1000, 5000, 10000, 50000, 100000];
 // Curated home feed — mirrors the reference recording note-for-note.
 export const homeNotes: YakiNoteData[] = [
   {
-    id: 'n-steak', name: 'Maria2000', seed: 'maria2000', nip05: true, zap: true, timeAgo: '22 minutes ago',
+    id: 'n-steak', name: 'Mariah2100', seed: 'mariah2100', nip05: true, zap: true, timeAgo: '22 minutes ago',
     content: 'Lunch time!  Its hard to beat ribeye steak for lunch, with avocado on the side. 🤤🤤',
     images: [cover()],
     reactions: 6, replies: 3, reposts: 2, quotes: 0, zaps: 177,
     zapChip: { sats: 100, from: 'Zap Cooking', reactors: ['zapcooking', 'marina'] },
   },
   {
-    id: 'n-rainy', name: 'Maria2000', seed: 'maria2000', nip05: true, zap: true, timeAgo: '3 hours ago',
+    id: 'n-rainy', name: 'Mariah2100', seed: 'mariah2100', nip05: true, zap: true, timeAgo: '3 hours ago',
     content: 'A dark and rainy morning for us, not typical for July in texas.  As soon as it  quits i need to take advantage of the moisture and get some buckwheat seeds in the ground.\n#RainyDay',
     images: [cover()],
     reactions: 5, replies: 1, reposts: 0, quotes: 0, zaps: 31,
     reactionEmoji: '💜', defaultLiked: true,
-    zapChip: { sats: 21, reactors: ['ostrich', 'gigi'] },
+    zapChip: { sats: 21, reactors: ['ostrich', 'zenzapper'] },
   },
   {
-    id: 'n-breath', name: 'Bohemia', seed: 'bohemia', timeAgo: '5 hours ago',
+    id: 'n-breath', name: 'Bohemya', seed: 'bohemya', timeAgo: '5 hours ago',
     content: 'Did you know you can hack your breathing software??',
     reactions: 1, replies: 1, reposts: 0, quotes: 0, zaps: 0,
     quoted: 'loading',
   },
   {
-    id: 'n-gn', name: 'Marina', seed: 'marina', nip05: true, zap: true, timeAgo: '1 hour ago',
+    id: 'n-gn', name: 'Marinka', seed: 'marinka', nip05: true, zap: true, timeAgo: '1 hour ago',
     content: "GN 🌙\n\nAngine de Poitrine is honestly the best concentration music I've ever enjoyed. My brain runs extremely smooth when listening to it.\n\nNighty night everybody! 🧡💜\n\nHere my favorite piece:",
     reactions: 3, replies: 0, reposts: 0, quotes: 0, zaps: 12,
   },
   {
-    id: 'n-gigi', name: 'Gigi', seed: 'gigi', nip05: true, zap: true, timeAgo: '5 hours ago',
+    id: 'n-zen', name: 'Zen Zapper', seed: 'zenzapper', nip05: true, zap: true, timeAgo: '5 hours ago',
     content: '"Why must one talk? Often one shouldn\'t talk, but live in silence."',
     images: [cover()],
     reactions: 1, replies: 1, reposts: 0, quotes: 0, zaps: 0,
   },
   {
-    id: 'n-gm', name: 'pitiunited', seed: 'pitiunited', nip05: true, zap: true, timeAgo: '6 hours ago',
+    id: 'n-gm', name: 'sandy', seed: 'sandy', nip05: true, zap: true, timeAgo: '6 hours ago',
     content: 'GM 😋',
     images: [cover()],
     reactions: 1, replies: 0, reposts: 0, quotes: 0, zaps: 0,

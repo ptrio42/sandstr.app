@@ -53,10 +53,10 @@ export function NotificationsScreen({ onOpenDrawer }: NotificationsScreenProps) 
 
         {/* A tail notification item (release announcement) */}
         <div className="flex gap-3 px-4 py-4 border-t border-[var(--md-outline-variant)]">
-          <Avatar seed="Vitor Pamplona" className="w-11 h-11" />
+          <Avatar seed="Violet Volt" className="w-11 h-11" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1 text-[var(--md-on-surface-variant)]">
-              <span className="font-semibold text-[var(--md-on-surface)]">Vitor Pamplona</span>
+              <span className="font-semibold text-[var(--md-on-surface)]">Violet Volt</span>
               <Play className="w-4 h-4" />
               <span className="text-sm" style={{ color: 'var(--md-primary)' }}>#Amethyst</span>
               <span className="text-sm ml-auto">· 2d</span>

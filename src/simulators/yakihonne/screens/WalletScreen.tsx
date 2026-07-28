@@ -15,8 +15,8 @@ const txs: Tx[] = [
   { dir: 'in', sats: 210, who: 'Zap Cooking', when: 'Today' },
   { dir: 'in', sats: 1000, who: 'Marina', when: 'Yesterday' },
   { dir: 'out', sats: 21, who: 'FeynStructure', when: 'Yesterday' },
-  { dir: 'in', sats: 5000, who: 'Alby', when: '3 days ago' },
-  { dir: 'out', sats: 500, who: 'pitiunited', when: '4 days ago' },
+  { dir: 'in', sats: 5000, who: 'Zapmail', when: '3 days ago' },
+  { dir: 'out', sats: 500, who: 'sandy', when: '4 days ago' },
 ];
 
 interface Props {
@@ -59,7 +59,7 @@ export const WalletScreen: React.FC<Props> = ({ currentUserSeed, balance, onOpen
         </button>
 
         <div className="mt-4 flex items-center justify-center gap-2 text-[13px] text-[var(--yh-text-2)]">
-          <span className="truncate">pitiunited@walletofsatoshi.com</span>
+          <span className="truncate">sandy@wallet.example</span>
           <button className="inline-flex items-center gap-1 text-[var(--yh-orange)] font-medium"><CopyIcon className="w-4 h-4" />Copy LN</button>
         </div>
       </div>

@@ -84,7 +84,7 @@ export function ComposeScreen({ isOpen, onClose, onPost }: ComposeScreenProps) {
           <div className="flex-1 overflow-y-auto px-4 pt-2">
             <div className="flex gap-3">
               <div className="relative shrink-0">
-                <Avatar seed="pitiunited" className="w-11 h-11" />
+                <Avatar seed="sandy" className="w-11 h-11" />
                 {/* account / anonymous badge (real app shows a small purple badge here) */}
                 <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[var(--md-primary)] ring-2 ring-[var(--md-background)] flex items-center justify-center">
                   <Lock className="w-2 h-2 text-[var(--md-on-primary)]" />

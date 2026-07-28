@@ -39,8 +39,8 @@ export interface YakiHonneSimulatorProps {
 }
 
 const SELF: YakiProfile = {
-  seed: 'pitiunited', name: 'pitiunited', nip05: true,
-  nip05addr: '_@thisbitcointhing.com', website: 'https://UseLessShit.co',
+  seed: 'sandy', name: 'sandy', nip05: true,
+  nip05addr: '_@sandy.example', website: 'https://sandy.example',
   bio: 'All-round buidler.', followings: '2.37K', followers: '3.51K', isSelf: true,
 };
 

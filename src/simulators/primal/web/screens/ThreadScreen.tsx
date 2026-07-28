@@ -5,8 +5,8 @@ import { NoteCard } from '../components/NoteCard';
 import { currentUser, type PNote } from '../data';
 
 const replies: PNote[] = [
-  { id: 'r1', name: 'Gigi', handle: 'gigi@primal.net', time: '18 hr.', verified: true, body: 'This is the way. Signal over noise, every time. ⚡', reply: 2, zap: '441', like: 58, repost: 4 },
-  { id: 'r2', name: 'L0la L33tz', handle: 'lola@primal.net', time: '17 hr.', body: 'Bookmarked. Need to reread this later.', reply: 0, zap: '77', like: 19, repost: 1 },
+  { id: 'r1', name: 'Zen Zapper', handle: 'zen@zenzapper.example', time: '18 hr.', verified: true, body: 'This is the way. Signal over noise, every time. ⚡', reply: 2, zap: '441', like: 58, repost: 4 },
+  { id: 'r2', name: 'D4ta D0ll', handle: 'd4ta@d0ll.example', time: '17 hr.', body: 'Bookmarked. Need to reread this later.', reply: 0, zap: '77', like: 19, repost: 1 },
 ];
 
 export function ThreadScreen({ note, onBack, onOpenThread }: { note: PNote; onBack: () => void; onOpenThread: (n: PNote) => void }) {

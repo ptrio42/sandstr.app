@@ -81,7 +81,7 @@ export const ThreadScreen: React.FC<Props> = ({ note, notes, users, currentUser,
         onClick={() => onReply(note)}
         className="flex items-center gap-3 px-4 py-2.5 border-t border-[var(--damus-separator)] bg-[var(--damus-bg)]"
       >
-        <Avatar seed={currentUser?.username || 'pitiunited'} className="w-8 h-8" />
+        <Avatar seed={currentUser?.username || 'sandy'} className="w-8 h-8" />
         <span className="flex-1 text-left text-[var(--damus-text-secondary)] text-[16px]">Type your note here...</span>
       </button>
     </div>

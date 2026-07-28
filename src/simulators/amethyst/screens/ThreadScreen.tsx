@@ -13,7 +13,7 @@ interface ThreadScreenProps {
 // composer pinned at the bottom.
 const replies: PostData[] = [
   { id: 'rep1', author: { name: 'sandwich', handle: 'sandwich', avatar: '', nip05: 'sandwich', isVerified: true }, content: 'GM ☀️', timestamp: '3d', stats: { replies: 1, reposts: 0, zaps: 0, likes: 2 } },
-  { id: 'rep2', author: { name: 'pitiunited', handle: 'thisbitcointhing.com', avatar: '', nip05: 'thisbitcointhing.com', isVerified: true }, content: 'GM ☕', timestamp: '4d', stats: { replies: 0, reposts: 0, zaps: 100, likes: 1 } },
+  { id: 'rep2', author: { name: 'sandy', handle: 'sandy.example', avatar: '', nip05: 'sandy.example', isVerified: true }, content: 'GM ☕', timestamp: '4d', stats: { replies: 0, reposts: 0, zaps: 100, likes: 1 } },
   { id: 'rep3', author: { name: 'Matt', handle: 'matt', avatar: '', nip05: 'matt', isVerified: false }, content: 'GM #nostr 🦩 ☕😊🙏\n\nOff for breakfast then a swim today, gotta make the most of the good stuff.', timestamp: '4d', stats: { replies: 2, reposts: 1, zaps: 21, likes: 5 } },
 ];
 

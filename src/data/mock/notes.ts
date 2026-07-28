@@ -496,7 +496,7 @@ Simple and effective.`,
   
   // Add some link preview posts
   const linkPosts = [
-    'Just read this amazing article about Bitcoin\'s energy usage. Worth your time:\n\nhttps://bitcoinmagazine.com/business/bitcoin-mining-energy\n\nTL;DR: It\'s actually good for the grid.',
+    'Just read this amazing article about Bitcoin\'s energy usage. Worth your time:\n\nhttps://blockbulletin.example/business/bitcoin-mining-energy\n\nTL;DR: It\'s actually good for the grid.',
     'Great thread on Nostr architecture:\n\nhttps://github.com/nostr-protocol/nips/blob/master/01.md\n\nEssential reading for devs.',
     'This Lightning Network visualization is mind-blowing:\n\nhttps://mempool.space/lightning\n\nThe network is growing so fast!',
   ];

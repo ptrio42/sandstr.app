@@ -25,7 +25,7 @@ export function AppTopBar({ onOpenDrawer, center }: AppTopBarProps) {
         data-tour="amethyst-profile-avatar"
         className="md-app-bar-icon-btn"
       >
-        <Avatar seed="pitiunited" className="w-9 h-9 ring-1 ring-[var(--md-outline-variant)]" />
+        <Avatar seed="sandy" className="w-9 h-9 ring-1 ring-[var(--md-outline-variant)]" />
       </motion.button>
 
       {/* CENTER: varies per screen */}

@@ -1,6 +1,11 @@
 /**
- * Curated Primal-flavoured mock content, mirroring the reference recording
- * (docs/refs/primal/shots) so the reproduction reads as the real app.
+ * Curated Primal-flavoured mock content. Layout, density, badge mix and counts
+ * mirror the reference recording (docs/refs/primal/shots) so the reproduction
+ * reads as the real app — but EVERY identity is invented. The recording showed
+ * real users; shipping their names with fabricated posts is defamation-shaped
+ * (see the header of src/data/mock/users.ts). Handles use .example domains
+ * (RFC 2606, never resolve). Relay URLs are kept real on purpose: they are
+ * infrastructure facts and part of fidelity, not statements by people.
  * All media = local data: URIs (getSampleImages); avatars = robohash <Avatar seed>.
  */
 import { getSampleImages } from '../../../data/mock/utils';
@@ -27,23 +32,23 @@ export interface PNote {
 const img = () => getSampleImages(1)[0];
 
 export const currentUser = {
-  name: 'pitiunited',
-  handle: 'thisbitcointhing.com',
-  npub: 'npub1thisbitcoinq7…8ga8y2eh0p58c79',
+  name: 'sandy',
+  handle: 'sandy.example',
+  npub: 'npub1sandysandboxq7…8ga8y2eh0p58c79',
   bio: 'All-round buidler.',
-  website: 'https://UseLessShit.co',
+  website: 'https://sandy.example',
   verified: true,
 };
 
 export const feedNotes: PNote[] = [
   {
-    id: 'n-flash',
-    name: 'FLASH',
-    handle: 'flash@primal.net',
+    id: 'n-spark',
+    name: 'SPARK',
+    handle: 'spark@sparkwire.example',
     time: '23 hr.',
     verified: true,
     legend: true,
-    body: '⚡🇺🇸 NEW - Police in Houston, Texas, are panicking and have started an immediate investigation as citizens continue to destroy Flock cameras across the city.\n\nThe police are struggling to make a single arrest because nobody in the city is assisting them with the investigation.\n\n"Public distaste for the cameras is growing nationwide."',
+    body: '⚡ NEW - The city council in Milltown has voted to switch off its license-plate camera network after a residents’ petition passed 50,000 signatures in a week.\n\nCouncillors admitted nobody could name a single crime the cameras had solved.\n\n"Public distaste for the cameras is growing nationwide."',
     media: img(),
     zapTop: { amount: '777' },
     reply: 20,
@@ -52,23 +57,23 @@ export const feedNotes: PNote[] = [
     repost: 32,
   },
   {
-    id: 'n-unclejim',
-    name: 'uncleJim21',
-    handle: 'uncleJim21@nostrly.com',
+    id: 'n-auntkay',
+    name: 'auntKay42',
+    handle: 'auntkay42@relayly.example',
     time: '23 hr.',
-    body: 'Google = SEO Ad Slop + Dog Shit Answers + 2010s Interface\nJamie = The Future + High Signal Data Straight from the Source + Zero Ads',
+    body: 'Big Search = SEO Ad Slop + Recycled Answers + 2010s Interface\nMy local model = High Signal Data Straight from the Source + Zero Ads',
     reply: 8,
     zap: '921',
     like: 44,
     repost: 12,
   },
   {
-    id: 'n-pip',
-    name: 'Pip the WoT guy',
-    handle: 'pip@vertexlab.io',
+    id: 'n-pia',
+    name: 'Pia the WoT gal',
+    handle: 'pia@trustgraph.example',
     time: '23 hr.',
     verified: true,
-    body: '🚀 npub.world v2 just dropped.\n\nSearch and discovery for Nostr, done right.\n\nMultiple algorithms.\nMultiple providers.\nOne personalized, decentralized experience.\n\nSo fast to feel instant. So flexible to be yours.',
+    body: '🚀 wotscout v2 just dropped.\n\nSearch and discovery for Nostr, done right.\n\nMultiple algorithms.\nMultiple providers.\nOne personalized, decentralized experience.\n\nSo fast to feel instant. So flexible to be yours.',
     media: img(),
     zapTop: { amount: '1389', comment: '🤘' },
     reply: 6,
@@ -77,14 +82,14 @@ export const feedNotes: PNote[] = [
     repost: 26,
   },
   {
-    id: 'n-odell',
-    name: 'ODELL',
-    handle: 'odell@primal.net',
+    id: 'n-castle',
+    name: 'CASTLE',
+    handle: 'castle@keepwire.example',
     time: '20 hr.',
     verified: true,
     legend: true,
-    body: '50k visitors 📈\n\n@CITADEL WIRE',
-    link: { title: 'CITADEL WIRE', desc: 'high signal news', url: 'https://citadelwire.com' },
+    body: '50k visitors 📈\n\n@KEEP WIRE',
+    link: { title: 'KEEP WIRE', desc: 'high signal news', url: 'https://keepwire.example' },
     zapTop: { amount: '50 005', comment: 'Proof of work 😎😎' },
     reply: 13,
     zap: '50 388',
@@ -92,9 +97,9 @@ export const feedNotes: PNote[] = [
     repost: 7,
   },
   {
-    id: 'n-kratter',
-    name: 'Matthew Kratter',
-    handle: 'kratter@primal.net',
+    id: 'n-kessler',
+    name: 'Mira Kessler',
+    handle: 'mira@kessler.example',
     time: '23 hr.',
     verified: true,
     body: 'Is 55% Miner Activation Too Low For BIP-110?',
@@ -104,16 +109,16 @@ export const feedNotes: PNote[] = [
     repost: 5,
   },
   {
-    id: 'n-hzrd',
-    name: 'hzrd149',
-    handle: 'hzrd149.com',
+    id: 'n-petal',
+    name: 'petal_dev',
+    handle: 'petal-dev.example',
     time: '1 day',
-    body: 'blossom is now serving over 2 million blobs across the network 🌸',
+    body: 'petals is now serving over 2 million blobs across the network 🌸',
     quote: {
-      name: 'hzrd149',
-      handle: 'hzrd149.com',
+      name: 'petal_dev',
+      handle: 'petal-dev.example',
       time: '23 hr.',
-      body: "I don't really remember, but I was asking it questions about eth and solana stuff and it was nice to get results that I normally cant find using google or other search engines",
+      body: "I don't really remember, but I was asking it questions about relay stuff and it was nice to get results that I normally cant find using regular search engines",
     },
     reply: 3,
     zap: '412',
@@ -122,16 +127,16 @@ export const feedNotes: PNote[] = [
   },
 ];
 
-export const liveCard = { name: 'NoGood Radio', started: 'Started 1 yr. ago', viewers: 8 };
+export const liveCard = { name: 'Static Bloom Radio', started: 'Started 1 yr. ago', viewers: 8 };
 
 export const trending = [
-  { name: 'HODL', time: '1 hr.', preview: "This is tough to do, but every time I can get into the headspace where I'm just…" },
-  { name: 'Matthew Kratter', time: '4 hr.', preview: '12 Attacks On Bitcoin (Happening Now) https://blossom.primal.net/1164e2864b…' },
-  { name: 'FLASH', time: '1 hr.', preview: "⚡🤠 FLASH - It's time for me to renew my VPN subscription. Do you have any…" },
-  { name: 'gladstein', time: '2 hr.', preview: 'Revolting I wonder how many people who drink these "energy drinks" know they…' },
-  { name: 'alp', time: '3 hr.', preview: 'https://image.nostr.build/f2c0104cbb2522c186fa3f3ca068cebe5170364ae3805…' },
-  { name: 'wickedsoul', time: '3 hr.', preview: 'Good night, BchNostr fam! Just wanna say thanks for being so nice and for lettin…' },
-  { name: 'Benking', time: '3 hr.', preview: 'People always talk about lack of money, but the real lack is of ideas and…' },
+  { name: 'HODLR', time: '1 hr.', preview: "This is tough to do, but every time I can get into the headspace where I'm just…" },
+  { name: 'Mira Kessler', time: '4 hr.', preview: '12 Attacks On Bitcoin (And What Happened) https://media.sandbox.example/1164e2…' },
+  { name: 'SPARK', time: '1 hr.', preview: "⚡🤠 SPARK - It's time for me to renew my VPN subscription. Do you have any…" },
+  { name: 'freedomfran', time: '2 hr.', preview: 'Revolting I wonder how many people who drink these "energy drinks" know they…' },
+  { name: 'alv', time: '3 hr.', preview: 'https://media.sandbox.example/f2c0104cbb2522c186fa3f3ca068cebe5170364ae3805…' },
+  { name: 'wildersoul', time: '3 hr.', preview: 'Good night, Nostr fam! Just wanna say thanks for being so nice and for lettin…' },
+  { name: 'Bertking', time: '3 hr.', preview: 'People always talk about lack of money, but the real lack is of ideas and…' },
 ];
 
 export const exploreFeeds = [
@@ -142,7 +147,7 @@ export const exploreFeeds = [
   { title: 'Technology Reads', desc: 'Technology-related long form notes', likes: 138, zaps: 21 },
   { title: 'Food Reads', desc: 'Food-related long form notes', likes: 114, zaps: 63 },
   { title: 'Gaming Reads', desc: 'Gaming-related long form notes', likes: 152, zaps: 0 },
-  { title: 'Notarized Notes', desc: 'Spam-free global feed of notarized notes. notary.electrum.org.', likes: 27, zaps: 0 },
+  { title: 'Notarized Notes', desc: 'Spam-free global feed of notarized notes. notary.example.', likes: 27, zaps: 0 },
 ];
 
 export const networkStats = [
@@ -160,32 +165,32 @@ export const hotTopics = [
 ];
 
 export const trendingUsers = [
-  { name: 'FLASH', legend: true }, { name: 'uncleJim21' }, { name: 'Pip the WoT…' }, { name: 'ODELL', legend: true },
-  { name: 'Matthew Kr…' }, { name: 'L0la L33tz' }, { name: 'Gigi' }, { name: 'Constantin' },
-  { name: 'UNCLE RO…' }, { name: 'Scott …' }, { name: 'Noshole' }, { name: 'HODL', legend: true },
-  { name: 'Joe Nakam…' }, { name: 'Ben Justma…' }, { name: 'rabble' }, { name: 'Sergio' },
+  { name: 'SPARK', legend: true }, { name: 'auntKay42' }, { name: 'Pia the WoT…' }, { name: 'CASTLE', legend: true },
+  { name: 'Mira Kessl…' }, { name: 'D4ta D0ll' }, { name: 'Zen Zapper' }, { name: 'Konstant' },
+  { name: 'UNCLE BL…' }, { name: 'Scout …' }, { name: 'Nosforall' }, { name: 'HODLR', legend: true },
+  { name: 'Jo Nakagi…' }, { name: 'Ben Varga…' }, { name: 'ramble' }, { name: 'Serge' },
 ];
 
 export const explorePeople = [
-  { name: 'ODELL', handle: 'odell@primal.net', verified: true, legend: true, bio: 'Focused on freedom tech and Bitcoin privacy.', followers: '312K' },
-  { name: 'Lyn Alden', handle: 'lyn@lynalden.com', verified: true, bio: 'Investment strategist. Macro & Bitcoin.', followers: '289K' },
-  { name: 'BTC Sessions', handle: 'btcsessions@primal.net', verified: true, bio: 'Bitcoin education, one tutorial at a time.', followers: '184K' },
-  { name: 'Matt Corallo', handle: 'matt@bluematt.me', verified: true, bio: 'Bitcoin & Lightning developer.', followers: '141K' },
-  { name: 'Simply Bitcoin', handle: 'simplybitcoin@primal.net', verified: true, bio: 'Keeping it simple. Stack sats.', followers: '133K' },
-  { name: 'TFTC', handle: 'tftc@primal.net', verified: true, bio: 'Tales From The Crypt. Bitcoin media.', followers: '128K' },
+  { name: 'CASTLE', handle: 'castle@keepwire.example', verified: true, legend: true, bio: 'Focused on freedom tech and Bitcoin privacy.', followers: '312K' },
+  { name: 'Macro Mia', handle: 'mia@macromia.example', verified: true, bio: 'Investment strategist. Macro & Bitcoin.', followers: '289K' },
+  { name: 'Sat Sessions', handle: 'satsessions@satsessions.example', verified: true, bio: 'Bitcoin education, one tutorial at a time.', followers: '184K' },
+  { name: 'Max Corvin', handle: 'max@corvin.example', verified: true, bio: 'Bitcoin & Lightning developer.', followers: '141K' },
+  { name: 'Simply Sats', handle: 'simplysats@simplysats.example', verified: true, bio: 'Keeping it simple. Stack sats.', followers: '133K' },
+  { name: 'Signal Feed', handle: 'signalfeed@signalfeed.example', verified: true, bio: 'Bitcoin media, daily.', followers: '128K' },
 ];
 
 export const searchResults = [
-  { name: 'jack', handle: 'jack@primal.net', legend: true, followers: '274K' },
-  { name: 'jack mallers', handle: 'jackmallers@primal.net', legend: true, followers: '169K' },
-  { name: 'Jameson Lopp', handle: 'lopp@lopp.net', followers: '86K' },
-  { name: 'James Lavish', handle: 'james@primal.net', followers: '52K' },
-  { name: '@Jay', handle: 'jayjay@nostrplebs.com', followers: '32K' },
-  { name: 'Sara Jade', handle: 'sarajade@tunestr.io', followers: '32K' },
-  { name: 'Jack Spirko', handle: 'jackspirko@primal.net', followers: '32K' },
-  { name: 'Jeff Jarvis', handle: 'jeffjarvis@mastodon-soci…', followers: '18K' },
-  { name: 'Abel James', handle: 'Abel@primal.net', followers: '15K' },
-  { name: 'Jammalynn Flower', handle: '', followers: '13K' },
+  { name: 'jasper', handle: 'jasper@purple.example', legend: true, followers: '274K' },
+  { name: 'jasper mills', handle: 'jaspermills@purple.example', legend: true, followers: '169K' },
+  { name: 'Jamie Locke', handle: 'jamie@locke.example', followers: '86K' },
+  { name: 'James Lavender', handle: 'james@purple.example', followers: '52K' },
+  { name: '@Jaye', handle: 'jayjay@plebs.example', followers: '32K' },
+  { name: 'Sana Jade', handle: 'sanajade@tunes.example', followers: '32K' },
+  { name: 'Jak Spero', handle: 'jakspero@purple.example', followers: '32K' },
+  { name: 'Joss Jarman', handle: 'jossjarman@fedi.examp…', followers: '18K' },
+  { name: 'Abel Jame', handle: 'abel@purple.example', followers: '15K' },
+  { name: 'Jamberry Flow', handle: '', followers: '13K' },
 ];
 
 export type NotifType = 'follow' | 'like' | 'zap' | 'reply' | 'repost' | 'mention';
@@ -199,26 +204,26 @@ export interface PNotif {
   sats?: string;
 }
 export const notifications: PNotif[] = [
-  { id: 'no1', type: 'follow', name: 'Ashna', time: '8h' },
-  { id: 'no2', type: 'follow', name: 'Wrestin', time: '1d' },
-  { id: 'no3', type: 'follow', name: 'CosmicWhispers', legend: true, time: '3d' },
-  { id: 'no4', type: 'follow', name: 'tzongocu', time: '3d' },
-  { id: 'no5', type: 'like', name: 'Rasha', time: '3d', note: 'GM ☀️' },
-  { id: 'no6', type: 'zap', name: 'Bitcoin Makueni', time: '3d', sats: '2 100', note: 'weekend project — how it started vs how its going' },
-  { id: 'no7', type: 'reply', name: 'Christian Larsen', time: '4d', note: 'ck this is the way' },
-  { id: 'no8', type: 'repost', name: 'Adam', time: '5d', note: 'GM 😊' },
+  { id: 'no1', type: 'follow', name: 'Ashra', time: '8h' },
+  { id: 'no2', type: 'follow', name: 'Wrenlin', time: '1d' },
+  { id: 'no3', type: 'follow', name: 'CometWhispers', legend: true, time: '3d' },
+  { id: 'no4', type: 'follow', name: 'tzonatu', time: '3d' },
+  { id: 'no5', type: 'like', name: 'Raika', time: '3d', note: 'GM ☀️' },
+  { id: 'no6', type: 'zap', name: 'Bitcoin Baraza', time: '3d', sats: '2 100', note: 'weekend project — how it started vs how its going' },
+  { id: 'no7', type: 'reply', name: 'Casper Lund', time: '4d', note: 'ck this is the way' },
+  { id: 'no8', type: 'repost', name: 'Aldo', time: '5d', note: 'GM 😊' },
 ];
 
 export const conversations = [
-  { name: 'Bitcoin Makueni 🇰🇪', handle: 'bitcoinmakueni@geyser.fund', time: '4mo', unread: 2 },
-  { name: 'PayPerQ', handle: 'payperq@nostr.lol', time: '4mo', unread: 1 },
-  { name: 'Holoboard.space', handle: '', time: '5mo', unread: 54 },
-  { name: 'PandaPark', handle: '', time: '5mo', unread: 0 },
-  { name: 'Enjoy the ride', handle: 'enjoytheride@rizful.com', time: '5mo', unread: 1 },
-  { name: 'JesterHodl', handle: 'jesterhodl@jesterhodl.com', time: '7mo', unread: 8 },
-  { name: 'Alby', handle: 'hello@getalby.com', time: '1y', unread: 1 },
-  { name: 'binsky', handle: 'Binsky@noderunners.org', time: '1y', unread: 3 },
-  { name: 'Stories for Satoshis', handle: '', time: '1y', unread: 4 },
+  { name: 'Bitcoin Baraza 🇰🇪', handle: 'baraza@fund.example', time: '4mo', unread: 2 },
+  { name: 'PayPerBit', handle: 'payperbit@bots.example', time: '4mo', unread: 1 },
+  { name: 'Holopad', handle: '', time: '5mo', unread: 54 },
+  { name: 'PandaPier', handle: '', time: '5mo', unread: 0 },
+  { name: 'Enjoy the ride', handle: 'enjoytheride@ride.example', time: '5mo', unread: 1 },
+  { name: 'JokerHodl', handle: 'jokerhodl@jokerhodl.example', time: '7mo', unread: 8 },
+  { name: 'Zapmail', handle: 'hello@wallet.example', time: '1y', unread: 1 },
+  { name: 'brinsky', handle: 'brinsky@nodecrew.example', time: '1y', unread: 3 },
+  { name: 'Stories for Sats', handle: '', time: '1y', unread: 4 },
 ];
 
 export const profileStats = [
@@ -261,10 +266,10 @@ export const relays = [
 export const bookmarkedNotes: PNote[] = [
   {
     id: 'bm1',
-    name: 'Robin von Mises',
-    handle: 'robin@excentered.com',
+    name: 'Rook von Bastiat',
+    handle: 'rook@offcentered.example',
     time: '1 yr.',
-    replyTo: '@ivycharcoal',
+    replyTo: '@ivyember',
     body: "Apple doesn't support it YET. Technically possible, only a matter of time",
     reply: 1,
     zap: '0',
@@ -273,11 +278,11 @@ export const bookmarkedNotes: PNote[] = [
   },
   {
     id: 'bm2',
-    name: 'pitiunited',
-    handle: 'thisbitcointhing.com',
+    name: 'sandy',
+    handle: 'sandy.example',
     time: '1 yr.',
     verified: true,
-    body: 'Some fresh screenshots from the upcoming @Ghost of Swarmstr release',
+    body: 'Some fresh screenshots from the upcoming @Driftwood release',
     media: img(),
     reply: 4,
     zap: '210',

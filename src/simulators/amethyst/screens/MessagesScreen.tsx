@@ -25,15 +25,15 @@ type Convo = {
 // Real Amethyst Messages ("Known" tab), modelled on the v1.12.6 screenshot:
 // public chats + DMs, name + @handle, a play affordance, and "• time".
 const conversations: Convo[] = [
-  { id: 'nostr', name: 'Nostr', tag: 'Public Chat', group: true, time: '1h', preview: '⚡JAKE⚡: Genuinely curious if anyone …' },
-  { id: 'amethyst', name: 'Amethyst Users', tag: 'Public Chat', group: true, logo: true, time: '1h', preview: '⚡JAKE⚡: Genuinely curious if anyone …' },
-  { id: 'karnage', name: 'Karnage', handle: '@karnage', verified: true, time: '3h', preview: 'They usually go after hosts, but in amethyst…' },
-  { id: 'neo', name: 'Neopatriarch', handle: '@getAlby.com', zap: true, time: '13h', preview: "It's gone now." },
-  { id: 'btcmil', name: 'Btcmil', handle: '@Loki', time: '15h', preview: 'Então tem algo errado na configuração do …' },
-  { id: 'vitor', name: 'Vitor Pamplona', verified: true, time: '15h', preview: '#Amethyst v0.62.8: More Performance…' },
+  { id: 'nostr', name: 'Nostr', tag: 'Public Chat', group: true, time: '1h', preview: '⚡JOLT⚡: Genuinely curious if anyone …' },
+  { id: 'amethyst', name: 'Amethyst Users', tag: 'Public Chat', group: true, logo: true, time: '1h', preview: '⚡JOLT⚡: Genuinely curious if anyone …' },
+  { id: 'karrot', name: 'Karrot', handle: '@karrot', verified: true, time: '3h', preview: 'They usually go after hosts, but in amethyst…' },
+  { id: 'neo', name: 'Neonwarden', handle: '@wallet.example', zap: true, time: '13h', preview: "It's gone now." },
+  { id: 'btcmil', name: 'Btcmilhao', handle: '@Lodki', time: '15h', preview: 'Então tem algo errado na configuração do …' },
+  { id: 'violet', name: 'Violet Volt', verified: true, time: '15h', preview: '#Amethyst v0.62.8: More Performance…' },
   { id: 'dbth', name: "Don't Believe the Hype 🦊", handle: '@dontb…', time: '21h', preview: 'Because it might happen that the melt take…' },
-  { id: 'jake', name: '⚡JAKE⚡', handle: '@HalfBakedKing', time: '2d', preview: 'Can you please report this for impersonatio…' },
-  { id: 'mpl', name: 'Matthew Lorentz', handle: '@mplorentz', time: '3d', preview: "Let me know when it's a good time for…" },
+  { id: 'jolt', name: '⚡JOLT⚡', handle: '@HalfChargedKing', time: '2d', preview: 'Can you please report this for impersonatio…' },
+  { id: 'mvl', name: 'Marta Vellin', handle: '@mvellin', time: '3d', preview: "Let me know when it's a good time for…" },
 ];
 
 // "New Requests" = messages from contacts you don't follow → shown as short npub

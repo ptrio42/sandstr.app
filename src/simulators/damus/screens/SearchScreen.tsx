@@ -16,7 +16,7 @@ const TRENDING = ['#nostr', '#bitcoin', '#zapathon', '#PenisButter', '#coffeecha
 // Damus "Universe" — search + discovery. Header shows "Universe 🛸" + relay count + filter.
 export const SearchScreen: React.FC<Props> = ({ currentUser, users, onOpenDrawer, onViewProfile }) => {
   const [q, setQ] = useState('');
-  const me = currentUser?.username || 'pitiunited';
+  const me = currentUser?.username || 'sandy';
   const [followed, setFollowed] = useState<Record<string, boolean>>({});
 
   const results = q
