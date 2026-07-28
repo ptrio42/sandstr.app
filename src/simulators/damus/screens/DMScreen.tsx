@@ -17,7 +17,7 @@ const PREVIEWS = [
 
 // Damus DMs (encrypted messages). NIP-04/NIP-17 chats; here a simple conversation list.
 export const DMScreen: React.FC<Props> = ({ currentUser, users, onOpenDrawer, onViewProfile }) => {
-  const me = currentUser?.username || 'pitiunited';
+  const me = currentUser?.username || 'sandy';
   const convos = users.slice(3, 13);
 
   return (

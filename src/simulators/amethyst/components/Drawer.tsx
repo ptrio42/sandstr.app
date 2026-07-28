@@ -49,8 +49,8 @@ export function Drawer({ isOpen, onClose, onTabChange, onOpenSettings }: DrawerP
             {/* Account header */}
             <div className="h-28 bg-gradient-to-br from-[#3a1d6e] via-[#7b2ff7] to-[#c026d3]" />
             <div className="px-4 -mt-8 pb-3 border-b border-[var(--md-outline-variant)]">
-              <Avatar seed="pitiunited" className="w-16 h-16 border-2 border-[var(--md-surface)]" />
-              <p className="font-bold text-lg text-[var(--md-on-surface)] mt-2">pitiunited</p>
+              <Avatar seed="sandy" className="w-16 h-16 border-2 border-[var(--md-surface)]" />
+              <p className="font-bold text-lg text-[var(--md-on-surface)] mt-2">sandy</p>
 
               {/* Update your status */}
               <div className="mt-2 relative rounded-xl border border-[var(--md-outline)] px-3 py-2.5 flex items-center gap-2">

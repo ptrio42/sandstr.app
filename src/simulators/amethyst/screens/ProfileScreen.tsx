@@ -22,11 +22,11 @@ interface ProfileScreenProps {
 // stat strip and NO "joined date" (Nostr has neither).
 
 const profile = {
-  name: 'pitiunited',
+  name: 'sandy',
   npub: 'npub178u…vq05qrg4',
-  nip05: 'thisbitcointhing.com',
-  website: 'UseLessShit.co',
-  lightning: 'furiouschina21@walletofsatoshi.com',
+  nip05: 'sandy.example',
+  website: 'sandy.example',
+  lightning: 'sandy@wallet.example',
   bio: 'All-round buidler.',
 };
 
@@ -67,7 +67,7 @@ export function ProfileScreen({ onBack, onFollowToggle }: ProfileScreenProps) {
         <div className="px-4">
           <div className="flex justify-between items-end -mt-12">
             <div className="relative">
-              <Avatar seed="pitiunited" className="w-24 h-24 border-4 border-[var(--md-background)]" />
+              <Avatar seed="sandy" className="w-24 h-24 border-4 border-[var(--md-background)]" />
               <span className="absolute top-1 right-1 w-6 h-6 rounded-full bg-[var(--md-primary)] ring-2 ring-[var(--md-background)] flex items-center justify-center">
                 <BadgeCheck className="w-3.5 h-3.5 text-[var(--md-on-primary)]" />
               </span>

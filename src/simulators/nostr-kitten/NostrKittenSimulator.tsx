@@ -430,7 +430,7 @@ interface GuestbookEntry {
 function GuestbookTab() {
   const [entries, setEntries] = useState<GuestbookEntry[]>([
     { name: 'CyberPunk99', message: 'Cool page! Love the starfield!', date: '1999-12-31' },
-    { name: 'SatoshiNakamoto', message: 'Working on something big... stay tuned', date: '1999-12-30' },
+    { name: 'xX_BlockNess_Xx', message: 'Working on something big... stay tuned', date: '1999-12-30' },
     { name: 'WebSurfer2000', message: 'A/S/L? Just kidding! Great Nostr client!', date: '1999-12-29' },
   ]);
   const [name, setName] = useState('');

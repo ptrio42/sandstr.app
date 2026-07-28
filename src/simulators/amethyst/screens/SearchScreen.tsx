@@ -15,7 +15,7 @@ const trendingTopics = [
 ];
 
 const recentSearches = [
-  'fiatjaf',
+  'nostrich_nina',
   'NIP-05',
   'zaps',
   'amethyst',
@@ -183,7 +183,7 @@ export function SearchScreen() {
                   Suggested for you
                 </h3>
                 <div className="space-y-2">
-                  {['fiatjaf', 'pablo', 'jb55', 'vitor'].map((user, index) => (
+                  {['nostrich_nina', 'kitbuilder', 'mapledev', 'violetvolt'].map((user, index) => (
                     <motion.div
                       key={index}
                       role="button"

@@ -45,7 +45,7 @@ export const Drawer: React.FC<Props> = ({ seed, onClose, onNav }) => {
           <button onClick={() => onNav('profile')} className="flex items-center gap-3">
             <Avatar seed={seed} className="w-14 h-14" rounded="rounded-2xl" />
             <div className="text-left">
-              <div className="text-[18px] font-extrabold">pitiunited</div>
+              <div className="text-[18px] font-extrabold">sandy</div>
               <div className="text-[13px] text-[var(--yh-text-2)]">All-round buidler.</div>
             </div>
           </button>

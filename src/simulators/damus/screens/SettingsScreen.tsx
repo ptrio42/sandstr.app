@@ -57,10 +57,10 @@ export const SettingsScreen: React.FC<Props> = ({ currentUser, onBack, onLogout,
 
       <div className="flex-1 overflow-y-auto pb-8">
         <div className="flex items-center gap-3 px-4 py-4">
-          <Avatar seed={currentUser?.username || 'pitiunited'} className="w-14 h-14" />
+          <Avatar seed={currentUser?.username || 'sandy'} className="w-14 h-14" />
           <div>
-            <div className="font-bold text-[18px] text-[var(--damus-text)]">{currentUser?.displayName || 'pitiunited'}</div>
-            <div className="text-[14px] text-[var(--damus-text-secondary)]">@{currentUser?.username || 'pitiunited'}</div>
+            <div className="font-bold text-[18px] text-[var(--damus-text)]">{currentUser?.displayName || 'sandy'}</div>
+            <div className="text-[14px] text-[var(--damus-text-secondary)]">@{currentUser?.username || 'sandy'}</div>
           </div>
         </div>
 

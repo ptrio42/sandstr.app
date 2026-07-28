@@ -43,7 +43,7 @@ export const DashboardScreen: React.FC<Props> = ({ currentUserSeed, onBack }) =>
       <div className="flex items-center gap-3 rounded-2xl bg-[var(--yh-surface)] border border-[var(--yh-divider)] p-3">
         <Avatar seed={currentUserSeed} className="w-14 h-14" rounded="rounded-full" />
         <div className="flex-1 min-w-0">
-          <div className="text-[18px] font-extrabold">pitiunited</div>
+          <div className="text-[18px] font-extrabold">sandy</div>
           <div className="text-[14px] text-[var(--yh-text-2)]">Joined on: Jul 14</div>
         </div>
         <div className="relative w-16 h-16 shrink-0">

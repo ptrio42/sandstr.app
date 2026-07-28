@@ -33,7 +33,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       <header className="sticky top-0 z-30 bg-[var(--damus-bg)]/85 backdrop-blur-xl">
         <div className="flex items-center justify-between px-4 pt-2 pb-1.5">
           <button onClick={onOpenDrawer} aria-label="Open menu">
-            <Avatar seed={currentUser?.username || 'pitiunited'} className="w-9 h-9" />
+            <Avatar seed={currentUser?.username || 'sandy'} className="w-9 h-9" />
           </button>
           <DamusLogo className="w-8 h-8" />
           <button onClick={onOpenRelays} className="text-[15px] text-[var(--damus-text-secondary)] font-medium w-9 text-right">

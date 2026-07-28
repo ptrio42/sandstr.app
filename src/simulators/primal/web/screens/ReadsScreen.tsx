@@ -5,9 +5,9 @@ import { VerifiedBadge } from '../components/ui';
 import { getSampleImages } from '../../../../data/mock/utils';
 
 const READS = [
-  { author: 'ODELL', handle: 'odell@primal.net', verified: true, legend: true, title: 'Bitcoin Privacy Is a Practice, Not a Product', summary: 'Freedom tech only matters if people actually use it. A practical guide to reclaiming your privacy one habit at a time.', read: '7 min read', time: '2 days' },
-  { author: 'Lyn Alden', handle: 'lyn@lynalden.com', verified: true, title: 'The Fiat Ratchet and the Long Game', summary: 'Why monetary debasement compounds slowly, then all at once — and what a hard-money base layer changes about the calculus.', read: '12 min read', time: '4 days' },
-  { author: 'Gigi', handle: 'gigi@primal.net', verified: true, title: '21 Lessons, Revisited', summary: 'What deep diving down the rabbit hole taught me about money, time, and self-sovereignty.', read: '9 min read', time: '1 wk.' },
+  { author: 'CASTLE', handle: 'castle@keepwire.example', verified: true, legend: true, title: 'Bitcoin Privacy Is a Practice, Not a Product', summary: 'Freedom tech only matters if people actually use it. A practical guide to reclaiming your privacy one habit at a time.', read: '7 min read', time: '2 days' },
+  { author: 'Macro Mia', handle: 'mia@macromia.example', verified: true, title: 'The Fiat Ratchet and the Long Game', summary: 'Why monetary debasement compounds slowly, then all at once — and what a hard-money base layer changes about the calculus.', read: '12 min read', time: '4 days' },
+  { author: 'Zen Zapper', handle: 'zen@zenzapper.example', verified: true, title: '21 Koans, Revisited', summary: 'What deep diving down the rabbit hole taught me about money, time, and self-sovereignty.', read: '9 min read', time: '1 wk.' },
 ];
 
 export function ReadsScreen() {

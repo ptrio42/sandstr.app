@@ -25,7 +25,7 @@ A comprehensive mock data generator for Nostr client simulators. This system pro
 **File:** `users.ts`
 
 Diverse user profiles including:
-- Bitcoin influencers (fiatjaf, PabloF7z, Will Casarin, etc.)
+- Bitcoin influencers (all fictional: Nostrich Nina, Kit Kobayashi, Maple Dev, etc.)
 - Content creators & writers
 - Developers & programmers
 - Regular Bitcoin/Nostr users

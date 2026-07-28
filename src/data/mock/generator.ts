@@ -250,7 +250,7 @@ export function generateLightningAddress(): string | undefined {
   if (Math.random() < 0.5) {
     return undefined;
   }
-  const providers = ['getalby.com', 'walletofsatoshi.com', 'strike.me', 'sbw.app'];
+  const providers = ['wallet.example', 'sats.example', 'zap.example', 'ln.example'];
   return `${generateUsername()}@${providers[Math.floor(Math.random() * providers.length)]}`;
 }
 
