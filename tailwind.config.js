@@ -43,6 +43,17 @@ export default {
         success: "#22C55E",
         danger: "#EF4444",
         warning: "#F59E0B",
+        // Sandstr's own identity (Palette 3). Additive on purpose — the keys
+        // above are load-bearing for simulator utility classes and must not move.
+        // Host chrome only; never use these inside src/simulators/.
+        brand: {
+          obsidian: "#0B0B10",
+          surface: "#15161D",
+          primary: "#7C68F2",
+          sand: "#E7C27A",
+          muted: "#A1A1AA",
+          ink: "#0F1115",
+        },
         friendly: {
           purple: {
             DEFAULT: "#9B7BFF",

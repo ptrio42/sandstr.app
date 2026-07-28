@@ -13,3 +13,17 @@ body {
   font-family: Inter, system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* --- Sandstr brand (Palette 3) -------------------------------------------
+   Host chrome only. Simulators keep their own client-accurate tokens. */
+:root {
+  --sandstr-obsidian: #0b0b10;
+  --sandstr-surface: #15161d;
+  --sandstr-primary: #7c68f2;
+  --sandstr-sand: #e7c27a;
+  --sandstr-muted: #a1a1aa;
+  --sandstr-ink: #0f1115;
+}
+
+/* The wordmark is drawn geometry, not type — see SandstrWordmark.tsx. Nothing
+   here depends on an installed font. */

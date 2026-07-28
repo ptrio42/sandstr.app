@@ -67,7 +67,9 @@ export default function Gallery() {
       <section className="mb-14 text-center">
         <h1 className="mb-5 text-4xl font-bold md:text-5xl">
           Try Nostr clients
-          <span className="block bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          {/* Sand only sings on the dark ground; on white it greys out, so light
+              mode stays inside the purple family. */}
+          <span className="block bg-gradient-to-r from-brand-primary to-[#5B45D9] bg-clip-text text-transparent dark:to-brand-sand">
             without installing anything
           </span>
         </h1>

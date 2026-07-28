@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>sandstr — Open Graph card source</title>
+    <!--
+      Source for public/og.png (1200x630). Regenerate after any brand change:
+
+        node --version >/dev/null   # nothing to install; any headless Chrome will do
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+          --headless --disable-gpu --window-size=1200,630 --hide-scrollbars \
+          --screenshot=public/og.png scripts/og-image.html
+
+      The mark and wordmark geometry below is copied verbatim from
+      src/host/brand/SandstrMark.tsx and SandstrWordmark.tsx. If you change either
+      component, update the paths here too — this file is a static mirror, not an
+      import, because the card has to render without the app or a bundler.
+    -->
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { width: 1200px; height: 630px; }
+      body {
+        background: #0b0b10;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        position: relative;
+        overflow: hidden;
+      }
+      /* Ambient glow, anchored behind the mark so the card has depth without noise. */
+      .glow {
+        position: absolute;
+        left: -180px;
+        top: -220px;
+        width: 900px;
+        height: 900px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(124, 104, 242, 0.26) 0%, rgba(124, 104, 242, 0) 62%);
+      }
+      .glow-sand {
+        position: absolute;
+        right: -260px;
+        bottom: -320px;
+        width: 760px;
+        height: 760px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(231, 194, 122, 0.13) 0%, rgba(231, 194, 122, 0) 62%);
+      }
+      /* Centred: OG cards get centre-cropped to several aspect ratios, and a
+         centred block survives that where a left-hugging one loses its lockup. */
+      .card {
+        position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0 88px 40px;
+        text-align: center;
+      }
+      .lockup { display: flex; align-items: center; gap: 30px; }
+      .lockup svg.mark { width: 132px; height: 132px; display: block; }
+      .lockup svg.word { height: 74px; width: auto; display: block; color: #fff; }
+      h1 {
+        margin-top: 52px;
+        font-size: 58px;
+        line-height: 1.12;
+        letter-spacing: -0.035em;
+        font-weight: 600;
+        color: #fff;
+      }
+      h1 .accent { color: #a394f7; }
+      .meta {
+        margin-top: 40px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        font-size: 23px;
+        color: #a1a1aa;
+        letter-spacing: -0.01em;
+      }
+      .dot { width: 5px; height: 5px; border-radius: 50%; background: #4b4b57; }
+      .rule {
+        position: absolute;
+        left: 88px;
+        right: 88px;
+        bottom: 74px;
+        height: 1px;
+        background: linear-gradient(to right, rgba(124, 104, 242, 0.55), rgba(231, 194, 122, 0.35), rgba(255, 255, 255, 0));
+      }
+      .disclaimer {
+        position: absolute;
+        left: 0;
+        right: 0;
+        text-align: center;
+        bottom: 40px;
+        font-size: 17px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #6b6b78;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="glow"></div>
+    <div class="glow-sand"></div>
+
+    <div class="card">
+      <div class="lockup">
+        <!-- SandstrMark, tone="brand" -->
+        <svg class="mark" viewBox="0 0 100 100">
+          <defs>
+            <clipPath id="a">
+              <path d="M14.00,44.05 C16.52,43.70 18.72,42.20 21.10,41.95 C23.48,41.70 25.92,41.80 28.30,42.55 C30.68,43.30 33.62,45.50 35.40,46.45 C37.18,47.40 37.32,47.47 39.00,48.25 C40.68,49.03 43.22,50.27 45.50,51.15 C47.78,52.03 50.32,53.50 52.70,53.55 C55.08,53.60 58.02,51.70 59.80,51.45 C61.58,51.20 61.72,51.15 63.40,52.05 C65.08,52.95 67.62,55.70 69.90,56.85 C72.18,58.00 74.72,58.95 77.10,58.95 C79.48,58.95 81.68,57.20 84.20,56.85 L106,-10 L-10,-10 Z" />
+            </clipPath>
+            <clipPath id="b">
+              <path d="M14.00,49.55 C16.52,49.20 18.72,47.70 21.10,47.45 C23.48,47.20 25.92,47.30 28.30,48.05 C30.68,48.80 33.62,51.00 35.40,51.95 C37.18,52.90 37.32,52.97 39.00,53.75 C40.68,54.53 43.22,55.77 45.50,56.65 C47.78,57.53 50.32,59.00 52.70,59.05 C55.08,59.10 58.02,57.20 59.80,56.95 C61.58,56.70 61.72,56.65 63.40,57.55 C65.08,58.45 67.62,61.20 69.90,62.35 C72.18,63.50 74.72,64.45 77.10,64.45 C79.48,64.45 81.68,62.70 84.20,62.35 L106,110 L-10,110 Z" />
+            </clipPath>
+            <clipPath id="p0"><path d="M14.00,18.14 A5.20,5.20 0 0 1 17.42,13.25 L34.42,7.05 A5.20,5.20 0 0 1 41.40,11.93 L41.40,80.49 A5.20,5.20 0 0 1 38.40,85.20 L21.40,93.14 A5.20,5.20 0 0 1 14.00,88.43 Z" /></clipPath>
+            <clipPath id="p1"><path d="M44.30,24.99 A5.20,5.20 0 0 1 47.40,20.23 L58.50,15.33 A5.20,5.20 0 0 1 65.80,20.08 L65.80,78.91 A5.20,5.20 0 0 1 62.70,83.67 L51.60,88.57 A5.20,5.20 0 0 1 44.30,83.82 Z" /></clipPath>
+            <clipPath id="p2"><path d="M68.70,32.34 A5.20,5.20 0 0 1 72.25,27.41 L79.15,25.10 A5.20,5.20 0 0 1 86.00,30.03 L86.00,77.74 A5.20,5.20 0 0 1 82.94,82.48 L76.04,85.59 A5.20,5.20 0 0 1 68.70,80.85 Z" /></clipPath>
+            <linearGradient id="up" x1="0" y1="0" x2="0.35" y2="1">
+              <stop offset="0" stop-color="#8A63F5" />
+              <stop offset="1" stop-color="#7350E8" />
+            </linearGradient>
+            <linearGradient id="lo0" gradientUnits="userSpaceOnUse" x1="0" y1="46" x2="0" y2="70">
+              <stop offset="0" stop-color="#F0CE86" /><stop offset="0.3" stop-color="#E7C27A" />
+              <stop offset="0.72" stop-color="#8266E2" /><stop offset="1" stop-color="#7350E8" />
+            </linearGradient>
+            <linearGradient id="lo1" gradientUnits="userSpaceOnUse" x1="0" y1="55" x2="0" y2="79">
+              <stop offset="0" stop-color="#F0CE86" /><stop offset="0.3" stop-color="#E7C27A" />
+              <stop offset="0.72" stop-color="#8266E2" /><stop offset="1" stop-color="#7350E8" />
+            </linearGradient>
+            <linearGradient id="lo2" gradientUnits="userSpaceOnUse" x1="0" y1="60.5" x2="0" y2="84.5">
+              <stop offset="0" stop-color="#F0CE86" /><stop offset="0.3" stop-color="#E7C27A" />
+              <stop offset="0.72" stop-color="#8266E2" /><stop offset="1" stop-color="#7350E8" />
+            </linearGradient>
+          </defs>
+          <g clip-path="url(#p0)">
+            <rect x="-10" y="-10" width="120" height="120" fill="url(#up)" clip-path="url(#a)" />
+            <rect x="-10" y="-10" width="120" height="120" fill="url(#lo0)" clip-path="url(#b)" />
+          </g>
+          <g clip-path="url(#p1)">
+            <rect x="-10" y="-10" width="120" height="120" fill="url(#up)" clip-path="url(#a)" />
+            <rect x="-10" y="-10" width="120" height="120" fill="url(#lo1)" clip-path="url(#b)" />
+          </g>
+          <g clip-path="url(#p2)">
+            <rect x="-10" y="-10" width="120" height="120" fill="url(#up)" clip-path="url(#a)" />
+            <rect x="-10" y="-10" width="120" height="120" fill="url(#lo2)" clip-path="url(#b)" />
+          </g>
+        </svg>
+
+        <!-- SandstrWordmark -->
+        <svg class="word" viewBox="-10 0 727.7 133">
+          <g fill="none" stroke="currentColor" stroke-width="20" stroke-linecap="butt" stroke-linejoin="round">
+            <path d="M70.37,50.69 A33.76,20.00 0 1 0 43.76,83.00 A33.76,20.00 0 1 1 17.16,115.31" />
+            <path d="M10.00,83.00 a34.97,40.00 0 1 0 69.94,0 a34.97,40.00 0 1 0 -69.94,0" transform="translate(100.90,0)" />
+            <path d="M84.40,43.00 L84.40,123.00" transform="translate(100.90,0)" />
+            <path d="M10.00,123.00 L10.00,72.76 A38.15,29.76 0 0 1 86.30,72.76 L86.30,123.00" transform="translate(212.30,0)" />
+            <path d="M10.00,83.00 a39.34,40.00 0 1 0 78.68,0 a39.34,40.00 0 1 0 -78.68,0" transform="translate(322.60,0)" />
+            <path d="M93.70,10.00 L93.70,123.00" transform="translate(322.60,0)" />
+            <path d="M71.94,50.69 A34.64,20.00 0 1 0 44.64,83.00 A34.64,20.00 0 1 1 17.34,115.31" transform="translate(443.30,0)" />
+            <path d="M34.08,10.00 L34.08,102.00 A21.00,21.00 0 0 0 55.08,123.00" transform="translate(541.00,0)" />
+            <path d="M4.00,49.00 L67.20,49.00" transform="translate(541.00,0)" />
+            <path d="M10.00,123.00 L10.00,70.20 A30.07,27.20 0 0 1 40.07,43.00" transform="translate(639.20,0)" />
+          </g>
+        </svg>
+      </div>
+
+      <h1>Try 10 Nostr clients<br /><span class="accent">in your browser</span></h1>
+
+      <div class="meta">
+        <span>No keys</span><span class="dot"></span>
+        <span>No install</span><span class="dot"></span>
+        <span>Nothing leaves your browser</span>
+      </div>
+    </div>
+
+    <div class="rule"></div>
+    <div class="disclaimer">Simulation · unofficial · mock data · not affiliated</div>
+  </body>
+</html>

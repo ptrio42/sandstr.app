@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
 import ClientSwitcher from './ClientSwitcher';
+import SandstrLogo from './brand/SandstrLogo';
 
 function useTheme() {
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
@@ -18,16 +19,13 @@ export default function Layout() {
   const { dark, toggle } = useTheme();
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
-      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/80 backdrop-blur dark:border-gray-800 dark:bg-gray-950/80">
+    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-brand-obsidian dark:text-gray-100">
+      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/80 backdrop-blur dark:border-white/10 dark:bg-brand-obsidian/80">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <Link to="/" className="flex items-center gap-2 font-bold">
-            <span className="text-xl">🐱</span>
-            <span className="text-lg tracking-tight">
-              Sandstr
-              <span className="ml-2 hidden text-xs font-normal text-gray-400 sm:inline">
-                try Nostr, no keys, no install
-              </span>
+          <Link to="/" className="flex items-center gap-3" aria-label="Sandstr — home">
+            <SandstrLogo size={26} />
+            <span className="hidden text-xs text-gray-400 sm:inline">
+              try Nostr, no keys, no install
             </span>
           </Link>
           <button
