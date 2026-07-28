@@ -25,12 +25,27 @@ export const SettingsScreen: React.FC<Props> = ({ currentUser, onBack, onLogout,
       <div className="mx-4 rounded-2xl overflow-hidden bg-[var(--damus-bg-secondary)]">{children}</div>
     </div>
   );
-  const Row = ({ label, right, onClick, danger }: { label: string; right?: React.ReactNode; onClick?: () => void; danger?: boolean }) => (
-    <button onClick={onClick} className="w-full flex items-center justify-between px-4 py-3.5 border-b border-[var(--damus-separator)] last:border-0 text-left">
-      <span className={`text-[17px] ${danger ? 'text-[var(--damus-danger)]' : 'text-[var(--damus-text)]'}`}>{label}</span>
-      {right ?? <ChevronRight className="w-4 h-4 text-[var(--damus-text-tertiary)]" />}
-    </button>
-  );
+  // `control` is for a trailing element that is itself a button (a Toggle): such a
+  // row renders as a <div>, because a <button> inside a <button> is invalid HTML
+  // and swallows the control's own click. Plain rows stay real buttons.
+  const rowClass = 'w-full flex items-center justify-between px-4 py-3.5 border-b border-[var(--damus-separator)] last:border-0 text-left';
+  const Row = ({ label, right, control, onClick, danger }: { label: string; right?: React.ReactNode; control?: React.ReactNode; onClick?: () => void; danger?: boolean }) => {
+    const text = <span className={`text-[17px] ${danger ? 'text-[var(--damus-danger)]' : 'text-[var(--damus-text)]'}`}>{label}</span>;
+    if (control) {
+      return (
+        <div className={rowClass}>
+          {text}
+          {control}
+        </div>
+      );
+    }
+    return (
+      <button onClick={onClick} className={rowClass}>
+        {text}
+        {right ?? <ChevronRight className="w-4 h-4 text-[var(--damus-text-tertiary)]" />}
+      </button>
+    );
+  };
 
   return (
     <div className="absolute inset-0 z-[52] flex flex-col bg-[var(--damus-bg)]" data-tour="damus-settings">
@@ -57,13 +72,13 @@ export const SettingsScreen: React.FC<Props> = ({ currentUser, onBack, onLogout,
 
         <Group title="Appearance & filters">
           <Row label="Appearance" right={<span className="text-[15px] text-[var(--damus-text-secondary)]">Dark ›</span>} />
-          <Row label="Auto-translate notes" right={<Toggle on={autoTranslate} onClick={() => setAutoTranslate((v) => !v)} />} />
-          <Row label="Left-handed" right={<Toggle on={leftHand} onClick={() => setLeftHand((v) => !v)} />} />
+          <Row label="Auto-translate notes" control={<Toggle on={autoTranslate} onClick={() => setAutoTranslate((v) => !v)} />} />
+          <Row label="Left-handed" control={<Toggle on={leftHand} onClick={() => setLeftHand((v) => !v)} />} />
           <Row label="Muted words & users" />
         </Group>
 
         <Group title="Advanced">
-          <Row label="Developer mode" right={<Toggle on={devMode} onClick={() => setDevMode((v) => !v)} />} />
+          <Row label="Developer mode" control={<Toggle on={devMode} onClick={() => setDevMode((v) => !v)} />} />
           <Row label="First aid" />
         </Group>
 
