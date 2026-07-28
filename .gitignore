@@ -5,3 +5,9 @@ dist-ssr
 CLAUDE.local.md
 .DS_Store
 .vite
+
+# Reference recordings/screenshots of the real clients (docs/FIDELITY.md).
+# Local-only by owner decision (2026-07-28): they are working reference
+# material, not something to publish. Purged from git history the same day —
+# do not re-add them. The screen-map.md specs STAY tracked.
+docs/refs/*/shots/
