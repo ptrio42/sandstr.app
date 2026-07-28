@@ -71,7 +71,8 @@ ucieczką od cudzej marki. Ścieżki:
 **Nostr Kitten NIE jest fundamentem ani „front door"** — nie istnieje jako realny klient Nostr; najwyżej
 opcjonalny easter-egg / maskotka. Nie traktuj go jako lidera strategicznego, kotwicy marki ani centrum
 deryzykowania. **Web klienty odtwarzamy we wspólnym stacku React („Poziom A")**, nie uruchamiając realnego
-kodu klienta. **„Sandstr" to nazwa robocza** — trywialna do zmiany.
+kodu klienta. **„Sandstr" to finalna nazwa projektu** (decyzja właściciela 2026-07-28; wcześniej robocza).
+Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` + `TRADEMARKS.md`.
 
 ## Liderzy vs reszta
 
