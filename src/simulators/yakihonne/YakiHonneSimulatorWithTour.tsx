@@ -83,7 +83,7 @@ export function YakiHonneSimulatorWithTour() {
   return (
     <TourWrapper 
       tourConfig={yakihonneTourConfig}
-      autoStart={true}
+      autoStart={false}
       onStepChange={handleStepChange}
       onTourComplete={() => {
         console.log('YakiHonne tour completed!');

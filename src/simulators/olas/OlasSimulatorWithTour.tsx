@@ -72,7 +72,7 @@ export function OlasSimulatorWithTour() {
   return (
     <TourWrapper 
       tourConfig={olasTourConfig}
-      autoStart={true}
+      autoStart={false}
       onStepChange={handleStepChange}
       onTourComplete={() => {
         console.log('Olas tour completed!');

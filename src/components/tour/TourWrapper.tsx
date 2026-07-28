@@ -97,7 +97,11 @@ function TourAutoStarter({
 export function TourWrapper({
   children,
   tourConfig,
-  autoStart = true,
+  // Opt-in, not opt-out: an unsolicited 75%-black backdrop is the wrong first
+  // impression for a product whose pitch is "just try it", and on a phone it
+  // dropped the mandated disclaimer to 1.73:1 contrast. Every client view shows
+  // a prominent "Take a tour" control instead.
+  autoStart = false,
   onTourComplete,
   onTourSkip,
   onStepChange,

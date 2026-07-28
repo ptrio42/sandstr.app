@@ -30,7 +30,7 @@ export function MobilePhoneFrame({
   showStatusBar = true,
 }: MobilePhoneFrameProps) {
   return (
-    <div className="mobile-phone-frame-wrapper flex items-center justify-center h-full w-full p-4">
+    <div className="mobile-phone-frame-wrapper flex items-center justify-center h-full w-full p-2 max-sm:p-0">
       {/* Phone bezel */}
       <div
         className={cn(
@@ -49,12 +49,16 @@ export function MobilePhoneFrame({
         )}
       >
         {/* Screen */}
-        <div className="relative h-full w-full overflow-hidden rounded-[40px] bg-white dark:bg-gray-900">
+        {/* max-sm:*, throughout: on a phone the visitor's own device is the
+            device, so the simulated OS chrome (island, 9:41 status bar, home
+            indicator) would be drawn directly beneath the real ones. The host
+            passes the matching max-sm: geometry overrides via className. */}
+        <div className="relative h-full w-full overflow-hidden rounded-[40px] bg-white dark:bg-gray-900 max-sm:rounded-none">
           {/* Dynamic Island (iOS) or centered punch-hole (Android) */}
           {platform === 'ios' ? (
-            <div className="absolute left-1/2 top-[11px] z-50 h-[26px] w-[86px] -translate-x-1/2 rounded-full bg-black" />
+            <div className="absolute left-1/2 top-[11px] z-50 h-[26px] w-[86px] -translate-x-1/2 rounded-full bg-black max-sm:hidden" />
           ) : (
-            <div className="absolute left-1/2 top-[10px] z-50 h-[9px] w-[9px] -translate-x-1/2 rounded-full bg-black ring-2 ring-black/25" />
+            <div className="absolute left-1/2 top-[10px] z-50 h-[9px] w-[9px] -translate-x-1/2 rounded-full bg-black ring-2 ring-black/25 max-sm:hidden" />
           )}
 
           {/* Status Bar */}
@@ -63,7 +67,8 @@ export function MobilePhoneFrame({
               className={cn(
                 'absolute left-0 right-0 top-0 z-40 h-[44px]',
                 'flex items-center justify-between px-7 pt-2',
-                'text-xs font-semibold text-black dark:text-white'
+                'text-xs font-semibold text-black dark:text-white',
+                'max-sm:hidden'
               )}
             >
               <span>9:41</span>
@@ -83,15 +88,18 @@ export function MobilePhoneFrame({
             className={cn(
               'absolute inset-0',
               'overflow-y-auto overflow-x-hidden',
+              // Without containment, reaching the end of a sim's feed chained
+              // straight into the page scroll and dragged the phone out of view.
+              'overscroll-contain',
               'scrollbar-hide',
-              showStatusBar && 'pt-[44px]'
+              showStatusBar && 'pt-[44px] max-sm:pt-0'
             )}
           >
             {children}
           </div>
 
           {/* Home Indicator */}
-          <div className="absolute bottom-2 left-1/2 z-40 h-[5px] w-[120px] -translate-x-1/2 rounded-full bg-black/25 dark:bg-white/35" />
+          <div className="absolute bottom-2 left-1/2 z-40 h-[5px] w-[120px] -translate-x-1/2 rounded-full bg-black/25 dark:bg-white/35 max-sm:hidden" />
         </div>
       </div>
     </div>
