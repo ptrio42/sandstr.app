@@ -5,7 +5,7 @@ import { TourContext } from '../../components/tour';
 
 import { TabBar, type YakiTab } from './components/TabBar';
 import { Drawer, type DrawerDest } from './components/Drawer';
-import { type FeedSource } from './components/FeedSelector';
+import { FeedSourceSheet, type FeedSource } from './components/FeedSelector';
 import { ZapIcon } from './components/icons';
 
 import { LoginScreen } from './screens/LoginScreen';
@@ -73,6 +73,7 @@ export function YakiHonneSimulator({ className = '', tourCommand, onCommandHandl
   const [authed, setAuthed] = useState(false);
   const [tab, setTab] = useState<YakiTab>('home');
   const [source, setSource] = useState<FeedSource>('recent');
+  const [sourceSheetOpen, setSourceSheetOpen] = useState(false);
   const [overlays, setOverlays] = useState<Overlay[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [balance, setBalance] = useState(537311);
@@ -86,7 +87,7 @@ export function YakiHonneSimulator({ className = '', tourCommand, onCommandHandl
     setTimeout(() => setToast(null), 2400);
   }, []);
 
-  const goTab = useCallback((t: YakiTab) => { setOverlays([]); setDrawerOpen(false); setTab(t); }, []);
+  const goTab = useCallback((t: YakiTab) => { setOverlays([]); setDrawerOpen(false); setSourceSheetOpen(false); setTab(t); }, []);
 
   const login = useCallback(() => {
     setAuthed(true); setTab('home'); setOverlays([]);
@@ -153,7 +154,7 @@ export function YakiHonneSimulator({ className = '', tourCommand, onCommandHandl
       case 'home':
         return (
           <HomeScreen
-            currentUserSeed={SELF.seed} source={source} onSource={setSource}
+            currentUserSeed={SELF.seed} source={source} onOpenSourcePicker={() => setSourceSheetOpen(true)}
             onOpenDrawer={() => setDrawerOpen(true)} onOpenSearch={() => push({ type: 'search' })}
             onOpenThread={openThread} onOpenArticle={openArticle} onViewProfile={viewProfile}
             onReply={openReply} onZap={doZap}
@@ -209,7 +210,22 @@ export function YakiHonneSimulator({ className = '', tourCommand, onCommandHandl
 
           {drawerOpen && <Drawer seed={SELF.seed} onClose={() => setDrawerOpen(false)} onNav={onDrawerNav} />}
 
-          {showTabBar && <TabBar active={tab} onNavigate={goTab} onCompose={() => openCompose()} />}
+          {/* feed-source picker — hoisted to the root (sibling of TabBar/Drawer, same
+              pattern as ComposeSheet) so the bottom sheet spans the full phone frame */}
+          {sourceSheetOpen && (
+            <FeedSourceSheet value={source} onChange={setSource} onClose={() => setSourceSheetOpen(false)} />
+          )}
+
+          {showTabBar && (
+            <TabBar
+              active={tab}
+              // Recording: FAB on Home notes feeds + Media + DMs — NOT on the Articles
+              // (Trending) feed. [REC vs REPO — recording wins]
+              fabVisible={(tab === 'home' && source !== 'trending') || tab === 'media' || tab === 'dms'}
+              onNavigate={goTab}
+              onCompose={() => openCompose()}
+            />
+          )}
 
           {toast && (
             <div className="absolute left-1/2 -translate-x-1/2 bottom-24 z-[80] flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[var(--yh-surface-2)] text-[var(--yh-text)] text-[14px] font-medium shadow-lg">

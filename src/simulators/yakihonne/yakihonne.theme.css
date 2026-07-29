@@ -4,7 +4,7 @@
  *
  * Brand truth (YakiHonne/mobile-app lib/utils/constants.dart):
  *   kMainColor  #EE7700  → DEFAULT accent = ORANGE (NOT purple; purple is one of 6 selectable accents)
- *   kPurple     #86318C  / kMainColor1 #6B218D → purple surface tone (banner, filled-heart reaction)
+ *   kPurple     #86318C  / kMainColor1 #6B218D → purple surface tone (banner / logo assets)
  *   dark-first: kScaffoldDark #171718 / kCardDark #222525 / kOutlineDark #393B3B ; OLED variant kBlackTheme #000000
  *   secondary text kDimGrey #B3B3B3 ; red #FF4A4A ; green #00C04D ; link/hashtag blue #1D9BF0
  *   font: DMSans (fallback NotoSans)
@@ -17,7 +17,7 @@
   --yh-orange-side: #fffaf3;
   --yh-purple: #86318c;
   --yh-purple-alt: #6b218d;
-  --yh-like: #9333ea;       /* filled-heart reaction reads as a vivid purple in-app */
+  --yh-like: #ee7700;
   --yh-red: #ff4a4a;
   --yh-green: #00c04d;
   --yh-blue: #504dff;
@@ -25,20 +25,22 @@
   --yh-zap: #ee7700;        /* sats / zap accent */
   --yh-amber: #ffc107;
 
-  /* DARK (default — matches the recording: near-OLED black) */
-  --yh-bg: #0a0a0b;
-  --yh-surface: #171718;    /* cards / chips / app-icon inner */
-  --yh-surface-2: #222525;  /* elevated pills, inputs, reaction-summary chip */
-  --yh-surface-3: #252429;  /* dim bg grey */
-  --yh-border: #2b2d2d;
+  /* DARK (default — measured from the recording: kScaffoldDark #171718 bg, #222424 cards/chips) */
+  --yh-bg: #171718;
+  --yh-surface: #222424;    /* cards / chips / app-icon inner (measured) */
+  --yh-surface-2: #222525;  /* elevated pills, inputs, reaction-summary chip (kCardDark) */
+  --yh-surface-3: #2a2a2e;  /* dim bg grey */
+  --yh-border: #2f3131;
   --yh-border-strong: #393b3b;
   --yh-divider: rgba(255, 255, 255, 0.06);
   --yh-text: #ffffff;
   --yh-text-2: #b3b3b3;
   --yh-text-3: #6c6d6f;
-  --yh-chip: rgba(255, 255, 255, 0.06);
+  --yh-chip: #222424;       /* measured chip fill */
 
-  --yh-font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* DM Sans is the real app's font but is NOT bundled locally (offline rule — no CDN
+     fetch); fall back to the system stack instead of declaring a font we don't ship. */
+  --yh-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
   font-family: var(--yh-font);
   background-color: var(--yh-bg);

@@ -101,7 +101,7 @@
   padding: 10px;
   border: 3px dashed #ff0000;
   margin-bottom: 10px;
-  animation: blink 1s step-end infinite;
+  animation: nk-blink 1s step-end infinite;
 }
 
 .main-title {
@@ -126,10 +126,12 @@
 }
 
 .blink {
-  animation: blink 1s step-end infinite;
+  animation: nk-blink 1s step-end infinite;
 }
 
-@keyframes blink {
+/* Renamed from `blink`: keyframes are global, and Amethyst's theme also defines
+   a (different) `blink` — whichever stylesheet loaded last won for both sims. */
+@keyframes nk-blink {
   0%, 50% { opacity: 1; }
   51%, 100% { opacity: 0; }
 }
@@ -400,7 +402,10 @@
   gap: 10px;
 }
 
-.action-btn {
+/* Scoped under the simulator root: unscoped `.action-btn` collided with
+   Amethyst's `.action-btn` (both stylesheets get loaded once the ClientSwitcher
+   preloads neighbouring clients, and whichever sheet loads last used to win). */
+.nostr-kitten-simulator .action-btn {
   background: #c0c0c0;
   border: 2px outset #fff;
   padding: 5px 10px;
@@ -409,11 +414,11 @@
   cursor: pointer;
 }
 
-.action-btn:active {
+.nostr-kitten-simulator .action-btn:active {
   border-style: inset;
 }
 
-.action-btn.action-btn-on {
+.nostr-kitten-simulator .action-btn.action-btn-on {
   background: linear-gradient(180deg, #ffff66, #ffcc00);
   border-style: inset;
   color: #000;
@@ -598,7 +603,7 @@
   font-size: 10px;
   padding: 2px 5px;
   margin-left: 10px;
-  animation: blink 0.5s step-end infinite;
+  animation: nk-blink 0.5s step-end infinite;
 }
 
 .awards-section {
@@ -704,22 +709,27 @@
   50% { transform: translateY(-10px); }
 }
 
-/* Scrollbar Styling */
-::-webkit-scrollbar {
+/* Scrollbar Styling — scoped: the unscoped version restyled every scrollbar in
+   the host document (including other simulators) once this sheet was loaded. */
+.nostr-kitten-simulator ::-webkit-scrollbar,
+.nostr-kitten-simulator::-webkit-scrollbar {
   width: 20px;
 }
 
-::-webkit-scrollbar-track {
+.nostr-kitten-simulator ::-webkit-scrollbar-track,
+.nostr-kitten-simulator::-webkit-scrollbar-track {
   background: #000;
   border: 2px inset #808080;
 }
 
-::-webkit-scrollbar-thumb {
+.nostr-kitten-simulator ::-webkit-scrollbar-thumb,
+.nostr-kitten-simulator::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, #c0c0c0, #808080);
   border: 2px outset #fff;
 }
 
-::-webkit-scrollbar-thumb:hover {
+.nostr-kitten-simulator ::-webkit-scrollbar-thumb:hover,
+.nostr-kitten-simulator::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #d3d3d3, #a9a9a9);
 }
 

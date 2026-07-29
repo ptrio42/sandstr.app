@@ -71,8 +71,9 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         </div>
       )}
 
-      <div className="flex gap-3">
-        <button onClick={stop(onViewProfile)} className="shrink-0 mt-0.5">
+      {/* Header: avatar + name row only — body and actions run full width below (real Damus layout) */}
+      <div className="flex items-start gap-3">
+        <button onClick={stop(onViewProfile)} className="shrink-0">
           <Avatar seed={author.username} className="w-11 h-11" zap={!!author.lightningAddress} />
         </button>
 
@@ -89,47 +90,47 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           </div>
 
           {replyingTo && (
-            <div className="text-[14px] text-[var(--damus-text-secondary)] -mt-0.5 mb-1">
+            <div className="text-[14px] text-[var(--damus-text-secondary)]">
               Replying to <span className="text-[var(--damus-purple)]">{replyingTo}</span>
             </div>
           )}
-
-          {/* body */}
-          <div className="text-[var(--damus-text)] text-[17px] leading-[1.35] whitespace-pre-wrap break-words mt-0.5">
-            {renderContent(body)}
-            {truncated && (
-              <button onClick={stop(() => setExpanded(true))} className="text-[var(--damus-purple)] ml-1">…Show more</button>
-            )}
-          </div>
-
-          {/* media */}
-          {note.images && note.images.length > 0 && (
-            <div className={`mt-2.5 rounded-2xl overflow-hidden grid gap-0.5 ${note.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-              {note.images.slice(0, 4).map((img, i) => (
-                <img key={i} src={img} alt="" className={`w-full object-cover ${note.images!.length === 1 ? 'max-h-80' : 'h-40'}`} />
-              ))}
-            </div>
-          )}
-
-          {/* action row */}
-          <div className="flex items-center justify-between mt-2.5 pr-1" data-tour="damus-interactions">
-            <button onClick={stop(onReply)} className="damus-action is-reply">
-              <ReplyIcon /> {note.replies > 0 && <span>{note.replies}</span>}
-            </button>
-            <button onClick={stop(() => { setReposted(v => !v); setReposts(c => reposted ? c - 1 : c + 1); })} className={`damus-action is-repost ${reposted ? 'active' : ''}`}>
-              <RepostIcon /> {reposts > 0 && <span>{reposts}</span>}
-            </button>
-            <button onClick={stop(() => { setLiked(v => !v); setLikes(c => liked ? c - 1 : c + 1); })} className={`damus-action is-like ${liked ? 'active' : ''}`}>
-              <ShakaIcon filled={liked} /> {likes > 0 && <span>{likes}</span>}
-            </button>
-            <button onClick={stop(() => { setZapped(v => !v); setZaps(c => zapped ? c - 1 : c + 1); })} className={`damus-action is-zap ${zapped ? 'active' : ''}`}>
-              <ZapIcon filled={zapped} /> {zaps > 0 && <span>{zaps >= 1000 ? `${(zaps / 1000).toFixed(1)}k` : zaps}</span>}
-            </button>
-            <button onClick={stop()} className="damus-action">
-              <ShareIcon />
-            </button>
-          </div>
         </div>
+      </div>
+
+      {/* body — full width from the card's left margin */}
+      <div className="text-[var(--damus-text)] text-[17px] leading-[1.35] whitespace-pre-wrap break-words mt-2">
+        {renderContent(body)}
+        {truncated && (
+          <button onClick={stop(() => setExpanded(true))} className="text-[var(--damus-purple)] ml-1">…Show more</button>
+        )}
+      </div>
+
+      {/* media */}
+      {note.images && note.images.length > 0 && (
+        <div className={`mt-2.5 rounded-2xl overflow-hidden grid gap-0.5 ${note.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          {note.images.slice(0, 4).map((img, i) => (
+            <img key={i} src={img} alt="" className={`w-full object-cover ${note.images!.length === 1 ? 'max-h-80' : 'h-40'}`} />
+          ))}
+        </div>
+      )}
+
+      {/* action row — full width */}
+      <div className="flex items-center justify-between mt-2.5 pr-1" data-tour="damus-interactions">
+        <button onClick={stop(onReply)} className="damus-action is-reply">
+          <ReplyIcon /> {note.replies > 0 && <span>{note.replies}</span>}
+        </button>
+        <button onClick={stop(() => { setReposted(v => !v); setReposts(c => reposted ? c - 1 : c + 1); })} className={`damus-action is-repost ${reposted ? 'active' : ''}`}>
+          <RepostIcon /> {reposts > 0 && <span>{reposts}</span>}
+        </button>
+        <button onClick={stop(() => { setLiked(v => !v); setLikes(c => liked ? c - 1 : c + 1); })} className={`damus-action is-like ${liked ? 'active' : ''}`}>
+          <ShakaIcon filled={liked} /> {likes > 0 && <span>{likes}</span>}
+        </button>
+        <button onClick={stop(() => { setZapped(v => !v); setZaps(c => zapped ? c - 1 : c + 1); })} className={`damus-action is-zap ${zapped ? 'active' : ''}`}>
+          <ZapIcon filled={zapped} /> {zaps > 0 && <span>{zaps >= 1000 ? `${(zaps / 1000).toFixed(1)}k` : zaps}</span>}
+        </button>
+        <button onClick={stop()} className="damus-action">
+          <ShareIcon />
+        </button>
       </div>
     </article>
   );

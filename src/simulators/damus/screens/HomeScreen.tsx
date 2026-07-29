@@ -30,7 +30,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   return (
     <div className="min-h-full bg-[var(--damus-bg)]" data-tour="damus-home">
       {/* Top bar: avatar (drawer) · Damus logo · relay count */}
-      <header className="sticky top-0 z-30 bg-[var(--damus-bg)]/85 backdrop-blur-xl">
+      <header className="damus-topbar">
         <div className="flex items-center justify-between px-4 pt-2 pb-1.5">
           <button onClick={onOpenDrawer} aria-label="Open menu">
             <Avatar seed={currentUser?.username || 'sandy'} className="w-9 h-9" />
@@ -49,8 +49,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               onClick={() => setTab(id)}
               className="flex-1 py-2.5 relative text-[16px] font-semibold"
             >
-              <span className={tab === id ? 'text-[var(--damus-text)]' : 'text-[var(--damus-text-secondary)]'}>{label}</span>
-              {tab === id && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-9 h-[3px] rounded-full damus-underline" />}
+              <span className="relative inline-block">
+                <span className={tab === id ? 'text-[var(--damus-text)]' : 'text-[var(--damus-text-secondary)]'}>{label}</span>
+                {tab === id && <span className="absolute -bottom-[7px] -left-1 -right-1 h-[3px] rounded-full damus-underline" />}
+              </span>
             </button>
           ))}
         </div>

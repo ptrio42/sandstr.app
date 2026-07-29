@@ -29,7 +29,7 @@ export const ComposeScreen: React.FC<ComposeScreenProps> = ({ currentUser, users
           onClick={() => canPost && onPost(content.trim())}
           disabled={!canPost}
           data-tour="damus-post"
-          className={`damus-btn px-6 py-2 text-[16px] ${canPost ? 'damus-btn-gradient' : 'bg-[var(--damus-bg-tertiary)] text-[var(--damus-text-secondary)]'}`}
+          className={`damus-btn damus-btn-cta px-6 py-2 text-[16px] ${canPost ? 'damus-btn-gradient' : 'bg-[var(--damus-bg-tertiary)] text-[var(--damus-text-secondary)]'}`}
         >
           Post
         </button>

@@ -28,6 +28,7 @@
   --primal-bg: #ffffff;              /* --background-site / -card */
   --primal-surface: #f5f5f5;         /* --background-sheet (user chip, subtle panels) */
   --primal-surface-2: #e5e5e5;       /* --background-input (pills, cards, preview, dividers-fill) */
+  --primal-input-head: #eeeeee;      /* --background-header-input (dropdown caption bar) */
   --primal-hover: #f5f5f5;           /* row hover */
 
   /* text */
@@ -69,6 +70,7 @@
   --primal-bg: #000000;              /* --background-site (OLED black — NOT #121212) */
   --primal-surface: #121212;         /* --background-sheet */
   --primal-surface-2: #222222;       /* --background-input */
+  --primal-input-head: #1a1a1a;      /* --background-header-input */
   --primal-hover: #161616;
 
   --primal-text: #ffffff;            /* --text-primary */
@@ -160,24 +162,27 @@
   flex-direction: column;
   gap: 2px;
 }
+/* NavLink spec (screen-map NavMenu): label 17px/400/20px; COLOR is the active
+   cue (secondary → primary), weight stays 400 — never bold. */
 .primal-nav-item {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   padding: 9px 8px;
   border-radius: var(--primal-radius-pill);
-  color: var(--primal-text);
-  font-size: 21px;
+  color: var(--primal-text-2);
+  font-size: 17px;
   font-weight: 400;
+  line-height: 20px;
   background: none;
   border: none;
   cursor: pointer;
   width: 100%;
   text-align: left;
-  transition: background 120ms ease;
+  transition: background 120ms ease, color 120ms ease;
 }
-.primal-nav-item:hover { background: var(--primal-hover); }
-.primal-nav-item.active { font-weight: 700; }
+.primal-nav-item:hover { background: var(--primal-hover); color: var(--primal-text); }
+.primal-nav-item.active { color: var(--primal-text); }
 .primal-nav-item .primal-nav-icon {
   width: 26px;
   height: 26px;
@@ -256,18 +261,75 @@
   padding: 12px 20px;
   letter-spacing: -0.01em;
 }
+/* Feed selector (FeedSelect/SelectionBox2 spec): plain trigger — current feed
+   name + caret, 16px/400 secondary text, no bg/border. */
+.primal-feedselect-wrap { position: relative; display: inline-block; }
 .primal-feedselector {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--primal-text);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 20px;
+  color: var(--primal-text-2);
   padding: 14px 20px;
   cursor: pointer;
   background: none;
   border: none;
+  font-family: inherit;
 }
+/* Open panel: caption bar ("Notes Feed:" + Edit Feeds) over the listbox */
+.primal-feeddrop {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 20px;
+  z-index: 40;
+  min-width: 292px;
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+.primal-feeddrop-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--primal-input-head);
+  border-radius: 8px 8px 0 0;
+  padding: 9px 16px;
+}
+.primal-feeddrop-title { color: var(--primal-text-3); font-size: 14px; }
+.primal-feeddrop-edit {
+  color: var(--primal-accent);
+  font-size: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+.primal-feeddrop-list {
+  background: var(--primal-surface-2);
+  border-radius: 0 0 8px 8px;
+  padding: 4px;
+}
+.primal-feeddrop-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--primal-text);
+  font-size: 16px;
+  font-weight: 400;
+  font-family: inherit;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+.primal-feeddrop-item:hover { background: var(--primal-border-2); }
+.primal-feeddrop-check { display: inline-flex; color: var(--primal-text); flex-shrink: 0; }
 
 /* tab strip (Explore / Notifications / Profile / Messages) */
 .primal-tabs {
@@ -586,15 +648,18 @@
 .primal-trend-name { font-weight: 700; font-size: 14px; }
 .primal-trend-preview { color: var(--primal-text-2); font-size: 14px; line-height: 1.35; margin-top: 2px; }
 
-/* stat grid (Explore right sidebar) */
+/* stat grid (Explore right sidebar) — NostrStats: number over lowercase label.
+   Numbers are regular weight in the recording and must NEVER wrap mid-number;
+   auto-sized columns spread across the (narrow) sidebar. */
 .primal-statgrid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px 12px;
+  grid-template-columns: auto auto auto;
+  justify-content: space-between;
+  gap: 14px 0;
   margin-top: 4px;
 }
-.primal-stat-num { font-size: 15px; font-weight: 800; }
-.primal-stat-label { color: var(--primal-text-2); font-size: 12px; }
+.primal-stat-num { font-size: 14px; font-weight: 400; white-space: nowrap; }
+.primal-stat-label { color: var(--primal-text-2); font-size: 12px; white-space: nowrap; }
 
 .primal-topic-tags { display: flex; flex-wrap: wrap; gap: 8px; }
 .primal-topic-tag {
@@ -605,9 +670,11 @@
   font-size: 14px;
 }
 
-.primal-user-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 6px; margin-top: 4px; }
-.primal-user-grid-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.primal-user-grid-name { font-size: 12px; color: var(--primal-text); text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* trending users 4-col grid — minmax(0,1fr) so long names ellipsize inside the
+   cell instead of blowing the grid out and clipping. */
+.primal-user-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px 6px; margin-top: 4px; }
+.primal-user-grid-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+.primal-user-grid-name { font-size: 12px; color: var(--primal-text); text-align: center; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ── Explore feed-card grid ───────────────────────────────────────── */
 .primal-feedgrid {
@@ -701,21 +768,28 @@
   border: 4px solid var(--primal-bg);
   background: var(--primal-bg);
 }
+/* Profile stat strip = the tab bar (screen-map ProfileTabs): 6 tabs, each a
+   big number STACKED over its label, spread across the full width — no
+   horizontal scroll/cut. */
 .primal-statstrip {
   display: flex;
-  gap: 26px;
+  justify-content: space-between;
+  gap: 8px;
   padding: 8px 20px 0;
   border-bottom: 1px solid var(--primal-border);
-  overflow-x: auto;
 }
 .primal-statcol {
   position: relative;
-  padding: 6px 0 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 6px 0 10px;
   cursor: pointer;
   white-space: nowrap;
+  min-width: 0;
 }
-.primal-statcol .n { font-size: 20px; font-weight: 700; }
-.primal-statcol .l { color: var(--primal-text-2); font-size: 14px; margin-left: 4px; }
+.primal-statcol .n { font-size: 18px; font-weight: 700; line-height: 1.2; }
+.primal-statcol .l { color: var(--primal-text-2); font-size: 13px; margin-top: 2px; }
 .primal-statcol.active::after {
   content: "";
   position: absolute;

@@ -99,7 +99,10 @@ export function MaterialCard({
 
   return (
     <motion.article
-      className={`md-card mb-2 ${onOpenThread ? 'cursor-pointer' : ''}`}
+      className={`bg-[var(--md-background)] ${onOpenThread ? 'cursor-pointer' : ''}`}
+      /* Real Amethyst feed: flat, edge-to-edge on black — no elevated card, no
+         rounded corners; just a hairline divider BETWEEN notes. */
+      style={{ borderBottom: '1px solid var(--amethyst-feed-divider)' }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 500, damping: 30 }}
@@ -204,7 +207,8 @@ export function MaterialCard({
       )}
 
       {/* Action Buttons */}
-      <div className="px-4 py-2 flex items-center justify-between border-t border-[var(--md-outline-variant)]" data-tour="amethyst-actions" onClick={(e) => e.stopPropagation()}>
+      {/* No rule above the action row in the real app — the only divider sits between notes */}
+      <div className="px-4 py-2 flex items-center justify-between" data-tour="amethyst-actions" onClick={(e) => e.stopPropagation()}>
         <motion.button
           whileTap={{ scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}

@@ -67,6 +67,17 @@ export const DamusSimulator: React.FC<DamusSimulatorProps> = ({ className = '', 
 
   const logout = () => { setAuthed(false); setCurrentUser(null); setOverlays([]); setDrawerOpen(false); };
 
+  // Transient "not in this demo" toast (same mechanic the Amethyst sim uses for
+  // out-of-scope taps: message + auto-dismiss).
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = useCallback((msg: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast(msg);
+    toastTimer.current = setTimeout(() => setToast(null), 2000);
+  }, []);
+  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
+
   const handleMenu = (d: MenuDest) => {
     setDrawerOpen(false);
     if (d === 'profile' && currentUser) openProfile(currentUser);
@@ -74,6 +85,7 @@ export const DamusSimulator: React.FC<DamusSimulatorProps> = ({ className = '', 
     else if (d === 'bookmarks') push({ type: 'bookmarks' });
     else if (d === 'settings') { registerAction('navigate_settings'); push({ type: 'settings' }); }
     else if (d === 'logout') logout();
+    else showToast('Not in this demo'); // wallet / purple / muted / merch
   };
 
   // Tour command bridge (interface preserved)
@@ -126,7 +138,11 @@ export const DamusSimulator: React.FC<DamusSimulatorProps> = ({ className = '', 
   };
 
   const top = overlays[overlays.length - 1];
-  const showTabBar = authed && overlays.length === 0 && !drawerOpen;
+  // Thread / profile / bookmarks are STACK PUSHES in real Damus — the tab bar and FAB
+  // stay mounted (recording: bookmarks + pushed views keep the bottom bar). Compose is
+  // a sheet; relays/settings replace the bottom edge with their own chrome.
+  const topKeepsTabBar = !top || top.type === 'thread' || top.type === 'profile' || top.type === 'bookmarks';
+  const showTabBar = authed && topKeepsTabBar && !drawerOpen;
 
   return (
     <div className={`damus-simulator ${parentTheme === 'dark' ? 'dark' : ''} ${className}`} data-theme={parentTheme}>
@@ -148,6 +164,12 @@ export const DamusSimulator: React.FC<DamusSimulatorProps> = ({ className = '', 
 
           {showTabBar && (
             <TabBar activeTab={tab} onNavigate={goTab} onCompose={() => openCompose()} />
+          )}
+
+          {toast && (
+            <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-[70] pointer-events-none px-4 py-2 rounded-full bg-[var(--damus-bg-tertiary)] text-[var(--damus-text)] text-[14px] font-medium shadow-lg whitespace-nowrap">
+              {toast}
+            </div>
           )}
         </>
       )}

@@ -1,4 +1,4 @@
-import { Suspense, type ReactNode } from 'react';
+import { Suspense, useEffect, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ChevronDown, ChevronLeft, Info, Monitor, Moon, Play, Sun } from 'lucide-react';
@@ -172,6 +172,19 @@ export default function ClientView() {
   // The global header is hidden on this route at phone widths, so the bar below
   // has to carry the theme switch or it becomes unreachable here.
   const { dark, toggle } = useTheme();
+
+  // Open each client in ITS real shipping default (Damus/Amethyst OLED dark,
+  // Primal Midnight, YakiHonne light — docs/refs/*/screen-map.md). Fidelity is
+  // the product, and on a light-mode OS the three strongest reproductions
+  // opened in a theme the real app never defaults to. An explicit choice on the
+  // host toggle (persisted as sandstr-theme) always wins; we never write that
+  // key here, so auto-switching stops the moment the visitor picks a side.
+  const clientTheme = entry?.defaultTheme;
+  useEffect(() => {
+    if (!clientTheme) return;
+    if (localStorage.getItem('sandstr-theme')) return;
+    document.documentElement.classList.toggle('dark', clientTheme === 'dark');
+  }, [clientTheme]);
 
   if (!entry) {
     return (

@@ -50,7 +50,7 @@ export const ProfileScreen: React.FC<Props> = ({ profile, onBack, onOpenThread, 
       <div className="px-4">
         {/* avatar + action */}
         <div className="flex items-start justify-between -mt-9">
-          <Avatar seed={profile.seed} className="w-[86px] h-[86px] ring-4 ring-[var(--yh-bg)]" rounded="rounded-2xl" />
+          <Avatar seed={profile.seed} className="w-20 h-20 ring-4 ring-[var(--yh-bg)] rounded-full" rounded="rounded-full" />
           <button className={`mt-11 px-5 py-2 rounded-xl text-[15px] font-semibold ${profile.isSelf ? 'bg-[var(--yh-surface-2)] text-[var(--yh-text)]' : 'yakihonne-btn-orange'}`} data-tour="yakihonne-follow">
             {profile.isSelf ? 'Edit profile' : 'Follow'}
           </button>

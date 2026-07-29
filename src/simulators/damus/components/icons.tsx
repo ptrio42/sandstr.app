@@ -26,7 +26,8 @@ export const HomeIcon = ({ className, filled }: P) => (
 export const MailIcon = ({ className, filled }: P) => (
   <svg {...S({ className, fill: filled ? 'currentColor' : 'none', strokeWidth: filled ? 0 : 1.9 })}>
     <rect x="3" y="5" width="18" height="14" rx="2.5" fill={filled ? 'currentColor' : 'none'} />
-    <path d="M4 7.5 12 13l8-5.5" stroke={filled ? '#000' : 'currentColor'} />
+    {/* detail path needs its own strokeWidth — it would inherit the svg's 0 when filled and vanish */}
+    <path d="M4 7.5 12 13l8-5.5" stroke={filled ? 'var(--damus-bg)' : 'currentColor'} strokeWidth={1.9} />
   </svg>
 );
 export const SearchIcon = ({ className }: P) => (
@@ -38,7 +39,8 @@ export const SearchIcon = ({ className }: P) => (
 export const BellIcon = ({ className, filled }: P) => (
   <svg {...S({ className, fill: filled ? 'currentColor' : 'none', strokeWidth: filled ? 0 : 1.9 })}>
     <path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8" />
-    <path d="M13.7 21a2 2 0 0 1-3.4 0" stroke={filled ? '#000' : 'currentColor'} />
+    {/* clapper keeps its own strokeWidth so it doesn't inherit the filled svg's 0 */}
+    <path d="M13.7 21a2 2 0 0 1-3.4 0" stroke="currentColor" fill="none" strokeWidth={1.9} />
   </svg>
 );
 

@@ -9,7 +9,7 @@ import { homeNotes, yakiArticles, type YakiArticle } from '../data';
 interface Props {
   currentUserSeed: string;
   source: FeedSource;
-  onSource: (s: FeedSource) => void;
+  onOpenSourcePicker: () => void;
   onOpenDrawer: () => void;
   onOpenSearch: () => void;
   onOpenThread: (id: string) => void;
@@ -20,7 +20,7 @@ interface Props {
 }
 
 export const HomeScreen: React.FC<Props> = ({
-  currentUserSeed, source, onSource, onOpenDrawer, onOpenSearch,
+  currentUserSeed, source, onOpenSourcePicker, onOpenDrawer, onOpenSearch,
   onOpenThread, onOpenArticle, onViewProfile, onReply, onZap,
 }) => {
   const isArticles = source === 'trending';
@@ -33,7 +33,7 @@ export const HomeScreen: React.FC<Props> = ({
           <button onClick={onOpenDrawer} aria-label="Menu" data-tour="yakihonne-profile">
             <Avatar seed={currentUserSeed} className="w-9 h-9" rounded="rounded-full" />
           </button>
-          <FeedSelector value={source} onChange={onSource} />
+          <FeedSelector value={source} onOpen={onOpenSourcePicker} />
           <div className="flex items-center gap-2">
             <button className="yakihonne-appbar-chip" aria-label="Filter"><SlidersIcon className="w-5 h-5" /></button>
             <button className="yakihonne-appbar-chip" aria-label="Search" onClick={onOpenSearch}><SearchIcon className="w-5 h-5" /></button>

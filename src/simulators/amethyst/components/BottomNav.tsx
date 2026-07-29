@@ -38,22 +38,9 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
           whileTap={{ scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
         >
-          {activeTab === item.id && (
-            <motion.div
-              layoutId="bottom-nav-indicator"
-              className="md-bottom-nav-indicator"
-              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-            />
-          )}
+          {/* Real Amethyst has no selection pill or indicator bar — the only
+              active cue is the icon tinted with the brand purple (via .active). */}
           <div className="relative flex items-center justify-center">
-            <motion.div
-              animate={{
-                backgroundColor: activeTab === item.id ? 'var(--md-secondary-container)' : 'transparent',
-              }}
-              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              className="absolute w-14 h-8 rounded-full"
-              style={{ zIndex: -1 }}
-            />
             <div className="relative">
               {item.icon}
               {item.dot && (

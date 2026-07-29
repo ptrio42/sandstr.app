@@ -20,6 +20,8 @@ export interface ClientEntry {
   hasTour: boolean;
   /** highlighted as a lead/flagship in the audit (Snort, Amethyst, Nostr Kitten, YakiHonne) */
   lead?: boolean;
+  /** the real client's shipping default theme; unset = follow the OS preference */
+  defaultTheme?: 'dark' | 'light';
   className?: string;
   Component: LazyExoticComponent<ComponentType<any>>;
   /**
@@ -40,14 +42,22 @@ function once(fn: Loader): () => Promise<unknown> {
 // How each simulator is mounted, mirroring the original Astro pages exactly:
 // mobile clients (ios/android) render inside MobilePhoneFrame; web/desktop render direct.
 // *WithTour wrappers are default exports; bare simulators are named exports.
-const MOUNTS: Record<string, { frame: Frame; tour: boolean; className?: string; load: Loader }> = {
-  damus: { frame: 'ios', tour: true, load: () => import('./simulators/damus/DamusSimulatorWithTour') },
-  amethyst: { frame: 'android', tour: true, load: () => import('./simulators/amethyst/AmethystSimulatorWithTour') },
+// `theme` = the REAL client's shipping default (Damus/Amethyst OLED dark, Primal
+// Midnight — per docs/refs/*/screen-map.md). On a light-mode OS these opened
+// light, so half of first visits saw the three strongest reproductions in a
+// theme the real app never defaults to. Applied only until the visitor touches
+// the host theme toggle; entries without `theme` follow the OS preference.
+const MOUNTS: Record<
+  string,
+  { frame: Frame; tour: boolean; className?: string; theme?: 'dark' | 'light'; load: Loader }
+> = {
+  damus: { frame: 'ios', tour: true, theme: 'dark', load: () => import('./simulators/damus/DamusSimulatorWithTour') },
+  amethyst: { frame: 'android', tour: true, theme: 'dark', load: () => import('./simulators/amethyst/AmethystSimulatorWithTour') },
   keychat: { frame: 'android', tour: true, load: () => import('./simulators/keychat/KeychatSimulatorWithTour') },
   olas: { frame: 'ios', tour: true, load: () => import('./simulators/olas/OlasSimulatorWithTour') },
-  yakihonne: { frame: 'ios', tour: true, load: () => import('./simulators/yakihonne/YakiHonneSimulatorWithTour') },
+  yakihonne: { frame: 'ios', tour: true, theme: 'light', load: () => import('./simulators/yakihonne/YakiHonneSimulatorWithTour') },
   snort: { frame: null, tour: true, load: () => import('./simulators/snort/SnortSimulatorWithTour') },
-  primal: { frame: null, tour: true, load: () => import('./simulators/primal/PrimalWebSimulatorWithTour') },
+  primal: { frame: null, tour: true, theme: 'dark', load: () => import('./simulators/primal/PrimalWebSimulatorWithTour') },
   coracle: {
     frame: null,
     tour: false,
@@ -97,6 +107,7 @@ const branded: ClientEntry[] = Object.values(allSimulatorConfigs).map((cfg) => {
     frame: mount.frame,
     hasTour: mount.tour,
     lead: LEADS.has(cfg.id),
+    defaultTheme: mount.theme,
     className: mount.className,
     Component: lazy(mount.load),
     preload: once(mount.load),
