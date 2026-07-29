@@ -2,6 +2,12 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { MockUser } from '../../../data/mock';
 import { getRandomUsers } from '../../../data/mock';
+import {
+  looksLikeRealSecretKey,
+  REAL_KEY_REFUSED,
+  DEMO_KEY_PLACEHOLDER,
+  SECRET_INPUT_PROPS,
+} from '../../shared/utils/keySafety';
 
 interface LoginScreenProps {
   onLogin: (user: MockUser) => void;
@@ -10,6 +16,17 @@ interface LoginScreenProps {
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [npubInput, setNpubInput] = useState('');
   const [nsecInput, setNsecInput] = useState('');
+  const [keyWarning, setKeyWarning] = useState(false);
+  // Refuse real secret keys: drop from state, don't hold. See keySafety.ts.
+  const onKeyChange = (value: string) => {
+    if (looksLikeRealSecretKey(value)) {
+      setNsecInput('');
+      setKeyWarning(true);
+      return;
+    }
+    setKeyWarning(false);
+    setNsecInput(value);
+  };
   const [activeTab, setActiveTab] = useState<'login' | 'generate'>('login');
   const [generatedKeys, setGeneratedKeys] = useState<{ npub: string; nsec: string } | null>(null);
   const [showCopiedToast, setShowCopiedToast] = useState(false);
@@ -136,12 +153,17 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                 Private Key (nsec)
               </label>
               <input
-                type="password"
+                {...SECRET_INPUT_PROPS}
                 value={nsecInput}
-                onChange={(e) => setNsecInput(e.target.value)}
-                placeholder="nsec1..."
+                onChange={(e) => onKeyChange(e.target.value)}
+                placeholder={DEMO_KEY_PLACEHOLDER}
                 className="md-input w-full"
               />
+              {keyWarning && (
+                <p className="mt-2 ml-1 text-xs leading-snug text-amber-600 dark:text-amber-400">
+                  {REAL_KEY_REFUSED}
+                </p>
+              )}
             </div>
             <button
               onClick={handleLogin}

@@ -1,6 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { MockUser } from '../../../data/mock';
+import {
+  looksLikeRealSecretKey,
+  REAL_KEY_REFUSED,
+  DEMO_KEY_PLACEHOLDER,
+  SECRET_INPUT_PROPS,
+} from '../../shared/utils/keySafety';
 
 interface LoginScreenProps {
   onLogin: (user: MockUser) => void;
@@ -10,6 +16,19 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [nsec, setNsec] = useState('');
+  const [keyWarning, setKeyWarning] = useState(false);
+
+  // Refuse anything that looks like a real secret key: drop it from state
+  // immediately rather than holding it, and explain why. See keySafety.ts.
+  const onKeyChange = useCallback((value: string) => {
+    if (looksLikeRealSecretKey(value)) {
+      setNsec('');
+      setKeyWarning(true);
+      return;
+    }
+    setKeyWarning(false);
+    setNsec(value);
+  }, []);
 
   // Generate a mock user
   const generateMockUser = useCallback((): MockUser => {
@@ -115,13 +134,16 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               
               <div className="space-y-2">
                 <input
-                  type="password"
+                  {...SECRET_INPUT_PROPS}
                   value={nsec}
-                  onChange={(e) => setNsec(e.target.value)}
-                  placeholder="Paste your nsec private key"
+                  onChange={(e) => onKeyChange(e.target.value)}
+                  placeholder={DEMO_KEY_PLACEHOLDER}
                   className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2D7FF9] dark:text-white"
                   data-tour="keychat-import-key"
                 />
+                {keyWarning && (
+                  <p className="text-xs leading-snug text-amber-600 dark:text-amber-400">{REAL_KEY_REFUSED}</p>
+                )}
                 <button
                   onClick={handleImportKey}
                   disabled={nsec.trim().length < 10}
@@ -131,8 +153,12 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 </button>
               </div>
               
+              {/* The real app reassures you about key custody here. We must not:
+                  there is no key and no custody, and a reassurance on a
+                  simulated login is how you train someone to trust the next
+                  fake one. */}
               <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                Your keys never leave this device. You are in control.
+                Simulated sign-in — no real keys, nothing is stored or sent.
               </p>
             </motion.div>
           ) : (
