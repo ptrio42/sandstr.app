@@ -27,10 +27,22 @@ usage tracking of any kind — not "opt-in", just absent.
 
 ## Keys and identities
 
-The site never generates, asks for, or handles real Nostr keys. Every npub,
+The site never asks for a real Nostr key, and it cannot use one. Every npub,
 nsec, profile, post, and zap you see is invented mock data (all identities are
-fictional — see `src/data/mock/users.ts`). Nothing connects to relays or to
-the Nostr network.
+fictional — see `src/data/mock/users.ts`). Nothing connects to relays or to the
+Nostr network, and there is no signing, no crypto, and no key storage anywhere
+in the code.
+
+The simulated sign-in screens do show the key-import field the real clients
+have — it is part of the interface being reproduced — but they never solicit a
+real key, and if you paste something that looks like one, it is **discarded
+immediately** rather than held in memory, with an explanation. See
+`src/simulators/shared/utils/keySafety.ts`. Nothing you type on a sign-in
+screen is stored, transmitted, or used for anything: any input signs you into a
+mock account.
+
+**Never paste a real nsec into any site you are only trying out — including
+this one.**
 
 ## Deleting everything
 
