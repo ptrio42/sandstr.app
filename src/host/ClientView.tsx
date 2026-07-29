@@ -1,7 +1,7 @@
-import { Suspense, useEffect, type ReactNode } from 'react';
+import { Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ChevronDown, ChevronLeft, Info, Monitor, Moon, Play, Sun } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ExternalLink, Info, Monitor, Moon, Play, Sun } from 'lucide-react';
 import MobilePhoneFrame from '../simulators/shared/components/MobilePhoneFrame';
 import { ClientGlyph, platformLabel } from './ClientGlyph';
 import { clients, getClient, type ClientEntry } from '../registry';
@@ -105,13 +105,76 @@ function ContextPanel({ entry, real }: { entry: ClientEntry; real: boolean }) {
 
       <Disclaimer name={entry.name} real={real} />
 
-      {real && (
+      {real && <Handoff entry={entry} />}
+    </aside>
+  );
+}
+
+/**
+ * The way out. A reproduction with no exit is a copy; one that hands you off is
+ * a signpost — which is both the product's actual purpose ("try it, then go get
+ * the real thing") and the cheapest trademark mitigation there is. Rendered at
+ * every breakpoint: inline in the ContextPanel at lg+, in the meta row below
+ * that, and in the mobile About sheet. URLs verified per-project — see the
+ * caveats above MOUNTS in registry.tsx.
+ */
+/**
+ * Phone-width "About this reproduction": the description, the honest status
+ * note, and the handoff. On a phone the sim is full-bleed and both the
+ * ContextPanel and the meta row are hidden, so without this the visitor has no
+ * way to learn who made the real client or where to get it. z-index sits above
+ * the tour band (9999/10001/10002) like the disclaimer strip.
+ */
+function AboutSheet({ entry, real, onClose }: { entry: ClientEntry; real: boolean; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[10004] flex items-end sm:hidden" role="dialog" aria-modal="true">
+      <button type="button" aria-label="Close" onClick={onClose} className="absolute inset-0 bg-black/50" />
+      <div className="relative w-full rounded-t-2xl bg-white p-5 pb-8 shadow-2xl dark:bg-gray-900">
+        <div className="mb-3 flex items-center gap-2">
+          <ClientGlyph client={entry} className="h-7 w-7" />
+          <h2 className="text-base font-semibold">{entry.name}</h2>
+          <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+            {platformLabel(entry.platform)}
+          </span>
+        </div>
+        <p className="mb-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{entry.description}</p>
+        {entry.statusNote && (
+          <p className="mb-3 text-xs italic leading-relaxed text-gray-400 dark:text-gray-500">
+            Early preview — {entry.statusNote}
+          </p>
+        )}
+        {real && <Handoff entry={entry} />}
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-5 w-full rounded-xl bg-gray-100 py-2.5 text-sm font-medium dark:bg-gray-800"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Handoff({ entry, compact }: { entry: ClientEntry; compact?: boolean }) {
+  const target = entry.homepage ?? entry.repo;
+  return (
+    <div className={compact ? 'contents' : 'space-y-2'}>
+      <a
+        href={target}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex w-fit items-center gap-1.5 text-xs font-medium text-primary-600 hover:underline dark:text-primary-400"
+      >
+        Get the real {entry.name} <ExternalLink className="h-3 w-3" />
+      </a>
+      {!compact && (
         <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
-          A reproduction built for learning — {entry.name} is made by its own team, and this is not
-          their software.
+          {entry.installNote}. Made by the {entry.name} team ({entry.upstreamLicense}) — this
+          reproduction is not their software.
         </p>
       )}
-    </aside>
+    </div>
   );
 }
 
@@ -175,6 +238,7 @@ export default function ClientView() {
   const entry = getClient(id);
   const reduce = useReducedMotion();
   const isMobile = useMediaQuery(MOBILE_QUERY);
+  const [aboutOpen, setAboutOpen] = useState(false);
   // The global header is hidden on this route at phone widths, so the bar below
   // has to carry the theme switch or it becomes unreachable here.
   const { dark, toggle } = useTheme();
@@ -185,6 +249,10 @@ export default function ClientView() {
   // opened in a theme the real app never defaults to. An explicit choice on the
   // host toggle (persisted as sandstr-theme) always wins; we never write that
   // key here, so auto-switching stops the moment the visitor picks a side.
+  // The switcher can change client while the sheet is open — it describes a
+  // specific reproduction, so it must not survive into the next one.
+  useEffect(() => setAboutOpen(false), [id]);
+
   const clientTheme = entry?.defaultTheme;
   useEffect(() => {
     if (!clientTheme) return;
@@ -296,8 +364,21 @@ export default function ClientView() {
         >
           <ChevronLeft className="h-5 w-5" />
         </Link>
-        <ClientGlyph client={entry} className="h-5 w-5 shrink-0" />
-        <span className="truncate text-sm font-semibold">{entry.name}</span>
+        {/* The title is the About affordance: at 320px the bar has no room for
+            another icon button, and a tappable title is a standard mobile
+            pattern. This is how the handoff to the real client exists on a
+            phone, where the ContextPanel and the meta row are both hidden. */}
+        <button
+          type="button"
+          onClick={() => setAboutOpen(true)}
+          aria-haspopup="dialog"
+          aria-label={`About this ${entry.name} reproduction`}
+          className="flex min-w-0 items-center gap-1 rounded-lg px-1 py-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+        >
+          <ClientGlyph client={entry} className="h-5 w-5 shrink-0" />
+          <span className="truncate text-sm font-semibold">{entry.name}</span>
+          <Info className="h-3 w-3 shrink-0 text-gray-400" />
+        </button>
         <span className="ml-auto flex shrink-0 items-center gap-0.5">
           {entry.hasTour && !gated && (
             <button
@@ -364,6 +445,7 @@ export default function ClientView() {
             <Play className="h-3.5 w-3.5" /> Take a tour
           </button>
         )}
+        {isReal && <Handoff entry={entry} compact />}
       </div>
 
       {/* ---------------- the stage ------------------------------------------ */}
@@ -389,6 +471,8 @@ export default function ClientView() {
             would be taking room from the reproduction it is describing. */}
         {frame && <ContextPanel entry={entry} real={isReal} />}
       </div>
+
+      {aboutOpen && <AboutSheet entry={entry} real={isReal} onClose={() => setAboutOpen(false)} />}
     </main>
   );
 }
