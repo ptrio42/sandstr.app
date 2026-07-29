@@ -255,12 +255,15 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
     }));
   }, []);
 
-  // Keyboard shortcuts
+  // Keyboard shortcuts. Search and refresh are simply not wired: this sim has
+  // no search screen (SnortScreen has no 'search') and no feed-refresh action,
+  // and every handler on the hook is optional. They previously held
+  // `() => console.log(...)` — a console.log used as an arrow BODY is the call's
+  // return value, so esbuild's `pure` list cannot drop it and it shipped in the
+  // production bundle (see the esbuild block in vite.config.ts).
   useKeyboardShortcuts({
     onNewPost: openCompose,
-    onSearch: () => console.log('[Snort] Search shortcut'),
     onGoHome: () => navigateTo('timeline'),
-    onRefresh: () => console.log('[Snort] Refresh shortcut'),
   });
 
   const renderScreen = () => {

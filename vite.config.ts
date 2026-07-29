@@ -12,4 +12,11 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  // ~90 debug console.log/debug calls live in the sims (some fire on every
+  // render). Devtools is the first thing a technical visitor opens, so strip
+  // them from production builds; console.error/warn stay (real failures).
+  // Dev keeps everything.
+  esbuild: {
+    pure: ['console.log', 'console.debug', 'console.info'],
+  },
 });

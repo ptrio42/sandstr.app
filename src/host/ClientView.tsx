@@ -22,16 +22,19 @@ function Disclaimer({ name, real }: { name: string; real: boolean }) {
 }
 
 /**
- * The phone-width form of the mandated banner. One line, never wraps (the old
- * pill wrapped to two lines and pushed the meta row to 108px), and it sits above
- * the tour's 9999/10001/10002 band so the one legal mitigation CLAUDE.md calls
+ * The phone-width form of the mandated banner. It sits above the tour's
+ * 9999/10001/10002 band so the one legal mitigation CLAUDE.md calls
  * non-negotiable stays legible even while a tour backdrop is up.
+ * NO `truncate` here, ever: at 320px (the most common narrow-Android width)
+ * it cut the text to "…not affiliated wit…" — on phones this strip is the
+ * only thing distinguishing the page from the real client, so it wraps to a
+ * second line instead of losing words.
  */
 function DisclaimerStrip({ name, real }: { name: string; real: boolean }) {
   return (
-    <div className="relative z-[10003] flex shrink-0 items-center justify-center gap-1.5 border-b border-amber-300/60 bg-amber-50 px-3 py-1 text-[10px] leading-tight text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-300">
+    <div className="relative z-[10003] flex shrink-0 items-center justify-center gap-1.5 border-b border-amber-300/60 bg-amber-50 px-3 py-1 text-[11px] leading-snug text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-300">
       <Info className="h-3 w-3 shrink-0" />
-      <span className="truncate">
+      <span className="text-center">
         <strong>SIMULATION</strong> · mock data ·{' '}
         {real ? `unofficial, not affiliated with ${name}` : 'original demo client'}
       </span>
@@ -121,7 +124,10 @@ function ContextPanel({ entry, real }: { entry: ClientEntry; real: boolean }) {
  * plainly and point at the clients that do work here.
  */
 function DesktopClientGate({ entry }: { entry: ClientEntry }) {
-  const mobileClients = clients.filter((c) => c.frame);
+  // Ready reproductions only. The gate's whole argument is "we'd rather send
+  // you elsewhere than show you a broken app" — recommending the unverified
+  // previews from that same screen would undercut it in one row.
+  const mobileClients = clients.filter((c) => c.frame && c.status === 'ready');
   return (
     <div className="flex h-full flex-col items-center justify-center gap-5 px-6 text-center">
       <ClientGlyph client={entry} className="h-14 w-14" />
@@ -185,6 +191,18 @@ export default function ClientView() {
     if (localStorage.getItem('sandstr-theme')) return;
     document.documentElement.classList.toggle('dark', clientTheme === 'dark');
   }, [clientTheme]);
+
+  // Keep client routes out of search indexes (robots.txt Disallow: /c/ is the
+  // main lever; this covers crawlers that render JS anyway). A pixel-faithful
+  // /c/damus ranking for "Damus" is the textbook confusion pattern, and that
+  // ranking is worth nothing to us — the gallery is the page that should rank.
+  useEffect(() => {
+    const meta = document.createElement('meta');
+    meta.name = 'robots';
+    meta.content = 'noindex';
+    document.head.appendChild(meta);
+    return () => meta.remove();
+  }, []);
 
   if (!entry) {
     return (
