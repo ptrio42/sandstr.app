@@ -1,15 +1,21 @@
 # Sandstr
 
-**Try every Nostr client in your browser — no keys, no install.**
+**Try Nostr clients in your browser — no keys, no install.**
 
-A standalone extraction of the "client simulators" feature originally built inside the
-`nostrich.love` beginner guide. Interactive, in-browser simulations of 10 Nostr clients
-(Damus, Amethyst, Primal, Snort, YakiHonne, Coracle, Gossip, Keychat, Olas + the original
-**Nostr Kitten**), with guided tours and mock data. No backend, no network, no real crypto.
+Interactive, in-browser simulations of real Nostr clients, with guided tours and mock data.
+No backend, no network, no real crypto — everything is static and computed in your browser
+([PRIVACY.md](PRIVACY.md)).
 
-> **Status: extraction spike.** This is the first isolated build — it lifts the feature out of
-> the Astro guide into a standalone Vite + React SPA and gets all 10 simulators rendering under
-> their own shell. Polish, branding, and the trademark/permission motion are follow-up phases.
+**Honest state of the shelf:** 4 reproductions are reference-verified and ready to try
+(Damus, Amethyst, Primal, YakiHonne — rebuilt screen by screen against recordings of the
+real apps), 5 more are clickable early previews (Snort, Coracle, Gossip, Keychat, Olas),
+plus **Nostr Kitten**, an original demo client of our own. The gallery labels each one
+accordingly.
+
+Every simulator is unofficial and unaffiliated; client names and designs belong to their
+teams ([TRADEMARKS.md](TRADEMARKS.md)). Each view carries a permanent
+"SIMULATION · mock data · unofficial" banner, and all identities in the mock feeds are
+fictional.
 
 ## Stack
 

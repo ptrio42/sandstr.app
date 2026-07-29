@@ -1,6 +1,8 @@
 # Sandstr — CLAUDE.md
 
-Samodzielny, w 100% kliencki produkt: **„try 10 Nostr clients in your browser — no keys, no install"**.
+Samodzielny, w 100% kliencki produkt: **„try Nostr clients in your browser — no keys, no install"**.
+(Bez liczby w taglinie — publiczna narracja to „4 wierne reprodukcje + 5 early previews + 1 original",
+sterowana osią `status`/`kind` w `src/registry.tsx`, nie „10 klientów".)
 **Rdzeń wartości = REAL-CLIENTS-FIRST:** wierne, wysokiej wierności, przeglądarkowe reprodukcje **realnych,
 brandowanych klientów Nostr** (Damus, Amethyst, Primal, Snort, YakiHonne, Coracle, Keychat, Olas, Gossip) —
 bez kluczy, bez instalacji. **Wierność wobec prawdziwych appek JEST produktem** — użytkownik ma naprawdę
@@ -40,7 +42,10 @@ Podgląd w sesji: `.claude/launch.json` → config **sandstr** (`preview_start`,
 - **`src/utils/cn.ts`** — `clsx` + `tailwind-merge`.
 - **`src/host/`** — NOWA warstwa hosta (nie z oryginału): `Layout` (topbar + theme toggle), `Gallery`
   (landing), `ClientView` (montuje klienta + ramkę + **baner disclaimera**).
-- **`src/registry.tsx`** — mapa `id → { Component (lazy), platforma, ramka, tour }`. **TU dodajesz/mapujesz
+- **`src/registry.tsx`** — mapa `id → { Component (lazy), platforma, ramka, tour, status, kind }`.
+  Oś gotowości: `status: ready|preview|planned` + `kind: reproduction|original` (+ `statusNote` dla
+  preview) steruje sekcjami galerii, chipami i wierszem poleceń w bramce mobile; `lead` jest DERYWOWANE
+  (`ready && reproduction`), nie ustawiaj ręcznie. **TU dodajesz/mapujesz
   klienta.** Odwzorowuje 1:1 dawne strony `.astro` z oryginału.
 
 **Montowanie klienta:** mobilne (ios/android) w `MobilePhoneFrame`; web/desktop bez ramki.
@@ -79,9 +84,13 @@ Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` + `TRADEMARKS.md`.
 - **Wzorzec wierności:** **Amethyst** i **Damus** — głębokie, zweryfikowane referencyjnie flagowce/szablony
   (Amethyst 8 powierzchni; Damus 11) — inline-SVG robohash avatary, lokalne media postów jako `data:`-URI,
   offline/CSP-safe, tokeny z repo klienta + weryfikacja side-by-side z realnym recordingiem. Do nich równamy.
-- **Dopieszczeni 2026-07-14 (wierność):** **Amethyst, Damus, Snort, YakiHonne, Primal (web)** (+ Nostr
-  Kitten jako opcjonalny easter-egg, nie lider).
-- **Druga fala** (odłożone: słabsza wierność / bugi): Keychat, Olas, Coracle, Gossip. (Primal-MOBILE stub.)
+- **READY (status w `registry.tsx`, 2026-07-28): Amethyst, Damus, YakiHonne, Primal (web)** — zweryfikowane
+  referencyjnie (screen-map + fidelity pass). (+ Nostr Kitten: `kind: 'original'`, opcjonalny easter-egg,
+  nie lider i nie front door.)
+- **Druga fala / PREVIEW** (słabsza wierność / bugi): **Snort** (korekta wcześniejszego wpisu — zero
+  realnych tokenów, brak `docs/refs/snort/screen-map.md`; wymaga pełnego recon→rebuild), Keychat, Olas,
+  Coracle, Gossip. (Primal-MOBILE stub, nieroutowany.) Galeria etykietuje je „Early preview" +
+  `statusNote`; nie przedstawiaj ich jako skończonych.
 - **Primal web (ZROBIONE 2026-07-14):** rebuild z recordingu + recon → `docs/refs/primal/screen-map.md`
   (autorytatywny: exact tokeny `palette.scss` Midnight/Ice, NavMenu, NoteFooter, Explore/Notifications/DMs).
   3-kolumnowy (lewy nav / feed / prawy sidebar); Ice(light, w recordingu) + Midnight(dark, OLED, realny

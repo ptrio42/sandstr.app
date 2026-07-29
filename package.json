@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "license": "MIT",
   "type": "module",
-  "description": "Try every Nostr client in your browser — no keys, no install. Interactive, fully client-side simulations of real Nostr clients.",
+  "description": "Try Nostr clients in your browser — no keys, no install. Interactive, fully client-side simulations of real Nostr clients.",
   "author": "ptrio42",
   "scripts": {
     "dev": "vite",

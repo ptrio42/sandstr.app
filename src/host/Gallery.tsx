@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, KeyRound, Sparkles, Zap } from 'lucide-react';
+import { ArrowRight, KeyRound, ServerOff, Sparkles } from 'lucide-react';
 import { clients, type ClientEntry } from '../registry';
 
 function PlatformBadge({ platform }: { platform: ClientEntry['platform'] }) {
@@ -11,6 +11,29 @@ function PlatformBadge({ platform }: { platform: ClientEntry['platform'] }) {
   );
 }
 
+/**
+ * Status chips are deliberately NEUTRAL GRAY — amber belongs to the simulation
+ * disclaimer alone, and the "Ready" story is told by the section heading, not
+ * by shouting on every card.
+ */
+function StatusChip({ c }: { c: ClientEntry }) {
+  if (c.kind === 'original') {
+    return (
+      <span className="absolute left-4 top-4 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+        Original
+      </span>
+    );
+  }
+  if (c.status === 'preview') {
+    return (
+      <span className="absolute left-4 top-4 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+        Early preview
+      </span>
+    );
+  }
+  return null;
+}
+
 function ClientCard({ c }: { c: ClientEntry }) {
   return (
     <Link
@@ -18,11 +41,7 @@ function ClientCard({ c }: { c: ClientEntry }) {
       className="group relative flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-800 dark:bg-gray-900"
     >
       <PlatformBadge platform={c.platform} />
-      {c.lead && (
-        <span className="absolute left-4 top-4 rounded-full bg-primary-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-700 dark:bg-primary-900/40 dark:text-primary-300">
-          ★ pick
-        </span>
-      )}
+      <StatusChip c={c} />
 
       <div
         className="mt-6 mb-4 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl text-3xl"
@@ -39,6 +58,10 @@ function ClientCard({ c }: { c: ClientEntry }) {
         {c.name}
       </h3>
       <p className="mb-4 flex-1 text-sm text-gray-600 dark:text-gray-400">{c.description}</p>
+
+      {c.statusNote && (
+        <p className="mb-4 text-xs italic leading-relaxed text-gray-400 dark:text-gray-500">{c.statusNote}</p>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {c.features.slice(0, 4).map((f) => (
@@ -61,7 +84,28 @@ function ClientCard({ c }: { c: ClientEntry }) {
   );
 }
 
+function Section({ title, note, items }: { title: string; note?: string; items: ClientEntry[] }) {
+  if (items.length === 0) return null;
+  return (
+    <section className="mb-12">
+      <div className="mb-5">
+        <h2 className="text-lg font-semibold">{title}</h2>
+        {note && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{note}</p>}
+      </div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {items.map((c) => (
+          <ClientCard key={c.id} c={c} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function Gallery() {
+  const ready = clients.filter((c) => c.kind === 'reproduction' && c.status === 'ready');
+  const previews = clients.filter((c) => c.kind === 'reproduction' && c.status === 'preview');
+  const originals = clients.filter((c) => c.kind === 'original');
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-12">
       <section className="mb-14 text-center">
@@ -74,8 +118,9 @@ export default function Gallery() {
           </span>
         </h1>
         <p className="mx-auto mb-6 max-w-2xl text-lg text-gray-600 dark:text-gray-400">
-          Interactive, in-browser simulations of {clients.length} Nostr clients. Feel what each one is like before you
-          commit to an install — or a keypair.
+          Interactive, in-browser simulations of real Nostr clients — {ready.length} faithful
+          reproductions ready to try, {previews.length} more in progress. Feel what each one is like
+          before you commit to an install — or a keypair.
         </p>
         <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500">
           <span className="inline-flex items-center gap-1.5">
@@ -85,16 +130,26 @@ export default function Gallery() {
             <Sparkles className="h-4 w-4" /> No signup
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <Zap className="h-4 w-4" /> Nothing leaves your browser
+            <ServerOff className="h-4 w-4" /> No server
           </span>
         </div>
       </section>
 
-      <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {clients.map((c) => (
-          <ClientCard key={c.id} c={c} />
-        ))}
-      </section>
+      <Section
+        title="Ready to try"
+        note="Reference-verified reproductions — rebuilt screen by screen against recordings of the real apps."
+        items={ready}
+      />
+      <Section
+        title="Early previews"
+        note="Clickable, but not yet verified against the real clients. Treat the look as approximate."
+        items={previews}
+      />
+      <Section
+        title="Not a real Nostr client"
+        note="Our own creation — no real-world counterpart, no trademark, just proof the shell can host anything."
+        items={originals}
+      />
     </main>
   );
 }

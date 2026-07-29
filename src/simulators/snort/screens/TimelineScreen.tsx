@@ -211,14 +211,13 @@ export const TimelineScreen: React.FC<TimelineScreenProps> = ({
               )
             ))}
 
-            {/* Load More */}
-            <div className="py-6 text-center">
-              <button
-                onClick={() => console.log('[Snort] Load more')}
-                className="snort-btn snort-btn-secondary"
-              >
-                Load more posts
-              </button>
+            {/* No "Load more": the feed is a fixed mock set, so the button did
+                nothing but `console.log` — and as an arrow BODY that log was the
+                handler's return value, which esbuild's `pure` list cannot drop,
+                so it shipped in the production bundle. A dead control is worse
+                than no control; the end of the feed is simply the end. */}
+            <div className="py-6 text-center text-sm text-[var(--snort-text-tertiary)]">
+              You're all caught up.
             </div>
           </>
         )}

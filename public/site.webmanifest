@@ -1,7 +1,7 @@
 {
   "name": "Sandstr — try Nostr clients",
   "short_name": "Sandstr",
-  "description": "Try every Nostr client in your browser — no keys, no install.",
+  "description": "Try Nostr clients in your browser — no keys, no install.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0B0B10",
