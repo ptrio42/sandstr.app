@@ -35,6 +35,20 @@ export interface ClientEntry {
   kind: ClientKind;
   /** one honest sentence shown on preview cards — what "early preview" means here */
   statusNote?: string;
+  /**
+   * Where to send someone who wants the REAL client. This is the point of the
+   * whole product, so it is not optional data: a reproduction with no way out
+   * is a copy, a reproduction that hands you off is a signpost. Also the
+   * cheapest trademark mitigation available, and the opening line of the
+   * consent email. `homepage` is null when the project genuinely has no site
+   * (Gossip) — link the repo instead, never invent a domain.
+   */
+  homepage: string | null;
+  repo: string;
+  /** upstream SPDX id — feeds THIRD-PARTY.md attribution */
+  upstreamLicense: string;
+  /** how a human actually installs it, one clause */
+  installNote: string;
   /** DERIVED: a reference-verified reproduction (status ready + kind reproduction). */
   lead: boolean;
   /** the real client's shipping default theme; unset = follow the OS preference */
@@ -67,6 +81,23 @@ function once(fn: Loader): () => Promise<unknown> {
 // `status` — 'ready' requires reference verification (docs/refs/<id>/screen-map.md
 // + a fidelity pass). Snort stays 'preview' until it has one: it currently uses
 // none of the real client's tokens and has no committed reference material.
+// `homepage`/`repo`/`upstreamLicense`/`installNote` were verified against each
+// project's OWN site and repository on 2026-07-29 — not from memory and not from
+// aggregators. A dead or wrong outbound link would embarrass us in front of
+// exactly the people we need consent from, so re-verify before changing one.
+// Recorded caveats:
+//  - snort: the GitHub repo's `homepage` field now says phoenix.social, but
+//    snort.social and phoenix.social serve byte-identical builds and the PWA
+//    manifest is still "snort.social - Nostr interface", with no rename
+//    announcement found. snort.social is the brand-correct link today; check
+//    with Kieran before switching. (git.v0l.io is a MIRROR — GitHub is canonical.)
+//  - gossip: genuinely has no website. homepage stays null; we link the repo.
+//  - olas: pablof7z/olas is the MIT repo behind the shipped app but was last
+//    pushed 2025-07; olas-nmp looks like an unlicensed in-progress rewrite. Its
+//    LICENSE.md copyright line is leftover create-expo-app boilerplate naming
+//    someone else — the SPDX id is safe to record, that name is NOT.
+//  - yakihonne: attribute YakiHonne/web-app; the *-web-app / *-mobile-app repos
+//    are archived.
 const MOUNTS: Record<
   string,
   {
@@ -76,6 +107,10 @@ const MOUNTS: Record<
     statusNote?: string;
     className?: string;
     theme?: 'dark' | 'light';
+    homepage: string | null;
+    repo: string;
+    upstreamLicense: string;
+    installNote: string;
     load: Loader;
   }
 > = {
@@ -84,6 +119,10 @@ const MOUNTS: Record<
     tour: true,
     status: 'ready',
     theme: 'dark',
+    homepage: 'https://damus.io',
+    repo: 'https://github.com/damus-io/damus',
+    upstreamLicense: 'GPL-3.0',
+    installNote: 'iOS App Store; Android as a direct APK from damus.io',
     load: () => import('./simulators/damus/DamusSimulatorWithTour'),
   },
   amethyst: {
@@ -91,6 +130,10 @@ const MOUNTS: Record<
     tour: true,
     status: 'ready',
     theme: 'dark',
+    homepage: 'https://amethyst.social',
+    repo: 'https://github.com/vitorpamplona/amethyst',
+    upstreamLicense: 'MIT',
+    installNote: 'Google Play, Zapstore, Obtainium, or a release APK',
     load: () => import('./simulators/amethyst/AmethystSimulatorWithTour'),
   },
   keychat: {
@@ -98,6 +141,10 @@ const MOUNTS: Record<
     tour: true,
     status: 'preview',
     statusNote: 'Brand and layout not yet verified against the real client.',
+    homepage: 'https://keychat.io',
+    repo: 'https://github.com/keychat-io/keychat-app',
+    upstreamLicense: 'AGPL-3.0',
+    installNote: 'iOS App Store, Google Play, or a release APK',
     load: () => import('./simulators/keychat/KeychatSimulatorWithTour'),
   },
   olas: {
@@ -105,6 +152,10 @@ const MOUNTS: Record<
     tour: true,
     status: 'preview',
     statusNote: 'An early sketch — not yet a faithful reproduction.',
+    homepage: 'https://olas.app',
+    repo: 'https://github.com/pablof7z/olas',
+    upstreamLicense: 'MIT',
+    installNote: 'iOS App Store, Android via Zapstore, or olas.app in a browser',
     load: () => import('./simulators/olas/OlasSimulatorWithTour'),
   },
   yakihonne: {
@@ -112,6 +163,10 @@ const MOUNTS: Record<
     tour: true,
     status: 'ready',
     theme: 'light',
+    homepage: 'https://yakihonne.com',
+    repo: 'https://github.com/YakiHonne/web-app',
+    upstreamLicense: 'MIT',
+    installNote: 'Web app, no install; also on the iOS App Store and Google Play',
     load: () => import('./simulators/yakihonne/YakiHonneSimulatorWithTour'),
   },
   snort: {
@@ -119,6 +174,10 @@ const MOUNTS: Record<
     tour: true,
     status: 'preview',
     statusNote: 'Layout and brand marks not yet verified against the real client.',
+    homepage: 'https://snort.social',
+    repo: 'https://github.com/v0l/snort',
+    upstreamLicense: 'MIT',
+    installNote: 'Web app, no install; Android wrapper on Google Play',
     load: () => import('./simulators/snort/SnortSimulatorWithTour'),
   },
   primal: {
@@ -126,6 +185,10 @@ const MOUNTS: Record<
     tour: true,
     status: 'ready',
     theme: 'dark',
+    homepage: 'https://primal.net',
+    repo: 'https://github.com/PrimalHQ/primal-web-app',
+    upstreamLicense: 'MIT',
+    installNote: 'Web app, no install; native iOS and Android apps too',
     load: () => import('./simulators/primal/PrimalWebSimulatorWithTour'),
   },
   coracle: {
@@ -133,6 +196,10 @@ const MOUNTS: Record<
     tour: false,
     status: 'preview',
     statusNote: 'An early sketch — not yet a faithful reproduction.',
+    homepage: 'https://coracle.social',
+    repo: 'https://github.com/coracle-social/coracle',
+    upstreamLicense: 'MIT',
+    installNote: 'Web app, no install; installable as a PWA',
     load: () => import('./simulators/coracle').then((m) => ({ default: m.CoracleSimulator })),
   },
   gossip: {
@@ -140,6 +207,10 @@ const MOUNTS: Record<
     tour: false,
     status: 'preview',
     statusNote: 'The real Gossip is a native desktop app; this is a rough web sketch.',
+    homepage: null,
+    repo: 'https://github.com/mikedilger/gossip',
+    upstreamLicense: 'MIT',
+    installNote: 'Native desktop binary for macOS, Linux or Windows from GitHub Releases',
     load: () => import('./simulators/gossip').then((m) => ({ default: m.GossipSimulator })),
   },
 };
@@ -163,6 +234,11 @@ const nostrKitten: ClientEntry = {
   status: 'ready',
   kind: 'original',
   lead: false,
+  // Ours, so the handoff points at this repo rather than someone else's project.
+  homepage: null,
+  repo: 'https://github.com/ptrio42/sandstr',
+  upstreamLicense: 'MIT',
+  installNote: 'Not a real client — it only exists here',
   className: 'h-full',
   Component: lazy(kittenLoad),
   preload: once(kittenLoad),
@@ -184,6 +260,10 @@ const branded: ClientEntry[] = Object.values(allSimulatorConfigs).map((cfg) => {
     status: mount.status,
     kind: 'reproduction' as const,
     statusNote: mount.statusNote,
+    homepage: mount.homepage,
+    repo: mount.repo,
+    upstreamLicense: mount.upstreamLicense,
+    installNote: mount.installNote,
     lead: mount.status === 'ready',
     defaultTheme: mount.theme,
     className: mount.className,

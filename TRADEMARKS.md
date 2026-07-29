@@ -21,5 +21,7 @@ open an issue or get in touch — the reproduction of your work exists to send
 users *to* you, and it will be corrected or removed on request, no questions
 asked.
 
-A per-client attribution inventory (what was referenced vs. copied, and under
-which upstream license) is tracked in `THIRD-PARTY.md` (in progress).
+A per-client attribution inventory — what was referenced vs. copied, each
+project's upstream license, and the open items we know about — is in
+[THIRD-PARTY.md](THIRD-PARTY.md). Every client view also links out to the real
+client, because sending people to you is the point.
