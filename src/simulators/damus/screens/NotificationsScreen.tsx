@@ -26,7 +26,7 @@ export const NotificationsScreen: React.FC<Props> = ({ currentUser, notes, users
 
   return (
     <div className="min-h-full bg-[var(--damus-bg)]" data-tour="damus-notifications">
-      <header className="sticky top-0 z-30 bg-[var(--damus-bg)]/85 backdrop-blur-xl">
+      <header className="damus-topbar">
         <div className="flex items-center gap-3 px-4 pt-2 pb-1">
           <button onClick={onOpenDrawer}><Avatar seed={me} className="w-9 h-9" /></button>
           <div className="flex-1 text-center">
@@ -41,8 +41,10 @@ export const NotificationsScreen: React.FC<Props> = ({ currentUser, notes, users
         <div className="flex px-2">
           {([['all', 'All'], ['zaps', 'Zaps'], ['mentions', 'Mentions']] as const).map(([id, label]) => (
             <button key={id} onClick={() => setTab(id)} className="flex-1 py-2.5 relative text-[16px] font-semibold">
-              <span className={tab === id ? 'text-[var(--damus-text)]' : 'text-[var(--damus-text-secondary)]'}>{label}</span>
-              {tab === id && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-full damus-underline" />}
+              <span className="relative inline-block">
+                <span className={tab === id ? 'text-[var(--damus-text)]' : 'text-[var(--damus-text-secondary)]'}>{label}</span>
+                {tab === id && <span className="absolute -bottom-[7px] -left-1 -right-1 h-[3px] rounded-full damus-underline" />}
+              </span>
             </button>
           ))}
         </div>

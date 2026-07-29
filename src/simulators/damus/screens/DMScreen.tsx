@@ -22,7 +22,7 @@ export const DMScreen: React.FC<Props> = ({ currentUser, users, onOpenDrawer, on
 
   return (
     <div className="min-h-full bg-[var(--damus-bg)]">
-      <header className="sticky top-0 z-30 bg-[var(--damus-bg)]/85 backdrop-blur-xl">
+      <header className="damus-topbar">
         <div className="flex items-center gap-3 px-4 pt-2 pb-2">
           <button onClick={onOpenDrawer}><Avatar seed={me} className="w-9 h-9" /></button>
           <div className="flex-1 text-center font-bold text-[17px] text-[var(--damus-text)]">DMs</div>

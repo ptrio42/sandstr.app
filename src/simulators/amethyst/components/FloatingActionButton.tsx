@@ -25,9 +25,10 @@ export function FloatingActionButton({
   };
 
   const variantStyles = {
+    // Real Amethyst FAB: solid brand purple (not the muted primary-container)
     primary: {
-      backgroundColor: 'var(--md-primary-container)',
-      color: 'var(--md-on-primary-container)',
+      backgroundColor: 'var(--md-primary)',
+      color: 'var(--md-on-primary)',
     },
     secondary: {
       backgroundColor: 'var(--md-secondary-container)',
@@ -42,7 +43,7 @@ export function FloatingActionButton({
   return (
     <motion.button
       onClick={onClick}
-      className={`md-fab ${sizeClasses[size]} rounded-2xl flex items-center justify-center shadow-lg`}
+      className={`md-fab ${sizeClasses[size]} rounded-full flex items-center justify-center shadow-lg`}
       data-tour="amethyst-fab"
       style={variantStyles[variant]}
       whileHover={{ scale: 1.05, boxShadow: '0 8px 12px 6px rgba(0, 0, 0, 0.15), 0 4px 4px 0px rgba(0, 0, 0, 0.3)' }}

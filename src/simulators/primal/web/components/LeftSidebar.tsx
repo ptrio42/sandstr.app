@@ -11,7 +11,8 @@ const NAV: NavDef[] = [
   { id: 'home', label: 'Home', Icon: Home, fillable: true },
   { id: 'reads', label: 'Reads', Icon: AlignLeft },
   { id: 'explore', label: 'Explore', Icon: Compass },
-  { id: 'messages', label: 'Messages', Icon: Mail, fillable: true, badge: '99+' },
+  // Mail is NOT fillable — filling the envelope rect renders a solid rectangle
+  { id: 'messages', label: 'Messages', Icon: Mail, badge: '99+' },
   { id: 'bookmarks', label: 'Bookmarks', Icon: Bookmark, fillable: true },
   { id: 'notifications', label: 'Notifications', Icon: Bell, fillable: true, badge: '99+' },
   { id: 'downloads', label: 'Downloads', Icon: Download, badge: '2' },

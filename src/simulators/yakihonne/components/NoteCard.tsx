@@ -55,11 +55,11 @@ export const NoteCard: React.FC<Props> = ({ note, onOpenThread, onViewProfile, o
   return (
     <article
       onClick={onOpenThread}
-      className="px-4 pt-3.5 pb-2.5 border-b border-[var(--yh-divider)] cursor-pointer"
+      className="px-2.5 pt-3.5 pb-2.5 border-b border-[var(--yh-divider)] cursor-pointer"
     >
       <div className="flex gap-3 items-start">
         <button onClick={stop(onViewProfile)} className="shrink-0 mt-0.5 self-start">
-          <Avatar seed={note.seed} className="w-11 h-11" zap={note.zap} />
+          <Avatar seed={note.seed} className="w-[30px] h-[30px]" zap={note.zap} />
         </button>
 
         <div className="flex-1 min-w-0">
@@ -116,27 +116,29 @@ export const NoteCard: React.FC<Props> = ({ note, onOpenThread, onViewProfile, o
             </div>
           )}
 
-          {/* action bar — react · reply · repost · quote · zap  +  translate · more */}
+          {/* action bar — react · reply · repost · quote · zap  +  translate · more.
+              Five flex-1 actions + natural-width trailing icons: the zap count can no
+              longer collide with the translate icon (fixed 19%-width overlap bug). */}
           <div className="flex items-center mt-2.5 pr-0.5" data-tour="yakihonne-interactions">
-            <button onClick={stop(toggleLike)} className={`yakihonne-action is-like ${liked ? 'active' : ''} w-[19%]`}>
+            <button onClick={stop(toggleLike)} className={`yakihonne-action is-like ${liked ? 'active' : ''} flex-1 min-w-0`}>
               {liked && note.reactionEmoji
                 ? <span className="text-[16px] leading-none">{note.reactionEmoji}</span>
                 : <HeartIcon filled={liked} className="w-[21px] h-[21px]" />}
               <span>{reactions}</span>
             </button>
-            <button onClick={stop(onReply)} className="yakihonne-action w-[19%]">
+            <button onClick={stop(onReply)} className="yakihonne-action flex-1 min-w-0">
               <CommentIcon className="w-[21px] h-[21px]" /><span>{note.replies}</span>
             </button>
-            <button onClick={stop(toggleRepost)} className={`yakihonne-action ${reposted ? 'active is-zap' : ''} w-[19%]`}>
+            <button onClick={stop(toggleRepost)} className={`yakihonne-action ${reposted ? 'active is-zap' : ''} flex-1 min-w-0`}>
               <RepostIcon className="w-[21px] h-[21px]" /><span>{reposts}</span>
             </button>
-            <button onClick={stop()} className="yakihonne-action w-[19%]">
+            <button onClick={stop()} className="yakihonne-action flex-1 min-w-0">
               <QuoteIcon className="w-[19px] h-[19px]" /><span>{note.quotes}</span>
             </button>
-            <button onClick={stop(doZap)} data-tour="yakihonne-zaps" className={`yakihonne-action is-zap ${zapped ? 'active' : ''} w-[19%]`}>
+            <button onClick={stop(doZap)} data-tour="yakihonne-zaps" className={`yakihonne-action is-zap ${zapped ? 'active' : ''} flex-1 min-w-0`}>
               <ZapIcon filled={zapped} className="w-[21px] h-[21px]" /><span>{abbrev(zaps)}</span>
             </button>
-            <div className="ml-auto flex items-center gap-2 text-[var(--yh-text-2)]">
+            <div className="shrink-0 pl-2 flex items-center gap-2 text-[var(--yh-text-2)]">
               <button onClick={stop()} aria-label="Translate"><TranslateIcon className="w-[21px] h-[21px]" /></button>
               <button onClick={stop()} aria-label="More"><EllipsisVIcon className="w-5 h-5" /></button>
             </div>

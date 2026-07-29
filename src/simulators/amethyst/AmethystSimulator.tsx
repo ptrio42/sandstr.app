@@ -218,9 +218,9 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
           />
         );
       case 'search':
-        return <SearchScreen key="search" />;
+        return <SearchScreen key="search" onOpenDrawer={() => setIsDrawerOpen(true)} />;
       case 'video':
-        return <VideoScreen key="video" />;
+        return <VideoScreen key="video" onOpenDrawer={() => setIsDrawerOpen(true)} />;
       case 'notifications':
         return <NotificationsScreen key="notifications" onOpenDrawer={() => setIsDrawerOpen(true)} />;
       case 'messages':

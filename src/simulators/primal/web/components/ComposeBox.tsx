@@ -32,10 +32,11 @@ export function ComposeBox({ open, onOpen, onClose, onPost }: ComposeBoxProps) {
     <div className="primal-editor primal-compose" data-tour="primal-compose">
       <div className="flex gap-3 items-start">
         <Avatar seed={currentUser.name} className="w-11 h-11" />
+        {/* Real Primal's expanded editor has NO placeholder — the collapsed
+            "Say something on nostr..." pill carries the prompt (screen-map). */}
         <textarea
           ref={ref}
           className="primal-editor-input"
-          placeholder="What's on your mind?"
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={1}

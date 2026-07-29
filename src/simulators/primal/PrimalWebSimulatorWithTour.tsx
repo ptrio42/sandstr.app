@@ -6,7 +6,10 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { TourWrapper } from '../../components/tour';
 import { primalTourConfig } from '../../data/tours';
-import { PrimalWebSimulator as PrimalWebSimulatorBase } from './index';
+// Import directly from the web simulator — NOT the './index' barrel. The barrel
+// drags in the unrouted mobile stub whose theme CSS declares unscoped globals
+// (.primal-nav-badge & co.) that override the web theme (orange stacked badges).
+import { PrimalWebSimulator as PrimalWebSimulatorBase } from './web/WebSimulator';
 import type { TabId } from './web/WebSimulator';
 
 export interface SimulatorCommand {

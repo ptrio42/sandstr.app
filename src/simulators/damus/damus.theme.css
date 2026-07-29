@@ -18,10 +18,10 @@
   --damus-like: #8B49E8;          /* liked shaka = LINEAR_GRADIENT purple→blue (blended) */
   --damus-adorable-purple: #EF5FE8;
 
-  /* Signature gradients (from DamusColors.swift) */
-  --damus-pink-gradient: linear-gradient(160deg, #D34CD9 0%, #F869B6 100%);      /* PinkGradient — CTAs / banner / PFP ring */
-  --damus-linear-gradient: linear-gradient(150deg, #CC43C5 0%, #4B4DFF 100%);    /* LINEAR_GRADIENT purple→blue — FAB / underline / liked */
-  --damus-fab-gradient: linear-gradient(150deg, #CC43C5 0%, #4B4DFF 100%);       /* compose FAB fill */
+  /* Signature gradients (from DamusColors.swift) — topTrailing → bottom(Trailing) ≈ 200deg in CSS */
+  --damus-pink-gradient: linear-gradient(200deg, #D34CD9 0%, #F869B6 100%);      /* PinkGradient — CTAs / banner / PFP ring */
+  --damus-linear-gradient: linear-gradient(200deg, #CC43C5 0%, #4B4DFF 100%);    /* LINEAR_GRADIENT purple→blue — FAB / underline / liked */
+  --damus-fab-gradient: linear-gradient(200deg, #CC43C5 0%, #4B4DFF 100%);       /* compose FAB fill */
 
   /* Surfaces (light default; .dark overrides to OLED) */
   --damus-bg: #FFFFFF;
@@ -67,6 +67,17 @@
   --damus-separator: rgba(255, 255, 255, 0.10);
 }
 
+/* Sticky screen header — Tailwind's `bg-[var(--damus-bg)]/85` emits nothing
+   (opacity modifier on a CSS var), which left headers transparent while scrolling. */
+.damus-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: color-mix(in srgb, var(--damus-bg) 85%, transparent);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
 /* Scrollable content column */
 .damus-content {
   flex: 1;
@@ -84,17 +95,25 @@
   justify-content: center;
   padding: 10px 18px;
   border-radius: 999px;
-  font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.01em;
   transition: transform 0.12s ease, opacity 0.12s ease;
   cursor: pointer;
   border: none;
   outline: none;
-  color: #fff;
+  /* color + font-size live on the variants / callers — a base `color` here
+     beats Tailwind utilities (same specificity, later in cascade) and once
+     rendered the Follow button white-on-white. */
 }
 .damus-btn:active { transform: scale(0.97); }
-.damus-btn-gradient { background-image: var(--damus-pink-gradient); }
+/* GradientButtonStyle: rounded-rect radius 12 (NOT a capsule), PinkGradient fill, white text */
+.damus-btn-gradient {
+  background-image: var(--damus-pink-gradient);
+  color: #fff;
+  border-radius: 12px;
+}
+/* primary-CTA geometry without the gradient (e.g. disabled Post) */
+.damus-btn-cta { border-radius: 12px; }
 .damus-btn-pill {
   background: var(--damus-bg-tertiary);
   color: var(--damus-text);
@@ -175,7 +194,9 @@
   border-top: 1px solid var(--damus-separator);
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  z-index: 40;
+  /* Above push screens (thread/profile/bookmarks, z 50-52) — stack pushes keep the
+     tab bar mounted in real Damus. Below compose sheet (55) / drawer (60) / login (65). */
+  z-index: 53;
 }
 .damus-tab {
   display: flex;
@@ -206,7 +227,7 @@
   box-shadow: 0 8px 22px rgba(122, 56, 240, 0.45);
   cursor: pointer;
   border: none;
-  z-index: 45;
+  z-index: 53; /* rides above push screens, like the tab bar */
   transition: transform 0.14s ease;
 }
 .damus-fab:active { transform: scale(0.94); }

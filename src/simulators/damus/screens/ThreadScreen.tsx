@@ -76,10 +76,11 @@ export const ThreadScreen: React.FC<Props> = ({ note, notes, users, currentUser,
         <div className="h-20" />
       </div>
 
-      {/* reply bar */}
+      {/* reply bar — lifted above the tab bar, which stays mounted on stack pushes */}
       <button
         onClick={() => onReply(note)}
         className="flex items-center gap-3 px-4 py-2.5 border-t border-[var(--damus-separator)] bg-[var(--damus-bg)]"
+        style={{ marginBottom: 'calc(50px + env(safe-area-inset-bottom, 16px))' }}
       >
         <Avatar seed={currentUser?.username || 'sandy'} className="w-8 h-8" />
         <span className="flex-1 text-left text-[var(--damus-text-secondary)] text-[16px]">Type your note here...</span>

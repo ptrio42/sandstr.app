@@ -167,17 +167,19 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onLikePo
       </motion.div>
 
       {/* Feed */}
+      {/* Feed is flat and edge-to-edge (no gutters/gaps) like the real app;
+          notes draw their own divider between each other. */}
       <div
         ref={feedRef}
-        className="flex-1 overflow-y-auto p-2 space-y-2"
+        className="flex-1 overflow-y-auto"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         {/* LIVE now — real Amethyst shows a live-activities strip as the first feed item (NIP-53), NOT a stories carousel */}
         <button
-          className="flex items-center gap-3 -mx-2 mb-1 px-4 py-3 border-b border-[var(--md-outline-variant)] text-left"
-          style={{ width: 'calc(100% + 1rem)' }}
+          className="w-full flex items-center gap-3 px-4 py-3 text-left"
+          style={{ borderBottom: '1px solid var(--amethyst-feed-divider)' }}
         >
           <div className="w-11 h-11 rounded-full bg-gradient-to-br from-fuchsia-600 to-purple-700 shrink-0" />
           <div className="flex-1 min-w-0">

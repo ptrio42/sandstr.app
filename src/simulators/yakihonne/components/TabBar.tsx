@@ -5,14 +5,16 @@ export type YakiTab = 'home' | 'media' | 'wallet' | 'dms' | 'notifications';
 
 interface TabBarProps {
   active: YakiTab;
+  /** Owner decides FAB visibility (recording: Home notes feeds + Media + DMs; not Articles). */
+  fabVisible: boolean;
   onNavigate: (t: YakiTab) => void;
   onCompose: () => void;
 }
 
 // YakiHonne bottom bar: exactly 5 icon-only tabs (Home · Media · Wallet · DMs · Notifications).
 // Active tab is NOT orange — it uses the filled icon variant + a tiny dot below (white/black).
-// The compose FAB is a SEPARATE orange button, shown only on Home & Media.
-export const TabBar: React.FC<TabBarProps> = ({ active, onNavigate, onCompose }) => {
+// The compose FAB is a SEPARATE orange button; the root passes down which screens show it.
+export const TabBar: React.FC<TabBarProps> = ({ active, fabVisible, onNavigate, onCompose }) => {
   const tabs: { id: YakiTab; Icon: typeof HomeIcon; badge?: boolean }[] = [
     { id: 'home', Icon: HomeIcon },
     { id: 'media', Icon: VideoIcon },
@@ -21,11 +23,9 @@ export const TabBar: React.FC<TabBarProps> = ({ active, onNavigate, onCompose })
     { id: 'notifications', Icon: BellIcon, badge: true },
   ];
 
-  const showFab = active === 'home' || active === 'media';
-
   return (
     <>
-      {showFab && (
+      {fabVisible && (
         <button className="yakihonne-fab" aria-label="Compose" data-tour="yakihonne-compose" onClick={onCompose}>
           <PlusIcon className="w-7 h-7" />
         </button>

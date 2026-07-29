@@ -21,11 +21,11 @@ export const ArticleCard: React.FC<Props> = ({ article, onOpen, onViewProfile })
   const stop = (fn?: () => void) => (e: React.MouseEvent) => { e.stopPropagation(); fn?.(); };
 
   return (
-    <article onClick={onOpen} className="px-4 pt-4 pb-3 border-b border-[var(--yh-divider)] cursor-pointer">
+    <article onClick={onOpen} className="px-2.5 pt-4 pb-3 border-b border-[var(--yh-divider)] cursor-pointer">
       {/* author row */}
       <div className="flex items-center gap-2.5">
         <button onClick={stop(onViewProfile)} className="shrink-0">
-          <Avatar seed={article.authorSeed} className="w-8 h-8" />
+          <Avatar seed={article.authorSeed} className="w-[30px] h-[30px]" />
         </button>
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
