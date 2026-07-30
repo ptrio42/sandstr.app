@@ -12,7 +12,10 @@
 - ✅ **YakiHonne** (13) — `eacd2c3`, `docs/refs/yakihonne/screen-map.md`
 - ✅ **Primal (web)** (9 powierzchni: Home/Explore/Notifications/Messages/Bookmarks/Profile/Settings/Thread/Login + compose + search-drop) — `docs/refs/primal/screen-map.md` (autorytatywny, 14 sekcji z `PrimalHQ/primal-web-app@main`). Ice(light)+Midnight(dark) OLED, accent BLUE `#2394EF`, akcje reply→zap→like→repost→bookmark (zap 2., like=magenta `#f800c1`), swirl-logo (verbatim path + gradient `#00E0FF→#0090F8→#2554ED`).
 
-**Do zrobienia (druga fala, słabsza wierność / stare stuby):** Snort, Keychat, Olas, Coracle, Gossip. Tokeny + killery każdego są niżej w tym pliku; korekty kolorów w `[[client-fidelity-ground-truth]]`. (Primal-MOBILE nadal stary stub — zrobiony tylko web.)
+**RECON zrobiony, REBUILD pending:**
+- 🟡 **Snort (web)** — `docs/refs/snort/screen-map.md` (autorytatywny, 19 sekcji / 12 powierzchni; recording 2026-07-14 + `v0l/snort@3cc8317`, commit `d1766b7`). **Symulator NIE przebudowany** — spec istnieje, kod nadal preview-tier. Skrót killerów: accent violet `--highlight` `#ac88ff`(dark)/`#7139f1`(light) **współistnieje** z CTA `--primary #ff3f15` (obecny teal to błąd — `#1ecbe1` to wyłącznie `--repost`) · reakcja = **SERCE `#ef4444`, nie emoji** · akcje **reply→repost→heart→[PoW]→zap→avatary zapperów** (ikony 18px, brak share i bookmark — są w `…`) · selektor feedu = **DROPDOWN**, w całym Snorcie **nie ma tabów z podkreśleniem** (drugi idiom to pill-row `TabSelectors`) · **domyślny motyw = `system`**, nie dark · **Deck = martwy kod** (patrz korekta niżej) · w light mode `.light button` bije utility Tailwinda, więc prawie wszystkie guziki są białe.
+
+**Do zrobienia (druga fala, słabsza wierność / stare stuby):** Keychat, Olas, Coracle, Gossip. Tokeny + killery każdego są niżej w tym pliku; korekty kolorów w `[[client-fidelity-ground-truth]]`. (Primal-MOBILE nadal stary stub — zrobiony tylko web.)
 
 **Start następnej sesji (agent robiący kolejny symulator):**
 1. **Użytkownik NAJPIERW wrzuca referencję** do `docs/refs/<client>/shots/` — screen-RECORDING (mobile: Keychat/Olas/Primal-mobile) albo screeny/live-capture (web za Cloudflare: Snort/Primal-web/Coracle — `WebFetch` daje pustą skorupę). Bez realnego renderu nie startuj (layout ≠ pamięć).
@@ -67,10 +70,14 @@ Pełny how-to w pamięci `[[fidelity-repro-playbook]]`.
 ## Per-client kit (zweryfikowane, confidence: high)
 
 ### Snort — web (repo `v0l/snort`, MIT)
-- **Tokeny:** `packages/app/src/index.css` (`:root` custom props) + `tailwind.config`. Żywa instancja: `snort.social` (devtools).
+- 📄 **Pełny spec: `docs/refs/snort/screen-map.md`** (19 sekcji, cytaty do plików repo). Poniżej tylko streszczenie.
+- **Tokeny:** `packages/app/src/index.css` — ⚠ **korekta:** to **Tailwind v4, blok `@theme{}`** (nie `:root`), a **`tailwind.config` NIE ISTNIEJE** w repo. Dark = baza `@theme`, light = override `html.light`. Skala typografii to **domyślna skala Tailwinda** (`--font-size-*` w `@theme` nie generują żadnych klas w v4; `--font-size-small`/`-tiny` są martwe). Żywa instancja: `snort.social` (devtools).
 - **Paleta (confirmed):** accent fiolet `--highlight` `#ac88ff` dark / `#7139f1` light · CTA orange-red `--primary` `#ff3f15` · sygnaturowy gradient `#a178ff→#ff6baf` · DM gradient `#5722d2→#db1771` · mention `#961ee1` · zap `#ff710a` · bg `#000`/`#fff`, warstwa `#090909`/`#f9f9f9` · font **Inter**.
-- **Nav / killer:** dark-first; **lewy sidebar** (web, nie bottom-tab); pill-buttony `border-radius:100px`; sygnatura = **Deck mode** (wielokolumnowy); akcent fiolet i CTA oranż współistnieją — nie zlewaj. (Obecny sim: teal = błąd.)
-- **Opt-in:** Kieran (`v0l`) — GitHub/Gitea `git.v0l.io`, aktywny na Nostr.
+- **Nav / killer:** **lewy sidebar** (web, nie bottom-tab) — Home/Discover/Notifications/Messages/Settings, aktywny = **swap ikony outline→solid + `font-bold`, BEZ tła/paska**, labelki **tylko ≥1280px** (niżej goły rail, ≤768px sidebar znika i pojawia się dolny bar 56px); widget salda sats w railu; czerwony pill „＋ New Note"; pill-buttony `border-radius:100px` (każdy goły `<button>` i każdy `input`/`select`); akcent fiolet i CTA oranż współistnieją — nie zlewaj. (Obecny sim: teal = błąd.)
+- ⚠ **Korekta „sygnatury":** **Deck mode NIE jest sygnaturą — to martwy kod.** Potrójnie zablokowany: `features.deck: false` w `config/default.json`, dodatkowo paywall subskrypcji (`deckSubKind: 1`, a `features.subscriptions: false`), a `SnortDeckLayout` **nie jest nigdzie zaimportowany** → **route `/deck` nie istnieje** (wpada w catch-all `/:link`). Nie buduj na nim symulatora i nie opisuj go jako dostępnego trybu.
+- ⚠ **Korekta „dark-first":** baza CSS jest ciemna, ale domyślna preferencja to **`theme: "system"`** (`Utils/Login/Preferences.ts`), a `useTheme.tsx` przełącza klasy `.light`/`.dark` na `<html>` — czyli user w light mode widzi **jasny** Snort (recording właśnie taki jest). Rób OBA motywy i oddaj sterowanie hostowemu `useParentTheme`.
+- **Multi-brand:** repo buduje 6 marek z jednego kodu (`config/{default,iris,meku,nostr,phoenix,soloco}.json`, wybór przez `NODE_CONFIG_ENV`). `default.json` **to Snort** i wszystkie 4 pipeline'y Drone budują `default` → Snort jest kanoniczny; phoenix.social to white-label (patrz otwarte pytanie w nagłówku screen-mapy).
+- **Opt-in:** Kieran (`v0l`) — **GitHub `github.com/v0l/snort` jest kanoniczny, `git.v0l.io` to mirror** (zweryfikowane 2026-07-29); aktywny na Nostr. Licencja MIT, © 2023 Kieran (v0l). Marka = raster `nostrich_*.png` (fioletowy struś) — **nie shipuj go bez zgody**, użyj `ClientGlyph`.
 
 ### Amethyst — Android (repo `vitorpamplona/amethyst`, MIT)
 - **Tokeny:** `amethyst/src/main/java/com/vitorpamplona/amethyst/ui/theme/Color.kt` (raw) + `Theme.kt` (light/dark ColorScheme) + `Type.kt` / `Shape.kt`. Brak wersji web — weryfikuj ze źródła + screenów Play.
