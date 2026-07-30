@@ -38,7 +38,7 @@ npm run preview
 The feature is self-contained. These trees were copied verbatim, preserving `src/`-relative
 paths so internal imports resolve unchanged:
 
-- `src/simulators/` — the feature (shared foundation + 10 clients)
+- `src/simulators/` — the feature (shared foundation + all client reproductions)
 - `src/data/mock/` — mock users/notes/threads/relays
 - `src/data/tours/` — per-client guided-tour configs
 - `src/components/tour/` — the tour engine
@@ -51,9 +51,16 @@ The 4 legacy/superseded simulators from the source repo (`interactive/damus`, `A
 
 ## Branding & trademark note
 
-As a standalone, potentially-monetized product, faithfully reproducing other teams' branded
-clients (Damus, Primal, …) carries real trademark/trade-dress risk that a free educational guide
-did not. The intended direction is **owned-IP-first**: lead with the original **Nostr Kitten**
-(and future generic-archetype clients), treat every real-branded simulator as strictly opt-in /
-permissioned, and keep a persistent "simulation · unofficial · mock data" disclaimer on every
-client view (already wired in `ClientView.tsx`).
+Faithfully reproducing other teams' branded clients (Damus, Primal, …) carries real
+trademark/trade-dress risk, and the mitigation is **honesty plus consent, not evasion**:
+
+- a permanent "SIMULATION · mock data · unofficial · not affiliated" banner on every client
+  view (`ClientView.tsx`), with [TRADEMARKS.md](TRADEMARKS.md) and
+  [THIRD-PARTY.md](THIRD-PARTY.md) recording exactly what was referenced vs. copied;
+- every client view links out to the real client — the reproduction exists to send people
+  *to* the teams whose work it depicts;
+- the primary mitigation is **opt-in consent from each client's maintainers**, who can have
+  any fidelity error fixed or the whole reproduction removed on request, no questions asked.
+
+(Nostr Kitten, our original demo client, is deliberately the *last* card in the gallery —
+it exists to show the shell works with anything, not to lead the product.)
