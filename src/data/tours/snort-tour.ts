@@ -18,7 +18,11 @@ const snortTourSteps: TourStep[] = [
     id: 'snort-login',
     target: '[data-tour="snort-login"]',
     title: 'Login Options',
-    content: 'Snort supports multiple login methods: browser extension (like nos2x or Alby), private key paste, or key generation. Extensions are recommended for better security. Your keys are your identity on Nostr!',
+    // Deliberately describes the extension/signer path only. The real client
+    // also accepts a pasted nsec, but this simulation never asks for one and
+    // must not suggest that pasting a private key into a web page you are just
+    // trying out is normal — see the "stop soliciting private keys" fix.
+    content: 'Snort signs you in with a browser signer extension like nos2x or Alby, so your key never leaves it. That key is your identity across every Nostr app — this demo just uses a throwaway one.',
     position: 'bottom',
     allowClickThrough: true,
     spotlightPadding: 16,
@@ -45,7 +49,7 @@ const snortTourSteps: TourStep[] = [
     id: 'snort-post',
     target: '.snort-post-btn, [data-tour="snort-post"]',
     title: 'Publish Your Note',
-    content: 'Write something interesting and click post! Your note will be cryptographically signed and broadcast to all connected relays. Once published, it is permanent on the Nostr network.',
+    content: 'Write something interesting and hit Send. Your note gets cryptographically signed and broadcast to every connected relay — once it is out there, it is out there.',
     position: 'bottom',
     allowClickThrough: true,
     spotlightPadding: 12,

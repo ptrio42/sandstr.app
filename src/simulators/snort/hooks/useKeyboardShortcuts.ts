@@ -58,7 +58,6 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions) {
     if (key === 'n' && !event.ctrlKey && !event.metaKey) {
       event.preventDefault();
       opts.onNewPost?.();
-      console.log('[Snort] Keyboard shortcut: New Post (N)');
       return;
     }
 
@@ -66,7 +65,6 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions) {
     if (key === '/' && !event.ctrlKey && !event.metaKey) {
       event.preventDefault();
       opts.onSearch?.();
-      console.log('[Snort] Keyboard shortcut: Search (/)');
       return;
     }
 
@@ -74,7 +72,6 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions) {
     if (key === 'r' && !event.ctrlKey && !event.metaKey) {
       event.preventDefault();
       opts.onRefresh?.();
-      console.log('[Snort] Keyboard shortcut: Refresh (R)');
       return;
     }
 
@@ -84,7 +81,6 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions) {
         if (e.key.toLowerCase() === 'h') {
           e.preventDefault();
           opts.onGoHome?.();
-          console.log('[Snort] Keyboard shortcut: Go Home (G+H)');
           document.removeEventListener('keydown', handleGH);
         }
       };
@@ -101,7 +97,6 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions) {
         if (e.key.toLowerCase() === 'p') {
           e.preventDefault();
           opts.onGoToProfile?.();
-          console.log('[Snort] Keyboard shortcut: Go to Profile (G+P)');
           document.removeEventListener('keydown', handleGP);
         }
       };
@@ -118,7 +113,6 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions) {
         if (e.key.toLowerCase() === 'n') {
           e.preventDefault();
           opts.onGoToNotifications?.();
-          console.log('[Snort] Keyboard shortcut: Go to Notifications (G+N)');
           document.removeEventListener('keydown', handleGN);
         }
       };
@@ -135,7 +129,6 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions) {
         if (e.key.toLowerCase() === 'm') {
           e.preventDefault();
           opts.onGoToMessages?.();
-          console.log('[Snort] Keyboard shortcut: Go to Messages (G+M)');
           document.removeEventListener('keydown', handleGM);
         }
       };
@@ -150,7 +143,6 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions) {
     if (key === 'l' && !event.ctrlKey && !event.metaKey && opts.onLike) {
       event.preventDefault();
       opts.onLike?.();
-      console.log('[Snort] Keyboard shortcut: Like (L)');
       return;
     }
 
@@ -158,7 +150,6 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions) {
     if (key === 't' && !event.ctrlKey && !event.metaKey && opts.onRepost) {
       event.preventDefault();
       opts.onRepost?.();
-      console.log('[Snort] Keyboard shortcut: Repost (T)');
       return;
     }
 
@@ -166,14 +157,12 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions) {
     if (key === 'r' && event.shiftKey && opts.onReply) {
       event.preventDefault();
       opts.onReply?.();
-      console.log('[Snort] Keyboard shortcut: Reply (Shift+R)');
       return;
     }
 
     // Help - Shift+?
     if (key === '?' && event.shiftKey) {
       event.preventDefault();
-      console.log('[Snort] Keyboard shortcut: Show Help (?)');
       // Could open a help modal here
       return;
     }

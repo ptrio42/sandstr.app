@@ -172,8 +172,12 @@ const MOUNTS: Record<
   snort: {
     frame: null,
     tour: true,
-    status: 'preview',
-    statusNote: 'Layout and brand marks not yet verified against the real client.',
+    // Promoted from 'preview' once the rebuild landed: tokens, navigation and
+    // all 12 surfaces are now traceable to docs/refs/snort/screen-map.md
+    // (owner's 2026-07-14 recording + v0l/snort@3cc8317). No `theme` field on
+    // purpose — Snort ships `theme: "system"`, which is exactly what "unset"
+    // means here.
+    status: 'ready',
     homepage: 'https://snort.social',
     repo: 'https://github.com/v0l/snort',
     upstreamLicense: 'MIT',

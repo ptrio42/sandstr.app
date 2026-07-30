@@ -1,237 +1,249 @@
+import React, { useEffect, useState } from 'react';
+import type { MockNote, MockUser } from '../../../data/mock';
+import { Avatar } from '../components/Avatar';
+import { Icon } from '../components/Icon';
+import { shortNpub, TEXT_TRUNCATE_LENGTH } from '../snortUtils';
+
 /**
- * Snort Compose Screen
- * Rich text editor for creating posts
+ * Snort's note creator — `docs/refs/snort/screen-map.md` §11, read together with
+ * §3 (the pill system) and §3.1 (the light-mode specificity trap).
+ *
+ * What the previous build got wrong and this one fixes:
+ *
+ *  - It is **a modal, never inline** (`NoteCreator.tsx:881` → `<Modal>`): a
+ *    `bg-black/80` scrim over a `layer-1 px-6 py-4 lg:w-[720px] max-h-[80dvh]`
+ *    body. §6.2 is explicit that the home feed has no inline composer at all.
+ *  - Order top→bottom is fixed: "Reply To" context + `<hr>` → the
+ *    "Compose a note" title row with a circular × → the drop zone + textarea →
+ *    the poll editor → the footer bar.
+ *  - The footer's left cluster is, in exact order,
+ *    **28px avatar · attachment · bar-chart · settings-outline · "Preview" ·
+ *    toggle** — confirmed frame-by-frame in the owner's recording.
+ *  - The submit label is **"Send"** ("Reply" when replying), never "Post", and
+ *    it is a plain white pill (see the comment on the button itself).
+ *  - There is no character counter and no markdown toolbar; neither exists
+ *    upstream. Emoji arrive through the `:` trigger, mentions through `@`.
+ *
+ * Rendered at its FINAL state with no enter animation: the preview environment
+ * freezes framer springs and CSS keyframes at frame 0, so an animated overlay
+ * would screenshot as invisible.
  */
 
-import React, { useState, useRef, useEffect } from 'react';
-import type { MockUser } from '../../../data/mock';
-
-interface ComposeScreenProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onPost: (content: string) => void;
+export interface ComposeScreenProps {
   currentUser: MockUser | null;
-  replyTo?: { author: string; content: string } | null;
+  replyTo: MockNote | null;
+  replyAuthor?: MockUser;
+  onClose: () => void;
+  onPost: () => void;
 }
 
-export const ComposeScreen: React.FC<ComposeScreenProps> = ({
-  isOpen,
-  onClose,
-  onPost,
+export function ComposeScreen({
   currentUser,
   replyTo,
-}) => {
-  const [content, setContent] = useState('');
-  const [isPosting, setIsPosting] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  replyAuthor,
+  onClose,
+  onPost,
+}: ComposeScreenProps) {
+  const [text, setText] = useState('');
+  const [preview, setPreview] = useState(false);
+  const [pollOpen, setPollOpen] = useState(false);
+  const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
 
-  const maxChars = 280;
-  const remainingChars = maxChars - content.length;
-  const isOverLimit = remainingChars < 0;
-
+  /* §11: Escape closes the modal, ⌘/Ctrl+Enter sends. */
   useEffect(() => {
-    if (isOpen && textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, [isOpen]);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) onPost();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose, onPost]);
 
-  const handleSubmit = async () => {
-    if (!content.trim() || isOverLimit) return;
+  /* Upstream's reply context renders the target with `showFooter:false,
+     showTime:false, canClick:false, showMedia:false` — i.e. author + body only. */
+  const quoted = replyTo
+    ? replyTo.content.length > TEXT_TRUNCATE_LENGTH
+      ? `${replyTo.content.slice(0, TEXT_TRUNCATE_LENGTH)}…`
+      : replyTo.content
+    : '';
+  const quotedName =
+    replyAuthor?.displayName || replyAuthor?.username || (replyTo ? shortNpub(replyTo.pubkey) : '');
 
-    setIsPosting(true);
-    
-    // Simulate posting delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    onPost(content);
-    setContent('');
-    setIsPosting(false);
-    onClose();
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      onClose();
-    }
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-      handleSubmit();
-    }
-  };
-
-  const insertMarkdown = (before: string, after: string = '') => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = content.substring(start, end);
-    const newContent = content.substring(0, start) + before + selectedText + after + content.substring(end);
-    
-    setContent(newContent);
-    
-    setTimeout(() => {
-      textarea.focus();
-      const newCursorPos = start + before.length + selectedText.length;
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-    }, 0);
-  };
-
-  if (!isOpen) return null;
+  const secondary = { color: 'var(--snort-text-secondary)' };
 
   return (
-    <div className="snort-modal-overlay" onClick={onClose}>
-      <div 
-        className="snort-modal max-w-xl"
+    <div className="snort-modal-scrim" onClick={onClose}>
+      <div
+        className="snort-modal-body"
+        role="dialog"
+        aria-modal="true"
+        aria-label={replyTo ? 'Reply to note' : 'Compose a note'}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="snort-modal-header">
-          <h2 className="snort-modal-title">
-            {replyTo ? 'Reply' : 'New Post'}
-          </h2>
+        {/* 1 — reply context, then the divider (§11.1). */}
+        {replyTo && (
+          <>
+            <h4 className="snort-h4">Reply To</h4>
+            <div className="max-h-64 overflow-y-auto">
+              <div className="flex items-start gap-3">
+                <Avatar seed={replyTo.pubkey} className="h-8 w-8" />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-semibold">{quotedName}</div>
+                  <p className="mt-1 whitespace-pre-wrap break-words text-sm" style={secondary}>
+                    {quoted}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <hr style={{ borderColor: 'var(--snort-border)' }} />
+          </>
+        )}
+
+        {/* 2 — title row. The × is a small icon button on a layer-3 chip. */}
+        <div className="font-medium flex justify-between items-center">
+          <span>Compose a note</span>
           <button
+            type="button"
+            className="snort-btn-sm rounded-full"
+            style={{ background: 'var(--snort-layer-3)' }}
+            aria-label="Close"
             onClick={onClose}
-            className="snort-modal-close"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <Icon name="x" size={16} />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="snort-modal-content">
-          {/* Reply Reference */}
-          {replyTo && (
-            <div className="mb-4 p-3 bg-slate-800/50 rounded-lg border-l-2 border-violet-500">
-              <p className="text-sm text-slate-400">Replying to @{replyTo.author}</p>
-              <p className="text-sm text-slate-300 mt-1 line-clamp-2">{replyTo.content}</p>
+        {/* 3 — the drop zone. Its dashed border is VISIBLE at rest: the
+            [REC vs REPO] note in §11 records that the shipped build dropped
+            `border-transparent`, so the dashes picked up the global gray. */}
+        <div className="snort-dropzone p-3">
+          {preview ? (
+            /* 6 — the Preview toggle replaces the editor entirely with a
+               read-only render of the note (`showFooter:false, canClick:false,
+               showTime:false`). */
+            <div className="flex items-start gap-3">
+              <Avatar seed={currentUser?.pubkey ?? 'anon'} className="h-8 w-8" />
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-semibold">
+                  {currentUser?.displayName || currentUser?.username || 'You'}
+                </div>
+                <p className="mt-1 whitespace-pre-wrap break-words text-sm">
+                  {text.trim() ? (
+                    text
+                  ) : (
+                    <span style={secondary}>Nothing to preview yet.</span>
+                  )}
+                </p>
+              </div>
             </div>
+          ) : (
+            <textarea
+              className="snort-textarea text-sm"
+              /* `!border-none !p-0 !rounded-none` upstream — the drop zone owns
+                 the frame, the textarea contributes no chrome of its own. */
+              style={{ borderWidth: 0, padding: 0, borderRadius: 0 }}
+              rows={4}
+              placeholder="What's on your mind?"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+            />
           )}
-
-          <div className="flex gap-3">
-            {currentUser && (
-              <img
-                src={`https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser?.pubkey || currentUser?.username || 'default'}`}
-                alt={currentUser.displayName}
-                className="w-10 h-10 rounded-full flex-shrink-0"
-              />
-            )}
-            <div className="flex-1">
-              <textarea
-                ref={textareaRef}
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={replyTo ? "Post your reply..." : "What's on your mind?"}
-                className="w-full min-h-[160px] bg-transparent border-none resize-none text-white placeholder-slate-500 focus:outline-none focus:ring-0 text-lg"
-                disabled={isPosting}
-              />
-            </div>
-          </div>
-
-          {/* Formatting Toolbar */}
-          <div className="flex items-center gap-1 mt-4 pt-4 border-t border-slate-700">
-            <button
-              onClick={() => insertMarkdown('**', '**')}
-              className="snort-compose-tool"
-              title="Bold"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6V4zm0 8h9a4 4 0 014 4 4 4 0 01-4 4H6v-8z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => insertMarkdown('*', '*')}
-              className="snort-compose-tool"
-              title="Italic"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-              </svg>
-            </button>
-            <button
-              onClick={() => insertMarkdown('`', '`')}
-              className="snort-compose-tool"
-              title="Inline Code"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-              </svg>
-            </button>
-            <button
-              onClick={() => insertMarkdown('\n```\n', '\n```\n')}
-              className="snort-compose-tool"
-              title="Code Block"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <button
-              onClick={() => insertMarkdown('[', '](url)')}
-              className="snort-compose-tool"
-              title="Link"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-              </svg>
-            </button>
-            <div className="w-px h-6 bg-slate-700 mx-2" />
-            <button
-              className="snort-compose-tool"
-              title="Add Image"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </button>
-            <button
-              className="snort-compose-tool"
-              title="Add Poll"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </button>
-          </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between p-4 border-t border-slate-700">
-          <div className="flex items-center gap-2 text-sm text-slate-400">
-            <kbd className="snort-kbd">Ctrl</kbd>
-            <span>+</span>
-            <kbd className="snort-kbd">Enter</kbd>
-            <span>to post</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className={`text-sm font-medium ${isOverLimit ? 'text-red-400' : remainingChars < 20 ? 'text-amber-400' : 'text-slate-400'}`}>
-              {remainingChars}
-            </span>
+        {/* 5 — poll editor, revealed by the bar-chart icon. Upstream seeds two
+            empty options and hides the icon once a poll exists. */}
+        {pollOpen && (
+          <div className="flex flex-col gap-2">
+            <h4 className="snort-h4">Poll Options</h4>
+            {pollOptions.map((value, i) => (
+              <label key={i} className="flex w-max max-w-full items-center gap-2">
+                <span className="whitespace-nowrap text-sm" style={secondary}>
+                  Option: {i + 1}
+                </span>
+                <input
+                  className="snort-input"
+                  value={value}
+                  onChange={(e) =>
+                    setPollOptions((opts) => opts.map((o, j) => (j === i ? e.target.value : o)))
+                  }
+                />
+                {i > 0 && (
+                  <button
+                    type="button"
+                    className="snort-btn-sm"
+                    aria-label={`Remove option ${i + 1}`}
+                    onClick={() => setPollOptions((opts) => opts.filter((_, j) => j !== i))}
+                  >
+                    <Icon name="close" size={14} />
+                  </button>
+                )}
+              </label>
+            ))}
             <button
-              onClick={handleSubmit}
-              data-tour="snort-post"
-              disabled={!content.trim() || isOverLimit || isPosting}
-              className="snort-btn snort-btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              type="button"
+              className="snort-btn-sm w-max"
+              aria-label="Add poll option"
+              onClick={() => setPollOptions((opts) => [...opts, ''])}
             >
-              {isPosting ? (
-                <>
-                  <svg className="w-4 h-4 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Posting...
-                </>
-              ) : (
-                replyTo ? 'Reply' : 'Post'
-              )}
+              <Icon name="plus" size={14} />
             </button>
           </div>
+        )}
+
+        {/* 4 — footer bar (`NoteCreator.tsx:575-644`). */}
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-4" style={secondary}>
+            <Avatar seed={currentUser?.pubkey ?? 'anon'} className="h-7 w-7" />
+            {/* Upstream renders these as AsyncIcon divs, not buttons — the
+                attachment dropdown and the advanced panel are out of scope. */}
+            <span className="cursor-pointer" title="Attach media">
+              <Icon name="attachment" size={24} />
+            </span>
+            <button
+              type="button"
+              className="snort-btn-sm"
+              style={{ padding: 0, color: pollOpen ? 'var(--snort-text)' : undefined }}
+              aria-label="Poll"
+              aria-pressed={pollOpen}
+              onClick={() => setPollOpen((v) => !v)}
+            >
+              <Icon name="bar-chart" size={24} />
+            </button>
+            <span className="cursor-pointer" title="Advanced">
+              <Icon name="settings-outline" size={24} />
+            </span>
+            {/* Upstream hides this label below `sm`; the sim's column can be
+                narrower than the viewport, so it stays visible here. */}
+            <span>Preview</span>
+            <button
+              type="button"
+              className={`snort-toggle ${preview ? 'active' : ''}`}
+              aria-label="Preview"
+              aria-pressed={preview}
+              onClick={() => setPreview((v) => !v)}
+            >
+              <span className="snort-toggle-knob" />
+            </button>
+          </div>
+
+          {/* Deliberately NOT `.primary`: upstream writes this as
+              `<AsyncButton className="bg-primary">`, and `.light button` (0,1,1)
+              beats that utility (0,1,0) — hence the white "Send" in the recording (§3.1). */}
+          <button
+            type="button"
+            className="snort-btn snort-post-btn"
+            data-tour="snort-post"
+            onClick={onPost}
+          >
+            {replyTo ? 'Reply' : 'Send'}
+          </button>
         </div>
       </div>
     </div>
   );
-};
+}
 
 export default ComposeScreen;

@@ -1,298 +1,198 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
 import type { MockUser } from '../../../data/mock';
-import { getRandomUsers } from '../../../data/mock';
-import {
-  looksLikeRealSecretKey,
-  REAL_KEY_REFUSED,
-  DEMO_KEY_PLACEHOLDER,
-  SECRET_INPUT_PROPS,
-} from '../../shared/utils/keySafety';
+import { Icon } from '../components/Icon';
 
-interface LoginScreenProps {
-  onLogin: (user: MockUser) => void;
+/**
+ * Snort — Onboarding / Sign In (`/login`).
+ *
+ * Rebuilt from `docs/refs/snort/screen-map.md` §15 (+ §3 for the pill system,
+ * §1 for the tokens and §16 for the brand mark), which is the authority for
+ * every decision below. Upstream is `Pages/onboarding/index.tsx` (the shell)
+ * and `Pages/onboarding/sign-in.tsx` (this screen).
+ *
+ * Shell (§15, verbatim from `Pages/onboarding/index.tsx`):
+ *
+ *   <div className="p-6">
+ *     <div className="float-right flex gap-2 items-center">
+ *       <Icon name="translate" /> <select className="capitalize">…</select>
+ *     </div>
+ *     <div className="w-[460px] max-w-full mx-auto my-auto mt-[15vh]
+ *                     rounded-lg px-8 py-7 layer-1">
+ *
+ * So: a 460px `layer-1` card pushed down 15vh, with a translate icon and a
+ * language `<select>` FLOATED top-right — not a header bar, an actual
+ * `float-right`. `[REC ✓ gray card centered in the feed column, translate icon
+ * + a select showing "العربية" top-right.]` Onboarding is *not* a standalone
+ * shell: the left NavSidebar (and per §5 the right column's search box) keep
+ * rendering, which is why this component draws only the centre column — the
+ * SnortSimulator shell mounts the Rail and RightColumn around it.
+ *
+ * Card body is `flex flex-col gap-6`, with the heading + subtitle nested in a
+ * `flex flex-col gap-4 items-center` block (§15, screen 1). Label strings are
+ * verbatim from the intl catalogue in §15's table (`Ub+AGc`, `eF0Re7`,
+ * `TaeBqw`, `aMaLBK`, `X6tipZ`, `25WwxF`, `39AHJm`).
+ *
+ * Three deliberate divergences, each explained at its call site below:
+ *   1. the brand mark is a monogram placeholder, not Snort's raster ostrich;
+ *   2. there is NO private-key field — the sim never solicits a real key;
+ *   3. "Supported Extensions" is inert, mirroring upstream's dead empty href.
+ *
+ * Accent discipline (§1): the only colour on this screen is `--snort-warning`
+ * `#ff8800` on the NIP-07 key badge. `--snort-highlight` violet carries the
+ * "Supported Extensions" link. `--snort-primary` orange-red does NOT appear
+ * here — it is compose/CTA only, and none of these buttons is `.primary`.
+ * Everything else is a white pill, exactly as §3 prescribes for a bare
+ * `<button>` (and, in light mode, as §3.1's specificity trap enforces anyway).
+ */
+
+export interface LoginScreenProps {
+  onLogin: (u: MockUser) => void;
+  users: MockUser[];
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
-  const [activeTab, setActiveTab] = useState<'login' | 'generate'>('login');
-  const [nsecInput, setNsecInput] = useState('');
-  const [keyWarning, setKeyWarning] = useState(false);
-  // Refuse real secret keys: drop from state, don't hold. See keySafety.ts.
-  const onKeyChange = (value: string) => {
-    if (looksLikeRealSecretKey(value)) {
-      setNsecInput('');
-      setKeyWarning(true);
-      return;
-    }
-    setKeyWarning(false);
-    setNsecInput(value);
-  };
-  const [generatedKeys, setGeneratedKeys] = useState<{ npub: string; nsec: string } | null>(null);
-  const [showCopiedToast, setShowCopiedToast] = useState(false);
+/**
+ * Fallback identity for the case where the mock module has not resolved yet
+ * (the shell loads `src/data/mock` lazily, so `users` is `[]` on first paint).
+ * Mirrors the shape the shell itself falls back to in its `login` tour command.
+ * Timestamps are FIXED constants, never `Date.now()` — this screen must render
+ * identically on every pass. `avatar` is empty on purpose: no remote URLs.
+ */
+const DEMO_USER: MockUser = {
+  pubkey: 'npub1snortdemo',
+  displayName: 'Snort User',
+  username: 'snortuser',
+  avatar: '',
+  bio: 'Exploring Nostr with Snort',
+  nip05: 'demo@snort.social',
+  followersCount: 256,
+  followingCount: 128,
+  createdAt: 1_700_000_000,
+  lastActive: 1_700_000_000,
+};
 
-  const handleLogin = () => {
-    // For demo, pick a random user
-    const randomUser = getRandomUsers(1)[0];
-    onLogin(randomUser);
-  };
+/**
+ * Upstream renders every language code the app is translated into. A short,
+ * static slice is enough to reproduce the control; the recording happens to
+ * show "العربية" in this select, so the list keeps native names like the real
+ * one (the `capitalize` class is upstream's, and is a no-op on non-Latin).
+ */
+const LANGUAGES: Array<{ code: string; label: string }> = [
+  { code: 'en', label: 'english' },
+  { code: 'es', label: 'español' },
+  { code: 'de', label: 'deutsch' },
+  { code: 'fr', label: 'français' },
+  { code: 'pt', label: 'português' },
+  { code: 'ja', label: '日本語' },
+  { code: 'ar', label: 'العربية' },
+];
 
-  const handleGenerateKeys = () => {
-    // Generate mock keys
-    const mockNpub = 'npub1' + Array(64).fill(0).map(() => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
-    const mockNsec = 'nsec1' + Array(64).fill(0).map(() => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
-    setGeneratedKeys({ npub: mockNpub, nsec: mockNsec });
-  };
+export function LoginScreen({ onLogin, users }: LoginScreenProps) {
+  const [language, setLanguage] = useState('en');
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setShowCopiedToast(true);
-    setTimeout(() => setShowCopiedToast(false), 2000);
-  };
-
-  const handleGeneratedLogin = () => {
-    if (generatedKeys) {
-      const newUser: MockUser = {
-        pubkey: generatedKeys.npub,
-        displayName: 'New User',
-        username: 'newuser',
-        avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${generatedKeys.npub}`,
-        bio: 'Just joined Nostr!',
-        followersCount: 0,
-        followingCount: 0,
-        createdAt: Math.floor(Date.now() / 1000),
-        lastActive: Math.floor(Date.now() / 1000),
-      };
-      onLogin(newUser);
-    }
-  };
+  /**
+   * SECURITY — deliberate divergence from the real client.
+   *
+   * Real Snort's "Sign in with key" swaps in a text field whose placeholder is
+   * "nsec, npub, nip-05, hex, mnemonic", and `useLoginHandler` will happily
+   * accept a real nsec — it even AUTO-SUBMITS the moment a bech32 string is
+   * pasted, and stores it unencrypted during onboarding (§15). Sandstr must
+   * never teach that gesture nor give anyone a place to perform it, so this
+   * simulator ships NO private-key input at all: no nsec field, no "nsec…"
+   * placeholder, no key parsing. Every button here is the same door into the
+   * demo — it hands back a mock identity and nothing else. This is the fix in
+   * commit 2b885f2 ("stop soliciting private keys") applied to the rebuild.
+   */
+  const enterDemo = () => onLogin(users[0] ?? DEMO_USER);
 
   return (
-    <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-6" data-tour="snort-login">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="w-full max-w-md"
-      >
-        {/* Logo Section */}
-        <div className="text-center mb-10">
-          <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200 }}
-            className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-violet-500 flex items-center justify-center shadow-lg"
-          >
-            <svg className="w-10 h-10 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </motion.div>
-          <h1 className="text-3xl font-bold text-white mb-2">Snort</h1>
-          <p className="text-slate-400">Fast, clean Nostr for the web</p>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="flex gap-1 bg-slate-800 rounded-xl p-1 mb-8">
-          <button
-            onClick={() => setActiveTab('login')}
-            className={`flex-1 py-3 text-sm font-semibold rounded-lg transition-all ${
-              activeTab === 'login'
-                ? 'bg-violet-500 text-slate-900'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Sign In
-          </button>
-          <button
-            onClick={() => setActiveTab('generate')}
-            className={`flex-1 py-3 text-sm font-semibold rounded-lg transition-all ${
-              activeTab === 'generate'
-                ? 'bg-violet-500 text-slate-900'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Create Account
-          </button>
-        </div>
-
-        {/* Login Tab */}
-        {activeTab === 'login' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-4"
-          >
-            <div className="bg-slate-800 rounded-xl p-6 space-y-6">
-              {/* Private Key Input */}
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Private Key (nsec)
-                </label>
-                <input
-                  {...SECRET_INPUT_PROPS}
-                  value={nsecInput}
-                  onChange={(e) => onKeyChange(e.target.value)}
-                  placeholder={DEMO_KEY_PLACEHOLDER}
-                  className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 transition-colors"
-                />
-                {keyWarning && (
-                  <p className="mt-2 text-xs leading-snug text-amber-400">{REAL_KEY_REFUSED}</p>
-                )}
-              </div>
-
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-700" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-slate-800 text-slate-400">or</span>
-                </div>
-              </div>
-
-              {/* Browser Extension Button */}
-              <button className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium transition-colors">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                Use Browser Extension
-              </button>
-
-              {/* Demo Login Button */}
-              <button
-                onClick={handleLogin}
-                className="w-full py-3 bg-violet-500 hover:bg-violet-400 text-slate-900 font-bold rounded-lg transition-colors"
-              >
-                Sign In
-              </button>
-            </div>
-
-            {/* Help Text */}
-            <div className="text-center text-sm text-slate-400">
-              <p>New to Nostr? Your keys are your identity.</p>
-              <p className="mt-1">No passwords, no accounts - just cryptography.</p>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Generate Keys Tab */}
-        {activeTab === 'generate' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-4"
-          >
-            {!generatedKeys ? (
-              <div className="bg-slate-800 rounded-xl p-6 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-700 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-2">Create Your Keys</h3>
-                <p className="text-slate-400 mb-6">
-                  We'll generate a secure public/private key pair. Your private key is like a password - 
-                  <span className="text-violet-400"> keep it safe!</span>
-                </p>
-                <button
-                  onClick={handleGenerateKeys}
-                  className="w-full py-3 bg-violet-500 hover:bg-violet-400 text-slate-900 font-bold rounded-lg transition-colors"
-                >
-                  Generate New Keys
-                </button>
-              </div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-slate-800 rounded-xl p-6 space-y-4"
-              >
-                {/* Public Key */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Public Key (npub)
-                  </label>
-                  <div className="flex gap-2">
-                    <div className="flex-1 px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-slate-400 text-sm break-all font-mono">
-                      {generatedKeys.npub}
-                    </div>
-                    <button
-                      onClick={() => handleCopy(generatedKeys.npub)}
-                      className="px-4 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-violet-400 transition-colors"
-                    >
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Private Key */}
-                <div>
-                  <label className="block text-sm font-medium text-red-400 mb-2">
-                    Private Key (nsec) - Save This!
-                  </label>
-                  <div className="flex gap-2">
-                    <div className="flex-1 px-4 py-3 bg-red-900/20 border border-red-500/30 rounded-lg text-red-300 text-sm break-all font-mono">
-                      {generatedKeys.nsec}
-                    </div>
-                    <button
-                      onClick={() => handleCopy(generatedKeys.nsec)}
-                      className="px-4 py-3 bg-red-900/30 hover:bg-red-900/50 rounded-lg text-red-400 transition-colors"
-                    >
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                    </button>
-                  </div>
-                  <p className="text-xs text-red-400 mt-2 flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    This is your only backup. Store it securely!
-                  </p>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3 pt-2">
-                  <button
-                    onClick={() => setGeneratedKeys(null)}
-                    className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors"
-                  >
-                    Back
-                  </button>
-                  <button
-                    onClick={handleGeneratedLogin}
-                    className="flex-1 py-3 bg-violet-500 hover:bg-violet-400 text-slate-900 font-bold rounded-lg transition-colors"
-                  >
-                    Continue
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </motion.div>
-        )}
-
-        {/* Footer */}
-        <div className="mt-8 text-center text-xs text-slate-500">
-          <p>Snort is a Nostr client. Your data is stored on decentralized relays.</p>
-        </div>
-      </motion.div>
-
-      {/* Toast */}
-      {showCopiedToast && (
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2"
+    <div className="p-6">
+      {/* Language picker — upstream is a literal `float-right`, not a header. */}
+      <div className="float-right flex gap-2 items-center">
+        <Icon name="translate" />
+        <select
+          className="snort-input capitalize !w-auto"
+          aria-label="Language"
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
         >
-          <div className="px-4 py-2 bg-slate-800 text-violet-400 rounded-lg shadow-lg text-sm font-medium">
-            Copied to clipboard!
-          </div>
-        </motion.div>
-      )}
+          {LANGUAGES.map((l) => (
+            <option key={l.code} value={l.code}>
+              {l.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* The 460px layer-1 card. `!px-8 !py-7` because `.snort-layer-1` carries
+          its own padding at equal specificity (ProfileScreen uses the same
+          escape hatch). */}
+      <div
+        data-tour="snort-login"
+        className="snort-login snort-layer-1 w-[460px] max-w-full mx-auto my-auto rounded-lg !px-8 !py-7 flex flex-col gap-6"
+        style={{ marginTop: '15vh' }}
+      >
+        {/*
+          BRAND MARK — deliberate substitution.
+
+          Upstream is `<img src={CONFIG.icon} width={48} height={48}
+          className="rounded-lg mr-auto ml-auto" />` = `nostrich_512.png`, a
+          raster painterly close-up of a violet→pink ostrich head (§16). It is a
+          bitmap: it cannot be redrawn as paths, and §16's SHIP-AND-GRANT note is
+          explicit that we must NOT ship it until Kieran (v0l) grants consent.
+          So this is the same 48px rounded-lg footprint filled with the app
+          monogram "S" — itself Snort's own fallback idiom (`LogoHeader.tsx`
+          renders `CONFIG.appName[0]` in a rounded-lg tile when `navLogo` is
+          null) — over `--snort-gradient`, the violet→pink ramp that the real
+          artwork is the reason for. No raster, no remote request.
+        */}
+        <div
+          className="w-12 h-12 rounded-lg mr-auto ml-auto flex items-center justify-center text-2xl font-bold text-white select-none"
+          style={{ background: 'var(--snort-gradient)' }}
+          aria-hidden="true"
+        >
+          S
+        </div>
+
+        {/* Heading block — `flex flex-col gap-4 items-center` (§15). */}
+        <div className="flex flex-col gap-4 items-center">
+          <h1 className="snort-h1 text-center">Sign In</h1>
+          <p className="text-center">Use a nostr signer extension to sign in</p>
+        </div>
+
+        {/* NIP-07 CTA. A plain AsyncButton (→ white pill) wrapping a
+            `rounded-full bg-warning p-3 text-white` badge holding the key
+            glyph: an #ff8800 circle inside a white pill. [REC ✓] */}
+        <button type="button" className="snort-btn" onClick={enterDemo}>
+          <span
+            className="rounded-full p-3 text-white flex items-center justify-center"
+            style={{ backgroundColor: 'var(--snort-warning)' }}
+          >
+            <Icon name="key" />
+          </span>
+          <span className="font-bold">Sign in with Nostr Extension</span>
+        </button>
+
+        {/* Upstream: `<Link to="" className="highlight">` — an EMPTY href, so
+            the link is dead, and `.highlight` is an undefined utility (the real
+            one would be `text-highlight`). We keep it visually violet via
+            `.snort-link` and keep it inert, which matches what it actually does
+            and avoids nesting an interactive element in the button column. */}
+        <span className="snort-link text-center">Supported Extensions</span>
+
+        {/* Real Snort swaps this for the key form. Here it is just another door
+            into the demo — see the `enterDemo` comment above. */}
+        <button type="button" className="snort-btn" onClick={enterDemo}>
+          Sign in with key
+        </button>
+
+        <p className="text-center">Don&apos;t have an account?</p>
+
+        <button type="button" className="snort-btn secondary" onClick={enterDemo}>
+          Sign Up
+        </button>
+      </div>
     </div>
   );
-};
+}
 
 export default LoginScreen;

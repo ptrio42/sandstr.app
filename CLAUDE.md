@@ -1,7 +1,7 @@
 # Sandstr — CLAUDE.md
 
 Samodzielny, w 100% kliencki produkt: **„try Nostr clients in your browser — no keys, no install"**.
-(Bez liczby w taglinie — publiczna narracja to „4 wierne reprodukcje + 5 early previews + 1 original",
+(Bez liczby w taglinie — publiczna narracja to „5 wiernych reprodukcji + 4 early previews + 1 original",
 sterowana osią `status`/`kind` w `src/registry.tsx`, nie „10 klientów".)
 **Rdzeń wartości = REAL-CLIENTS-FIRST:** wierne, wysokiej wierności, przeglądarkowe reprodukcje **realnych,
 brandowanych klientów Nostr** (Damus, Amethyst, Primal, Snort, YakiHonne, Coracle, Keychat, Olas, Gossip) —
@@ -84,14 +84,20 @@ Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` + `TRADEMARKS.md`.
 - **Wzorzec wierności:** **Amethyst** i **Damus** — głębokie, zweryfikowane referencyjnie flagowce/szablony
   (Amethyst 8 powierzchni; Damus 11) — inline-SVG robohash avatary, lokalne media postów jako `data:`-URI,
   offline/CSP-safe, tokeny z repo klienta + weryfikacja side-by-side z realnym recordingiem. Do nich równamy.
-- **READY (status w `registry.tsx`, 2026-07-28): Amethyst, Damus, YakiHonne, Primal (web)** — zweryfikowane
-  referencyjnie (screen-map + fidelity pass). (+ Nostr Kitten: `kind: 'original'`, opcjonalny easter-egg,
-  nie lider i nie front door.)
-- **Druga fala / PREVIEW** (słabsza wierność / bugi): **Snort** (**RECON ZROBIONY 2026-07-30** →
-  `docs/refs/snort/screen-map.md`, autorytatywny: 19 sekcji / 12 powierzchni z recordingu 2026-07-14 +
-  `v0l/snort@3cc8317`. **Sam symulator NADAL nieprzebudowany** — zero realnych tokenów, wymyślona
-  nawigacja, zepsuty `CodeBlock.tsx`; rebuild to następny krok, spec jest gotowy), Keychat, Olas,
-  Coracle, Gossip. (Primal-MOBILE stub, nieroutowany.) Galeria etykietuje je „Early preview" +
+- **READY (status w `registry.tsx`): Amethyst, Damus, YakiHonne, Primal (web)** (2026-07-28) **+ Snort**
+  (2026-07-30) — zweryfikowane referencyjnie (screen-map + fidelity pass). (+ Nostr Kitten:
+  `kind: 'original'`, opcjonalny easter-egg, nie lider i nie front door.)
+- **Snort (ZROBIONE 2026-07-30):** recon + pełny rebuild → `docs/refs/snort/screen-map.md`
+  (autorytatywny, 19 sekcji z recordingu 2026-07-14 + `v0l/snort@3cc8317`) i przepisany
+  `src/simulators/snort/` (12 powierzchni). Accent violet `--highlight` `#ac88ff`/`#7139f1`
+  **współistnieje** z CTA `--primary #ff3f15`; reakcja = SERCE `#ef4444`; akcje
+  **reply→repost→heart→zap→avatary zapperów** (kolor zmieniają TYLKO serce i zap — `text-nostr-purple`/
+  `-blue` nie istnieją w prawdziwym kliencie); selektor feedu = **dropdown**, nigdzie nie ma tabów
+  z podkreśleniem; kafelek Relays w Settings **celowo bez tła** (prawdziwy bug: `bg-dark` + Tailwind v4).
+  Naprawione po drodze: B8 (highlighter + `dangerouslySetInnerHTML` usunięte — Snort nie ma kolorowania
+  składni), B9b (scroller), B10 (dolny pasek ≤768px), zero requestów zewnętrznych.
+- **Druga fala / PREVIEW** (słabsza wierność / bugi): Keychat, Olas, Coracle, Gossip.
+  (Primal-MOBILE stub, nieroutowany.) Galeria etykietuje je „Early preview" +
   `statusNote`; nie przedstawiaj ich jako skończonych.
 - **Primal web (ZROBIONE 2026-07-14):** rebuild z recordingu + recon → `docs/refs/primal/screen-map.md`
   (autorytatywny: exact tokeny `palette.scss` Midnight/Ice, NavMenu, NoteFooter, Explore/Notifications/DMs).
