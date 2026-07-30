@@ -1,393 +1,299 @@
+import React, { useCallback, useMemo, useState } from 'react';
+import type { MockNote, MockUser } from '../../../data/mock';
+import { Avatar } from './Avatar';
+import { Icon } from './Icon';
+import { CodeBlock } from './CodeBlock';
+import { MediaEmbed } from './MediaEmbed';
+import { clientTag, formatShort, noteTime, shortNpub, TEXT_TRUNCATE_LENGTH } from '../snortUtils';
+
 /**
- * Snort Note Card Component
- * Individual note display with actions
+ * A Snort note.
+ *
+ * Structure and every colour decision come from `docs/refs/snort/screen-map.md`
+ * §4, built from the owner's 2026-07-14 recording read together with
+ * `v0l/snort@3cc8317`. The parts a reproducer habitually gets wrong:
+ *
+ *  - It is a FLAT DIVIDED LIST. No card, no radius, no shadow — separation is a
+ *    single bottom border. The only rounded box on the surface is a quote embed.
+ *  - The body is NOT indented under the avatar; it starts at the card's left
+ *    padding and runs full width.
+ *  - Action order is reply → repost → heart → zap → zapper avatars. There is no
+ *    share and no bookmark button; those live in the `…` menu.
+ *  - The default icon colour is the INHERITED body colour, not a muted gray.
+ *  - Only the heart and the zap ever change colour. Reply and repost reference
+ *    `text-nostr-purple` / `text-nostr-blue`, which are undefined in the real
+ *    client, so they genuinely have no hover and no active state. Reproduced.
+ *  - The reaction is a HEART (#ef4444), not an emoji.
+ *  - The zap value is a SUM OF SATS, not a number of zaps.
  */
 
-import React, { useState } from 'react';
-import { MediaEmbed } from './MediaEmbed';
-import { CodeBlock } from './CodeBlock';
-import type { MockUser, MockNote } from '../../../data/mock';
-
-interface NoteCardProps {
+export interface NoteCardProps {
   note: MockNote;
-  author: MockUser;
-  onViewProfile: () => void;
-  onViewThread?: () => void;
-  showReplyLine?: boolean;
-  compact?: boolean;
+  author?: MockUser;
+  users: MockUser[];
+  /** Thread root: upstream suppresses the row hover tint via `isRoot`. */
+  isRoot?: boolean;
+  /** The focused note in a thread gets a 2px violet outline (not a border). */
+  highlight?: boolean;
+  showFooter?: boolean;
+  /** Renders the "{name} reposted" label bar above the note. */
+  repostedByName?: string;
+  onOpenThread?: (note: MockNote) => void;
+  onViewProfile?: (user: MockUser) => void;
+  onReply?: (note: MockNote) => void;
+  /** Marks this note's action row as the guided-tour target. */
+  tourTarget?: boolean;
+  className?: string;
 }
 
-export const NoteCard: React.FC<NoteCardProps> = ({
+export function NoteCard({
   note,
   author,
+  users,
+  isRoot = false,
+  highlight = false,
+  showFooter = true,
+  repostedByName,
+  onOpenThread,
   onViewProfile,
-  onViewThread,
-  showReplyLine = false,
-  compact = false,
-}) => {
+  onReply,
+  tourTarget = false,
+  className = '',
+}: NoteCardProps) {
   const [liked, setLiked] = useState(false);
   const [reposted, setReposted] = useState(false);
-  const [zapOpen, setZapOpen] = useState(false);
-  const [likes, setLikes] = useState(note.likes);
-  const [reposts, setReposts] = useState(note.reposts);
-  const [zaps, setZaps] = useState(note.zaps);
-  const [zapAmount, setZapAmount] = useState(note.zapAmount);
+  const [zapped, setZapped] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
-  const formatTime = (timestamp: number) => {
-    const date = new Date(timestamp * 1000);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
+  const via = useMemo(() => clientTag(note.id, note.tags), [note.id, note.tags]);
+  const time = useMemo(() => noteTime(note.created_at), [note.created_at]);
 
-    if (minutes < 1) return 'now';
-    if (minutes < 60) return `${minutes}m`;
-    if (hours < 24) return `${hours}h`;
-    if (days < 7) return `${days}d`;
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
+  // Top zappers: upstream shows the top 3 at 24px, overlapping by -ml-2.
+  const zappers = useMemo(
+    () => users.filter((u) => u.pubkey !== note.pubkey).slice(0, 3),
+    [users, note.pubkey],
+  );
 
-  const handleLike = () => {
-    if (liked) {
-      setLikes(prev => prev - 1);
-    } else {
-      setLikes(prev => prev + 1);
-    }
-    setLiked(!liked);
-  };
+  const displayName = author?.displayName || shortNpub(note.pubkey);
+  const isLong = note.content.length > TEXT_TRUNCATE_LENGTH;
+  const body = isLong && !expanded ? `${note.content.slice(0, TEXT_TRUNCATE_LENGTH)}…` : note.content;
 
-  const handleRepost = () => {
-    if (reposted) {
-      setReposts(prev => prev - 1);
-    } else {
-      setReposts(prev => prev + 1);
-    }
-    setReposted(!reposted);
-  };
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
+  const openThread = useCallback(() => onOpenThread?.(note), [onOpenThread, note]);
 
-  const handleZap = (amount: number) => {
-    setZaps(prev => prev + 1);
-    setZapAmount(prev => prev + amount);
-    setZapOpen(false);
-    console.log(`[Snort] Zapped ${amount} sats`);
-  };
-
-  // Parse content for code blocks and media
-  const renderContent = () => {
-    const parts: React.ReactNode[] = [];
-    let content = note.content;
-
-    // Check for code blocks
-    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
-    let match;
-    let lastIndex = 0;
-
-    while ((match = codeBlockRegex.exec(note.content)) !== null) {
-      // Add text before code block
-      if (match.index > lastIndex) {
-        parts.push(
-          <p key={lastIndex} className="mb-2">
-            {renderTextWithLinks(note.content.substring(lastIndex, match.index))}
-          </p>
-        );
-      }
-
-      // Add code block
-      const language = match[1] || 'text';
-      const code = match[2].trim();
-      parts.push(
-        <CodeBlock key={match.index} code={code} language={language} />
-      );
-
-      lastIndex = match.index + match[0].length;
-    }
-
-    // Add remaining text
-    if (lastIndex < note.content.length) {
-      parts.push(
-        <p key={lastIndex}>
-          {renderTextWithLinks(note.content.substring(lastIndex))}
-        </p>
-      );
-    }
-
-    // If no code blocks found, just render the text
-    if (parts.length === 0) {
-      parts.push(<p key="text">{renderTextWithLinks(note.content)}</p>);
-    }
-
-    return parts;
-  };
-
-  const renderTextWithLinks = (text: string) => {
-    // Replace URLs with links
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const nostrRegex = /(nostr:npub[\w]+|nostr:nevent[\w]+|nostr:note[\w]+)/g;
-    const hashtagRegex = /#[\w]+/g;
-
-    let parts: React.ReactNode[] = [];
-    let lastIndex = 0;
-
-    // Combine all regex matches
-    const matches: Array<{ type: string; index: number; length: number; content: string }> = [];
-    
-    let m;
-    while ((m = urlRegex.exec(text)) !== null) {
-      matches.push({ type: 'url', index: m.index, length: m[0].length, content: m[0] });
-    }
-    while ((m = nostrRegex.exec(text)) !== null) {
-      matches.push({ type: 'nostr', index: m.index, length: m[0].length, content: m[0] });
-    }
-    while ((m = hashtagRegex.exec(text)) !== null) {
-      matches.push({ type: 'hashtag', index: m.index, length: m[0].length, content: m[0] });
-    }
-
-    // Sort by index
-    matches.sort((a, b) => a.index - b.index);
-
-    for (const match of matches) {
-      // Add text before match
-      if (match.index > lastIndex) {
-        parts.push(text.substring(lastIndex, match.index));
-      }
-
-      // Add styled match
-      if (match.type === 'url') {
-        parts.push(
-          <a
-            key={match.index}
-            href={match.content}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-violet-400 hover:underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {match.content}
-          </a>
-        );
-      } else if (match.type === 'nostr') {
-        parts.push(
-          <span
-            key={match.index}
-            className="text-violet-400 font-mono cursor-pointer hover:underline"
-            onClick={(e) => {
-              e.stopPropagation();
-              console.log('[Snort] Open:', match.content);
-            }}
-          >
-            {match.content.substring(0, 20)}...
-          </span>
-        );
-      } else if (match.type === 'hashtag') {
-        parts.push(
-          <span
-            key={match.index}
-            className="text-violet-400 cursor-pointer hover:underline"
-            onClick={(e) => {
-              e.stopPropagation();
-              console.log('[Snort] Search hashtag:', match.content);
-            }}
-          >
-            {match.content}
-          </span>
-        );
-      }
-
-      lastIndex = match.index + match.length;
-    }
-
-    // Add remaining text
-    if (lastIndex < text.length) {
-      parts.push(text.substring(lastIndex));
-    }
-
-    return parts.length > 0 ? parts : text;
-  };
+  const likeCount = note.likes + (liked ? 1 : 0);
+  const repostCount = note.reposts + (reposted ? 1 : 0);
+  const zapTotal = note.zapAmount + (zapped ? 50 : 0);
 
   return (
-    <>
-      <div 
-        className={`snort-note ${compact ? 'p-3' : ''}`}
-        onClick={onViewThread}
-        style={{ cursor: onViewThread ? 'pointer' : 'default' }}
-      >
-        {/* Reply Line */}
-        {showReplyLine && <div className="snort-thread-line" />}
-
-        {/* Header */}
-        <div className="snort-note-header">
-          <img
-            src={`https://api.dicebear.com/7.x/bottts/svg?seed=${author.pubkey || author.username || 'default'}`}
-            alt={author.displayName}
-            className="snort-note-avatar"
-            onClick={(e) => {
-              e.stopPropagation();
-              onViewProfile();
-            }}
-          />
-          <div className="snort-note-meta">
-            <div className="snort-note-author">
-              <span 
-                className="hover:underline cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onViewProfile();
-                }}
-              >
-                {author.displayName}
-              </span>
-              {author.isVerified && (
-                <span className="snort-verified">
-                  <svg fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                </span>
-              )}
-            </div>
-            <div className="snort-note-username">
-              @{author.username} · <span className="snort-note-time">{formatTime(note.created_at)}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="snort-note-content">
-          {renderContent()}
-        </div>
-
-        {/* Media */}
-        {note.images && note.images.length > 0 && (
-          <MediaEmbed images={note.images} />
-        )}
-
-        {/* Actions */}
-        <div className="snort-note-actions" data-tour="snort-interactions">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onViewThread?.();
-            }}
-            className="snort-action-btn"
-            title="Reply"
-          >
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            <span>{note.replies > 0 ? note.replies : ''}</span>
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleRepost();
-            }}
-            className={`snort-action-btn ${reposted ? 'reposted' : ''}`}
-            title="Repost"
-          >
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <span>{reposts > 0 ? reposts : ''}</span>
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleLike();
-            }}
-            className={`snort-action-btn ${liked ? 'liked' : ''}`}
-            title="Like"
-          >
-            <svg fill={liked ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-            <span>{likes > 0 ? likes : ''}</span>
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setZapOpen(true);
-            }}
-            className="snort-action-btn"
-            title="Zap"
-          >
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span>{zapAmount > 0 ? (zapAmount / 1000).toFixed(1) + 'k' : ''}</span>
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              console.log('[Snort] Share:', note.id);
-            }}
-            className="snort-action-btn ml-auto"
-            title="Share"
-          >
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Zap Modal */}
-      {zapOpen && (
-        <div 
-          className="snort-modal-overlay"
-          onClick={() => setZapOpen(false)}
+    <div className={`snort-note ${className}`}>
+      {repostedByName && (
+        <div
+          className="flex items-center gap-1 px-3 py-2 text-base font-semibold"
+          style={{ borderBottom: '1px solid var(--snort-border)' }}
         >
-          <div 
-            className="snort-modal max-w-sm"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="snort-modal-header">
-              <h2 className="snort-modal-title">Send Zap</h2>
-              <button
-                onClick={() => setZapOpen(false)}
-                className="snort-modal-close"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="snort-modal-content">
-              <p className="text-sm text-slate-400 mb-4">Choose amount to zap:</p>
-              <div className="snort-zap-amounts">
-                {[100, 500, 1000, 5000, 10000, 50000].map((amount) => (
-                  <button
-                    key={amount}
-                    onClick={() => handleZap(amount)}
-                    className="snort-zap-amount"
-                  >
-                    <div className="snort-zap-amount-value">{amount >= 1000 ? (amount / 1000) + 'k' : amount}</div>
-                    <div className="snort-zap-amount-sats">sats</div>
-                  </button>
-                ))}
-              </div>
-              <div className="mt-4">
-                <input
-                  type="text"
-                  placeholder="Custom amount..."
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-violet-500"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      const amount = parseInt((e.target as HTMLInputElement).value);
-                      if (amount > 0) handleZap(amount);
-                    }
-                  }}
-                />
-              </div>
-            </div>
-          </div>
+          {/* 18px `repeat` + "{name} reposted" — deliberately NOT coloured; the
+              `svg.repeat { color: var(--repost) }` rule never matches here. */}
+          <Icon name="repeat" size={18} />
+          <span>{repostedByName} reposted</span>
         </div>
       )}
-    </>
+
+      <div
+        className={`snort-note-inner ${isRoot ? 'is-root' : ''} ${highlight ? 'is-highlight' : ''}`}
+        onClick={openThread}
+      >
+        {/* ---- Header ---- */}
+        <div className="flex justify-between gap-2">
+          <div className="flex min-w-0 items-start gap-2">
+            <span
+              className="cursor-pointer"
+              onClick={(e) => {
+                stop(e);
+                if (author) onViewProfile?.(author);
+              }}
+            >
+              <Avatar
+                seed={author?.username || note.pubkey}
+                className="h-12 w-12"
+                distance={author?.isVerified ? 1 : null}
+              />
+            </span>
+
+            <div className="min-w-0">
+              <div className="truncate font-medium">
+                <span
+                  className="cursor-pointer hover:underline"
+                  onClick={(e) => {
+                    stop(e);
+                    if (author) onViewProfile?.(author);
+                  }}
+                >
+                  {displayName}
+                </span>
+                {author?.nip05 && <Nip05 nip05={author.nip05} verified={author.isVerified !== false} />}
+              </div>
+              {/* The "via {client}" line — a signature Snort detail. */}
+              <div className="text-xs" style={{ color: 'var(--snort-text-secondary)' }}>
+                via {via}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <time className="text-sm font-medium" style={{ color: '#737373' }}>
+              {time}
+            </time>
+            <span
+              className="cursor-pointer px-1 py-0.5"
+              style={{ color: '#737373' }}
+              onClick={stop}
+              aria-label="More"
+            >
+              <Icon name="dots" size={15} />
+            </span>
+          </div>
+        </div>
+
+        {/* ---- Body: full width, NOT indented under the avatar ---- */}
+        <div className="min-h-0">
+          <NoteText content={body} />
+          {isLong && (
+            <span
+              className="snort-link"
+              onClick={(e) => {
+                stop(e);
+                setExpanded((v) => !v);
+              }}
+            >
+              {expanded ? 'Show less' : 'Show more'}
+            </span>
+          )}
+
+          {note.images && note.images.length > 0 && (
+            <div className="mt-3">
+              <MediaEmbed noteId={note.id} count={note.images.length} />
+            </div>
+          )}
+
+          {showFooter && (
+            <div
+              className="snort-note-actions mt-4"
+              data-tour={tourTarget ? 'snort-interactions' : undefined}
+              onClick={stop}
+            >
+              {/* reply — no active colour in the real client */}
+              <button type="button" className="snort-action" aria-label="Reply" onClick={() => onReply?.(note)}>
+                <Icon name="reply" size={18} />
+                {note.replies > 0 && <span>{formatShort(note.replies)}</span>}
+              </button>
+
+              {/* repost — likewise no active colour */}
+              <button
+                type="button"
+                className="snort-action"
+                aria-label="Repost"
+                onClick={() => setReposted((v) => !v)}
+              >
+                <Icon name="repeat" size={18} />
+                {repostCount > 0 && <span>{formatShort(repostCount)}</span>}
+              </button>
+
+              {/* like — outline heart → filled heart + #ef4444 */}
+              <button
+                type="button"
+                className={`snort-action heart ${liked ? 'active' : ''}`}
+                aria-label="Like"
+                onClick={() => setLiked((v) => !v)}
+              >
+                <Icon name={liked ? 'heart-solid' : 'heart'} size={18} />
+                {likeCount > 0 && <span>{formatShort(likeCount)}</span>}
+              </button>
+
+              {/* zap — the value is a SAT TOTAL */}
+              <button
+                type="button"
+                className={`snort-action zap ${zapped ? 'active' : ''}`}
+                aria-label="Zap"
+                onClick={() => setZapped((v) => !v)}
+              >
+                <Icon name={zapped ? 'zapFast' : 'zap'} size={18} />
+                {zapTotal > 0 && <span>{formatShort(zapTotal)}</span>}
+              </button>
+
+              {/* Top-3 zapper avatars, 24px, overlapping. */}
+              {zapTotal > 0 && zappers.length > 0 && (
+                <div className="flex flex-none items-center">
+                  {zappers.map((z, i) => (
+                    <Avatar key={z.pubkey} seed={z.username} className={`h-6 w-6 ${i > 0 ? '-ml-2' : ''}`} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
-};
+}
+
+/**
+ * nip05 (`Components/User/Nip05.tsx`): neutral-400, `opacity-50` while
+ * unverified, and the DOMAIN gets the signature gradient when it is the
+ * first-party one. There is no green check — only a red `x` on failure.
+ */
+function Nip05({ nip05, verified }: { nip05: string; verified: boolean }) {
+  const [name, domain] = nip05.includes('@') ? nip05.split('@') : ['', nip05];
+  const firstParty = domain === 'snort.social';
+  return (
+    <span
+      className={`ml-1 inline-flex items-center text-xs font-normal ${verified ? '' : 'opacity-50'}`}
+      style={{ color: '#a3a3a3' }}
+    >
+      {name && name !== '_' && <span>{name}@</span>}
+      <span className={firstParty && verified ? 'snort-gradient-text' : undefined}>{domain}</span>
+      {!verified && (
+        <span className="ml-0.5" style={{ color: 'var(--snort-error)' }}>
+          <Icon name="x" size={13} strokeWidth={2.5} />
+        </span>
+      )}
+    </span>
+  );
+}
+
+/**
+ * Note body. Hashtags, mentions and URLs are `text-highlight` violet with NO
+ * pill background; a fenced block renders as plain monospace, because Snort has
+ * no syntax highlighter (§4.3).
+ */
+export function NoteText({ content }: { content: string }) {
+  const blocks = useMemo(() => content.split(/```/), [content]);
+
+  return (
+    <div className="whitespace-pre-wrap" style={{ overflowWrap: 'break-word' }}>
+      {blocks.map((block, i) =>
+        i % 2 === 1 ? (
+          <CodeBlock key={i} code={block.replace(/^\n/, '')} />
+        ) : (
+          <React.Fragment key={i}>{linkify(block)}</React.Fragment>
+        ),
+      )}
+    </div>
+  );
+}
+
+/** Splits on hashtags, @mentions and URLs, colouring each `--snort-highlight`. */
+function linkify(text: string): React.ReactNode[] {
+  return text.split(/(\s)/).map((part, i) => {
+    if (/^#[\w-]+$/.test(part) || /^@[\w.-]+$/.test(part) || /^https?:\/\/\S+$/.test(part)) {
+      return (
+        <span key={i} className="snort-link">
+          {part}
+        </span>
+      );
+    }
+    return <React.Fragment key={i}>{part}</React.Fragment>;
+  });
+}
 
 export default NoteCard;

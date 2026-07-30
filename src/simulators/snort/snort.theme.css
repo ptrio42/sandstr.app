@@ -1,1159 +1,766 @@
 /**
- * Snort Theme
- * Developer-friendly web Nostr client
- * Dark theme default with teal accents
+ * Snort theme — real tokens.
+ *
+ * Every value here is traceable to `packages/app/src/index.css` in
+ * `v0l/snort@3cc8317`; the citation table is `docs/refs/snort/screen-map.md`
+ * §1–§3. The previous version of this file was invented (slate `#0f172a` +
+ * violet `#7c3aed` + "teal accents") and matched nothing in the real client.
+ *
+ * Two things to keep straight, because they are the #1 way to get Snort wrong:
+ *   1. The accent violet (--snort-highlight) and the CTA orange-red
+ *      (--snort-primary) COEXIST and never blend. Violet = links, hashtags,
+ *      mentions, unread, "N new notes". Orange-red = compose/CTA only.
+ *   2. Real Snort is Tailwind v4 with an `@theme` block and no tailwind.config.
+ *      Sandstr is Tailwind 3, so the same values live here as plain custom
+ *      properties and are consumed via var() and the component classes below.
+ *
+ * Dark is the base (as in the real client); `.light` overrides it. That mirrors
+ * Snort's own mechanism exactly — `useTheme.tsx` toggles `.light`/`.dark` on
+ * <html> — so the host's theme toggle maps onto it 1:1 via `useParentTheme`.
+ * The real default preference is `theme: "system"`, NOT dark (§18.2).
  */
 
 .snort-simulator {
-  /* The root ignores the className the host passes, so the height chain has to
-     be closed here: without a definite height the `height:100%` on .snort-layout
-     below resolves against an auto parent, falls back to content, and the layout
-     sized itself to 1024px inside a 901px card. */
+  /* The host's swap wrapper gives us h-full; the root ignores the className the
+     host passes, so the height chain has to be closed here. Without a definite
+     height, `height:100%` on .snort-layout resolves against an auto parent,
+     falls back to content, and the layout sizes itself past the card. */
   height: 100%;
 
-  /* Color System - Dark Default */
-  --snort-bg-primary: #0f172a;
-  --snort-bg-secondary: #1e293b;
-  --snort-bg-tertiary: #334155;
-  --snort-bg-elevated: #1e293b;
-  
-  --snort-text-primary: #f8fafc;
-  --snort-text-secondary: #94a3b8;
-  --snort-text-tertiary: #64748b;
-  --snort-text-muted: #475569;
-  
-  --snort-border: #334155;
-  --snort-border-subtle: #1e293b;
-  
-  /* Accent Colors - Snort purple/violet */
-  --snort-accent: #7c3aed;
-  --snort-accent-hover: #6d28d9;
-  --snort-accent-light: #8b5cf6;
-  --snort-accent-dark: #5b21b6;
-  --snort-accent-soft: rgba(124, 58, 237, 0.12);
-  
-  /* Status Colors */
-  --snort-success: #22c55e;
-  --snort-warning: #f59e0b;
-  --snort-error: #ef4444;
-  --snort-info: #3b82f6;
-  
-  /* Code Colors */
-  --snort-code-bg: #0d1117;
-  --snort-code-border: #30363d;
-  --snort-code-text: #c9d1d9;
-  
-  /* Syntax Highlighting */
-  --snort-syntax-keyword: #ff7b72;
-  --snort-syntax-string: #a5d6ff;
-  --snort-syntax-comment: #8b949e;
-  --snort-syntax-function: #d2a8ff;
-  --snort-syntax-number: #79c0ff;
-  
-  /* Shadows */
-  --snort-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --snort-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-  --snort-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-  
-  /* Spacing */
-  --snort-spacing-xs: 0.25rem;
-  --snort-spacing-sm: 0.5rem;
-  --snort-spacing-md: 1rem;
-  --snort-spacing-lg: 1.5rem;
-  --snort-spacing-xl: 2rem;
-  
-  /* Border Radius */
-  --snort-radius-sm: 4px;
-  --snort-radius: 8px;
-  --snort-radius-lg: 12px;
-  --snort-radius-xl: 16px;
-  
-  /* Transitions */
-  --snort-transition-fast: 150ms ease;
-  --snort-transition: 250ms ease;
-  
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background-color: var(--snort-bg-primary);
-  color: var(--snort-text-primary);
-}
-
-/* Light Theme - re-skins the client when the Dark Mode toggle is off.
-   Scoped to the simulator root via data-snort-theme="light" so it only
-   affects this simulator. Overrides the same --snort-* tokens the whole
-   UI is built on, keeping the purple accent with light-mode contrast. */
-.snort-simulator[data-snort-theme='light'] {
-  --snort-bg-primary: #ffffff;
-  --snort-bg-secondary: #f4f4f7;
-  --snort-bg-tertiary: #e6e6ee;
-  --snort-bg-elevated: #ffffff;
-
-  --snort-text-primary: #1a1523;
-  --snort-text-secondary: #52525b;
-  --snort-text-tertiary: #71717a;
-  --snort-text-muted: #a1a1aa;
-
-  --snort-border: #e0e0e8;
-  --snort-border-subtle: #ececef;
-
-  /* Accent stays Snort purple, tuned slightly for light backgrounds */
-  --snort-accent: #7c3aed;
-  --snort-accent-hover: #6d28d9;
-  --snort-accent-light: #8b5cf6;
-  --snort-accent-dark: #5b21b6;
-  --snort-accent-soft: rgba(124, 58, 237, 0.1);
-
-  --snort-shadow-sm: 0 1px 2px 0 rgba(24, 24, 27, 0.06);
-  --snort-shadow: 0 4px 6px -1px rgba(24, 24, 27, 0.1);
-  --snort-shadow-lg: 0 10px 15px -3px rgba(24, 24, 27, 0.12);
-
-  background-color: var(--snort-bg-primary);
-  color: var(--snort-text-primary);
-}
-
-/* Light-theme overrides for the hardcoded Tailwind utility classes used on
-   always-visible chrome (sidebars, headers, quick-compose). Without these the
-   dark-tuned text/background utilities would render low-contrast on a light
-   background. Scoped to the simulator root so no global Tailwind is touched. */
-.snort-simulator[data-snort-theme='light'] .text-white {
-  color: var(--snort-text-primary);
-}
-.snort-simulator[data-snort-theme='light'] .text-slate-400,
-.snort-simulator[data-snort-theme='light'] .text-slate-500 {
-  color: var(--snort-text-secondary);
-}
-.snort-simulator[data-snort-theme='light'] .border-slate-700 {
-  border-color: var(--snort-border);
-}
-.snort-simulator[data-snort-theme='light'] .bg-slate-900 {
-  background-color: var(--snort-bg-secondary);
-}
-.snort-simulator[data-snort-theme='light'] .hover\:bg-slate-800:hover {
-  background-color: var(--snort-bg-tertiary);
-}
-
-/* Layout */
-.snort-layout {
-  display: grid;
-  grid-template-columns: 260px 1fr 320px;
-  /* Fill the host card, don't re-guess the viewport. The card used to be 82vh so
-     80vh happened to be close; now it's whatever the app shell has left, and the
-     old value left an 82.8px dead band below the layout at 768x1024. */
-  height: 100%;
+  /* Containing block for the modal scrim and the bottom bar, both of which are
+     `position: absolute`. Without this they resolve against whatever ancestor
+     happens to be positioned and escape the device card onto the host chrome. */
+  position: relative;
   overflow: hidden;
+
+  /* ---- Surfaces / text (index.css:6-20) ---- */
+  --snort-bg: #000; /* pure black, not #121212 */
+  --snort-bg-nearly: #090909;
+  --snort-header-bg: rgba(0, 0, 0, 0.3);
+  --snort-text: #fff;
+  --snort-text-secondary: #a7a7a7;
+
+  /* ---- Layer scale (index.css:57-60). NOTE: inverts direction in light. ---- */
+  --snort-layer-1: #171717; /* neutral-900 */
+  --snort-layer-2: #262626; /* neutral-800 */
+  --snort-layer-3: #404040; /* neutral-700 */
+
+  /* Global border colour: `* { @apply border-neutral-800 light:border-neutral-400 }`
+     (index.css:63-65). This is the note divider, card border AND thread line. */
+  --snort-border: #262626;
+
+  /* ---- Accents (index.css:22-34) ---- */
+  --snort-primary: #ff3f15; /* CTA orange-red: New Note, Send, upload bar */
+  --snort-highlight: #ac88ff; /* accent violet: links, unread, new-notes pill */
+  --snort-error: #ff6053;
+  --snort-success: #2ad544;
+  --snort-warning: #ff8800;
+  --snort-live: #f83838; /* LIVE badge — distinct from --snort-primary */
+  --snort-heart: #ef4444; /* the reaction is a HEART, not an emoji */
+  --snort-zap: #ff710a;
+  --snort-repost: #1ecbe1; /* the ONLY legitimate teal in Snort */
+  --snort-mention: #961ee1; /* the mention FILTER icon only */
+  --snort-pro: #ffdd65;
+  --snort-free: #1a5aff;
+
+  /* ---- Gradients (index.css:36-49) ---- */
+  /* Signature gradient. Its ONLY real use is a verified first-party nip05
+     domain (Nip05.tsx:61) — deliberately not on the wordmark. */
+  --snort-gradient: linear-gradient(90deg, #a178ff 0%, #ff6baf 100%);
+  /* Own DM bubbles only. */
+  --snort-dm-gradient: linear-gradient(90deg, #5722d2 0%, #db1771 100%);
+
+  /* ---- Type (index.css:12-14, 125-135) ---- */
+  --snort-font: 'Inter', system-ui, -apple-system, sans-serif;
+
+  font-family: var(--snort-font);
+  font-size: 15px;
+  background-color: var(--snort-bg);
+  color: var(--snort-text);
+  -webkit-font-smoothing: antialiased;
 }
 
-@media (max-width: 1200px) {
-  .snort-layout {
-    grid-template-columns: 220px 1fr 280px;
-  }
+.snort-simulator.light {
+  --snort-bg: #fff;
+  --snort-bg-nearly: #f9f9f9;
+  --snort-header-bg: rgba(255, 255, 255, 0.3);
+  --snort-text: #0f0f0f;
+  --snort-text-secondary: #5c6c92;
+  --snort-highlight: #7139f1; /* the violet darkens in light mode */
+  --snort-layer-1: #e5e5e5; /* neutral-200 */
+  --snort-layer-2: #d4d4d4; /* neutral-300 */
+  --snort-layer-3: #a1a1a1; /* neutral-400 */
+  --snort-border: #a1a1a1; /* light:border-neutral-400 */
+  /* Real Snort feeds the flat #dee1e8 into `background-image` here, which is
+     invalid CSS and makes outgoing DM bubbles transparent in light mode. We keep
+     the gradient instead — the one deliberate divergence from a real bug,
+     because a transparent chat bubble reads as broken rather than as faithful. */
 }
 
-@media (max-width: 1024px) {
-  .snort-layout {
-    grid-template-columns: 200px 1fr;
-  }
-  .snort-layout .snort-right-sidebar {
-    display: none;
-  }
+/* ============================ App shell ============================
+ * Real Snort scrolls as ONE document: body `overflow-y: scroll` with the two
+ * side columns `sticky top-0 h-screen` (§5). Sandstr's /c/:id is a
+ * non-scrolling 100dvh app shell, so the equivalent here is a flex row whose
+ * centre column owns the scroll. This also fixes SHIP-AND-GRANT B9b, where
+ * .snort-main had no scroller and the login card's lower half was unreachable.
+ *
+ * Column visibility is gated in JS off the CONTAINER width, not a viewport
+ * @media query — the sim lives inside a card narrower than the window, and
+ * viewport queries are what made the 640-768px band delete the navigation
+ * (B10). Real Snort also gates in JS (useWindowSize), so this is faithful.
+ */
+.snort-layout {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  background-color: var(--snort-bg);
 }
 
-@media (max-width: 768px) {
-  .snort-layout {
-    grid-template-columns: 1fr;
-  }
-  .snort-layout .snort-left-sidebar {
-    display: none;
-  }
-}
-
-/* Sidebar */
-.snort-sidebar {
-  background: var(--snort-bg-secondary);
-  border-right: 1px solid var(--snort-border);
+/* Left rail. Real widths: content-width icon rail 769-1279px, 224px (xl:w-56)
+   with labels at >=1280px; labels are `hidden xl:inline` (§5.1). */
+.snort-rail {
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-}
-
-.snort-sidebar-right {
-  border-right: none;
-  border-left: 1px solid var(--snort-border);
-}
-
-.snort-sidebar-header {
-  padding: var(--snort-spacing-md);
-  border-bottom: 1px solid var(--snort-border);
-}
-
-.snort-sidebar-section {
-  padding: var(--snort-spacing-sm) 0;
-}
-
-.snort-sidebar-title {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--snort-text-tertiary);
-  padding: var(--snort-spacing-sm) var(--snort-spacing-md);
-}
-
-/* Navigation */
-.snort-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.snort-nav-item {
-  display: flex;
-  align-items: center;
-  gap: var(--snort-spacing-sm);
-  padding: var(--snort-spacing-sm) var(--snort-spacing-md);
-  color: var(--snort-text-secondary);
-  text-decoration: none;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  border-radius: 0;
-  transition: all var(--snort-transition-fast);
-  cursor: pointer;
-  border: none;
-  background: transparent;
-  width: 100%;
-  text-align: left;
-}
-
-.snort-nav-item:hover {
-  background: var(--snort-bg-tertiary);
-  color: var(--snort-text-primary);
-}
-
-.snort-nav-item.active {
-  background: var(--snort-bg-tertiary);
-  color: var(--snort-accent);
-  border-right: 3px solid var(--snort-accent);
-}
-
-.snort-nav-icon {
-  width: 20px;
-  height: 20px;
+  gap: 0.25rem;
   flex-shrink: 0;
+  padding: 1rem 0.5rem;
+  border-right: 1px solid var(--snort-border);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.snort-rail::-webkit-scrollbar {
+  display: none;
+}
+.snort-rail.is-wide {
+  width: 224px;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.snort-rail.is-narrow {
+  align-items: center;
 }
 
-.snort-nav-badge {
-  margin-left: auto;
-  background: var(--snort-accent);
-  color: var(--snort-bg-primary);
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 10px;
-  min-width: 18px;
-  text-align: center;
-}
-
-/* Main Content */
 .snort-main {
   display: flex;
+  flex: 1 1 0;
   flex-direction: column;
-  overflow: hidden;
-  background: var(--snort-bg-primary);
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto; /* B9b: the card body must own a scroller */
 }
 
-.snort-header {
+/* Right column: `hidden lg:flex flex-col lg:w-1/3 sticky top-0 h-screen py-3
+   px-4 border-l` — appears at >=1024px (§5.4). */
+.snort-right {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--snort-spacing-md);
-  border-bottom: 1px solid var(--snort-border);
-  background: var(--snort-bg-secondary);
+  flex-direction: column;
+  gap: 1rem;
+  /* 300px, not upstream's `lg:w-1/3`: the host card gives the sim 1022px, so a
+     third would starve the feed. 224 (rail) + 300 + ~498 (feed) keeps Snort's
+     real proportions inside the space we actually have. */
+  width: 300px;
+  flex-shrink: 0;
+  padding: 0.75rem 1rem;
+  border-left: 1px solid var(--snort-border);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.snort-right::-webkit-scrollbar {
+  display: none;
+}
+
+/* Sticky, blurred centre-column header (Header.tsx:89-119). On the main feed it
+   holds nothing but the centered feed picker — the logo slot and the bell are
+   both `md:invisible` on desktop (§5.3). */
+.snort-header {
   position: sticky;
   top: 0;
   z-index: 10;
-}
-
-.snort-header-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--snort-text-primary);
-}
-
-.snort-header-actions {
   display: flex;
   align-items: center;
-  gap: var(--snort-spacing-sm);
+  justify-content: space-between;
+  gap: 1.5rem;
+  background-color: var(--snort-header-bg);
+  backdrop-filter: blur(16px);
 }
 
-/* Content Scroll Area */
-.snort-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--snort-spacing-md);
-}
-
-/* Note Card */
-.snort-note {
-  background: var(--snort-bg-secondary);
-  border: 1px solid var(--snort-border);
-  border-radius: var(--snort-radius);
-  padding: var(--snort-spacing-md);
-  margin-bottom: var(--snort-spacing-md);
-  transition: border-color var(--snort-transition-fast);
-}
-
-.snort-note:hover {
-  border-color: var(--snort-border-subtle);
-}
-
-.snort-note-header {
+/* Bottom tab bar, <=768px only (`Pages/Layout/Footer.tsx`). Upstream is
+   `md:hidden fixed bottom-0 z-10 w-full pb-safe-area bg-layer-1` and the layout
+   reserves exactly 56px for it via `pb-safe-area-plus-footer`. */
+.snort-bottom-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
   display: flex;
   align-items: center;
-  gap: var(--snort-spacing-sm);
-  margin-bottom: var(--snort-spacing-sm);
-}
-
-.snort-note-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: var(--snort-bg-tertiary);
-}
-
-.snort-note-meta {
-  flex: 1;
-  min-width: 0;
-}
-
-.snort-note-author {
-  font-weight: 600;
-  color: var(--snort-text-primary);
-  display: flex;
-  align-items: center;
-  gap: var(--snort-spacing-xs);
-}
-
-.snort-note-username {
-  color: var(--snort-text-secondary);
-  font-size: 0.875rem;
-  font-weight: 400;
-}
-
-.snort-note-time {
-  color: var(--snort-text-tertiary);
-  font-size: 0.8125rem;
-}
-
-.snort-note-content {
-  color: var(--snort-text-primary);
-  line-height: 1.6;
-  margin-bottom: var(--snort-spacing-sm);
-  word-wrap: break-word;
-}
-
-.snort-note-content p {
-  margin: 0 0 var(--snort-spacing-sm);
-}
-
-.snort-note-content p:last-child {
-  margin-bottom: 0;
-}
-
-/* Verified Badge */
-.snort-verified {
-  display: inline-flex;
-  align-items: center;
-  color: var(--snort-accent);
-}
-
-.snort-verified svg {
-  width: 16px;
-  height: 16px;
-}
-
-/* Note Actions */
-.snort-note-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--snort-spacing-lg);
-  padding-top: var(--snort-spacing-sm);
+  height: 56px;
+  padding-bottom: env(safe-area-inset-bottom);
+  background-color: var(--snort-layer-1);
   border-top: 1px solid var(--snort-border);
 }
+/* Keep the last note clear of the bar. */
+.snort-layout:has(+ .snort-bottom-bar) .snort-main {
+  padding-bottom: 56px;
+}
 
-.snort-action-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--snort-spacing-xs);
-  color: var(--snort-text-tertiary);
-  font-size: 0.875rem;
-  font-weight: 500;
-  background: transparent;
-  border: none;
+/* ============================ Buttons ============================
+ * `@utility button` is applied to EVERY bare <button> in real Snort
+ * (index.css:217-239): a white pill with black text. Scoped to a class here so
+ * host/tour chrome mounted inside the sim is unaffected.
+ */
+.snort-btn {
+  position: relative;
   cursor: pointer;
-  padding: var(--snort-spacing-xs) var(--snort-spacing-sm);
-  border-radius: var(--snort-radius-sm);
-  transition: all var(--snort-transition-fast);
-}
-
-.snort-action-btn:hover {
-  background: var(--snort-bg-tertiary);
-}
-
-.snort-action-btn svg {
-  width: 18px;
-  height: 18px;
-}
-
-.snort-action-btn.liked {
-  color: #ef4444;
-}
-
-.snort-action-btn.reposted {
-  color: #22c55e;
-}
-
-.snort-action-btn.zapped {
-  color: #f59e0b;
-}
-
-/* Code Block */
-.snort-code-block {
-  background: var(--snort-code-bg);
-  border: 1px solid var(--snort-code-border);
-  border-radius: var(--snort-radius);
-  margin: var(--snort-spacing-md) 0;
-  overflow: hidden;
-}
-
-.snort-code-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--snort-spacing-sm) var(--snort-spacing-md);
-  background: var(--snort-bg-tertiary);
-  border-bottom: 1px solid var(--snort-code-border);
-}
-
-.snort-code-lang {
-  font-size: 0.75rem;
+  padding: 10px 16px;
   font-weight: 600;
-  color: var(--snort-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.snort-code-copy {
-  display: flex;
-  align-items: center;
-  gap: var(--snort-spacing-xs);
-  color: var(--snort-text-tertiary);
-  font-size: 0.75rem;
-  background: transparent;
+  font-size: 15px;
+  color: #000;
+  background-color: #fff;
   border: none;
-  cursor: pointer;
-  padding: var(--snort-spacing-xs);
-  border-radius: var(--snort-radius-sm);
-  transition: all var(--snort-transition-fast);
-}
-
-.snort-code-copy:hover {
-  color: var(--snort-text-primary);
-  background: var(--snort-bg-secondary);
-}
-
-.snort-code-content {
-  padding: var(--snort-spacing-md);
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-  font-size: 0.875rem;
-  line-height: 1.6;
-  color: var(--snort-code-text);
-  overflow-x: auto;
-  white-space: pre;
-}
-
-/* Syntax Highlighting */
-.snort-code-keyword { color: var(--snort-syntax-keyword); }
-.snort-code-string { color: var(--snort-syntax-string); }
-.snort-code-comment { color: var(--snort-syntax-comment); font-style: italic; }
-.snort-code-function { color: var(--snort-syntax-function); }
-.snort-code-number { color: var(--snort-syntax-number); }
-
-/* Media Embed */
-.snort-media {
-  margin: var(--snort-spacing-md) 0;
-  border-radius: var(--snort-radius);
-  overflow: hidden;
-  background: var(--snort-bg-tertiary);
-}
-
-.snort-media img,
-.snort-media video {
-  width: 100%;
-  max-height: 500px;
-  object-fit: cover;
-  display: block;
-}
-
-.snort-media-grid {
-  display: grid;
-  gap: var(--snort-spacing-xs);
-  border-radius: var(--snort-radius);
-  overflow: hidden;
-}
-
-.snort-media-grid-2 {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.snort-media-grid-3 {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.snort-media-grid-4 {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-/* Thread Tree */
-.snort-thread {
-  position: relative;
-}
-
-.snort-thread-line {
-  position: absolute;
-  left: 22px;
-  top: 52px;
-  bottom: 0;
-  width: 2px;
-  background: var(--snort-border);
-}
-
-.snort-reply {
-  position: relative;
-  padding-left: 52px;
-  margin-top: var(--snort-spacing-md);
-}
-
-.snort-reply::before {
-  content: '';
-  position: absolute;
-  left: 22px;
-  top: 22px;
-  width: 20px;
-  height: 2px;
-  background: var(--snort-border);
-}
-
-.snort-reply-nested {
-  margin-left: 28px;
-}
-
-/* Compose */
-.snort-compose {
-  background: var(--snort-bg-secondary);
-  border: 1px solid var(--snort-border);
-  border-radius: var(--snort-radius);
-  padding: var(--snort-spacing-md);
-}
-
-.snort-compose-textarea {
-  width: 100%;
-  min-height: 120px;
-  background: var(--snort-bg-primary);
-  border: 1px solid var(--snort-border);
-  border-radius: var(--snort-radius);
-  padding: var(--snort-spacing-md);
-  color: var(--snort-text-primary);
-  font-size: 1rem;
-  line-height: 1.6;
-  resize: vertical;
+  border-radius: 100px; /* full pill */
+  outline: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  user-select: none;
   font-family: inherit;
 }
-
-.snort-compose-textarea:focus {
-  outline: none;
-  border-color: var(--snort-accent);
+.snort-btn:hover {
+  background-color: #f5f5f5; /* neutral-100 */
+}
+.snort-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
-.snort-compose-textarea::placeholder {
-  color: var(--snort-text-tertiary);
+/* Primary CTA. Hover is an orange GLOW; the fill does not change. */
+.snort-btn.primary {
+  background: var(--snort-primary);
+  color: #fff;
+}
+.snort-btn.primary:hover {
+  background: var(--snort-primary);
+  box-shadow: 0 0 10px var(--snort-primary);
 }
 
-.snort-compose-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: var(--snort-spacing-md);
+.snort-btn.secondary {
+  color: var(--snort-text);
+  background-color: var(--snort-layer-3);
+}
+.snort-btn.secondary:hover {
+  background-color: var(--snort-layer-2);
 }
 
-.snort-compose-tools {
-  display: flex;
-  align-items: center;
-  gap: var(--snort-spacing-sm);
-}
-
-.snort-compose-tool {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  color: var(--snort-accent);
-  background: transparent;
-  border: none;
-  border-radius: var(--snort-radius-sm);
-  cursor: pointer;
-  transition: all var(--snort-transition-fast);
-}
-
-.snort-compose-tool:hover {
-  background: var(--snort-bg-tertiary);
-}
-
-.snort-compose-tool svg {
-  width: 20px;
-  height: 20px;
-}
-
-/* Button */
-.snort-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--snort-spacing-xs);
-  padding: var(--snort-spacing-sm) var(--snort-spacing-md);
-  font-size: 0.9375rem;
-  font-weight: 600;
-  border-radius: var(--snort-radius);
-  cursor: pointer;
-  transition: all var(--snort-transition-fast);
-  border: none;
-}
-
-.snort-btn-primary {
-  background: var(--snort-accent);
-  color: var(--snort-bg-primary);
-}
-
-.snort-btn-primary:hover {
-  background: var(--snort-accent-hover);
-}
-
-.snort-btn-secondary {
-  background: var(--snort-bg-tertiary);
-  color: var(--snort-text-primary);
-}
-
-.snort-btn-secondary:hover {
-  background: var(--snort-border);
-}
-
-.snort-btn-ghost {
-  background: transparent;
+/* The only variant that drops to weight 400. Hover INVERTS to a solid pill. */
+.snort-btn.transparent {
+  font-weight: 400;
   color: var(--snort-text-secondary);
+  background-color: transparent;
+  border: 1px solid var(--snort-border);
+}
+.snort-btn.transparent:hover {
+  color: var(--snort-bg);
+  background-color: var(--snort-text);
 }
 
-.snort-btn-ghost:hover {
-  background: var(--snort-bg-tertiary);
-  color: var(--snort-text-primary);
+/* IconButton: `w-10 h-10 aspect-square !p-0 !m-0 bg-neutral-800 text-white`
+   plus the inherited 100px radius = a 40px circle. */
+.snort-btn.icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background-color: var(--snort-layer-2);
+  color: #fff;
 }
 
+/* ---- The light-mode specificity trap (§3.1) ----
+ * `.light button` in real Snort has specificity (0,1,1) and therefore BEATS any
+ * single utility class (0,1,0). That is why, in the owner's recording, nearly
+ * every control is a white bordered pill and only two things are coloured: the
+ * orange "New Note" (.primary — an equal-specificity, later rule) and the red
+ * profile mute circle (which uses `!bg-error`). Reproduced below.
+ */
+.snort-simulator.light .snort-btn,
+.snort-simulator.light .snort-btn.secondary,
+.snort-simulator.light .snort-btn.icon {
+  color: #4b5c83;
+  background-color: #fff;
+  border: 1px solid var(--snort-border);
+  box-shadow: rgba(0, 0, 0, 0.08) 0 1px 1px;
+}
+.snort-simulator.light .snort-btn:hover,
+.snort-simulator.light .snort-btn.secondary:hover,
+.snort-simulator.light .snort-btn.icon:hover {
+  box-shadow: rgba(0, 0, 0, 0.2) 0 1px 3px;
+}
+.snort-simulator.light .snort-btn.primary {
+  background: var(--snort-primary);
+  color: #fff;
+  border: none;
+}
+.snort-simulator.light .snort-btn.transparent {
+  color: var(--snort-text);
+  background-color: transparent;
+}
+/* Stand-ins for Snort's `!important` utilities, which survive the trap. */
+.snort-btn.force-error,
+.snort-simulator.light .snort-btn.force-error {
+  background-color: var(--snort-error);
+  color: #fff;
+  border: none;
+}
+.snort-btn.force-success,
+.snort-simulator.light .snort-btn.force-success {
+  background-color: var(--snort-success);
+  color: #fff;
+  border: none;
+}
+
+/* Small icon button — 8px radius, NOT a pill (index.css:326-336). */
 .snort-btn-sm {
-  padding: var(--snort-spacing-xs) var(--snort-spacing-sm);
-  font-size: 0.875rem;
-}
-
-/* Profile */
-.snort-profile-header {
-  background: var(--snort-bg-secondary);
-  border-bottom: 1px solid var(--snort-border);
-}
-
-.snort-profile-banner {
-  height: 160px;
-  background: linear-gradient(135deg, var(--snort-accent-dark), var(--snort-accent));
-}
-
-.snort-profile-info {
-  padding: 0 var(--snort-spacing-md) var(--snort-spacing-md);
-  position: relative;
-}
-
-.snort-profile-avatar {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  border: 4px solid var(--snort-bg-secondary);
-  margin-top: -60px;
-  background: var(--snort-bg-tertiary);
-  object-fit: cover;
-}
-
-.snort-profile-actions {
-  display: flex;
-  gap: var(--snort-spacing-sm);
-  margin-top: var(--snort-spacing-sm);
-}
-
-.snort-profile-name {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--snort-text-primary);
-  margin-top: var(--snort-spacing-sm);
-}
-
-.snort-profile-handle {
-  font-size: 0.9375rem;
-  color: var(--snort-text-secondary);
-}
-
-.snort-profile-bio {
-  margin-top: var(--snort-spacing-sm);
-  color: var(--snort-text-primary);
-  line-height: 1.6;
-}
-
-.snort-profile-stats {
-  display: flex;
-  gap: var(--snort-spacing-lg);
-  margin-top: var(--snort-spacing-md);
-}
-
-.snort-profile-stat {
+  padding: 4px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
-  gap: var(--snort-spacing-xs);
-  color: var(--snort-text-secondary);
-  font-size: 0.9375rem;
-}
-
-.snort-profile-stat strong {
-  color: var(--snort-text-primary);
-  font-weight: 700;
-}
-
-/* Relay Card */
-.snort-relay {
-  background: var(--snort-bg-secondary);
-  border: 1px solid var(--snort-border);
-  border-radius: var(--snort-radius);
-  padding: var(--snort-spacing-md);
-  margin-bottom: var(--snort-spacing-md);
-}
-
-.snort-relay-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--snort-spacing-sm);
-}
-
-.snort-relay-name {
-  font-weight: 600;
-  color: var(--snort-text-primary);
-  display: flex;
-  align-items: center;
-  gap: var(--snort-spacing-xs);
-}
-
-.snort-relay-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 10px;
-}
-
-.snort-relay-status.connected {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
-}
-
-.snort-relay-status.disconnected {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-}
-
-.snort-relay-status.connecting {
-  background: rgba(245, 158, 11, 0.2);
-  color: #f59e0b;
-}
-
-.snort-relay-status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-}
-
-.snort-relay-status.connected .snort-relay-status-dot {
-  background: #22c55e;
-}
-
-.snort-relay-status.disconnected .snort-relay-status-dot {
-  background: #ef4444;
-}
-
-.snort-relay-status.connecting .snort-relay-status-dot {
-  background: #f59e0b;
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.snort-relay-url {
-  font-family: monospace;
-  font-size: 0.8125rem;
-  color: var(--snort-text-tertiary);
-}
-
-.snort-relay-stats {
-  display: flex;
-  gap: var(--snort-spacing-md);
-  margin-top: var(--snort-spacing-sm);
-  font-size: 0.8125rem;
-  color: var(--snort-text-secondary);
-}
-
-.snort-relay-policies {
-  display: flex;
-  gap: var(--snort-spacing-sm);
-  margin-top: var(--snort-spacing-sm);
-}
-
-.snort-relay-policy {
-  font-size: 0.75rem;
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: var(--snort-bg-tertiary);
-  color: var(--snort-text-secondary);
-}
-
-.snort-relay-policy.active {
-  background: var(--snort-accent);
-  color: var(--snort-bg-primary);
-}
-
-/* Settings */
-.snort-settings-group {
-  background: var(--snort-bg-secondary);
-  border: 1px solid var(--snort-border);
-  border-radius: var(--snort-radius);
-  margin-bottom: var(--snort-spacing-md);
-  overflow: hidden;
-}
-
-.snort-settings-header {
-  padding: var(--snort-spacing-md);
-  border-bottom: 1px solid var(--snort-border);
-  font-weight: 600;
-  color: var(--snort-text-primary);
-}
-
-.snort-setting {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--snort-spacing-md);
-  border-bottom: 1px solid var(--snort-border);
-}
-
-.snort-setting:last-child {
-  border-bottom: none;
-}
-
-.snort-setting-info {
-  flex: 1;
-}
-
-.snort-setting-label {
-  font-weight: 500;
-  color: var(--snort-text-primary);
-}
-
-.snort-setting-desc {
-  font-size: 0.8125rem;
-  color: var(--snort-text-tertiary);
-  margin-top: 2px;
-}
-
-/* Toggle Switch */
-.snort-toggle {
-  position: relative;
-  width: 44px;
-  height: 24px;
-  background: var(--snort-bg-tertiary);
-  border-radius: 12px;
   cursor: pointer;
-  transition: background var(--snort-transition-fast);
+  background: transparent;
+  border: none;
+  color: inherit;
+}
+.snort-btn-sm.active {
+  background: rgba(255, 255, 255, 0.1);
+}
+.snort-simulator.light .snort-btn-sm.active {
+  background: rgba(0, 0, 0, 0.06);
 }
 
-.snort-toggle.active {
-  background: var(--snort-accent);
+/* ============================ Inputs ============================
+ * `.btn, input, select { @apply rounded-full }` (index.css:241-245) OVERRIDES
+ * the 12px radius set at :417-429 — so inputs and selects are pills, while
+ * textarea keeps 12px.
+ */
+.snort-input,
+.snort-textarea {
+  padding: 8px 12px;
+  color: var(--snort-text);
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  outline: none;
+  font-size: 15px;
+  line-height: 24px;
+  font-family: inherit;
+  width: 100%;
+}
+.snort-simulator.light .snort-input,
+.snort-simulator.light .snort-textarea {
+  border: 2px solid var(--snort-border);
+}
+.snort-input {
+  border-radius: 100px;
+}
+.snort-textarea {
+  border-radius: 12px;
+  resize: none;
+}
+.snort-input::placeholder,
+.snort-textarea::placeholder {
+  color: #737373; /* neutral-500 */
 }
 
-.snort-toggle-thumb {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 20px;
-  height: 20px;
-  background: var(--snort-text-primary);
-  border-radius: 50%;
-  transition: transform var(--snort-transition-fast);
+/* ============================ Layers ============================ */
+.snort-layer-1 {
+  background-color: var(--snort-layer-1);
+  border: 1px solid var(--snort-border);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+.snort-layer-2 {
+  background-color: var(--snort-layer-2);
+  border: 1px solid var(--snort-border);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
 }
 
-.snort-toggle.active .snort-toggle-thumb {
-  transform: translateX(20px);
+/* ============================ Nav ============================
+ * Active state is `active font-bold` plus an outline→solid icon swap. There is
+ * NO pill, tint or bar behind the active item, and `hover:bg-secondary`
+ * resolves to nothing in the real client, so nav hover has NO background (§5.1).
+ */
+.snort-nav-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border-radius: 100px;
+  padding: 0.75rem;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: var(--snort-text);
+  font-size: 15px;
+  font-family: inherit;
+  width: 100%;
+  text-align: left;
+}
+.snort-rail.is-wide .snort-nav-item {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+.snort-rail.is-narrow .snort-nav-item {
+  width: auto;
+  justify-content: center;
+}
+.snort-nav-item.active {
+  font-weight: 700;
 }
 
-/* Keyboard Shortcut */
-.snort-kbd {
-  display: inline-flex;
+/* ============================ Note list ============================
+ * A flat, divided list: no card, no radius, no shadow. Separation is `border-b`
+ * only; `min-h-[110px]`, `px-3 py-2`, `gap-4` between header and body (§4.1).
+ */
+.snort-note {
+  border-bottom: 1px solid var(--snort-border);
+}
+.snort-note-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+  min-height: 110px;
+  cursor: pointer;
+}
+/* Row hover tint: neutral-950 / light neutral-50. Suppressed on a thread root. */
+.snort-note-inner:not(.is-root):hover {
+  background-color: #0a0a0a;
+}
+.snort-simulator.light .snort-note-inner:not(.is-root):hover {
+  background-color: #fafafa;
+}
+/* The focused thread note gets a 2px violet OUTLINE, not a border. */
+.snort-note-inner.is-highlight {
+  outline: 2px solid var(--snort-highlight);
+}
+
+/* Action bar: fixed 24px height, gap-4, 18px icons. The default colour is the
+   INHERITED body colour — not a muted gray (§4.4). */
+.snort-note-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  height: 1.5rem;
+  overflow: hidden;
+  max-width: 100%;
+}
+.snort-action {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: none;
+  min-width: 80px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  transition: color 200ms ease-in-out;
+}
+/* Only the heart and the zap ever change colour: `text-nostr-purple` and
+   `text-nostr-blue` (reply/repost) are UNDEFINED in the real client, so those
+   two buttons have no hover and no active colour at all. Reproduced. */
+.snort-action.heart:hover,
+.snort-action.heart.active {
+  color: var(--snort-heart);
+}
+.snort-action.zap:hover,
+.snort-action.zap.active {
+  color: var(--snort-zap);
+}
+
+/* The "N new notes" pill — violet fill, white text, fully rounded (§6.4). */
+.snort-new-notes {
+  display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  min-width: 24px;
-  height: 24px;
-  padding: 0 6px;
-  background: var(--snort-bg-tertiary);
-  border: 1px solid var(--snort-border);
-  border-radius: 4px;
-  font-family: monospace;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--snort-text-secondary);
+  gap: 0.5rem;
+  padding: 0.375rem 1.5rem;
+  color: #fff;
+  background-color: var(--snort-highlight);
+  border-radius: 100px;
+  cursor: pointer;
+  border: none;
+  font: inherit;
 }
 
-/* Filter Tabs */
+/* ============================ Tab pills ============================
+ * The second (and only other) tab idiom. Active = `bg-layer-3`. There is NO
+ * underline tab anywhere in Snort (§8.4).
+ */
 .snort-tabs {
   display: flex;
-  gap: var(--snort-spacing-xs);
-  padding: var(--snort-spacing-sm) var(--snort-spacing-md);
-  border-bottom: 1px solid var(--snort-border);
-  background: var(--snort-bg-secondary);
-}
-
-.snort-tab {
-  padding: var(--snort-spacing-sm) var(--snort-spacing-md);
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--snort-text-secondary);
-  background: transparent;
-  border: none;
-  border-radius: var(--snort-radius-sm);
-  cursor: pointer;
-  transition: all var(--snort-transition-fast);
-}
-
-.snort-tab:hover {
-  color: var(--snort-text-primary);
-  background: var(--snort-bg-tertiary);
-}
-
-.snort-tab.active {
-  color: var(--snort-accent);
-  background: var(--snort-accent-soft);
-}
-
-/* Search */
-.snort-search {
-  position: relative;
-}
-
-.snort-search-input {
+  gap: 0.5rem;
+  overflow-x: auto;
   width: 100%;
-  padding: var(--snort-spacing-sm) var(--snort-spacing-md);
-  padding-left: 40px;
-  background: var(--snort-bg-tertiary);
-  border: 1px solid var(--snort-border);
-  border-radius: var(--snort-radius);
-  color: var(--snort-text-primary);
-  font-size: 0.9375rem;
+  scrollbar-width: none;
 }
-
-.snort-search-input:focus {
-  outline: none;
-  border-color: var(--snort-accent);
+.snort-tabs::-webkit-scrollbar {
+  display: none;
 }
-
-.snort-search-icon {
-  position: absolute;
-  left: var(--snort-spacing-sm);
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--snort-text-tertiary);
-}
-
-/* NIP Badge */
-.snort-nip-badge {
-  display: inline-flex;
+.snort-tab {
+  display: flex;
+  gap: 0.5rem;
   align-items: center;
-  gap: 4px;
-  font-size: 0.6875rem;
+  padding: 0.5rem 1rem;
+  margin: 0.25rem 0;
+  border-radius: 100px;
+  cursor: pointer;
   font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: var(--snort-bg-tertiary);
+  white-space: pre;
+  background-color: var(--snort-layer-1);
+  border: 1px solid var(--snort-border);
+  color: var(--snort-text);
+  font-size: 15px;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.snort-tab:hover {
+  background-color: var(--snort-layer-2);
+}
+.snort-tab.active {
+  background-color: var(--snort-layer-3);
+}
+
+/* ============================ Text ============================ */
+.snort-link {
+  color: var(--snort-highlight);
+  text-decoration: none;
+  overflow-wrap: break-word;
+  cursor: pointer;
+}
+.snort-link:hover {
+  text-decoration: underline;
+}
+/* Verified first-party nip05 domain — the signature gradient's only real use. */
+.snort-gradient-text {
+  background: var(--snort-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.snort-muted {
   color: var(--snort-text-secondary);
 }
+.snort-code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  background-color: var(--snort-layer-2);
+  border-radius: 0.5rem;
+}
 
-/* Scrollbar */
+/* Headings are hardcoded in real Snort (index.css:387-415), all weight 600. */
+.snort-h1 {
+  font-size: 32px;
+  line-height: 42px;
+  font-weight: 600;
+}
+.snort-h2 {
+  font-size: 26px;
+  line-height: 36px;
+  font-weight: 600;
+}
+.snort-h3 {
+  font-size: 20px;
+  line-height: 30px;
+  font-weight: 600;
+}
+.snort-h4 {
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+/* ============================ Settings menu ============================
+ * Collapsed-border stack: rounded-t-xl on the first row, rounded-b-xl on the
+ * last, border-t-0 on the rest. Each row has a p-1 rounded-lg COLOURED tile
+ * with an 18px white glyph (§14).
+ */
+.snort-settings-group-title {
+  padding: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #a3a3a3;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+.snort-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.375rem 0.625rem;
+  border: 1px solid var(--snort-border);
+  cursor: pointer;
+  background: transparent;
+  width: 100%;
+  color: var(--snort-text);
+  text-align: left;
+  font: inherit;
+}
+.snort-settings-row:first-child {
+  border-top-left-radius: 0.75rem;
+  border-top-right-radius: 0.75rem;
+}
+.snort-settings-row:not(:first-child) {
+  border-top: 0;
+}
+.snort-settings-row:last-child {
+  border-bottom-left-radius: 0.75rem;
+  border-bottom-right-radius: 0.75rem;
+}
+.snort-settings-tile {
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+/* ============================ Relay table ============================ */
+.snort-relay-table {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+.snort-relay-table thead th {
+  text-transform: uppercase;
+  color: #a3a3a3;
+  font-weight: 600;
+  text-align: left;
+  padding-bottom: 0.25rem;
+  font-size: 0.875rem;
+}
+.snort-relay-table td {
+  padding: 0.125rem 0;
+  vertical-align: middle;
+}
+.snort-status-dot {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 100px;
+  flex-shrink: 0;
+}
+
+/* ============================ Modal ============================
+ * bg-black/80 scrim; body `layer-1 px-6 py-4 lg:w-[720px] max-h-[80dvh]` (§11).
+ * Rendered at FINAL state (no enter animation) — the preview environment
+ * freezes framer springs AND CSS keyframes at frame 0, so an animated overlay
+ * would screenshot as invisible.
+ */
+.snort-modal-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-y: auto;
+  z-index: 40;
+  padding: 1rem;
+}
+.snort-modal-body {
+  background-color: var(--snort-layer-1);
+  border: 1px solid var(--snort-border);
+  border-radius: 0.5rem;
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 720px;
+  max-width: 100%;
+  max-height: 100%;
+  margin: auto;
+  overflow-y: auto;
+}
+
+/* Compose drop zone. In the recording the dashed border is VISIBLE at rest
+   (§11 [REC vs REPO]); current master sets border-transparent until dragging. */
+.snort-dropzone {
+  border: 2px dashed var(--snort-border);
+  border-radius: 0.5rem;
+}
+
+/* Preview toggle: fill-neutral-600 → fill-success when active. */
+.snort-toggle {
+  width: 40px;
+  height: 22px;
+  border-radius: 100px;
+  background-color: #525252;
+  position: relative;
+  cursor: pointer;
+  border: none;
+  flex-shrink: 0;
+  transition: background-color 500ms;
+}
+.snort-toggle.active {
+  background-color: var(--snort-success);
+}
+.snort-toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 100px;
+  background: #fff;
+  transition: transform 500ms;
+}
+.snort-toggle.active .snort-toggle-knob {
+  transform: translateX(1.125rem);
+}
+
+/* ============================ Live strip ============================ */
+.snort-live-badge {
+  background-color: var(--snort-live);
+  color: #fff;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 100px;
+}
+/* 25px host avatar with a violet ring: `outline-2 outline-highlight`. */
+.snort-live-avatar {
+  outline: 2px solid var(--snort-highlight);
+  border-radius: 100px;
+}
+
+/* DM bubbles — the gradient is applied to YOUR OWN messages only (§10). */
+.snort-dm-mine {
+  background-image: var(--snort-dm-gradient);
+  color: #fff;
+  padding: 0.75rem;
+  border-radius: 0.5rem 0.5rem 0.5rem 0;
+}
+.snort-dm-theirs {
+  background-color: var(--snort-layer-1);
+  padding: 0.75rem;
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+/* Scrollbars (index.css:83-104): 8px, fully rounded, neutral track/thumb. */
 .snort-simulator ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
-
 .snort-simulator ::-webkit-scrollbar-track {
-  background: var(--snort-bg-primary);
+  background-color: var(--snort-layer-2);
+  border-radius: 100px;
 }
-
 .snort-simulator ::-webkit-scrollbar-thumb {
-  background: var(--snort-bg-tertiary);
-  border-radius: 4px;
-}
-
-.snort-simulator ::-webkit-scrollbar-thumb:hover {
-  background: var(--snort-border);
-}
-
-/* Loading */
-.snort-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--snort-spacing-xl);
-  color: var(--snort-text-secondary);
-}
-
-.snort-loading-spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid var(--snort-border);
-  border-top-color: var(--snort-accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Empty State */
-.snort-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--snort-spacing-xl);
-  text-align: center;
-  color: var(--snort-text-secondary);
-}
-
-.snort-empty-icon {
-  width: 48px;
-  height: 48px;
-  margin-bottom: var(--snort-spacing-md);
-  color: var(--snort-text-tertiary);
-}
-
-/* Modal Overlay */
-.snort-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  padding: var(--snort-spacing-md);
-}
-
-.snort-modal {
-  background: var(--snort-bg-secondary);
-  border: 1px solid var(--snort-border);
-  border-radius: var(--snort-radius-lg);
-  max-width: 600px;
-  width: 100%;
-  max-height: 80vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.snort-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--snort-spacing-md);
-  border-bottom: 1px solid var(--snort-border);
-}
-
-.snort-modal-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--snort-text-primary);
-}
-
-.snort-modal-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  color: var(--snort-text-secondary);
-  background: transparent;
-  border: none;
-  border-radius: var(--snort-radius-sm);
-  cursor: pointer;
-  transition: all var(--snort-transition-fast);
-}
-
-.snort-modal-close:hover {
-  background: var(--snort-bg-tertiary);
-  color: var(--snort-text-primary);
-}
-
-.snort-modal-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--snort-spacing-md);
-}
-
-/* Zap Modal */
-.snort-zap-amounts {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--snort-spacing-sm);
-  margin-bottom: var(--snort-spacing-md);
-}
-
-.snort-zap-amount {
-  padding: var(--snort-spacing-md);
-  background: var(--snort-bg-tertiary);
-  border: 2px solid transparent;
-  border-radius: var(--snort-radius);
-  text-align: center;
-  cursor: pointer;
-  transition: all var(--snort-transition-fast);
-}
-
-.snort-zap-amount:hover,
-.snort-zap-amount.selected {
-  border-color: var(--snort-accent);
-  background: var(--snort-accent-soft);
-}
-
-.snort-zap-amount-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--snort-text-primary);
-}
-
-.snort-zap-amount-sats {
-  font-size: 0.75rem;
-  color: var(--snort-text-tertiary);
-  text-transform: uppercase;
+  background-color: var(--snort-layer-3);
+  border-radius: 100px;
 }

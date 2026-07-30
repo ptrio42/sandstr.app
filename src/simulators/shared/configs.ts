@@ -90,15 +90,24 @@ export const primalConfig: SimulatorConfig = {
 
 /**
  * Snort - Web Nostr client
- * Minimalist web client with purple accents
+ *
+ * Brand swatch = the stops of `--snort-gradient`, the one gradient the client
+ * actually names after itself (`packages/app/src/index.css`; see
+ * docs/refs/snort/screen-map.md §1). The previous `#7C3AED`/`#8B5CF6` was
+ * invented and matched nothing upstream.
+ *
+ * Note the two real accents COEXIST and are deliberately not merged here: the
+ * violet `--highlight` (#ac88ff dark / #7139f1 light) carries links and unread
+ * state, while `--primary` #ff3f15 is the orange-red CTA. The gradient below is
+ * the brand mark; the working tokens live in `snort.theme.css`.
  */
 export const snortConfig: SimulatorConfig = {
   id: SimulatorClient.SNORT,
   name: 'Snort',
   description: 'Simple, fast web Nostr client.',
   platform: 'web',
-  primaryColor: '#7C3AED', // Purple (Snort brand)
-  secondaryColor: '#8B5CF6',
+  primaryColor: '#a178ff', // --snort-gradient stop 1 (violet)
+  secondaryColor: '#ff6baf', // --snort-gradient stop 2 (pink)
   icon: '/icons/snort.png',
   supportedFeatures: [
     SimulatorFeature.DM,

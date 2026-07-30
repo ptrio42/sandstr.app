@@ -1,313 +1,530 @@
+import { useState } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
+import { Icon } from '../components/Icon';
+import { formatShort, seededUnit } from '../snortUtils';
+
 /**
- * Snort Relays Screen
- * Advanced relay management
+ * Snort — Relay settings (`/settings/relays`).
+ *
+ * Rebuilt from `docs/refs/snort/screen-map.md` §12, which is the authority for
+ * every string, column and colour below. Upstream is
+ * `Pages/settings/Relays.tsx` + `Components/Relay/Relay.tsx`,
+ * `status-label.tsx`, `uptime-label.tsx` and `permissions.tsx`.
+ *
+ * Page = `flex flex-col gap-4` of **My Relays → Add Relays → Discover**, inside
+ * the `px-3` wrapper the whole `/settings` subtree carries.
+ *
+ * The four things a reproducer habitually gets wrong here:
+ *
+ *  1. **The RELAY column shows the short derived name, never the `wss://` URL.**
+ *     Upstream is `connection.info?.name ?? getRelayName(addr)`, truncated to 20
+ *     chars + "…", with the full URL only in the `title` tooltip.
+ *     [REC ✓ "memlay", "nostr.wine", "damus.io", "nos.lol".]
+ *  2. **PERMISSIONS are two plain clickable words, not switches** — "Read" then
+ *     "Write", disabled ones gray. Toggling is local; only Save publishes.
+ *  3. **UPTIME is a separate latency verdict from STATUS**, so a row legitimately
+ *     reads a red "Dead" beside a green "Connected". See UPTIME_NOTE below.
+ *  4. **Both Discover sections start COLLAPSED**, and their header rows are
+ *     `text-gray-light uppercase` — a class that does not exist in Snort's
+ *     Tailwind v4 theme, so they render in the inherited font colour while My
+ *     Relays' `text-neutral-400` headers are genuinely gray. §19 lists that
+ *     inconsistency among the bugs to reproduce rather than fix.
+ *
+ * Everything is deterministic: user counts, latency and distances come from
+ * `seededUnit`, never `Math.random()`.
  */
 
-import React, { useState, useEffect } from 'react';
-import type { MockRelay } from '../../../data/mock';
-
-interface RelaysScreenProps {
+export interface RelaysScreenProps {
   onBack: () => void;
 }
 
-interface RelayState extends MockRelay {
-  isConnected: boolean;
-  isConnecting: boolean;
-  readPolicy: boolean;
-  writePolicy: boolean;
+/**
+ * Reset for the controls upstream builds out of bare `<div onClick>`s. Snort's
+ * `@utility button` (§3) turns every real `<button>` into a white pill, so the
+ * section headers must not inherit that look.
+ */
+const BARE: CSSProperties = {
+  background: 'none',
+  border: 'none',
+  padding: 0,
+  color: 'inherit',
+  fontFamily: 'inherit',
+  cursor: 'pointer',
+  textAlign: 'left',
+};
+
+interface SimRelay {
+  url: string;
+  /** NIP-11 `info.name`; upstream prefers it over `getRelayName(addr)`. */
+  infoName?: string;
+  read: boolean;
+  write: boolean;
 }
 
-// Sample relay data for demo
-const sampleRelays: MockRelay[] = [
-  {
-    id: 'wss://relay.damus.io',
-    url: 'wss://relay.damus.io',
-    name: 'Damus Relay',
-    description: 'Main relay for Damus iOS app',
-    isPaid: false,
-    isOnline: true,
-    supportedNips: [1, 2, 4, 9, 11, 12, 15, 16, 20, 22, 28, 33, 40],
-    latency: 45,
-    userCount: 15000,
-    lastSeen: Date.now(),
-    restrictions: { authRequired: false, paymentRequired: false, writeRestricted: false },
-    software: 'strfry',
-    version: '1.0.0',
-  },
-  {
-    id: 'wss://relay.snort.social',
-    url: 'wss://relay.snort.social',
-    name: 'Snort Relay',
-    description: 'Official Snort web client relay',
-    isPaid: false,
-    isOnline: true,
-    supportedNips: [1, 2, 4, 9, 11, 12, 15, 16, 20, 22, 28, 33, 40],
-    latency: 32,
-    userCount: 8000,
-    lastSeen: Date.now(),
-    restrictions: { authRequired: false, paymentRequired: false, writeRestricted: false },
-    software: 'strfry',
-    version: '1.0.0',
-  },
-  {
-    id: 'wss://nos.lol',
-    url: 'wss://nos.lol',
-    name: 'nos.lol',
-    description: 'General purpose public relay',
-    isPaid: false,
-    isOnline: true,
-    supportedNips: [1, 2, 4, 9, 11, 12, 15, 16, 20, 22, 28, 33, 40],
-    latency: 58,
-    userCount: 12000,
-    lastSeen: Date.now(),
-    restrictions: { authRequired: false, paymentRequired: false, writeRestricted: false },
-    software: 'strfry',
-    version: '1.0.0',
-  },
-  {
-    id: 'wss://relay.nostr.band',
-    url: 'wss://relay.nostr.band',
-    name: 'Nostr Band',
-    description: 'High-performance relay with search',
-    isPaid: false,
-    isOnline: true,
-    supportedNips: [1, 2, 4, 9, 11, 12, 15, 16, 20, 22, 28, 33, 40, 50],
-    latency: 28,
-    userCount: 20000,
-    lastSeen: Date.now(),
-    restrictions: { authRequired: false, paymentRequired: false, writeRestricted: false },
-    features: ['search', 'trending'],
-    software: 'strfry',
-    version: '1.0.0',
-  },
+/**
+ * The relay set from the recording. `relay.damus.io` displays as "damus.io"
+ * because that is the NIP-11 name the relay itself serves — the host is not
+ * being trimmed.
+ */
+const DEFAULT_RELAYS: SimRelay[] = [
+  { url: 'wss://relay.snort.social', infoName: 'memlay', read: true, write: true },
+  { url: 'wss://nostr.wine', read: true, write: true },
+  { url: 'wss://relay.damus.io', infoName: 'damus.io', read: true, write: true },
+  { url: 'wss://nos.lol', read: true, write: true },
 ];
 
-export const RelaysScreen: React.FC<RelaysScreenProps> = ({ onBack }) => {
-  const [relays, setRelays] = useState<RelayState[]>(
-    sampleRelays.map(relay => ({
-      ...relay,
-      isConnected: relay.isOnline,
-      isConnecting: false,
-      readPolicy: true,
-      writePolicy: !relay.restrictions?.writeRestricted,
-    }))
-  );
-  const [newRelayUrl, setNewRelayUrl] = useState('');
-  const [showAddForm, setShowAddForm] = useState(false);
+/** `getRelayName(addr)` — host + pathname, no scheme, no trailing slash. */
+function getRelayName(url: string): string {
+  return url.replace(/^wss?:\/\//i, '').replace(/\/+$/, '');
+}
 
-  const handleConnect = (relayId: string) => {
-    setRelays(prev => prev.map(relay => {
-      if (relay.id === relayId) {
-        if (relay.isConnected) {
-          return { ...relay, isConnected: false };
-        } else {
-          return { ...relay, isConnecting: true };
-        }
-      }
-      return relay;
-    }));
+/** Upstream truncates the displayed name to 20 chars and appends an ellipsis. */
+function truncateName(name: string): string {
+  return name.length > 20 ? `${name.slice(0, 20)}…` : name;
+}
 
-    // Simulate connection delay
-    setTimeout(() => {
-      setRelays(prev => prev.map(relay => 
-        relay.id === relayId 
-          ? { ...relay, isConnecting: false, isConnected: true }
-          : relay
-      ));
-    }, 1000);
+function relayLabel(relay: SimRelay): string {
+  return truncateName(relay.infoName ?? getRelayName(relay.url));
+}
+
+/** `wss://` is prefixed when no scheme was typed; trailing slashes are dropped. */
+function sanitizeRelayUrl(input: string): string | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+  const withScheme = /^wss?:\/\//i.test(trimmed) ? trimmed : `wss://${trimmed}`;
+  return withScheme.replace(/\/+$/, '');
+}
+
+/**
+ * `uptime-label.tsx` — a 4-state verdict from the average `rtt-read` in
+ * kind-30166 relay-monitor events, `idealPing 500` / `badPing 1000`, always
+ * `font-semibold` and carrying a `{ms} ms` tooltip.
+ *
+ * UPTIME_NOTE: with no monitor data the average is `NaN` and the cell reads a
+ * red **"Dead"** — which is exactly what every row showed in the owner's
+ * recording, sitting right next to a green "Connected". It looks like a
+ * contradiction and it is; §12 and §19 both say to keep it, so the My Relays
+ * rows below pass `null`. The Discover sections do have monitor data, which is
+ * where the other three states show up.
+ */
+const IDEAL_PING = 500;
+const BAD_PING = 1000;
+
+function uptimeVerdict(rttMs: number | null): { label: string; color: string; title: string } {
+  if (rttMs === null || Number.isNaN(rttMs)) {
+    return { label: 'Dead', color: 'var(--snort-error)', title: 'No monitor data' };
+  }
+  if (rttMs > BAD_PING) return { label: 'Poor', color: 'var(--snort-error)', title: `${rttMs} ms` };
+  if (rttMs >= IDEAL_PING) return { label: 'Good', color: 'var(--snort-warning)', title: `${rttMs} ms` };
+  return { label: 'Great', color: 'var(--snort-success)', title: `${rttMs} ms` };
+}
+
+interface DiscoverRelay {
+  url: string;
+  users: number;
+  rttMs: number;
+  distanceKm: number;
+}
+
+/** Deterministic stand-in for the kind-30166 monitor aggregates. */
+function discoverRelay(url: string): DiscoverRelay {
+  return {
+    url,
+    users: Math.round(1200 + seededUnit(`${url}:users`) * 90000),
+    rttMs: Math.round(80 + seededUnit(`${url}:rtt`) * 1400),
+    distanceKm: Math.round(seededUnit(`${url}:km`) * 950),
+  };
+}
+
+/** Upstream lists the top 20 / up to 100; the sim ships a representative slice. */
+const POPULAR_RELAYS: DiscoverRelay[] = [
+  'wss://relay.nostr.band',
+  'wss://nostr.mom',
+  'wss://offchain.pub',
+  'wss://nostr.oxtr.dev',
+  'wss://relay.nostr.bg',
+].map(discoverRelay);
+
+const CLOSE_RELAYS: DiscoverRelay[] = [
+  'wss://eden.nostr.land',
+  'wss://nostr-pub.wellorder.net',
+  'wss://nostr.bitcoiner.social',
+  'wss://relay.nostrich.land',
+].map(discoverRelay);
+
+export function RelaysScreen({ onBack }: RelaysScreenProps) {
+  const [relays, setRelays] = useState<SimRelay[]>(DEFAULT_RELAYS);
+  const [draft, setDraft] = useState('');
+  /**
+   * Upstream's Save is an `AsyncButton`, which hosts a transient state on the
+   * button itself while the NIP-65 list is published and blasted out. Ours is a
+   * static check glyph — no animation, because the preview environment freezes
+   * springs and keyframes at frame 0.
+   */
+  const [published, setPublished] = useState(false);
+
+  const mutate = (next: SimRelay[]) => {
+    setRelays(next);
+    setPublished(false);
   };
 
-  const handleTogglePolicy = (relayId: string, policy: 'read' | 'write') => {
-    setRelays(prev => prev.map(relay => {
-      if (relay.id === relayId) {
-        return {
-          ...relay,
-          [policy === 'read' ? 'readPolicy' : 'writePolicy']: 
-            !relay[policy === 'read' ? 'readPolicy' : 'writePolicy'],
-        };
-      }
-      return relay;
-    }));
+  const togglePermission = (url: string, key: 'read' | 'write') => {
+    mutate(relays.map((r) => (r.url === url ? { ...r, [key]: !r[key] } : r)));
   };
 
-  const handleAddRelay = () => {
-    if (newRelayUrl.trim()) {
-      const url = newRelayUrl.startsWith('wss://') ? newRelayUrl : `wss://${newRelayUrl}`;
-      const newRelay: RelayState = {
-        id: `custom-${Date.now()}`,
-        url,
-        name: url.replace('wss://', ''),
-        description: 'Custom relay',
-        isPaid: false,
-        isOnline: true,
-        supportedNips: [1, 2, 4, 9, 11, 12, 15, 16, 20, 22, 28, 33, 40],
-        latency: 0,
-        userCount: 0,
-        lastSeen: Date.now(),
-        isConnected: false,
-        isConnecting: false,
-        readPolicy: true,
-        writePolicy: true,
-      };
-      setRelays(prev => [...prev, newRelay]);
-      setNewRelayUrl('');
-      setShowAddForm(false);
+  /** The trash icon removes the relay and persists immediately (§12). */
+  const removeRelay = (url: string) => {
+    mutate(relays.filter((r) => r.url !== url));
+  };
+
+  const addRelays = (text: string) => {
+    // Submission splits on newlines — "a single or multiple relays, one per line".
+    const parsed = text.split('\n').map(sanitizeRelayUrl);
+    const next = [...relays];
+    for (const url of parsed) {
+      if (!url) continue;
+      if (next.some((r) => r.url === url)) continue;
+      next.push({ url, read: true, write: true });
     }
+    mutate(next);
   };
 
-  const handleRemoveRelay = (relayId: string) => {
-    setRelays(prev => prev.filter(r => r.id !== relayId));
-  };
-
-  const connectedCount = relays.filter(r => r.isConnected).length;
-  const totalCount = relays.length;
+  const isAdded = (url: string) => relays.some((r) => r.url === url);
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="snort-header">
-        <div className="flex items-center gap-3">
-          <button onClick={onBack} className="snort-btn snort-btn-ghost snort-btn-sm">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-          </button>
-          <div>
-            <h1 className="snort-header-title">Relays</h1>
-            <p className="text-sm text-slate-400">{connectedCount} of {totalCount} connected</p>
-          </div>
+    <div className="snort-relays flex flex-col gap-4 px-3 py-2" data-tour="snort-relays">
+      {/* Sandstr affordance: upstream relies on the header's history back arrow,
+          which in this shell returns to the timeline rather than to Settings. */}
+      <button
+        type="button"
+        style={BARE}
+        className="snort-muted flex w-fit items-center gap-2 text-sm"
+        onClick={onBack}
+      >
+        <Icon name="arrowBack" size={16} />
+        Settings
+      </button>
+
+      {/* ---------------------------- My Relays ---------------------------- */}
+      <section className="flex flex-col gap-2">
+        <h2 className="text-xl font-medium">My Relays</h2>
+        {/* Verbatim from `Relays.tsx`; `small` is muted body text (§2). */}
+        <small className="snort-muted leading-6">
+          Relays are servers you connect to for sending and receiving events. Aim for 4-8 relays.
+        </small>
+        <small className="snort-muted leading-6">
+          The relay name shown is not the same as the full URL entered.
+        </small>
+
+        <div className="overflow-x-auto">
+          <table className="snort-relay-table">
+            <thead>
+              <tr>
+                <th>Relay</th>
+                <th>Status</th>
+                <th>Permissions</th>
+                <th className="text-center">Uptime</th>
+                {/* Blank header over the trash column. */}
+                <th className="w-8">
+                  <span className="sr-only">Remove</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {relays.map((relay) => {
+                // Every rendered row has a live connection — upstream renders
+                // nothing at all for a relay without one — so "Offline" never
+                // appears here and the dot is always `--success`.
+                const uptime = uptimeVerdict(null);
+                return (
+                  <tr key={relay.url}>
+                    <td className="pr-4">
+                      {/* Upstream links this to `/settings/relays/:id`; that detail
+                          page is out of scope for the sim, so it stays plain text
+                          with the full URL in the tooltip, as upstream sets it. */}
+                      <span title={relay.url} className="font-medium">
+                        {relayLabel(relay)}
+                      </span>
+                    </td>
+                    <td className="pr-4">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="snort-status-dot"
+                          style={{ backgroundColor: 'var(--snort-success)' }}
+                          aria-hidden
+                        />
+                        Connected
+                      </div>
+                    </td>
+                    <td className="pr-4">
+                      <div className="flex items-center gap-3">
+                        <PermissionWord
+                          label="Read"
+                          enabled={relay.read}
+                          onToggle={() => togglePermission(relay.url, 'read')}
+                        />
+                        <PermissionWord
+                          label="Write"
+                          enabled={relay.write}
+                          onToggle={() => togglePermission(relay.url, 'write')}
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 text-center">
+                      <span
+                        className="font-semibold"
+                        style={{ color: uptime.color }}
+                        title={uptime.title}
+                      >
+                        {uptime.label}
+                      </span>
+                    </td>
+                    <td>
+                      {/* `text-gray-light` is undefined upstream, so the trash
+                          glyph inherits the body colour instead of going gray. */}
+                      <button
+                        type="button"
+                        className="snort-btn-sm"
+                        aria-label={`Remove ${relayLabel(relay)}`}
+                        onClick={() => removeRelay(relay.url)}
+                      >
+                        <Icon name="trash" size={20} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="snort-btn snort-btn-primary snort-btn-sm"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Add Relay
+
+        <button type="button" className="snort-btn self-start" onClick={() => setPublished(true)}>
+          Save
+          {published && <Icon name="check" size={16} />}
         </button>
-      </div>
+      </section>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 p-4 border-b border-slate-700">
-        <div className="bg-slate-800 rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-violet-400">{connectedCount}</p>
-          <p className="text-xs text-slate-400">Connected</p>
+      {/* ---------------------------- Add Relays --------------------------- */}
+      <section className="flex flex-col gap-2">
+        <h3 className="text-xl font-medium">Add Relays</h3>
+        <small className="snort-muted leading-6">
+          You can add a single or multiple relays, one per line.
+        </small>
+        {/* A textarea keeps the 12px radius — only inputs and selects are pills (§3). */}
+        <textarea
+          className="snort-textarea"
+          rows={4}
+          placeholder="wss://my-relay.com"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+        />
+        <button
+          type="button"
+          className="snort-btn secondary self-start"
+          onClick={() => {
+            addRelays(draft);
+            setDraft('');
+          }}
+        >
+          Add
+        </button>
+      </section>
+
+      {/* ----------------------------- Discover ---------------------------- */}
+      <CollapsedSection title="Popular Relays">
+        <small className="snort-muted leading-6">Popular relays used by people you follow.</small>
+        <div className="overflow-x-auto">
+          <table className="snort-relay-table">
+            <thead>
+              <tr>
+                <DiscoverHeader>Relay</DiscoverHeader>
+                <DiscoverHeader>Uptime</DiscoverHeader>
+                <DiscoverHeader>Users</DiscoverHeader>
+                <DiscoverHeader>
+                  <span className="sr-only">Add</span>
+                </DiscoverHeader>
+              </tr>
+            </thead>
+            <tbody>
+              {POPULAR_RELAYS.map((relay) => {
+                const uptime = uptimeVerdict(relay.rttMs);
+                return (
+                  <tr key={relay.url}>
+                    <td className="pr-4">
+                      <RelayName url={relay.url} />
+                    </td>
+                    <td className="pr-4">
+                      <span
+                        className="font-semibold"
+                        style={{ color: uptime.color }}
+                        title={uptime.title}
+                      >
+                        {uptime.label}
+                      </span>
+                    </td>
+                    <td className="pr-4">{formatShort(relay.users)}</td>
+                    <td className="text-right">
+                      <AddButton
+                        url={relay.url}
+                        added={isAdded(relay.url)}
+                        onAdd={() => addRelays(relay.url)}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-        <div className="bg-slate-800 rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-white">{relays.filter(r => r.isPaid).length}</p>
-          <p className="text-xs text-slate-400">Paid</p>
+      </CollapsedSection>
+
+      <CollapsedSection title="Close Relays">
+        <small className="snort-muted leading-6">Relays close to your geographic location.</small>
+        <div className="overflow-x-auto">
+          <table className="snort-relay-table">
+            <thead>
+              <tr>
+                <DiscoverHeader>Relay</DiscoverHeader>
+                <DiscoverHeader>Distance</DiscoverHeader>
+                <DiscoverHeader>Uptime</DiscoverHeader>
+                <DiscoverHeader>
+                  <span className="sr-only">Add</span>
+                </DiscoverHeader>
+              </tr>
+            </thead>
+            <tbody>
+              {CLOSE_RELAYS.map((relay) => {
+                const uptime = uptimeVerdict(relay.rttMs);
+                return (
+                  <tr key={relay.url}>
+                    <td className="pr-4">
+                      <RelayName url={relay.url} />
+                    </td>
+                    <td className="pr-4">{`${relay.distanceKm} km`}</td>
+                    <td className="pr-4">
+                      <span
+                        className="font-semibold"
+                        style={{ color: uptime.color }}
+                        title={uptime.title}
+                      >
+                        {uptime.label}
+                      </span>
+                    </td>
+                    <td className="text-right">
+                      <AddButton
+                        url={relay.url}
+                        added={isAdded(relay.url)}
+                        onAdd={() => addRelays(relay.url)}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-        <div className="bg-slate-800 rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-white">
-            {Math.round(relays.filter(r => r.isConnected).reduce((acc, r) => acc + r.latency, 0) / Math.max(connectedCount, 1))}ms
-          </p>
-          <p className="text-xs text-slate-400">Avg Latency</p>
-        </div>
-      </div>
-
-      {/* Add Relay Form */}
-      {showAddForm && (
-        <div className="p-4 border-b border-slate-700 bg-slate-800/50">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newRelayUrl}
-              onChange={(e) => setNewRelayUrl(e.target.value)}
-              placeholder="wss://relay.example.com"
-              className="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-violet-500"
-            />
-            <button
-              onClick={handleAddRelay}
-              className="snort-btn snort-btn-primary snort-btn-sm"
-            >
-              Add
-            </button>
-            <button
-              onClick={() => setShowAddForm(false)}
-              className="snort-btn snort-btn-ghost snort-btn-sm"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Relays List */}
-      <div className="snort-content flex-1">
-        {relays.map((relay) => (
-          <div key={relay.id} className="snort-relay">
-            <div className="snort-relay-header">
-              <div>
-                <div className="snort-relay-name">
-                  {relay.name}
-                  {relay.isPaid && (
-                    <span className="ml-2 px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full">
-                      Paid
-                    </span>
-                  )}
-                </div>
-                <p className="snort-relay-url">{relay.url}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`snort-relay-status ${relay.isConnecting ? 'connecting' : relay.isConnected ? 'connected' : 'disconnected'}`}>
-                  <span className="snort-relay-status-dot" />
-                  {relay.isConnecting ? 'Connecting...' : relay.isConnected ? 'Connected' : 'Disconnected'}
-                </span>
-                <button
-                  onClick={() => handleConnect(relay.id)}
-                  className={`snort-btn snort-btn-sm ${relay.isConnected ? 'snort-btn-secondary' : 'snort-btn-primary'}`}
-                >
-                  {relay.isConnected ? 'Disconnect' : 'Connect'}
-                </button>
-              </div>
-            </div>
-
-            {relay.description && (
-              <p className="text-sm text-slate-400 mb-3">{relay.description}</p>
-            )}
-
-            <div className="snort-relay-stats">
-              <span>Latency: {relay.latency}ms</span>
-              <span>Users: {relay.userCount.toLocaleString()}</span>
-              <span>NIPs: {relay.supportedNips.slice(0, 5).join(', ')}{relay.supportedNips.length > 5 ? '...' : ''}</span>
-            </div>
-
-            <div className="snort-relay-policies">
-              <button
-                onClick={() => handleTogglePolicy(relay.id, 'read')}
-                className={`snort-relay-policy ${relay.readPolicy ? 'active' : ''}`}
-              >
-                Read {relay.readPolicy ? '✓' : '✗'}
-              </button>
-              <button
-                onClick={() => handleTogglePolicy(relay.id, 'write')}
-                className={`snort-relay-policy ${relay.writePolicy ? 'active' : ''}`}
-              >
-                Write {relay.writePolicy ? '✓' : '✗'}
-              </button>
-              {relay.restrictions?.authRequired && (
-                <span className="snort-relay-policy">Auth Required</span>
-              )}
-              {relay.restrictions?.paymentRequired && (
-                <span className="snort-relay-policy">Payment Required</span>
-              )}
-            </div>
-
-            {/* Remove button for custom relays */}
-            {relay.id.startsWith('custom-') && (
-              <button
-                onClick={() => handleRemoveRelay(relay.id)}
-                className="mt-3 text-red-400 hover:text-red-300 text-sm"
-              >
-                Remove relay
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
+      </CollapsedSection>
     </div>
   );
-};
+}
+
+/**
+ * `permissions.tsx:9-34` — two clickable WORDS, never switches. Enabled keeps the
+ * default colour, disabled goes gray. A `<span>` (upstream uses a bare `div`)
+ * keeps this out of the pill-button system and out of any nested-button trap.
+ */
+function PermissionWord({
+  label,
+  enabled,
+  onToggle,
+}: {
+  label: string;
+  enabled: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <span
+      role="button"
+      tabIndex={0}
+      aria-pressed={enabled}
+      className={`cursor-pointer select-none${enabled ? '' : ' text-neutral-500'}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggle();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onToggle();
+        }
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+/**
+ * Discover column heading. Upstream writes `text-gray-light uppercase`, and
+ * `text-gray-light` is one of the undefined classes §19 lists — so these headers
+ * are uppercase but NOT gray, unlike My Relays'. The inline colour is what beats
+ * `.snort-relay-table thead th`'s neutral-400.
+ */
+function DiscoverHeader({ children }: { children: ReactNode }) {
+  return <th style={{ color: 'var(--snort-text)' }}>{children}</th>;
+}
+
+/**
+ * Upstream pairs the name with a `RelayFavicon`, which hotlinks the relay host's
+ * favicon — CSP-unsafe and offline-breaking for Sandstr (§19.10). The bundled
+ * `relay` glyph stands in for the favicon's fallback shape.
+ */
+function RelayName({ url }: { url: string }) {
+  return (
+    <span className="flex items-center gap-2" title={url}>
+      <Icon name="relay" size={16} />
+      <span className="font-medium">{truncateName(getRelayName(url))}</span>
+    </span>
+  );
+}
+
+/** Upstream: `AsyncButton className="!py-1 mb-1"` — a default white pill, squashed. */
+function AddButton({ url, added, onAdd }: { url: string; added: boolean; onAdd: () => void }) {
+  return (
+    <button
+      type="button"
+      className="snort-btn mb-1"
+      style={{ paddingTop: 4, paddingBottom: 4 }}
+      disabled={added}
+      aria-label={`Add ${getRelayName(url)}`}
+      onClick={onAdd}
+    >
+      Add
+    </button>
+  );
+}
+
+/**
+ * `CollapsedSection` — a clickable `text-xl` title row with a caret, `startClosed`
+ * by default, which is how both Discover sections render (§12).
+ */
+function CollapsedSection({ title, children }: { title: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <section className="flex flex-col gap-2">
+      <button
+        type="button"
+        style={BARE}
+        className="flex w-full items-center gap-4 text-xl font-medium"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        {title}
+        <Icon name="chevronDown" size={20} className={open ? 'rotate-180' : undefined} />
+      </button>
+      {open && <div className="flex flex-col gap-2">{children}</div>}
+    </section>
+  );
+}
 
 export default RelaysScreen;

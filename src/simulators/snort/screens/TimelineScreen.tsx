@@ -1,229 +1,241 @@
+import { useMemo, useState } from 'react';
+import type { MockNote, MockUser } from '../../../data/mock';
+import { Avatar } from '../components/Avatar';
+import { Icon } from '../components/Icon';
+import { NoteCard } from '../components/NoteCard';
+import { formatShort, noteImages, seededUnit } from '../snortUtils';
+
 /**
- * Snort Timeline Screen
- * Main feed with filters and note display
+ * Snort — the home feed.
+ *
+ * Rebuilt from `docs/refs/snort/screen-map.md` §6.2 / §6.3 / §6.4 with the note
+ * surface itself living in `NoteCard` (§4). The three things the previous
+ * version of this file got wrong, all of them called out in the spec:
+ *
+ *  - **There is no inline compose box** (§6.2). `TimelineFollows.tsx:87-116`
+ *    renders only the latest-pill, the notes and `AutoLoadMore`;
+ *    `NoteCreatorButton` is mounted in the sidebar and the mobile footer ONLY.
+ *    [REC ✓ nothing between the header and the first note but the live strip.]
+ *  - **There is no tab row here.** The feed picker is the header dropdown
+ *    (§6.1) and Snort has no underline tabs anywhere; the tab is handed to us
+ *    as the `feedTab` prop.
+ *  - The order of the surface is live strip → "N new notes" pill → notes →
+ *    "Load more".
+ *
+ * Everything is deterministic: image and viewer counts come from `noteImages`
+ * (memoised local `data:` URIs) and `seededUnit`, never `Math.random()`.
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
-import { NoteCard } from '../components/NoteCard';
-import type { MockUser, MockNote } from '../../../data/mock';
-import type { SnortScreen } from '../SnortSimulator';
-
-interface TimelineScreenProps {
+export interface TimelineScreenProps {
   currentUser: MockUser | null;
   notes: MockNote[];
   users: MockUser[];
-  onNavigate: (screen: SnortScreen) => void;
-  onViewProfile: (user: MockUser) => void;
-  onViewThread: (note: MockNote) => void;
-  onOpenCompose: () => void;
+  feedTab: string;
+  onViewProfile: (u: MockUser) => void;
+  onViewThread: (n: MockNote) => void;
+  onReply: (n: MockNote) => void;
 }
 
-type FeedFilter = 'following' | 'global' | 'trending';
+/** The feed caps displayed notes at ~25 across every Sandstr simulator. */
+const FEED_CAP = 25;
+/** `AutoLoadMore` chunk size — "Load more" reveals the next slice. */
+const PAGE = 10;
 
-export const TimelineScreen: React.FC<TimelineScreenProps> = ({
+/**
+ * §6.3 — the live strip only exists on `/` and `/following`, i.e. the two tabs
+ * whose picker labels are these.
+ */
+const LIVE_TABS = ['Following', 'For you'];
+
+/**
+ * Invented stream titles. Real streams would carry real people's names, so the
+ * titles are generic and the HOSTS are resolved from mock users instead.
+ */
+const STREAMS = [
+  '24/7 Chiptune Radio',
+  'Building a relay, live',
+  'Lo-fi beats to zap to',
+  'Sats & Coffee: morning show',
+  'Late night synthwave',
+];
+
+export function TimelineScreen({
   currentUser,
   notes,
   users,
+  feedTab,
   onViewProfile,
   onViewThread,
-  onOpenCompose,
-}) => {
-  const [activeFilter, setActiveFilter] = useState<FeedFilter>('following');
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  onReply,
+}: TimelineScreenProps) {
+  const [showNewNotes, setShowNewNotes] = useState(true);
+  const [limit, setLimit] = useState(PAGE);
 
-  const handleRefresh = useCallback(() => {
-    setIsRefreshing(true);
-    setTimeout(() => {
-      setIsRefreshing(false);
-      console.log('[Snort] Feed refreshed');
-    }, 1000);
-  }, []);
-
-  // Create user lookup map for performance
-  const userMap = useMemo(() => {
+  const usersByPubkey = useMemo(() => {
     const map = new Map<string, MockUser>();
-    users.forEach(user => map.set(user.pubkey, user));
+    for (const u of users) map.set(u.pubkey, u);
     return map;
   }, [users]);
 
-  // Apply the active feed filter to the notes before slicing/rendering.
-  // - following: a stable subset of authors (mimics a follow list)
-  // - global: every note, most recent first
-  // - trending: sorted by engagement (zaps + likes + reposts)
-  const filteredNotes = useMemo(() => {
-    if (activeFilter === 'trending') {
-      const engagement = (n: MockNote) =>
-        (n.zaps || 0) * 3 + (n.likes || 0) + (n.reposts || 0) * 2;
-      return [...notes].sort((a, b) => engagement(b) - engagement(a));
+  /**
+   * Per-tab sources (§6.4, "Per-tab sources"): `media` restricts to media
+   * kinds, `conversations` drops `postsOnly`, `followed-by-friends` widens the
+   * follow distance to 2, `trending/notes` is a ranked feed. Reproduced as
+   * deterministic filters over the mock set; the props array is never mutated.
+   */
+  const feedNotes = useMemo(() => {
+    const all = [...notes];
+    let selected: MockNote[];
+
+    switch (feedTab) {
+      case 'Media':
+        selected = all.filter((n) => (n.images?.length ?? 0) > 0);
+        break;
+      case 'Trending Notes':
+        selected = all.sort((a, b) => b.likes - a.likes);
+        break;
+      case 'Trending Hashtags':
+        selected = all.filter((n) => (n.hashtags?.length ?? 0) > 0);
+        break;
+      case 'Conversations':
+        selected = all.filter((n) => n.replies > 0);
+        break;
+      case 'Followed by friends':
+        // followDistance={2} — a stable "friends of friends" slice.
+        selected = all.filter((n) => seededUnit(`fof:${n.id}`) > 0.35);
+        break;
+      case 'Follow Sets':
+        selected = all.filter((n) => seededUnit(`set:${n.id}`) > 0.5);
+        break;
+      case 'For you':
+        // The DVM feed interleaves with the follows feed, so the order differs
+        // from `Following` without the contents differing.
+        selected = all.sort((a, b) => seededUnit(`dvm:${a.id}`) - seededUnit(`dvm:${b.id}`));
+        break;
+      default:
+        // `Following` = TimelineFollows postsOnly, newest first.
+        selected = all.sort((a, b) => b.created_at - a.created_at);
     }
 
-    if (activeFilter === 'following') {
-      // Derive a deterministic "following" set: roughly the first third of
-      // known authors, so the tab visibly narrows the feed.
-      const authorPubkeys = Array.from(new Set(notes.map(n => n.pubkey)));
-      const followedCount = Math.max(1, Math.ceil(authorPubkeys.length / 3));
-      const followed = new Set(authorPubkeys.slice(0, followedCount));
-      return notes.filter(n => followed.has(n.pubkey));
-    }
+    // A tab that filters down to nothing would render a blank column; the mock
+    // set is small, so fall back to the unfiltered feed rather than a dead end.
+    return (selected.length > 0 ? selected : all).slice(0, FEED_CAP);
+  }, [notes, feedTab]);
 
-    // global: everything, most recent first
-    return [...notes].sort((a, b) => b.created_at - a.created_at);
-  }, [notes, activeFilter]);
+  const visible = feedNotes.slice(0, limit);
+  const hasMore = limit < feedNotes.length;
 
-  // Get notes with authors
-  const notesWithAuthors = useMemo(() => {
-    return filteredNotes.slice(0, 25).map(note => ({
-      note,
-      author: userMap.get(note.pubkey),
-    })).filter(item => item.author); // Only include notes with valid authors
-  }, [filteredNotes, userMap]);
+  /** Up to 3 overlapping 24px avatars in the pill — never your own (§6.4). */
+  const newNoteAvatars = useMemo(
+    () => users.filter((u) => u.pubkey !== currentUser?.pubkey).slice(0, 3),
+    [users, currentUser],
+  );
+  const newNoteCount = 2 + Math.floor(seededUnit(`new:${feedTab}`) * 12);
 
-  // Genuinely loading only while no data has arrived yet.
-  const isLoading = notes.length === 0;
+  const showLive = LIVE_TABS.includes(feedTab);
 
   return (
-    <div className="flex flex-col h-full" data-tour="snort-feed">
-      {/* Header */}
-      <div className="snort-header" data-tour="snort-compose">
-        <h1 className="snort-header-title">Timeline</h1>
-        <div className="snort-header-actions">
-          <button
-            onClick={handleRefresh}
-            className="snort-btn snort-btn-ghost snort-btn-sm"
-            disabled={isRefreshing}
-          >
-            <svg 
-              className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </button>
-          <button
-            onClick={onOpenCompose}
-            className="snort-btn snort-btn-primary snort-btn-sm"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            New Post
+    <div>
+      {showLive && <LiveStreams users={users} />}
+
+      {showNewNotes && notes.length > 0 && (
+        <div className="flex justify-center py-2">
+          {/* `bg-highlight` violet fill, white text, fully rounded. Inline click
+              is `showLatest(false)` — the pill simply goes away. */}
+          <button type="button" className="snort-new-notes" onClick={() => setShowNewNotes(false)}>
+            {newNoteAvatars.length > 0 && (
+              <span className="flex items-center">
+                {newNoteAvatars.map((u, i) => (
+                  <Avatar key={u.pubkey} seed={u.username} className={`h-6 w-6 ${i > 0 ? '-ml-2' : ''}`} />
+                ))}
+              </span>
+            )}
+            <span>{newNoteCount} new notes</span>
+            <Icon name="arrowUp" size={20} />
           </button>
         </div>
-      </div>
+      )}
 
-      {/* Filter Tabs */}
-      <div className="snort-tabs">
-        {(['following', 'global', 'trending'] as FeedFilter[]).map((filter) => (
-          <button
-            key={filter}
-            onClick={() => setActiveFilter(filter)}
-            className={`snort-tab ${activeFilter === filter ? 'active' : ''}`}
-          >
-            {filter.charAt(0).toUpperCase() + filter.slice(1)}
-          </button>
+      {/* The flat divided note list (§4.1). `.snort-feed` + the data attribute
+          are both the guided tour's target selector. */}
+      <div className="snort-feed" data-tour="snort-feed">
+        {visible.map((note, i) => (
+          <NoteCard
+            key={note.id}
+            note={note}
+            author={usersByPubkey.get(note.pubkey)}
+            users={users}
+            onOpenThread={onViewThread}
+            onViewProfile={onViewProfile}
+            onReply={onReply}
+            /* One target only, or the tour spotlights every action bar. */
+            tourTarget={i === 0}
+          />
         ))}
       </div>
 
-      {/* Quick Compose */}
-      <div className="p-4 border-b border-slate-700">
-        <div className="snort-compose">
-          <div className="flex gap-3">
-            {currentUser && (
-              <img
-                src={`https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser?.pubkey || currentUser?.username || 'default'}`}
-                alt={currentUser.displayName}
-                className="w-10 h-10 rounded-full flex-shrink-0"
-              />
-            )}
-            <div className="flex-1">
-              <button
-                onClick={onOpenCompose}
-                className="w-full text-left px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-slate-500 hover:border-violet-500/50 hover:text-slate-400 transition-colors"
-              >
-                What's on your mind?
-              </button>
-              <div className="snort-compose-actions mt-3">
-                <div className="snort-compose-tools">
-                  <button className="snort-compose-tool" title="Add image">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </button>
-                  <button className="snort-compose-tool" title="Add code">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                    </svg>
-                  </button>
-                  <button className="snort-compose-tool" title="Add poll">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </button>
-                </div>
-                <button
-                  onClick={onOpenCompose}
-                  className="snort-btn snort-btn-primary snort-btn-sm"
-                >
-                  Post
-                </button>
-              </div>
-            </div>
-          </div>
+      {/* `AutoLoadMore` — an infinite-scroll trigger wrapping a plain button.
+          [REC ✓ white "Load more" pill.] */}
+      {hasMore && (
+        <div className="flex justify-center py-4">
+          <button type="button" className="snort-btn" onClick={() => setLimit((n) => n + PAGE)}>
+            Load more
+          </button>
         </div>
-      </div>
-
-      {/* Feed */}
-      <div className="snort-content flex-1">
-        {isRefreshing && (
-          <div className="snort-loading">
-            <div className="snort-loading-spinner mr-3" />
-            <span>Refreshing feed...</span>
-          </div>
-        )}
-
-        {isLoading ? (
-          <div className="snort-empty">
-            <svg className="snort-empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            <p>Loading timeline...</p>
-          </div>
-        ) : notesWithAuthors.length === 0 ? (
-          <div className="snort-empty">
-            <svg className="snort-empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            <p>No posts in this feed yet.</p>
-          </div>
-        ) : (
-          <>
-            {notesWithAuthors.map(({ note, author }) => (
-              author && (
-                <NoteCard
-                  key={note.id}
-                  note={note}
-                  author={author}
-                  onViewProfile={() => onViewProfile(author)}
-                  onViewThread={() => onViewThread(note)}
-                />
-              )
-            ))}
-
-            {/* No "Load more": the feed is a fixed mock set, so the button did
-                nothing but `console.log` — and as an arrow BODY that log was the
-                handler's return value, which esbuild's `pure` list cannot drop,
-                so it shipped in the production bundle. A dead control is worse
-                than no control; the end of the feed is simply the end. */}
-            <div className="py-6 text-center text-sm text-[var(--snort-text-tertiary)]">
-              You're all caught up.
-            </div>
-          </>
-        )}
-      </div>
+      )}
     </div>
   );
-};
+}
+
+/**
+ * §6.3 — `Components/LiveStream/LiveStreams.tsx:20`:
+ * `flex mx-2 gap-4 overflow-x-auto`, cards `h-[80px]`, `aspect-video` thumbnail,
+ * an uppercase status badge, a 25px host avatar with `outline-2
+ * outline-highlight`, and a viewer-count pill.
+ *
+ * [REC ✓ dark title bar over the thumbnail, red LIVE pill bottom-left,
+ * violet-ringed avatar bottom-right, a dark "1 viewers" pill, and a visible
+ * horizontal scrollbar — so the scrollbar is deliberately NOT hidden here.]
+ *
+ * The badge colour is `--snort-live #f83838` (via `.snort-live-badge`), which
+ * the recording samples as distinct from the "New Note" orange in the same
+ * frame. The viewer label is not pluralised upstream: it reads "1 viewers".
+ */
+function LiveStreams({ users }: { users: MockUser[] }) {
+  return (
+    <div className="mx-2 flex gap-4 overflow-x-auto py-2">
+      {STREAMS.map((title, i) => {
+        const host = users.length > 0 ? users[i % users.length] : undefined;
+        const viewers = 1 + Math.floor(seededUnit(`viewers:${i}`) * 2600);
+        return (
+          <div
+            key={title}
+            className="relative h-[80px] shrink-0 cursor-pointer overflow-hidden rounded-lg"
+            style={{ border: '1px solid var(--snort-border)' }}
+          >
+            {/* aspect-video at 80px tall = 142px wide. */}
+            <img src={noteImages(`live:${i}`, 1)[0]} alt="" className="h-[80px] w-[142px] object-cover" />
+
+            {/* Dark title bar across the top of the card. */}
+            <div className="absolute inset-x-0 top-0 truncate bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
+              {title}
+            </div>
+
+            {/* The viewer pill sits under the title bar; the badge and the host
+                share the bottom row, which is all a 142px card fits. */}
+            <span className="absolute right-1 top-6 rounded-full bg-black/60 px-1.5 text-[10px] leading-4 text-white">
+              {formatShort(viewers)} viewers
+            </span>
+
+            <div className="absolute inset-x-0 bottom-0 flex items-end justify-between px-1 pb-1">
+              <span className="snort-live-badge">LIVE</span>
+              <Avatar seed={host?.username ?? `stream:${i}`} className="snort-live-avatar h-[25px] w-[25px]" />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default TimelineScreen;
