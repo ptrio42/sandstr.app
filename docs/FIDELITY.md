@@ -15,6 +15,20 @@
 - ✅ **Snort (web)** (12 powierzchni: Home/Thread/Profile/Notifications/Messages/Discover/Search/Settings/Relays/Compose/Login + right column) — `docs/refs/snort/screen-map.md` (autorytatywny, 19 sekcji; recording 2026-07-14 + `v0l/snort@3cc8317`), rebuild `cbe56b1`. Accent violet `--highlight` `#ac88ff`(dark)/`#7139f1`(light) **współistnieje** z CTA `--primary #ff3f15` (dawny teal to był błąd — `#1ecbe1` to wyłącznie `--repost`) · reakcja = **SERCE `#ef4444`, nie emoji** · akcje **reply→repost→heart→[PoW]→zap→avatary zapperów** (18px, brak share/bookmark — są w `…`; kolor zmieniają TYLKO serce i zap, bo `text-nostr-purple`/`-blue` nie istnieją) · selektor feedu = **DROPDOWN**, nigdzie nie ma tabów z podkreśleniem (drugi idiom to pill-row) · **domyślny motyw = `system`** · **Deck = martwy kod** · w light mode `.light button` bije utility Tailwinda, więc prawie wszystkie guziki są białe. Przy okazji naprawione: B8 (highlighter usunięty — Snort nie ma kolorowania składni), B9b, B10 (dolny pasek ≤768px), zero requestów zewnętrznych.
   **Gotcha hosta:** frameless klient dostaje dokładnie **1022px** (karta `max-w-5xl`) przy każdym viewporcie — progi breakpointów trzeba skalować do karty, inaczej prawa kolumna nigdy się nie zamontuje. I mierz szerokość callback-refem + `resize`, bo ekran logowania i zalogowany montują różne roota (jednorazowy observer obserwuje odłączony węzeł).
 
+- ✅ **Wisp** (13 powierzchni: login/feed/thread/profile/notifications/chat/wallet/search/compose/zap/
+  drawer/settings×4) — `docs/refs/wisp/screen-map.md` (autorytatywny; recording 2026-07-30 +
+  `barrydeen/wisp@11ac08f` v1.2.1, 14-agentowy recon). Android, Kotlin/Compose M3; **default = theme
+  „custom" DARK, accent `#FF9800`**, bg `#0A0A0B`, error = celowy iOS-red `#FF3B30`; jedyny brand-gradient
+  to radial logo `#FFBA60→#E97941` (evenodd ghost z wyciętymi oczami). Akcje **reply→react→repost→zap→
+  add-to-list**; serce NIGDY nie barwi się — zastępuje je twój emoji; zap = **₿ CurrencyBitcoin** (bolt
+  to opt-in) i pokazuje SUMĘ satów; sygnatura #1 = **undo-countdown „Post now (N)"** na każdym poście.
+  Feed-selector = dropdown-pill (For You default); pigułki online+relay-count (zielone) w top barze;
+  „∞ Followers"; statusy NIP-38 pod nazwami; ICQ-flower + dźwięk na reply/DM. Odtworzone leaki M3:
+  `secondaryContainer #4A4458` na chipach relay read/write/auth i segmencie Gallery|Stack. [REC vs REPO]:
+  recording miał **Fiat Mode ON** (default OFF, `FiatPreferences.kt`) — sim szipuje sats+₿; README
+  obiecuje Amber/NIP-55, ale **kod NIP-55 nie istnieje** w repo. Opt-in: Barry Deen (`barrydeen`),
+  OpenSats-funded, aktywny na Nostr; homepage `wisp.mobile`, Play `com.wisp.app`, MIT.
+
 **Do zrobienia (druga fala, słabsza wierność / stare stuby):** Keychat, Olas, Coracle, Gossip. Tokeny + killery każdego są niżej w tym pliku; korekty kolorów w `[[client-fidelity-ground-truth]]`. (Primal-MOBILE nadal stary stub — zrobiony tylko web.)
 
 **Start następnej sesji (agent robiący kolejny symulator):**

@@ -1,10 +1,10 @@
 # Sandstr — CLAUDE.md
 
 Samodzielny, w 100% kliencki produkt: **„try Nostr clients in your browser — no keys, no install"**.
-(Bez liczby w taglinie — publiczna narracja to „5 wiernych reprodukcji + 4 early previews + 1 original",
-sterowana osią `status`/`kind` w `src/registry.tsx`, nie „10 klientów".)
+(Bez liczby w taglinie — publiczna narracja to „6 wiernych reprodukcji + 4 early previews + 1 original",
+sterowana osią `status`/`kind` w `src/registry.tsx`, nie „11 klientów".)
 **Rdzeń wartości = REAL-CLIENTS-FIRST:** wierne, wysokiej wierności, przeglądarkowe reprodukcje **realnych,
-brandowanych klientów Nostr** (Damus, Amethyst, Primal, Snort, YakiHonne, Coracle, Keychat, Olas, Gossip) —
+brandowanych klientów Nostr** (Damus, Amethyst, Primal, Snort, YakiHonne, Wisp, Coracle, Keychat, Olas, Gossip) —
 bez kluczy, bez instalacji. **Wierność wobec prawdziwych appek JEST produktem** — użytkownik ma naprawdę
 przetestować klienta, nie „jakiś losowy twór".
 Wyodrębniony (extraction spike, 2026-07-14) z feature'u symulatorów klientów, który żył w przewodniku
@@ -27,11 +27,11 @@ Podgląd w sesji: `.claude/launch.json` → config **sandstr** (`preview_start`,
 
 ## Architektura / mapa kodu
 
-- **`src/simulators/` — SERCE.** 10 klientów na wspólnym fundamencie.
+- **`src/simulators/` — SERCE.** 11 klientów na wspólnym fundamencie.
   - `shared/` — `useSimulator` (Context+reducer, w większości **NIEUŻYWANY** — sim trzymają lokalny
     `useState`), `SimulatorShell`, `MobilePhoneFrame` (ramka iPhone, `platform` ios/android),
     `MockKeyDisplay`, `NoteCard`, `useParentTheme` (obserwuje klasę `dark` na `<html>`),
-    `mockKeys`/`mockEvents`, **`configs.ts`** (metadata 9 brandowanych klientów), `types`.
+    `mockKeys`/`mockEvents`, **`configs.ts`** (metadata 10 brandowanych klientów), `types`.
   - `<client>/` — każdy klient: `<Client>Simulator.tsx` (baza UI/stan) +
     `<Client>SimulatorWithTour.tsx` (wrapper: `TourWrapper` + mapowanie kroków toura na komendy stanu) +
     `screens/` + `components/` + `<client>.theme.css`.
@@ -84,9 +84,19 @@ Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` + `TRADEMARKS.md`.
 - **Wzorzec wierności:** **Amethyst** i **Damus** — głębokie, zweryfikowane referencyjnie flagowce/szablony
   (Amethyst 8 powierzchni; Damus 11) — inline-SVG robohash avatary, lokalne media postów jako `data:`-URI,
   offline/CSP-safe, tokeny z repo klienta + weryfikacja side-by-side z realnym recordingiem. Do nich równamy.
-- **READY (status w `registry.tsx`): Amethyst, Damus, YakiHonne, Primal (web)** (2026-07-28) **+ Snort**
-  (2026-07-30) — zweryfikowane referencyjnie (screen-map + fidelity pass). (+ Nostr Kitten:
+- **READY (status w `registry.tsx`): Amethyst, Damus, YakiHonne, Primal (web)** (2026-07-28) **+ Snort
+  + Wisp** (2026-07-30) — zweryfikowane referencyjnie (screen-map + fidelity pass). (+ Nostr Kitten:
   `kind: 'original'`, opcjonalny easter-egg, nie lider i nie front door.)
+- **Wisp (ZROBIONE 2026-07-30):** recon (`barrydeen/wisp@11ac08f`, v1.2.1, MIT © Barry Deen; homepage
+  `wisp.mobile`) + recording → `docs/refs/wisp/screen-map.md` (autorytatywny) i `src/simulators/wisp/`
+  (13 powierzchni: login/feed/thread/profile/notifications/chat/wallet/search/compose/zap/drawer/
+  Interface/Relays/Keys/Social Graph). Default = theme „custom" DARK, accent `#FF9800`, bg `#0A0A0B`,
+  error = iOS-red `#FF3B30`; akcje **reply→react(emoji zastępuje serce, nigdy nie barwi)→repost→
+  zap(₿ CurrencyBitcoin domyślnie, suma satów)→add-to-list**; sygnatury: **undo-countdown „Post now (N)"**
+  na każdym poście, feed-selector DROPDOWN (For You default), pigułki online/relay-count w top barze,
+  „∞ Followers", statusy NIP-38, ICQ-flower na bell. Celowo odtworzone bugi/leaki: M3 `secondaryContainer`
+  `#4A4458` na chipach read/write/auth i segmentach Gallery|Stack. Recording miał Fiat Mode ON — sim
+  szipuje repo-default (sats+₿); patrz §18 screen-mapy.
 - **Snort (ZROBIONE 2026-07-30):** recon + pełny rebuild → `docs/refs/snort/screen-map.md`
   (autorytatywny, 19 sekcji z recordingu 2026-07-14 + `v0l/snort@3cc8317`) i przepisany
   `src/simulators/snort/` (12 powierzchni). Accent violet `--highlight` `#ac88ff`/`#7139f1`

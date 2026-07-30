@@ -195,6 +195,21 @@ const MOUNTS: Record<
     installNote: 'Web app, no install; native iOS and Android apps too',
     load: () => import('./simulators/primal/PrimalWebSimulatorWithTour'),
   },
+  wisp: {
+    frame: 'android',
+    tour: true,
+    // Reference-verified 2026-07-30: recording + barrydeen/wisp@11ac08f recon
+    // → docs/refs/wisp/screen-map.md, then a live side-by-side pass per surface.
+    status: 'ready',
+    theme: 'dark', // real shipping default: theme "custom" dark (MainActivity.kt:47)
+    // Verified 2026-07-30 against wisp.mobile + github.com/barrydeen/wisp
+    // (MIT, © 2025 Barry Deen; Play id com.wisp.app; OpenSats-funded).
+    homepage: 'https://wisp.mobile',
+    repo: 'https://github.com/barrydeen/wisp',
+    upstreamLicense: 'MIT',
+    installNote: 'Google Play, or Zapstore (zapstore.yaml ships in the repo)',
+    load: () => import('./simulators/wisp/WispSimulatorWithTour'),
+  },
   coracle: {
     frame: null,
     tour: false,
