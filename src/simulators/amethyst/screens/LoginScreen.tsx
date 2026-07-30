@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { MockUser } from '../../../data/mock';
-import { getRandomUsers } from '../../../data/mock';
+import { getRandomUsers, generateAvatarGradient } from '../../../data/mock';
 import {
   looksLikeRealSecretKey,
   REAL_KEY_REFUSED,
@@ -54,7 +54,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
         pubkey: generatedKeys.npub,
         displayName: 'New User',
         username: 'newuser',
-        avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${generatedKeys.npub}`,
+        avatar: generateAvatarGradient(generatedKeys.npub), // local, offline — no DiceBear
         bio: 'Just joined Nostr!',
         followersCount: 0,
         followingCount: 0,

@@ -17,6 +17,7 @@ import type { PostData } from './components/MaterialCard';
 import { useParentTheme } from '../shared/hooks/useParentTheme';
 import './amethyst.theme.css';
 import type { MockUser } from '../../data/mock';
+import { generateAvatarGradient } from '../../data/mock';
 import { TourContext } from '../../components/tour';
 
 // Types
@@ -144,7 +145,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
             pubkey: 'npub1amethyst123',
             displayName: 'Amethyst User',
             username: 'amethystuser',
-            avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=amethyst',
+            avatar: generateAvatarGradient('amethyst'), // local, offline — no DiceBear
             bio: 'Exploring Nostr with Amethyst',
             followersCount: 42,
             followingCount: 10,

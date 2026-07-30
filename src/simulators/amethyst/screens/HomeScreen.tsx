@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MaterialCard, PostData } from '../components/MaterialCard';
 import { AppTopBar } from '../components/AppTopBar';
 import { FeedSelector } from '../components/FeedSelector';
-import { getRecentNotes, getUserByPubkey } from '../../../data/mock';
+import { getRecentNotes, getUserByPubkey, generateAvatarGradient } from '../../../data/mock';
 import type { MockNote } from '../../../data/mock';
 import '../amethyst.theme.css';
 
@@ -34,7 +34,7 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onLikePo
         author: {
           name: author?.displayName || 'Unknown',
           handle: author?.nip05 || author?.username || 'unknown',
-          avatar: author?.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${note.pubkey}`,
+          avatar: author?.avatar || generateAvatarGradient(note.pubkey), // local, offline — no DiceBear
           nip05: author?.nip05,
           isVerified: author?.isVerified,
         },
