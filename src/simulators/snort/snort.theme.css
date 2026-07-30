@@ -454,6 +454,36 @@
   overflow: hidden;
   max-width: 100%;
 }
+
+/* PoW readout — `hidden md:flex` upstream. Gated on a class the shell sets from
+   the measured CONTAINER width, because a viewport media query is what deleted
+   this sim's navigation once already (B10). The hide rule is written as
+   `:not(.is-md)` rather than a bare `.snort-pow { display: none }`, because
+   `.snort-action` is declared later at the same specificity and would win the
+   source-order tie and keep the badge visible. */
+.snort-pow {
+  cursor: default;
+}
+.snort-simulator:not(.is-md) .snort-pow {
+  display: none;
+}
+
+/* Quote embed — `rounded-lg border`, the only rounded box on the note surface
+   (§4.3). The nested note keeps the outer card's padding rhythm, so the inner
+   NoteCard's own padding is what gives the box its inset. */
+.snort-quote {
+  border: 1px solid var(--snort-border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+/* The nested note must not repeat the divider that separates feed rows, and it
+   never takes the row hover tint. */
+.snort-quote .snort-note {
+  border-bottom: none;
+}
+.snort-quote .snort-note:hover {
+  background-color: transparent;
+}
 .snort-action {
   display: flex;
   align-items: center;

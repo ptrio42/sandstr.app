@@ -338,7 +338,7 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
   // ---- Render ----
   if (!isAuthed || screen === 'login') {
     return (
-      <div ref={attachRoot} className={`snort-simulator ${parentTheme}`} data-theme={parentTheme}>
+      <div ref={attachRoot} className={`snort-simulator ${parentTheme}${width >= 768 ? ' is-md' : ''}`} data-theme={parentTheme}>
         <div className="snort-layout">
           {showRail && (
             <Rail
@@ -445,7 +445,7 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
   })();
 
   return (
-    <div ref={attachRoot} className={`snort-simulator ${parentTheme}`} data-theme={parentTheme}>
+    <div ref={attachRoot} className={`snort-simulator ${parentTheme}${width >= 768 ? ' is-md' : ''}`} data-theme={parentTheme}>
       <div className="snort-layout">
         {showRail && (
           <Rail

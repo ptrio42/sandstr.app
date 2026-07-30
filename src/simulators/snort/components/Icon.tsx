@@ -26,6 +26,7 @@ export type IconName =
   | 'settings-outline' | 'settings-solid'
   | 'reply' | 'repeat' | 'heart' | 'heart-solid'
   | 'zap' | 'zap-solid' | 'zapFast' | 'zapCircle'
+  | 'diamond'
   | 'plus' | 'chevronDown' | 'arrowBack' | 'arrowFront' | 'arrowUp' | 'arrow-right'
   | 'dots' | 'x' | 'close' | 'copy' | 'check' | 'trash'
   | 'qr' | 'mute' | 'wifi' | 'pencil' | 'stars' | 'user-v2' | 'user-x'
@@ -120,6 +121,17 @@ const SOLID: Partial<Record<IconName, React.ReactNode>> = {
   'mail-solid': <path d="M3 7.3V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7.3l-8.4 5.9a1 1 0 0 1-1.2 0zM4.2 5h15.6a1 1 0 0 1 .8 1.6L12 12 3.4 6.6A1 1 0 0 1 4.2 5z" />,
   'settings-solid': <path d="M13.7 2.2a2 2 0 0 0-3.4 0l-.5 1.5a1.6 1.6 0 0 1-2 1.1l-1.5-.5A2 2 0 0 0 4 7.2l1 1.2a1.6 1.6 0 0 1 0 2.3L4 11.9a2 2 0 0 0 2.3 2.9l1.5-.5a1.6 1.6 0 0 1 2 1.2l.5 1.5a2 2 0 0 0 3.4 0l.5-1.5a1.6 1.6 0 0 1 2-1.2l1.5.5a2 2 0 0 0 2.3-2.9l-1-1.2a1.6 1.6 0 0 1 0-2.3l1-1.2a2 2 0 0 0-2.3-2.9l-1.5.5a1.6 1.6 0 0 1-2-1.1zM12 15.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4z" />,
   'heart-solid': <path d="M19.1 5.4a4.6 4.6 0 0 0-6.5 0l-.6.6-.6-.6a4.6 4.6 0 0 0-6.5 6.5l.6.6L12 19l6.5-6.5.6-.6a4.6 4.6 0 0 0 0-6.5z" />,
+  // PoW badge, action-bar column 4. Outline gem: it is a passive indicator, so
+  // it must not read as heavy as the filled heart sitting next to it.
+  'diamond': (
+    <path
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinejoin="round"
+      d="M7.4 4h9.2l3.4 4.6-8 11.2-8-11.2L7.4 4zm-3.2 4.6h15.6M9.6 8.6L12 19.8l2.4-11.2L12 4z"
+    />
+  ),
   'zap-solid': <path d="M13 2 4 14h6l-1 8 9-12h-6z" />,
   'bookmark-solid': <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.2L5 21V4a1 1 0 0 1 1-1z" />,
 };

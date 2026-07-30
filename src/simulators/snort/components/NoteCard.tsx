@@ -4,7 +4,16 @@ import { Avatar } from './Avatar';
 import { Icon } from './Icon';
 import { CodeBlock } from './CodeBlock';
 import { MediaEmbed } from './MediaEmbed';
-import { clientTag, formatShort, noteTime, shortNpub, TEXT_TRUNCATE_LENGTH } from '../snortUtils';
+import {
+  clientTag,
+  formatShort,
+  neventRef,
+  noteTime,
+  powDifficulty,
+  quotedNoteIndex,
+  shortNpub,
+  TEXT_TRUNCATE_LENGTH,
+} from '../snortUtils';
 
 /**
  * A Snort note.
@@ -44,6 +53,17 @@ export interface NoteCardProps {
   /** Marks this note's action row as the guided-tour target. */
   tourTarget?: boolean;
   className?: string;
+  /**
+   * Pool the quote-embed is resolved against (§4.3). Omit it and no note quotes
+   * anything — screens that render a feed pass their own list.
+   */
+  notes?: MockNote[];
+  /**
+   * Quote nesting level. 0 is a top-level note; the note inside a quote box is 1.
+   * Upstream degrades past depth 1 to a bare `#nevent1…` link rather than nesting
+   * boxes forever, and so does this.
+   */
+  depth?: number;
 }
 
 export function NoteCard({
@@ -59,6 +79,8 @@ export function NoteCard({
   onReply,
   tourTarget = false,
   className = '',
+  notes,
+  depth = 0,
 }: NoteCardProps) {
   const [liked, setLiked] = useState(false);
   const [reposted, setReposted] = useState(false);
@@ -67,6 +89,22 @@ export function NoteCard({
 
   const via = useMemo(() => clientTag(note.id, note.tags), [note.id, note.tags]);
   const time = useMemo(() => noteTime(note.created_at), [note.created_at]);
+
+  /** §4.4 column 4 — null for the majority of notes, which carry no nonce tag. */
+  const pow = useMemo(() => powDifficulty(note.content), [note.content]);
+
+  /**
+   * §4.3 — the quoted note, resolved against the pool the screen handed us. Self
+   * references are dropped, and a candidate that would itself quote is kept
+   * anyway: it just renders its own quote as the `#nevent1…` link at depth 1.
+   */
+  const quoted = useMemo(() => {
+    if (!notes || notes.length === 0) return null;
+    const idx = quotedNoteIndex(note.content, notes.length);
+    if (idx === null) return null;
+    const candidate = notes[idx];
+    return candidate && candidate.id !== note.id ? candidate : null;
+  }, [notes, note.content, note.id]);
 
   // Top zappers: upstream shows the top 3 at 24px, overlapping by -ml-2.
   const zappers = useMemo(
@@ -176,6 +214,28 @@ export function NoteCard({
             </div>
           )}
 
+          {/* ---- Quote embed (§4.3) ----
+              The ONLY rounded box anywhere on the note surface. Upstream renders
+              the referenced event nested with `showFooter:false, truncate:true`;
+              past depth 1 it stops nesting and prints the bare event link. */}
+          {quoted &&
+            (depth === 0 ? (
+              <div className="snort-quote mt-3" onClick={stop}>
+                <NoteCard
+                  note={quoted}
+                  author={users.find((u) => u.pubkey === quoted.pubkey)}
+                  users={users}
+                  depth={1}
+                  showFooter={false}
+                  isRoot
+                  onViewProfile={onViewProfile}
+                  onOpenThread={onOpenThread}
+                />
+              </div>
+            ) : (
+              <span className="snort-link">{neventRef(quoted.id)}</span>
+            ))}
+
           {showFooter && (
             <div
               className="snort-note-actions mt-4"
@@ -209,6 +269,18 @@ export function NoteCard({
                 <Icon name={liked ? 'heart-solid' : 'heart'} size={18} />
                 {likeCount > 0 && <span>{formatShort(likeCount)}</span>}
               </button>
+
+              {/* PoW — §4.4 column 4, between like and zap. Not a button: it is
+                  a passive readout with no handler and no active colour, and it
+                  is `hidden md:flex` upstream, so it drops out on narrow
+                  containers (gated by `is-md` on the root, never a viewport
+                  media query — see the shell). */}
+              {pow !== null && (
+                <span className="snort-action snort-pow" aria-label={`Proof of work: ${pow} bits`}>
+                  <Icon name="diamond" size={18} />
+                  <span>{pow}</span>
+                </span>
+              )}
 
               {/* zap — the value is a SAT TOTAL */}
               <button
