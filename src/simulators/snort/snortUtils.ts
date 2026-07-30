@@ -103,3 +103,46 @@ export function shortNpub(pubkey: string): string {
   const base = pubkey.startsWith('npub') ? pubkey : `npub1${pubkey}`;
   return base.slice(0, 12);
 }
+
+/**
+ * NIP-13 proof-of-work difficulty for a note, or `null` when the note carries no
+ * `nonce` tag — which is the ordinary case (§4.4, column 4).
+ *
+ * Upstream reads the difficulty off the event: the icon renders only when
+ * `findTag(ev, "nonce")` exists and `CONFIG.showPowIcon` is on, and the number
+ * shown is the count of leading zero BITS in the event id. Neither input exists
+ * here: mock notes have no nonce tags, and `mockNotes` builds every `id` from
+ * `generateHex()` at import time, so ids are re-randomised on every reload and
+ * anything derived from them would flicker between sessions.
+ *
+ * So the seed is the note CONTENT, which is a fixed template string. Same note,
+ * same badge, every reload. The ~28% hit rate and the 16-25 bit band are chosen
+ * to look like a real feed, where a minority of notes are mined and the ones
+ * that are cluster around 20.
+ */
+export function powDifficulty(seed: string): number | null {
+  if (seededUnit(`pow:${seed}`) > 0.28) return null;
+  return 16 + Math.floor(seededUnit(`pow-bits:${seed}`) * 10);
+}
+
+/**
+ * Index of the note this one quote-embeds, or `null` for the majority that quote
+ * nothing (§4.3).
+ *
+ * Real Snort finds a `nostr:nevent1…` reference in the content and renders the
+ * referenced event inline. Mock content has no such references, so — as with
+ * `powDifficulty` — the choice is seeded from the content string and stable.
+ */
+export function quotedNoteIndex(seed: string, total: number): number | null {
+  if (total < 2) return null;
+  if (seededUnit(`quote:${seed}`) > 0.18) return null;
+  return Math.floor(seededUnit(`quote-idx:${seed}`) * total);
+}
+
+/**
+ * The `#nevent1…` text link a quote degrades to past depth 1 (§4.3). Snort
+ * bech32-encodes the event; the shape, not the encoding, is what shows.
+ */
+export function neventRef(noteId: string): string {
+  return `#nevent1${noteId.replace(/[^a-z0-9]/gi, '').slice(0, 12).toLowerCase()}`;
+}

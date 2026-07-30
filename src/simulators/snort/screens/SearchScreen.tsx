@@ -146,6 +146,7 @@ export function SearchScreen({
               note={n}
               author={usersByPubkey.get(n.pubkey)}
               users={users}
+              notes={notes}
               onOpenThread={onViewThread}
               onViewProfile={onViewProfile}
             />

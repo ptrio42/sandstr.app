@@ -165,6 +165,7 @@ export function TimelineScreen({
             note={note}
             author={usersByPubkey.get(note.pubkey)}
             users={users}
+            notes={notes}
             onOpenThread={onViewThread}
             onViewProfile={onViewProfile}
             onReply={onReply}
