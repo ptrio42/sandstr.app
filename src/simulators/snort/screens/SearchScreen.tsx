@@ -55,6 +55,13 @@ export interface SearchScreenProps {
   users: MockUser[];
   onViewProfile: (u: MockUser) => void;
   onViewThread: (n: MockNote) => void;
+  /**
+   * Seeded from the right column's SearchBox, which is how this screen is
+   * reached on desktop — upstream navigates to `/search/<term>` and the page
+   * reads the term off the URL, so arriving with a query already applied is the
+   * faithful behaviour, not a shortcut.
+   */
+  initialQuery?: string;
 }
 
 type SearchTab = 'notes' | 'people';
@@ -65,8 +72,14 @@ const TABS: { id: SearchTab; label: string }[] = [
   { id: 'people', label: 'People' },
 ];
 
-export function SearchScreen({ notes, users, onViewProfile, onViewThread }: SearchScreenProps) {
-  const [query, setQuery] = useState('');
+export function SearchScreen({
+  notes,
+  users,
+  onViewProfile,
+  onViewThread,
+  initialQuery = '',
+}: SearchScreenProps) {
+  const [query, setQuery] = useState(initialQuery);
   const [tab, setTab] = useState<SearchTab>('notes');
 
   const term = query.trim().toLowerCase();

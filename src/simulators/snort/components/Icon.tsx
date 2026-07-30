@@ -104,7 +104,18 @@ const OUTLINE: Partial<Record<IconName, React.ReactNode>> = {
 /** Filled counterparts — the nav swaps outline→solid on the active item. */
 const SOLID: Partial<Record<IconName, React.ReactNode>> = {
   'home-solid': <path d="M11.4 2.3a1 1 0 0 1 1.2 0l8.5 7a1 1 0 0 1 .4.8V20a1 1 0 0 1-1 1h-5.5v-6h-4v6H4.5a1 1 0 0 1-1-1v-9.9a1 1 0 0 1 .4-.8z" />,
-  'search-solid': <path d="M11 3a8 8 0 1 0 4.9 14.3l3.4 3.4a1.1 1.1 0 0 0 1.6-1.6l-3.4-3.4A8 8 0 0 0 11 3z" />,
+  // Filled ring + handle, NOT a solid disc: at 24px a filled circle reads as a
+  // featureless blob rather than a magnifier.
+  'search-solid': (
+    <>
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm0 3.2a4.8 4.8 0 1 1 0 9.6 4.8 4.8 0 0 1 0-9.6z"
+      />
+      <path d="M16.5 16.5a1.1 1.1 0 0 1 1.6 0l3 3a1.1 1.1 0 0 1-1.6 1.6l-3-3a1.1 1.1 0 0 1 0-1.6z" />
+    </>
+  ),
   'bell-solid': <><path d="M12 2a6 6 0 0 0-6 6c0 5.5-2 6.6-2 6.6a1 1 0 0 0 .6 1.8h14.8a1 1 0 0 0 .6-1.8S18 13.5 18 8a6 6 0 0 0-6-6z" /><path d="M10.3 19a2 2 0 0 0 3.4 0z" /></>,
   'mail-solid': <path d="M3 7.3V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7.3l-8.4 5.9a1 1 0 0 1-1.2 0zM4.2 5h15.6a1 1 0 0 1 .8 1.6L12 12 3.4 6.6A1 1 0 0 1 4.2 5z" />,
   'settings-solid': <path d="M13.7 2.2a2 2 0 0 0-3.4 0l-.5 1.5a1.6 1.6 0 0 1-2 1.1l-1.5-.5A2 2 0 0 0 4 7.2l1 1.2a1.6 1.6 0 0 1 0 2.3L4 11.9a2 2 0 0 0 2.3 2.9l1.5-.5a1.6 1.6 0 0 1 2 1.2l.5 1.5a2 2 0 0 0 3.4 0l.5-1.5a1.6 1.6 0 0 1 2-1.2l1.5.5a2 2 0 0 0 2.3-2.9l-1-1.2a1.6 1.6 0 0 1 0-2.3l1-1.2a2 2 0 0 0-2.3-2.9l-1.5.5a1.6 1.6 0 0 1-2-1.1zM12 15.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4z" />,
