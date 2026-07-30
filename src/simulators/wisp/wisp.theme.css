@@ -1,0 +1,148 @@
+/**
+ * Wisp theme — real tokens from barrydeen/wisp@11ac08f (v1.2.1).
+ * Source: app/src/main/kotlin/com/wisp/app/ui/theme/Theme.kt (the runtime
+ * "custom" scheme, which overrides the same-named preset in Themes.kt) +
+ * hardcoded screen literals catalogued in docs/refs/wisp/screen-map.md §1.
+ * Every selector is scoped under .wisp-simulator (an unscoped class once bled
+ * between simulators — see CLAUDE.md).
+ */
+
+.wisp-simulator {
+  /* Shipped default: theme "custom", DARK, accent #FF9800 (InterfacePreferences.kt) */
+  --wisp-accent: #FF9800;
+  --wisp-on-accent: #FFFFFF;
+  --wisp-bg: #0A0A0B;
+  --wisp-surface: #1C1C1E;
+  --wisp-surface-variant: #2C2C2E;
+  --wisp-on-bg: #E0E0E0;
+  --wisp-on-surface-variant: #9998A0;
+  --wisp-outline: #38383A;
+  /* M3 dark-baseline fallbacks Wisp never overrides (visible in the real app) */
+  --wisp-outline-variant: #49454F;
+  --wisp-secondary-container: #4A4458;
+  --wisp-on-secondary-container: #E8DEF8;
+  --wisp-error-container: #8C1D18;
+  --wisp-on-error-container: #F9DEDC;
+  /* Named roles */
+  --wisp-error: #FF3B30; /* deliberate iOS systemRed (Theme.kt comment) */
+  --wisp-zap: #FF9800;
+  --wisp-repost: #4CAF50;
+  --wisp-paid: #FFD54F;
+  /* Hardcoded screen literals (screen-map §1) */
+  --wisp-nip05: #FF8C00;
+  --wisp-lightning: #FFC107;
+  --wisp-live: #E53935;
+  --wisp-relay-error: #FF5252;
+  --wisp-income: #2E7D32;
+  /* Splash buttons (SplashScreen.kt) */
+  --wisp-google-bg: #131314;
+  --wisp-google-fg: #E3E3E3;
+  --wisp-google-border: #8E918F;
+  --wisp-nostr-bg: #1A0E2E;
+  --wisp-nostr-fg: #E9DDFF;
+  --wisp-nostr-border: #8E30EB;
+  /* Brand gradient stops (ic_wisp_logo.xml radial) */
+  --wisp-logo-grad-a: #FFBA60;
+  --wisp-logo-grad-b: #E97941;
+
+  /* The host mounts the sim in a fixed app shell — fill it, never size off vh. */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  background: var(--wisp-bg);
+  color: var(--wisp-on-bg);
+  /* Wisp bundles no fonts — platform Roboto (Compose default). */
+  font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 15px; /* WispTypography bodyLarge 15sp */
+  line-height: 1.45;
+  /* Long unbroken tokens (code lines, URLs in mock notes) must wrap like on a
+     real phone — otherwise they widen a scroll region and, because a set
+     overflow-y computes the unset overflow-x to auto, the whole feed becomes
+     horizontally scrollable and drifts off-frame. */
+  overflow-wrap: anywhere;
+}
+
+/* Counts and labels inside real buttons must never mid-break ("69" → "6/9"). */
+.wisp-simulator button {
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+/* Light "custom" scheme — the runtime WispTheme branch (Theme.kt:148-164),
+   NOT the dead Themes.kt preset values. Followed via useParentTheme. */
+.wisp-simulator[data-theme='light'] {
+  --wisp-bg: #ECECEC;
+  --wisp-surface: #F5F5F5;
+  --wisp-surface-variant: #E0E0E0;
+  --wisp-on-bg: #1C1B1F;
+  --wisp-on-surface-variant: #6B6B6B;
+  --wisp-outline: #CCCCCC;
+  --wisp-outline-variant: #CAC4D0;
+  --wisp-secondary-container: #E8DEF8;
+  --wisp-on-secondary-container: #1D192B;
+  --wisp-error-container: #F9DEDC;
+  --wisp-on-error-container: #410E0B;
+  --wisp-zap: #B85C00;
+  --wisp-repost: #2E7D32;
+  --wisp-paid: #C9A000;
+}
+
+.wisp-simulator ::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Hairline divider used between posts / above bars (0.5dp in Compose). */
+.wisp-simulator .wisp-divider {
+  height: 1px;
+  transform: scaleY(0.5);
+  transform-origin: top;
+  background: var(--wisp-outline);
+}
+
+/* The undo-countdown fill animation (ComposeScreen "Post now (N)" pill).
+   Duration is set inline via --wisp-undo-duration. */
+@keyframes wisp-undo-drain {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+.wisp-simulator .wisp-undo-fill {
+  animation: wisp-undo-drain var(--wisp-undo-duration, 10s) linear forwards;
+}
+
+/* Zap success burst — expanding accent ring (LightningOverlay.kt, simplified). */
+@keyframes wisp-zap-ring {
+  0% {
+    transform: scale(0.2);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+.wisp-simulator .wisp-zap-ring {
+  animation: wisp-zap-ring 1.1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  border: 3px solid var(--wisp-zap);
+  border-radius: 9999px;
+}
+
+/* Splash logo idle float (SplashScreen.kt bob −8dp/1.2s + sway ±3°/2.4s). */
+@keyframes wisp-logo-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(3deg);
+  }
+}
+.wisp-simulator .wisp-logo-float {
+  animation: wisp-logo-bob 2.4s ease-in-out infinite;
+}

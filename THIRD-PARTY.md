@@ -1,6 +1,6 @@
 # Third-party attribution
 
-sandstr reproduces the interfaces of nine real, open-source Nostr clients. This
+sandstr reproduces the interfaces of ten real, open-source Nostr clients. This
 file records, per client, **what was referenced and what was copied** — because
 those are different things with different obligations, and being precise about
 it is part of asking each team for their blessing (see [TRADEMARKS.md](TRADEMARKS.md)).
@@ -34,6 +34,7 @@ derive no code from them. If that ever changes, this file changes with it.
 | [Primal](https://primal.net) | [PrimalHQ/primal-web-app](https://github.com/PrimalHQ/primal-web-app) | MIT | `palette.scss` (Midnight/Ice), NavMenu + NoteFooter structure, three-column layout | app icon, UI labels, **logo swirl path** — see caveat |
 | [Snort](https://snort.social) | [v0l/snort](https://github.com/v0l/snort) | MIT (© 2023 Kieran / v0l) | `packages/app/src/index.css` `@theme` tokens, nav + feed-picker structure, note action order, settings menu grouping and tile colours, UI label strings | app icon (`public/icons/snort.png`), UI labels. **Not** the `nostrich_*.png` mark — deliberately replaced with our own monogram |
 | [YakiHonne](https://yakihonne.com) | [YakiHonne/web-app](https://github.com/YakiHonne/web-app) | MIT | brand orange, navigation, settings/notification copy | app icon, UI labels |
+| [Wisp](https://wisp.mobile) | [barrydeen/wisp](https://github.com/barrydeen/wisp) | MIT (© 2025 Barry Deen) | `Theme.kt`/`Themes.kt` tokens, `BottomBar`/`ActionBar`/drawer structure, action order, settings copy (verified against a 2026-07-30 recording — `docs/refs/wisp/screen-map.md`) | app icon (`public/icons/wisp.svg` — the `ic_wisp_logo.xml` glyph path + radial gradient), UI labels |
 | [Coracle](https://coracle.social) | [coracle-social/coracle](https://github.com/coracle-social/coracle) | MIT | rough layout only (*Early preview*) | app icon |
 | [Gossip](https://github.com/mikedilger/gossip) | [mikedilger/gossip](https://github.com/mikedilger/gossip) | MIT | rough layout only (*Early preview*); no website exists, so the handoff links the repo | app icon |
 | [Keychat](https://keychat.io) | [keychat-io/keychat-app](https://github.com/keychat-io/keychat-app) | AGPL-3.0 | rough layout only (*Early preview*) | app icon |

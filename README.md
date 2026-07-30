@@ -6,9 +6,9 @@ Interactive, in-browser simulations of real Nostr clients, with guided tours and
 No backend, no network, no real crypto — everything is static and computed in your browser
 ([PRIVACY.md](PRIVACY.md)).
 
-**Honest state of the shelf:** 5 reproductions are reference-verified and ready to try
-(Damus, Amethyst, Primal, YakiHonne, Snort — rebuilt screen by screen against recordings of
-the real apps), 4 more are clickable early previews (Coracle, Gossip, Keychat, Olas),
+**Honest state of the shelf:** 6 reproductions are reference-verified and ready to try
+(Damus, Amethyst, Primal, YakiHonne, Snort, Wisp — rebuilt screen by screen against recordings
+of the real apps), 4 more are clickable early previews (Coracle, Gossip, Keychat, Olas),
 plus **Nostr Kitten**, an original demo client of our own. The gallery labels each one
 accordingly.
 

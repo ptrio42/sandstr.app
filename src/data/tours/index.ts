@@ -9,6 +9,7 @@ export { primalTourConfig, default as primalTour } from './primal-tour';
 export { snortTourConfig, default as snortTour } from './snort-tour';
 export { yakihonneTourConfig, default as yakihonneTour } from './yakihonne-tour';
 export { keychatTourConfig, default as keychatTour } from './keychat-tour';
+export { wispTourConfig, default as wispTour } from './wisp-tour';
 
 // Static map for easy lookup
 import { damusTourConfig as damus } from './damus-tour';
@@ -17,6 +18,7 @@ import { primalTourConfig as primal } from './primal-tour';
 import { snortTourConfig as snort } from './snort-tour';
 import { yakihonneTourConfig as yakihonne } from './yakihonne-tour';
 import { keychatTourConfig as keychat } from './keychat-tour';
+import { wispTourConfig as wisp } from './wisp-tour';
 
 export const tourConfigs = {
   damus,
@@ -25,6 +27,7 @@ export const tourConfigs = {
   snort,
   yakihonne,
   keychat,
+  wisp,
 } as const;
 
 export type TourClient = keyof typeof tourConfigs;

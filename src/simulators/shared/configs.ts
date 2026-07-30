@@ -244,6 +244,33 @@ export const olasConfig: SimulatorConfig = {
 };
 
 /**
+ * Wisp - Android Nostr client
+ * "a wee interface to scroll posts" — outbox-model client by Barry Deen.
+ * Colors from docs/refs/wisp/screen-map.md: accent #FF9800 (Theme.kt "custom"
+ * default), secondary = the brand-glyph radial stop #E97941 (ic_wisp_logo.xml).
+ */
+export const wispConfig: SimulatorConfig = {
+  id: SimulatorClient.WISP,
+  name: 'Wisp',
+  description: 'Minimal, fast Android client with the outbox relay model, embedded Spark wallet, and an undo countdown on every post.',
+  platform: 'android',
+  primaryColor: '#FF9800', // real accent (Theme.kt / InterfacePreferences.kt default)
+  secondaryColor: '#E97941', // logo radial-gradient stop
+  icon: '/icons/wisp.svg',
+  supportedFeatures: [
+    SimulatorFeature.DM,
+    SimulatorFeature.ZAPS,
+    SimulatorFeature.THREADS,
+    SimulatorFeature.SEARCH,
+    SimulatorFeature.RELAYS,
+    SimulatorFeature.NIP05,
+    SimulatorFeature.LIVE_STREAMING,
+    SimulatorFeature.MUTE_LIST,
+  ],
+  defaultView: SimulatorView.FEED,
+};
+
+/**
  * All simulator configs collection
  */
 export const allSimulatorConfigs: Record<SimulatorClient, SimulatorConfig> = {
@@ -256,6 +283,7 @@ export const allSimulatorConfigs: Record<SimulatorClient, SimulatorConfig> = {
   [SimulatorClient.GOSSIP]: gossipConfig,
   [SimulatorClient.KEYCHAT]: keychatConfig,
   [SimulatorClient.OLAS]: olasConfig,
+  [SimulatorClient.WISP]: wispConfig,
 };
 
 /**
