@@ -87,8 +87,10 @@ Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` + `TRADEMARKS.md`.
 - **READY (status w `registry.tsx`, 2026-07-28): Amethyst, Damus, YakiHonne, Primal (web)** — zweryfikowane
   referencyjnie (screen-map + fidelity pass). (+ Nostr Kitten: `kind: 'original'`, opcjonalny easter-egg,
   nie lider i nie front door.)
-- **Druga fala / PREVIEW** (słabsza wierność / bugi): **Snort** (korekta wcześniejszego wpisu — zero
-  realnych tokenów, brak `docs/refs/snort/screen-map.md`; wymaga pełnego recon→rebuild), Keychat, Olas,
+- **Druga fala / PREVIEW** (słabsza wierność / bugi): **Snort** (**RECON ZROBIONY 2026-07-30** →
+  `docs/refs/snort/screen-map.md`, autorytatywny: 19 sekcji / 12 powierzchni z recordingu 2026-07-14 +
+  `v0l/snort@3cc8317`. **Sam symulator NADAL nieprzebudowany** — zero realnych tokenów, wymyślona
+  nawigacja, zepsuty `CodeBlock.tsx`; rebuild to następny krok, spec jest gotowy), Keychat, Olas,
   Coracle, Gossip. (Primal-MOBILE stub, nieroutowany.) Galeria etykietuje je „Early preview" +
   `statusNote`; nie przedstawiaj ich jako skończonych.
 - **Primal web (ZROBIONE 2026-07-14):** rebuild z recordingu + recon → `docs/refs/primal/screen-map.md`
