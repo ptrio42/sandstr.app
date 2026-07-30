@@ -40,9 +40,16 @@ export interface RightColumnProps {
   notes: MockNote[];
   users: MockUser[];
   onViewProfile: (u: MockUser) => void;
+  /**
+   * Submitting the SearchBox. Upstream navigates to `/search/<term>`, and on
+   * desktop this box is the ONLY route to the search page — the left rail's
+   * magnifier goes to Discover, and only the mobile footer has a Search tab.
+   * Without this wired up the search screen is unreachable at desktop widths.
+   */
+  onSearch?: (term: string) => void;
 }
 
-export function RightColumn({ currentUser, notes, users, onViewProfile }: RightColumnProps) {
+export function RightColumn({ currentUser, notes, users, onViewProfile, onSearch }: RightColumnProps) {
   const loggedIn = currentUser !== null;
 
   const usersByPubkey = useMemo(() => {
@@ -53,7 +60,7 @@ export function RightColumn({ currentUser, notes, users, onViewProfile }: RightC
 
   return (
     <aside className="snort-right">
-      <SearchBox users={users} onViewProfile={onViewProfile} />
+      <SearchBox users={users} onViewProfile={onViewProfile} onSearch={onSearch} />
 
       {/* `<span className="mb-4">` upstream; the column's own gap covers it. */}
       <div className="flex flex-col gap-4">
@@ -153,11 +160,18 @@ function SmallIconButton({
 function SearchBox({
   users,
   onViewProfile,
+  onSearch,
 }: {
   users: MockUser[];
   onViewProfile: (u: MockUser) => void;
+  onSearch?: (term: string) => void;
 }) {
   const [term, setTerm] = useState('');
+
+  const submit = () => {
+    const q = term.trim();
+    if (q) onSearch?.(q);
+  };
 
   const matches = useMemo(() => {
     const q = term.trim().toLowerCase();
@@ -194,6 +208,9 @@ function SearchBox({
           const v = e.target.value;
           if (!v.trim().toLowerCase().startsWith('nsec1')) setTerm(v);
         }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') submit();
+        }}
         aria-label="Search"
       />
       <span
@@ -214,7 +231,17 @@ function SearchBox({
             border: '1px solid var(--snort-border)',
           }}
         >
-          <div className="truncate px-4 py-2 text-sm">Search notes: {term.trim()}</div>
+          <div
+            className="cursor-pointer truncate px-4 py-2 text-sm"
+            onClick={submit}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') submit();
+            }}
+          >
+            Search notes: {term.trim()}
+          </div>
           {matches.map((u) => (
             <div
               key={u.pubkey}

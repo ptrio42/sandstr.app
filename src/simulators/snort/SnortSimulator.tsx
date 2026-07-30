@@ -112,6 +112,8 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
   const [replyTo, setReplyTo] = useState<MockNote | null>(null);
   const [feedTab, setFeedTab] = useState('Following'); // `defaultRootTab` in config/default.json
   const [pickerOpen, setPickerOpen] = useState(false);
+  /** Seeded by the right column's SearchBox — the only desktop route to search. */
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [mock, setMock] = useState<{ users: MockUser[]; notes: MockNote[]; threads: MockThread[] }>({
     users: [],
@@ -253,6 +255,12 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
     [mock.threads],
   );
 
+  const runSearch = useCallback((term: string) => {
+    setSearchQuery(term);
+    setScreen('search');
+    setComposeOpen(false);
+  }, []);
+
   const openCompose = useCallback(
     (note?: MockNote) => {
       setReplyTo(note ?? null);
@@ -347,7 +355,13 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
             <LoginScreen onLogin={handleLogin} users={mock.users} />
           </main>
           {showRight && (
-            <RightColumn currentUser={null} notes={mock.notes} users={mock.users} onViewProfile={viewProfile} />
+            <RightColumn
+              currentUser={null}
+              notes={mock.notes}
+              users={mock.users}
+              onViewProfile={viewProfile}
+              onSearch={runSearch}
+            />
           )}
         </div>
       </div>
@@ -412,7 +426,15 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
       case 'discover':
         return <DiscoverScreen users={mock.users} onViewProfile={viewProfile} />;
       case 'search':
-        return <SearchScreen notes={mock.notes} users={mock.users} onViewProfile={viewProfile} onViewThread={viewThread} />;
+        return (
+          <SearchScreen
+            notes={mock.notes}
+            users={mock.users}
+            onViewProfile={viewProfile}
+            onViewThread={viewThread}
+            initialQuery={searchQuery}
+          />
+        );
       case 'relays':
         return <RelaysScreen onBack={() => navigateTo('settings')} />;
       case 'settings':
@@ -482,6 +504,7 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
             notes={mock.notes}
             users={mock.users}
             onViewProfile={viewProfile}
+            onSearch={runSearch}
           />
         )}
       </div>
