@@ -77,7 +77,11 @@ ucieczką od cudzej marki. Ścieżki:
 opcjonalny easter-egg / maskotka. Nie traktuj go jako lidera strategicznego, kotwicy marki ani centrum
 deryzykowania. **Web klienty odtwarzamy we wspólnym stacku React („Poziom A")**, nie uruchamiając realnego
 kodu klienta. **„Sandstr" to finalna nazwa projektu** (decyzja właściciela 2026-07-28; wcześniej robocza).
-Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` + `TRADEMARKS.md`.
+**Domena produkcyjna: `sandstr.app`** (decyzja 2026-08-03). `sandstr.com` jest zajęta przez niezwiązany
+fintech („SAND", najem krótkoterminowy, Wix, od 2025-08) — inna branża, brak kolizji, ale i brak szans na
+drop; nie planuj `.com`. Absolutne `og:url`/`og:image` i `canonical` w `index.html` są **przypięte do
+galerii** (`https://sandstr.app/`), nie do bieżącej trasy — to ta sama decyzja co `Disallow: /c/`
+w `public/robots.txt`. Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` + `TRADEMARKS.md`.
 
 ## Liderzy vs reszta
 

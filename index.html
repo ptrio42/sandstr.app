@@ -18,18 +18,26 @@
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0B0B10" />
 
     <!--
-      og:image is regenerated from scripts/og-image.html — see the comment in that
-      file. Once the production domain is fixed, make og:image and og:url absolute:
-      some scrapers (Twitter in particular) will not resolve a relative image path.
+      Production domain is sandstr.app (2026-08-03). og:image and og:url are
+      absolute because some scrapers (Twitter in particular) will not resolve a
+      relative image path. og:image itself is regenerated from
+      scripts/og-image.html — see the comment in that file.
+
+      og:url and canonical are deliberately hard-pinned to the gallery rather
+      than tracking the current route: /c/ is Disallow'd in public/robots.txt on
+      purpose (a pixel-faithful /c/damus must not rank for "Damus"), so pointing
+      every deep link at "/" is the same call, expressed to crawlers.
     -->
+    <link rel="canonical" href="https://sandstr.app/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Sandstr" />
+    <meta property="og:url" content="https://sandstr.app/" />
     <meta property="og:title" content="Sandstr — Try Nostr clients, no keys, no install" />
     <meta
       property="og:description"
       content="Interactive, in-browser simulations of real Nostr clients. Unofficial, mock data, not affiliated."
     />
-    <meta property="og:image" content="/og.png" />
+    <meta property="og:image" content="https://sandstr.app/og.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta
