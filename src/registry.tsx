@@ -213,8 +213,15 @@ const MOUNTS: Record<
   coracle: {
     frame: null,
     tour: false,
-    status: 'preview',
-    statusNote: 'An early sketch — not yet a faithful reproduction.',
+    // Reference-verified 2026-08-05: owner's recording + coracle-social/coracle
+    // @efea13f recon → docs/refs/coracle/screen-map.md, then a live
+    // side-by-side pass per surface (§19).
+    status: 'ready',
+    // The real shipping default, not a guess: `synced({key: "ui/theme",
+    // defaultValue: "dark"})` in src/partials/state.ts:36-40. Coracle has no
+    // prefers-color-scheme detection at all, so an unset value here would have
+    // opened half of all first visits in a theme the app never picks itself.
+    theme: 'dark',
     homepage: 'https://coracle.social',
     repo: 'https://github.com/coracle-social/coracle',
     upstreamLicense: 'MIT',

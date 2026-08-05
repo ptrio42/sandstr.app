@@ -89,8 +89,8 @@ w `public/robots.txt`. Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` 
   (Amethyst 8 powierzchni; Damus 11) — inline-SVG robohash avatary, lokalne media postów jako `data:`-URI,
   offline/CSP-safe, tokeny z repo klienta + weryfikacja side-by-side z realnym recordingiem. Do nich równamy.
 - **READY (status w `registry.tsx`): Amethyst, Damus, YakiHonne, Primal (web)** (2026-07-28) **+ Snort
-  + Wisp** (2026-07-30) — zweryfikowane referencyjnie (screen-map + fidelity pass). (+ Nostr Kitten:
-  `kind: 'original'`, opcjonalny easter-egg, nie lider i nie front door.)
+  + Wisp** (2026-07-30) **+ Coracle** (2026-08-05) — zweryfikowane referencyjnie (screen-map + fidelity
+  pass). (+ Nostr Kitten: `kind: 'original'`, opcjonalny easter-egg, nie lider i nie front door.)
 - **Wisp (ZROBIONE 2026-07-30):** recon (`barrydeen/wisp@11ac08f`, v1.2.1, MIT © Barry Deen; homepage
   `wisp.mobile`) + recording → `docs/refs/wisp/screen-map.md` (autorytatywny) i `src/simulators/wisp/`
   (13 powierzchni: login/feed/thread/profile/notifications/chat/wallet/search/compose/zap/drawer/
@@ -110,7 +110,21 @@ w `public/robots.txt`. Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` 
   z podkreśleniem; kafelek Relays w Settings **celowo bez tła** (prawdziwy bug: `bg-dark` + Tailwind v4).
   Naprawione po drodze: B8 (highlighter + `dangerouslySetInnerHTML` usunięte — Snort nie ma kolorowania
   składni), B9b (scroller), B10 (dolny pasek ≤768px), zero requestów zewnętrznych.
-- **Druga fala / PREVIEW** (słabsza wierność / bugi): Keychat, Olas, Coracle, Gossip.
+- **Coracle (ZROBIONE 2026-08-05):** recon (`coracle-social/coracle@efea13f`, MIT © Jon Staab/hodlbod;
+  app na `app.coracle.social`) + recording → `docs/refs/coracle/screen-map.md` (autorytatywny, 19 sekcji)
+  i przepisany `src/simulators/coracle/` (15 powierzchni). Svelte 4 + Tailwind 3; **default = DARK**
+  (`state.ts:36-40`, brak `prefers-color-scheme`), accent **burnt-orange `#FC560E` IDENTYCZNY w obu
+  motywach**, zero gradientów marki. Klucz: **ciepły ramp `tinted-*`** (`#3E3A38` sidebar/karty) nad
+  **zimnym `neutral-*`** (`#262626` strona, `#171717` top bar), a karty **ALTERNUJĄ** oba wg zagnieżdżenia
+  (`AltColor.svelte`). Lewy sidebar = 6 pozycji **TYLKO TEKST, bez ikon**; aktywna **rośnie**
+  (`text-2xl`→`text-3xl`) + akcentowe podkreślenie. Akcje noty: **reply→zap→like→repost** (zap DRUGI),
+  ikony **OBRYSOWE** (własny partial 17×16) poza wypełnionym repostem; licznik zapa = **suma satów**.
+  Sygnatura = prawy panel **„Your Feeds"** (7 chipów presetów + Relay Feeds/Your Lists/Custom Feeds).
+  Prawie wszystko to **modale** ze scrimem odsuniętym o sidebar (`ml-72`) i okrągłym akcentowym X.
+  **Login NIE MA pola na klucz** — same delegacje (extension/bunker), więc reprodukcja też go nie ma
+  (`keySafety.ts` celowo nieużyty). Groups = tylko notka „Groups are going away!". [REC vs REPO]:
+  polskie ekrany w nagraniu to **nstart** (`start.njump.me`), osobny projekt — nie odtwarzamy.
+- **Druga fala / PREVIEW** (słabsza wierność / bugi): Keychat, Olas, Gossip.
   (Primal-MOBILE stub, nieroutowany.) Galeria etykietuje je „Early preview" +
   `statusNote`; nie przedstawiaj ich jako skończonych.
 - **Primal web (ZROBIONE 2026-07-14):** rebuild z recordingu + recon → `docs/refs/primal/screen-map.md`
