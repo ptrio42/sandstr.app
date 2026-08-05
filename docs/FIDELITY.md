@@ -7,9 +7,19 @@
 ## Status / next-up (aktualizuj po każdym kliencie)
 
 **Głębokie flagowce ZROBIONE (wzorzec wierności, recording→recon→screen-map→rebuild→verify):**
-- ✅ **Amethyst** (8 powierzchni) — `0ea6f07`, `docs/refs/amethyst/`
+- ✅ **Amethyst** (9 powierzchni) — `0ea6f07`, `docs/refs/amethyst/`. **Dogrywka 2026-08-05:** doszły dwa
+  brakujące ekrany logged-off (Login ↔ Sign Up) — verbatim logo z `res/drawable/amethyst.xml`
+  (`#652D80→#2598CF`), pole 280dp = **68% szerokości ekranu** z fioletowym QR + okiem, „Adjust **Tor
+  Settings**", pill 50dp/r35dp; etykieta `OutlinedButton` jest **biała, nie fioletowa** [REC vs REPO].
 - ✅ **Damus** (11) — `6ab3956`, `docs/refs/damus/screen-map.md`
-- ✅ **YakiHonne** (13) — `eacd2c3`, `docs/refs/yakihonne/screen-map.md`
+- ✅ **YakiHonne** (15) — `eacd2c3`, `docs/refs/yakihonne/screen-map.md`. **Dogrywka 2026-08-05:** drugi
+  recording domknął całe onboarding — landing („Enjoy the experience of owning your own data!" + hero +
+  Log in / **orange-outlined** Create account / EULA / „Continue as a guest ›"), **Log in** (wielkie
+  „Hey, Welcome Back", pole klucza, a metody **Keys / Remote signer** jako karty **przyklejone do dołu**,
+  zaznaczenie = **sam 1.5px pomarańczowy obrys**; Remote signer = **QR biały-na-czarnym** + dashed
+  `nostrconnect://` + `bunker://`) i **Create account** = 5-stronicowy kreator (Details → Starter packs →
+  Interests → Wallet → Preview) z rozszerzającym się wskaźnikiem stron; jedyny **zielony** CTA w apce to
+  „Export keys" na ostatniej stronie, a stopka i tak zostaje pomarańczowa.
 - ✅ **Primal (web)** (9 powierzchni: Home/Explore/Notifications/Messages/Bookmarks/Profile/Settings/Thread/Login + compose + search-drop) — `docs/refs/primal/screen-map.md` (autorytatywny, 14 sekcji z `PrimalHQ/primal-web-app@main`). Ice(light)+Midnight(dark) OLED, accent BLUE `#2394EF`, akcje reply→zap→like→repost→bookmark (zap 2., like=magenta `#f800c1`), swirl-logo (verbatim path + gradient `#00E0FF→#0090F8→#2554ED`).
 
 - ✅ **Snort (web)** (12 powierzchni: Home/Thread/Profile/Notifications/Messages/Discover/Search/Settings/Relays/Compose/Login + right column) — `docs/refs/snort/screen-map.md` (autorytatywny, 19 sekcji; recording 2026-07-14 + `v0l/snort@3cc8317`), rebuild `cbe56b1`. Accent violet `--highlight` `#ac88ff`(dark)/`#7139f1`(light) **współistnieje** z CTA `--primary #ff3f15` (dawny teal to był błąd — `#1ecbe1` to wyłącznie `--repost`) · reakcja = **SERCE `#ef4444`, nie emoji** · akcje **reply→repost→heart→[PoW]→zap→avatary zapperów** (18px, brak share/bookmark — są w `…`; kolor zmieniają TYLKO serce i zap, bo `text-nostr-purple`/`-blue` nie istnieją) · selektor feedu = **DROPDOWN**, nigdzie nie ma tabów z podkreśleniem (drugi idiom to pill-row) · **domyślny motyw = `system`** · **Deck = martwy kod** · w light mode `.light button` bije utility Tailwinda, więc prawie wszystkie guziki są białe. Przy okazji naprawione: B8 (highlighter usunięty — Snort nie ma kolorowania składni), B9b, B10 (dolny pasek ≤768px), zero requestów zewnętrznych.
