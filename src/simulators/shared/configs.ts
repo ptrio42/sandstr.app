@@ -17,7 +17,7 @@ export const damusConfig: SimulatorConfig = {
   platform: 'ios',
   primaryColor: '#CC43C5', // DamusPurple (real brand accent)
   secondaryColor: '#F869B6', // PinkGradient stop 2
-  icon: '/icons/damus.png',
+  icon: '/icons/damus.webp',
   supportedFeatures: [
     SimulatorFeature.DM,
     SimulatorFeature.ZAPS,
@@ -71,7 +71,7 @@ export const primalConfig: SimulatorConfig = {
   platform: 'web',
   primaryColor: '#2394EF', // Primal brand blue (--accent, Midnight/Ice)
   secondaryColor: '#14B9FF', // signature gradient cyan (#14B9FF→#690DFF)
-  icon: '/icons/primal.png',
+  icon: '/icons/primal.webp',
   supportedFeatures: [
     SimulatorFeature.DM,
     SimulatorFeature.ZAPS,
@@ -108,7 +108,7 @@ export const snortConfig: SimulatorConfig = {
   platform: 'web',
   primaryColor: '#a178ff', // --snort-gradient stop 1 (violet)
   secondaryColor: '#ff6baf', // --snort-gradient stop 2 (pink)
-  icon: '/icons/snort.png',
+  icon: '/icons/snort.webp',
   supportedFeatures: [
     SimulatorFeature.DM,
     SimulatorFeature.ZAPS,
@@ -159,7 +159,7 @@ export const coracleConfig: SimulatorConfig = {
   platform: 'web',
   primaryColor: '#6366F1', // Indigo
   secondaryColor: '#818CF8',
-  icon: '/icons/coracle.png',
+  icon: '/icons/coracle.webp',
   supportedFeatures: [
     SimulatorFeature.DM,
     SimulatorFeature.ZAPS,

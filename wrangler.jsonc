@@ -1,0 +1,30 @@
+{
+  // Deploy config for Cloudflare Workers static assets (sandstr.app).
+  //
+  // `name` MUST match the Worker the dashboard already created — deploying
+  // under a different name would silently stand up a second, unrouted copy
+  // instead of updating the live one.
+  "name": "sandstr-app",
+  "compatibility_date": "2026-08-05",
+
+  "assets": {
+    "directory": "./dist",
+
+    // The SPA fallback. This replaces the `/*  /index.html  200` rule that
+    // public/_redirects used to carry: on Workers assets that rule is rejected
+    // at deploy time as an infinite loop, because the runtime already
+    // normalises URLs (a request for /index.html redirects to /), so the
+    // rewrite would re-enter its own rule. Same behaviour, expressed where
+    // this platform expects it — any path that is not a real file serves
+    // index.html with a 200, which is what BrowserRouter needs for a refreshed
+    // or shared /c/<client> link.
+    //
+    // If this ever moves to Netlify, the _redirects rule has to come back:
+    // there is no equivalent of this setting there.
+    "not_found_handling": "single-page-application"
+  }
+
+  // public/_headers still applies as-is — Workers assets read the same file
+  // Pages and Netlify do, so the CSP and the rest of the security headers are
+  // unaffected by any of the above.
+}

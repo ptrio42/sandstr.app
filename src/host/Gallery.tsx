@@ -48,7 +48,19 @@ function ClientCard({ c }: { c: ClientEntry }) {
         style={{ backgroundColor: `${c.primaryColor}1a` }}
       >
         {c.icon ? (
-          <img src={c.icon} alt={`${c.name} logo`} className="h-full w-full rounded-2xl object-cover" />
+          // Icons are 128px sources in a 64px box (2× for retina). Intrinsic
+          // width/height let the browser reserve the space before the file
+          // lands — the markup is prerendered now, so these tags exist before
+          // any JS runs.
+          <img
+            src={c.icon}
+            alt={`${c.name} logo`}
+            width={64}
+            height={64}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full rounded-2xl object-cover"
+          />
         ) : (
           <span>{c.emoji}</span>
         )}

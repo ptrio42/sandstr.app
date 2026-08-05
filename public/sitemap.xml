@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  One URL, on purpose. The client reproductions under /c/ are Disallow'd in
+  robots.txt (a pixel-faithful /c/damus must not rank for "Damus"), so listing
+  them here would ask crawlers to fetch what the same site tells them not to.
+
+  No <lastmod>: a hand-written date goes stale the first time it is forgotten,
+  and a lastmod crawlers learn to distrust is worth less than none.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://sandstr.app/</loc>
+  </url>
+</urlset>
