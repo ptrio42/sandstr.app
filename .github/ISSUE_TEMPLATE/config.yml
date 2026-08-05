@@ -1,0 +1,13 @@
+# Blank issues stay ON: a developer filing a build break should not have to walk
+# through a form written for a Damus user reporting a wrong button order.
+blank_issues_enabled: true
+contact_links:
+  - name: How a reproduction actually gets built
+    url: https://github.com/ptrio42/sandstr.app/blob/main/docs/FIDELITY.md
+    about: The reference-first process. Read this before putting real effort into a capture or a screen map.
+  - name: What reference material looks like
+    url: https://github.com/ptrio42/sandstr.app/tree/main/docs/refs
+    about: Existing screen maps (Damus, Wisp, Snort, Primal, Amethyst). This is the shape of a great contribution.
+  - name: Try the clients
+    url: https://sandstr.app
+    about: The gallery. Every report here is about one of these reproductions.

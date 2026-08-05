@@ -1,0 +1,74 @@
+name: Request a client
+description: A Nostr client you'd like to try in the browser that isn't here yet.
+title: "[client] "
+labels: ["client-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Requests are a real signal — they're how we decide what gets built next. But be warned that a
+        vote alone is the slow path. What actually moves a client up the queue:
+
+        1. **The client is open source.** We read its own source for design tokens and navigation.
+           A closed-source client can only ever be guessed at from screenshots, and guessing is exactly
+           what this project refuses to do.
+        2. **Someone can supply a capture.** Usually you — see
+           [Add reference material](https://github.com/ptrio42/sandstr.app/issues/new?template=2-add-reference.yml).
+        3. **The team is reachable.** We ask each team's blessing before leaning on their brand.
+           If you know them, that helps more than anything else on this list.
+
+  - type: input
+    id: client
+    attributes:
+      label: Which client?
+      placeholder: "Nostur"
+    validations:
+      required: true
+
+  - type: input
+    id: homepage
+    attributes:
+      label: Homepage
+      placeholder: "https://nostur.com"
+
+  - type: input
+    id: repo
+    attributes:
+      label: Source repository
+      description: If there isn't one, say so — it usually means we can't do this faithfully.
+      placeholder: "https://github.com/nostur-com/nostur-ios-public"
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - iOS
+        - Android
+        - Web
+        - Desktop
+        - More than one
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: What makes it worth reproducing?
+      description: |
+        What does it do that Damus, Amethyst, Primal, Snort, YakiHonne or Wisp don't? A client that
+        would land as "the same feed again" is a poor use of the effort.
+      placeholder: "It's the only client with a real outbox-model relay picker, and that's the thing newcomers never get to see before installing."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Can you help?
+      description: Optional, and the difference between a request that sits for a year and one that ships.
+      options:
+        - label: I can record the real app (I'll open a reference issue).
+        - label: I'd take a shot at the screen map myself.
+        - label: I'm on the team that builds it.
+        - label: I know the team and can introduce you.
