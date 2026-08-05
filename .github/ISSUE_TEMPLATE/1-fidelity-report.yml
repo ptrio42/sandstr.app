@@ -1,7 +1,6 @@
 name: Something looks off
 description: You use the real client and our reproduction gets a detail wrong.
 title: "[fidelity] "
-labels: ["fidelity"]
 body:
   - type: markdown
     attributes:
@@ -31,8 +30,8 @@ body:
         - Primal
         - Snort
         - Wisp
+        - Nostur
         - Keychat
-        - Olas
         - Coracle
         - Gossip
         - Nostr Kitten

@@ -1,7 +1,6 @@
 name: Add reference material
 description: Contribute a recording, screenshots or a screen map for a client.
 title: "[reference] "
-labels: ["reference"]
 body:
   - type: markdown
     attributes:
@@ -39,8 +38,8 @@ body:
         - Primal
         - Snort
         - Wisp
+        - Nostur
         - Keychat
-        - Olas
         - Coracle
         - Gossip
         - A client that isn't in Sandstr yet

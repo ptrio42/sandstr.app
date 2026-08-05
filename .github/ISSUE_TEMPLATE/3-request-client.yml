@@ -1,7 +1,6 @@
 name: Request a client
 description: A Nostr client you'd like to try in the browser that isn't here yet.
 title: "[client] "
-labels: ["client-request"]
 body:
   - type: markdown
     attributes:
