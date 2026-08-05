@@ -3,6 +3,7 @@ import { Moon, Sun } from 'lucide-react';
 import ClientSwitcher from './ClientSwitcher';
 import SandstrLogo from './brand/SandstrLogo';
 import { useTheme } from './useTheme';
+import { addReferenceUrl, requestClientUrl } from './contribute';
 import { cn } from '../utils/cn';
 
 export default function Layout() {
@@ -76,6 +77,31 @@ export default function Layout() {
             >
               ⚡ Support the builder
             </a>
+          </p>
+          {/* Intake. Every reproduction is rebuilt against a recording of the
+              real app from a real account, and that — not code — is what limits
+              how many exist. The people who can supply it are already reading
+              this page. See src/host/contribute.ts. */}
+          <p className="mt-1">
+            Missing your client?{' '}
+            <a
+              href={requestClientUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              Request one
+            </a>{' '}
+            — or{' '}
+            <a
+              href={addReferenceUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              send reference material
+            </a>{' '}
+            for one, which is how the next reproduction actually gets built.
           </p>
         </footer>
       )}

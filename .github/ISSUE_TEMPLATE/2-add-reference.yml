@@ -1,0 +1,138 @@
+name: Add reference material
+description: Contribute a recording, screenshots or a screen map for a client.
+title: "[reference] "
+labels: ["reference"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Every reproduction here is rebuilt screen by screen against a **recording of the real app**,
+        read together with the client's own source. See [docs/FIDELITY.md](https://github.com/ptrio42/sandstr.app/blob/main/docs/FIDELITY.md).
+
+        The bottleneck isn't code — it's a capture from a real account with real state: a feed with
+        actual follows, notifications that aren't empty, a wallet with a balance, a profile with a
+        history. You have that. We can't manufacture it.
+
+        **Read the privacy section at the bottom before you record anything.** It changes how you should capture.
+
+  - type: markdown
+    attributes:
+      value: |
+        ### What makes a capture usable
+
+        - **Screen recording beats screenshots** — it catches transitions, sheets and empty states.
+        - **Slow.** Rest ~2s on each screen. Fast scrolling produces motion-blurred frames we can't read a hex value from.
+        - **Portrait, native resolution, no crop.** Don't record a phone with another phone.
+        - **Both themes** if the client has them, and say which one it ships as default.
+        - **Walk the whole app**: feed → open a note → thread → profile → notifications → DMs → compose →
+          search → settings → relays. Include the boring screens; those are the ones nobody ever captures.
+        - **No cursor callouts, no editing, no music.** Raw is better.
+
+  - type: dropdown
+    id: client
+    attributes:
+      label: Which client?
+      options:
+        - Damus
+        - Amethyst
+        - YakiHonne
+        - Primal
+        - Snort
+        - Wisp
+        - Keychat
+        - Olas
+        - Coracle
+        - Gossip
+        - A client that isn't in Sandstr yet
+    validations:
+      required: true
+
+  - type: input
+    id: client-other
+    attributes:
+      label: If it isn't in Sandstr yet — which one?
+      placeholder: "Nostur — https://nostur.com"
+
+  - type: dropdown
+    id: material
+    attributes:
+      label: What are you contributing?
+      options:
+        - A screen recording
+        - Screenshots
+        - A filled-in screen-map.md (or a PR for one)
+        - A pointer to the client's design tokens in its source
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: surfaces
+    attributes:
+      label: Which screens does it cover?
+      description: List them. This is what tells us whether it closes a gap or duplicates what we have.
+      placeholder: |
+        feed (For You + Following), thread view, profile, notifications,
+        DM list + one conversation, compose, zap sheet, settings → relays
+    validations:
+      required: true
+
+  - type: input
+    id: capture
+    attributes:
+      label: Device, OS, app version, theme
+      description: Without this we can't tell a faithful detail from a platform quirk or an old build.
+      placeholder: "Pixel 8, Android 15, Amethyst 0.94.3, dark theme (app default)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: link
+    attributes:
+      label: The material
+      description: |
+        Attach it here (GitHub takes video up to 10 MB), or link it — Blossom, nostr.build, any host that
+        won't expire. **Whatever you attach to this issue is public and permanent.**
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy — please read, this one matters
+      description: |
+        A recording of a Nostr client is a recording of an *identity*. It can contain your private key,
+        your DMs, your contacts, your wallet balance and your NWC connection string. Posted to a public
+        issue, that is unrecoverable — a leaked `nsec` is a stolen account, permanently.
+
+        **Strongest advice: record on a fresh throwaway account, or an account you're willing to burn.**
+        If you must use your real one, skip the key screens entirely rather than trying to blur them.
+      options:
+        - label: There is no private key (`nsec`), seed phrase, key-backup screen or recovery screen visible at any point.
+          required: true
+        - label: There are no private messages visible — no DM contents, no DM previews in a list.
+          required: true
+        - label: There is no wallet balance, NWC connection string, LNURL or payment credential visible.
+          required: true
+        - label: I'm not exposing anyone else's non-public content, and I accept that anything visible here becomes public permanently.
+          required: true
+
+  - type: checkboxes
+    id: rights
+    attributes:
+      label: Rights
+      description: |
+        Short version: you're licensing *your capture*, not the app in it. The client belongs to its own
+        team, which is exactly why every reproduction ships a "not affiliated" banner and a link to the real thing.
+      options:
+        - label: I captured this myself and I'm allowed to share it.
+          required: true
+        - label: I grant the Sandstr project a non-exclusive licence to use it as reference material for building the reproduction, and I understand the app shown belongs to its own team.
+          required: true
+
+  - type: checkboxes
+    id: credit
+    attributes:
+      label: Credit
+      options:
+        - label: Credit me if this gets used (leave your npub or handle in a comment). Leave unchecked to stay anonymous.

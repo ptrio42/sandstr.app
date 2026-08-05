@@ -1,0 +1,108 @@
+name: Something looks off
+description: You use the real client and our reproduction gets a detail wrong.
+title: "[fidelity] "
+labels: ["fidelity"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **This is the most useful report you can file.** Fidelity to the real app *is* the product,
+        and you have something we don't: the real client, on your device, with your account.
+
+        Two kinds of report, one of which we can act on:
+
+        | ❌ can't act on | ✅ can act on |
+        |---|---|
+        | "the colours feel off" | "the accent is orange, we render purple" |
+        | "the feed is wrong" | "the zap button is 2nd in the action row, we put it 4th" |
+        | "looks dated" | "the feed selector is a dropdown, we render tabs" |
+
+        One specific detail per report beats a list of vague impressions. Small is fine —
+        a single wrong icon is a real bug here.
+
+  - type: dropdown
+    id: client
+    attributes:
+      label: Which reproduction?
+      options:
+        - Damus
+        - Amethyst
+        - YakiHonne
+        - Primal
+        - Snort
+        - Wisp
+        - Keychat
+        - Olas
+        - Coracle
+        - Gossip
+        - Nostr Kitten
+        - The Sandstr site itself (gallery, navigation, theme)
+    validations:
+      required: true
+
+  - type: input
+    id: where
+    attributes:
+      label: Where exactly
+      description: The page you were on, plus the screen inside it.
+      placeholder: "https://sandstr.app/c/damus — the notifications tab"
+
+  - type: textarea
+    id: wrong
+    attributes:
+      label: What we render
+      description: What our reproduction does today.
+      placeholder: "The action row under a note is reply, repost, heart, zap."
+    validations:
+      required: true
+
+  - type: textarea
+    id: real
+    attributes:
+      label: What the real client does
+      description: The correct behaviour or appearance. Be as concrete as you can bear to be.
+      placeholder: "The real Damus has no heart — the third action is the shaka (🤙), and it's the default 'like'."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: basis
+    attributes:
+      label: How do you know?
+      description: Not a trust test — it tells us how much verification we still owe before changing anything.
+      options:
+        - I use this client daily
+        - I have it installed and just checked
+        - I'm on the team that builds it
+        - I read the client's source
+        - I saw a screenshot or recording somewhere
+    validations:
+      required: true
+
+  - type: input
+    id: env
+    attributes:
+      label: Real client version and platform
+      description: Optional, but it settles arguments — clients change, and we may be faithful to an older build.
+      placeholder: "Damus 1.14, iOS 18.3"
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshot of the real client
+      description: |
+        Optional and genuinely helpful — but read the box below first. **Everything attached here is public forever.**
+      placeholder: "Drag an image in, or paste a link."
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Before you attach anything
+      description: |
+        A screenshot of a Nostr client carries more than you think: private keys, DMs, contacts,
+        wallet balances. A GitHub issue is public and permanent — a leaked `nsec` cannot be taken back.
+      options:
+        - label: Nothing I attached shows a private key (`nsec`), a key-backup or recovery screen, or a wallet connection string.
+          required: true
+        - label: Nothing I attached shows private messages, or another person's content that wasn't already public.
+          required: true

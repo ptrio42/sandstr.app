@@ -1,12 +1,13 @@
 import { Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ChevronDown, ChevronLeft, ExternalLink, Info, Monitor, Moon, Play, Sun } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ExternalLink, Flag, Info, Monitor, Moon, Play, Sun } from 'lucide-react';
 import MobilePhoneFrame from '../simulators/shared/components/MobilePhoneFrame';
 import { ClientGlyph, platformLabel } from './ClientGlyph';
 import { clients, getClient, type ClientEntry } from '../registry';
 import { useMediaQuery, MOBILE_QUERY } from './useMediaQuery';
 import { useTheme } from './useTheme';
+import { fidelityReportUrl } from './contribute';
 import { cn } from '../utils/cn';
 
 function Disclaimer({ name, real }: { name: string; real: boolean }) {
@@ -105,7 +106,12 @@ function ContextPanel({ entry, real }: { entry: ClientEntry; real: boolean }) {
 
       <Disclaimer name={entry.name} real={real} />
 
-      {real && <Handoff entry={entry} />}
+      {real && (
+        <div className="space-y-2">
+          <Handoff entry={entry} />
+          <ReportLink entry={entry} />
+        </div>
+      )}
     </aside>
   );
 }
@@ -143,7 +149,12 @@ function AboutSheet({ entry, real, onClose }: { entry: ClientEntry; real: boolea
             Early preview — {entry.statusNote}
           </p>
         )}
-        {real && <Handoff entry={entry} />}
+        {real && (
+          <div className="space-y-2">
+            <Handoff entry={entry} />
+            <ReportLink entry={entry} />
+          </div>
+        )}
         <button
           type="button"
           onClick={onClose}
@@ -175,6 +186,31 @@ function Handoff({ entry, compact }: { entry: ClientEntry; compact?: boolean }) 
         </p>
       )}
     </div>
+  );
+}
+
+/**
+ * The crowdsourcing hook, and deliberately the quietest thing on the surface —
+ * it must never compete with the mandated disclaimer or the handoff.
+ *
+ * It sits ON the client view rather than on a contribute page because that is
+ * where the qualified reviewer already is: someone who opened /c/damus and
+ * actually uses Damus can price a wrong action-row order in two seconds, and
+ * fidelity to the real app is the entire product claim. Unlike a capture, this
+ * contribution carries no privacy load — they're describing our reproduction,
+ * not uploading their account. Real clients only: "fidelity" is meaningless for
+ * Nostr Kitten, which isn't a reproduction of anything.
+ */
+function ReportLink({ entry }: { entry: ClientEntry }) {
+  return (
+    <a
+      href={fidelityReportUrl(entry)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex w-fit items-center gap-1.5 text-[11px] text-gray-400 transition-colors hover:text-gray-600 hover:underline dark:text-gray-500 dark:hover:text-gray-300"
+    >
+      <Flag className="h-3 w-3 shrink-0" /> Spotted something off?
+    </a>
   );
 }
 
@@ -446,6 +482,11 @@ export default function ClientView() {
           </button>
         )}
         {isReal && <Handoff entry={entry} compact />}
+        {/* The frameless clients have no ContextPanel, so this row is their ONLY
+            desktop home for the report link — hence it lives here and not just
+            in the panel. Framed clients hide this whole row at lg+, so the two
+            never render together. */}
+        {isReal && <ReportLink entry={entry} />}
       </div>
 
       {/* ---------------- the stage ------------------------------------------ */}
