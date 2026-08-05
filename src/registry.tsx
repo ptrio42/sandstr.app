@@ -14,7 +14,10 @@ export type Frame = 'ios' | 'android' | null;
  * - 'planned' — not clickable yet ("coming soon"); no entry uses it today
  */
 export type ClientStatus = 'ready' | 'preview' | 'planned';
-/** 'reproduction' = a real team's client; 'original' = ours (Nostr Kitten). */
+/**
+ * 'reproduction' = a real team's client; 'original' = ours (Nostr Kitten).
+ * No LISTED client is 'original' today — see `unlisted` at the bottom of this file.
+ */
 export type ClientKind = 'reproduction' | 'original';
 
 type Loader = () => Promise<{ default: ComponentType<any> }>;
@@ -92,10 +95,6 @@ function once(fn: Loader): () => Promise<unknown> {
 //    announcement found. snort.social is the brand-correct link today; check
 //    with Kieran before switching. (git.v0l.io is a MIRROR — GitHub is canonical.)
 //  - gossip: genuinely has no website. homepage stays null; we link the repo.
-//  - olas: pablof7z/olas is the MIT repo behind the shipped app but was last
-//    pushed 2025-07; olas-nmp looks like an unlicensed in-progress rewrite. Its
-//    LICENSE.md copyright line is leftover create-expo-app boilerplate naming
-//    someone else — the SPDX id is safe to record, that name is NOT.
 //  - yakihonne: attribute YakiHonne/web-app; the *-web-app / *-mobile-app repos
 //    are archived.
 const MOUNTS: Record<
@@ -146,17 +145,6 @@ const MOUNTS: Record<
     upstreamLicense: 'AGPL-3.0',
     installNote: 'iOS App Store, Google Play, or a release APK',
     load: () => import('./simulators/keychat/KeychatSimulatorWithTour'),
-  },
-  olas: {
-    frame: 'ios',
-    tour: true,
-    status: 'preview',
-    statusNote: 'An early sketch — not yet a faithful reproduction.',
-    homepage: 'https://olas.app',
-    repo: 'https://github.com/pablof7z/olas',
-    upstreamLicense: 'MIT',
-    installNote: 'iOS App Store, Android via Zapstore, or olas.app in a browser',
-    load: () => import('./simulators/olas/OlasSimulatorWithTour'),
   },
   yakihonne: {
     frame: 'ios',
@@ -243,6 +231,13 @@ const MOUNTS: Record<
 
 // Nostr Kitten is OUR original client — not a reproduction of anyone's work,
 // and deliberately NOT the front door (CLAUDE.md forbids leading with it).
+// UNLISTED since 2026-08-05: the shelf is "reproductions of real clients", and
+// a GeoCities parody sitting among them muddled that sentence for every first
+// visit. The entry and the simulator stay — /c/nostr-kitten still resolves, as
+// the easter egg CLAUDE.md always said it was — it just no longer appears in the
+// gallery, the ⌘K palette or the switcher rail. Relisting = move it back into
+// `clients` (the gallery's "original" section is the only piece that was
+// deleted, and it was six lines).
 const kittenLoad: Loader = () =>
   import('./simulators/nostr-kitten/NostrKittenSimulator').then((m) => ({ default: m.NostrKittenSimulator }));
 
@@ -298,11 +293,20 @@ const branded: ClientEntry[] = Object.values(allSimulatorConfigs).map((cfg) => {
   } satisfies ClientEntry;
 });
 
-// Ready reproductions first, then previews, originals last — the same order
-// the gallery sections tell the story in.
-const rank = (c: ClientEntry) => (c.kind === 'original' ? 2 : c.status === 'ready' ? 0 : 1);
-export const clients: ClientEntry[] = [...branded, nostrKitten].sort((a, b) => rank(a) - rank(b));
+// Ready reproductions first, then previews — the same order the gallery
+// sections tell the story in.
+const rank = (c: ClientEntry) => (c.status === 'ready' ? 0 : 1);
 
+/**
+ * Everything the product SHOWS. Gallery, ⌘K palette and the switcher rail all
+ * read this array, so anything absent here is invisible without being deleted.
+ */
+export const clients: ClientEntry[] = [...branded].sort((a, b) => rank(a) - rank(b));
+
+/** Reachable at /c/<id>, listed nowhere. See the Nostr Kitten note above. */
+const unlisted: ClientEntry[] = [nostrKitten];
+
+/** Routing resolves unlisted clients too — that is what keeps the egg findable. */
 export function getClient(id: string | undefined): ClientEntry | undefined {
-  return clients.find((c) => c.id === id);
+  return clients.find((c) => c.id === id) ?? unlisted.find((c) => c.id === id);
 }

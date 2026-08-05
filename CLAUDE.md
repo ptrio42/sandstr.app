@@ -1,10 +1,11 @@
 # Sandstr — CLAUDE.md
 
 Samodzielny, w 100% kliencki produkt: **„try Nostr clients in your browser — no keys, no install"**.
-(Bez liczby w taglinie — publiczna narracja to „6 wiernych reprodukcji + 4 early previews + 1 original",
-sterowana osią `status`/`kind` w `src/registry.tsx`, nie „11 klientów".)
+(Bez liczby w taglinie — publiczna narracja to „7 wiernych reprodukcji + 2 early previews",
+sterowana osią `status` w `src/registry.tsx`, nie „N klientów". Od 2026-08-05 **wszystko, co widoczne,
+jest reprodukcją realnego klienta** — Nostr Kitten wyszedł z listy, Olas wyleciał z repo.)
 **Rdzeń wartości = REAL-CLIENTS-FIRST:** wierne, wysokiej wierności, przeglądarkowe reprodukcje **realnych,
-brandowanych klientów Nostr** (Damus, Amethyst, Primal, Snort, YakiHonne, Wisp, Coracle, Keychat, Olas, Gossip) —
+brandowanych klientów Nostr** (Damus, Amethyst, Primal, Snort, YakiHonne, Wisp, Coracle, Keychat, Gossip) —
 bez kluczy, bez instalacji. **Wierność wobec prawdziwych appek JEST produktem** — użytkownik ma naprawdę
 przetestować klienta, nie „jakiś losowy twór".
 Wyodrębniony (extraction spike, 2026-07-14) z feature'u symulatorów klientów, który żył w przewodniku
@@ -27,11 +28,11 @@ Podgląd w sesji: `.claude/launch.json` → config **sandstr** (`preview_start`,
 
 ## Architektura / mapa kodu
 
-- **`src/simulators/` — SERCE.** 11 klientów na wspólnym fundamencie.
+- **`src/simulators/` — SERCE.** 10 klientów na wspólnym fundamencie (9 na liście + nielistowany Kitten).
   - `shared/` — `useSimulator` (Context+reducer, w większości **NIEUŻYWANY** — sim trzymają lokalny
     `useState`), `SimulatorShell`, `MobilePhoneFrame` (ramka iPhone, `platform` ios/android),
     `MockKeyDisplay`, `NoteCard`, `useParentTheme` (obserwuje klasę `dark` na `<html>`),
-    `mockKeys`/`mockEvents`, **`configs.ts`** (metadata 10 brandowanych klientów), `types`.
+    `mockKeys`/`mockEvents`, **`configs.ts`** (metadata 9 brandowanych klientów), `types`.
   - `<client>/` — każdy klient: `<Client>Simulator.tsx` (baza UI/stan) +
     `<Client>SimulatorWithTour.tsx` (wrapper: `TourWrapper` + mapowanie kroków toura na komendy stanu) +
     `screens/` + `components/` + `<client>.theme.css`.
@@ -47,6 +48,9 @@ Podgląd w sesji: `.claude/launch.json` → config **sandstr** (`preview_start`,
   preview) steruje sekcjami galerii, chipami i wierszem poleceń w bramce mobile; `lead` jest DERYWOWANE
   (`ready && reproduction`), nie ustawiaj ręcznie. **TU dodajesz/mapujesz
   klienta.** Odwzorowuje 1:1 dawne strony `.astro` z oryginału.
+  **Dwie listy:** `clients` (eksportowana) = to, co produkt POKAZUJE — galeria, paleta ⌘K, rail
+  switchera czytają tylko ją; `unlisted` (prywatna, dziś sam Nostr Kitten) = wciąż routowalne pod
+  `/c/<id>`, ale niewidoczne. `getClient()` przeszukuje obie — to ono trzyma easter-egg przy życiu.
 
 **Montowanie klienta:** mobilne (ios/android) w `MobilePhoneFrame`; web/desktop bez ramki.
 `*SimulatorWithTour` = **default export**; bazowe Coracle/Gossip/NostrKitten = **named export**.
@@ -75,7 +79,14 @@ ucieczką od cudzej marki. Ścieżki:
     lekka mitygacja.
 **Nostr Kitten NIE jest fundamentem ani „front door"** — nie istnieje jako realny klient Nostr; najwyżej
 opcjonalny easter-egg / maskotka. Nie traktuj go jako lidera strategicznego, kotwicy marki ani centrum
-deryzykowania. **Web klienty odtwarzamy we wspólnym stacku React („Poziom A")**, nie uruchamiając realnego
+deryzykowania. **NIELISTOWANY od 2026-08-05** (decyzja właściciela): półka mówi „reprodukcje realnych
+klientów", a parodia GeoCities stojąca obok Damusa psuła to zdanie przy każdej pierwszej wizycie. Kod
+i wpis w rejestrze ZOSTAJĄ (`unlisted` w `registry.tsx`), `/c/nostr-kitten` dalej działa — nie kasuj go.
+**Powód, dla którego zostaje: przyszły, prawdziwy klient dla zabawy.** Właściciel chce kiedyś zbudować
+działającego klienta Nostr w tym duchu — na Nostrze taki żart potrafi zaskoczyć mocniej niż kolejny
+poważny feed. Rozważany kierunek: **fork Wispa ostylowany na Nostr Kitten** (Wisp = mały, czytelny,
+MIT, Android, już mamy jego screen-mapę i tokeny). To jest osobny produkt, a NIE symulator w tym repo —
+sandstr pozostaje półką reprodukcji. **Web klienty odtwarzamy we wspólnym stacku React („Poziom A")**, nie uruchamiając realnego
 kodu klienta. **„Sandstr" to finalna nazwa projektu** (decyzja właściciela 2026-07-28; wcześniej robocza).
 **Domena produkcyjna: `sandstr.app`** (decyzja 2026-08-03). `sandstr.com` jest zajęta przez niezwiązany
 fintech („SAND", najem krótkoterminowy, Wix, od 2025-08) — inna branża, brak kolizji, ale i brak szans na
@@ -90,7 +101,7 @@ w `public/robots.txt`. Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` 
   offline/CSP-safe, tokeny z repo klienta + weryfikacja side-by-side z realnym recordingiem. Do nich równamy.
 - **READY (status w `registry.tsx`): Amethyst, Damus, YakiHonne, Primal (web)** (2026-07-28) **+ Snort
   + Wisp** (2026-07-30) **+ Coracle** (2026-08-05) — zweryfikowane referencyjnie (screen-map + fidelity
-  pass). (+ Nostr Kitten: `kind: 'original'`, opcjonalny easter-egg, nie lider i nie front door.)
+  pass). (Nostr Kitten `kind: 'original'` istnieje nadal, ale jest NIELISTOWANY — patrz sekcja Branding.)
 - **Wisp (ZROBIONE 2026-07-30):** recon (`barrydeen/wisp@11ac08f`, v1.2.1, MIT © Barry Deen; homepage
   `wisp.mobile`) + recording → `docs/refs/wisp/screen-map.md` (autorytatywny) i `src/simulators/wisp/`
   (13 powierzchni: login/feed/thread/profile/notifications/chat/wallet/search/compose/zap/drawer/
@@ -124,9 +135,15 @@ w `public/robots.txt`. Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` 
   **Login NIE MA pola na klucz** — same delegacje (extension/bunker), więc reprodukcja też go nie ma
   (`keySafety.ts` celowo nieużyty). Groups = tylko notka „Groups are going away!". [REC vs REPO]:
   polskie ekrany w nagraniu to **nstart** (`start.njump.me`), osobny projekt — nie odtwarzamy.
-- **Druga fala / PREVIEW** (słabsza wierność / bugi): Keychat, Olas, Gossip.
+- **Druga fala / PREVIEW** (słabsza wierność / bugi): Keychat, Gossip.
   (Primal-MOBILE stub, nieroutowany.) Galeria etykietuje je „Early preview" +
   `statusNote`; nie przedstawiaj ich jako skończonych.
+- **USUNIĘTY 2026-08-05: Olas.** Upstream `pablof7z/olas` bez pushu od 2025-07 (a `olas-nmp` to
+  nielicencjonowany, niedokończony rewrite) — nie ma czego wiernie odtwarzać, a nasza wersja i tak była
+  generycznym klonem Instagrama (Stories/Follow Requests nie istnieją w Nostrze). Wyleciały:
+  `src/simulators/olas/`, `olas-tour.ts`, `public/icons/olas.svg`, wpisy w `registry.tsx`/`configs.ts`/
+  `SimulatorClient` oraz sekcja w `docs/FIDELITY.md`. **Nie przywracaj bez ponownego recon** — jeśli
+  upstream ożyje, robimy go od nowa procesem reference-first.
 - **Primal web (ZROBIONE 2026-07-14):** rebuild z recordingu + recon → `docs/refs/primal/screen-map.md`
   (autorytatywny: exact tokeny `palette.scss` Midnight/Ice, NavMenu, NoteFooter, Explore/Notifications/DMs).
   3-kolumnowy (lewy nav / feed / prawy sidebar); Ice(light, w recordingu) + Midnight(dark, OLED, realny

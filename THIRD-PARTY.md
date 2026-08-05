@@ -1,6 +1,6 @@
 # Third-party attribution
 
-sandstr reproduces the interfaces of ten real, open-source Nostr clients. This
+sandstr reproduces the interfaces of nine real, open-source Nostr clients. This
 file records, per client, **what was referenced and what was copied** — because
 those are different things with different obligations, and being precise about
 it is part of asking each team for their blessing (see [TRADEMARKS.md](TRADEMARKS.md)).
@@ -38,10 +38,13 @@ derive no code from them. If that ever changes, this file changes with it.
 | [Coracle](https://coracle.social) | [coracle-social/coracle](https://github.com/coracle-social/coracle) | MIT (© Jon Staab / hodlbod) | `.env.template` `VITE_DARK_THEME`/`VITE_LIGHT_THEME` colour tokens and `tailwind.config.cjs` naming, `MenuDesktop`/`Nav`/`Routes` shell structure, `NoteActions` action order, `RelayCard`/`RelayCardActions` anatomy, `Login`/`Onboarding`/settings copy (verified against a 2026-08-05 recording — `docs/refs/coracle/screen-map.md`) | app icon (`public/icons/coracle.webp`), UI labels. **Not** `wordmark-dark.png`/`logo.png` — the wordmark is set in type beside our own glyph. **Not** Font Awesome: every icon is re-drawn (`components/Icon.tsx`), so no FA artwork and no CC BY 4.0 obligation is inherited |
 | [Gossip](https://github.com/mikedilger/gossip) | [mikedilger/gossip](https://github.com/mikedilger/gossip) | MIT | rough layout only (*Early preview*); no website exists, so the handoff links the repo | app icon |
 | [Keychat](https://keychat.io) | [keychat-io/keychat-app](https://github.com/keychat-io/keychat-app) | AGPL-3.0 | rough layout only (*Early preview*) | app icon |
-| [Olas](https://olas.app) | [pablof7z/olas](https://github.com/pablof7z/olas) | MIT | rough layout only (*Early preview*) | app icon |
+
+An Olas reproduction shipped here until 2026-08-05 and was removed, icon
+included — `pablof7z/olas` has not been pushed since 2025-07, so there was no
+maintained client left to be faithful to.
 
 Nostr Kitten is not in this table: it is an original client of ours and
-reproduces nobody's work.
+reproduces nobody's work. It is no longer listed in the gallery either.
 
 ## Open items, stated plainly
 
@@ -55,12 +58,6 @@ reproduces nobody's work.
   no recolouring, no redrawing. A monogram fallback already exists in
   `src/host/ClientGlyph.tsx`, so any team that prefers we not use their mark can
   be honoured immediately.
-- **Olas copyright line.** Its `LICENSE.md` is MIT text but the copyright holder
-  named in it is leftover `create-expo-app` boilerplate, not the Olas author.
-  The SPDX id (MIT) is recorded above; the name deliberately is not. To be
-  confirmed with the author, along with which repo backs the current build —
-  `pablof7z/olas` was last pushed 2025-07 while `olas-nmp` looks like an
-  in-progress, unlicensed rewrite.
 - **Snort domain.** The GitHub repo's `homepage` field now points at
   `phoenix.social`, which serves a byte-identical build to `snort.social` while
   the PWA manifest still reads "snort.social". We link `snort.social` as the

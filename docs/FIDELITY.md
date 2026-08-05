@@ -46,10 +46,12 @@
   (`start.njump.me`), osobny projekt — poza zakresem. Opt-in: Jon Staab (`hodlbod`), FUTO Fellow,
   bardzo opt-in-friendly.
 
-**Do zrobienia (druga fala, słabsza wierność / stare stuby):** Keychat, Olas, Gossip. Tokeny + killery każdego są niżej w tym pliku; korekty kolorów w `[[client-fidelity-ground-truth]]`. (Primal-MOBILE nadal stary stub — zrobiony tylko web.)
+**Do zrobienia (druga fala, słabsza wierność / stare stuby):** Keychat, Gossip. Tokeny + killery każdego są niżej w tym pliku; korekty kolorów w `[[client-fidelity-ground-truth]]`. (Primal-MOBILE nadal stary stub — zrobiony tylko web.)
+
+**USUNIĘTE 2026-08-05 — Olas.** Upstream `pablof7z/olas` bez pushu od 2025-07 (a `olas-nmp` to nielicencjonowany, niedokończony rewrite), więc nie ma stabilnego ground truth do odwzorowania, a nasza wersja była generycznym klonem Instagrama ze Stories/Follow Requests, których Nostr nie ma. Wypadły: `src/simulators/olas/`, `olas-tour.ts`, `public/icons/olas.svg`, wpisy w rejestrze/configs/typach oraz sekcja tokenów w tym pliku. Historia jest w gicie — gdyby upstream ożył, wracamy przez normalny proces reference-first, nie przez `git revert`.
 
 **Start następnej sesji (agent robiący kolejny symulator):**
-1. **Użytkownik NAJPIERW wrzuca referencję** do `docs/refs/<client>/shots/` — screen-RECORDING (mobile: Keychat/Olas/Primal-mobile) albo screeny/live-capture (web za Cloudflare: Snort/Primal-web/Coracle — `WebFetch` daje pustą skorupę). Bez realnego renderu nie startuj (layout ≠ pamięć).
+1. **Użytkownik NAJPIERW wrzuca referencję** do `docs/refs/<client>/shots/` — screen-RECORDING (mobile: Keychat/Primal-mobile) albo screeny/live-capture (web za Cloudflare: Snort/Primal-web/Coracle — `WebFetch` daje pustą skorupę). Bez realnego renderu nie startuj (layout ≠ pamięć).
 2. Odpal **background `Workflow`** recon repo (~11 agentów/powierzchnia) → zapisz verbatim `docs/refs/<client>/screen-map.md`.
 3. Czytaj recording (klatki: `ffmpeg select='gt(scene,0.12)'`) + repo RAZEM. **[REC vs REPO]:** recording wygrywa LAYOUT, repo wygrywa HEX/nazwy-ikon/labelki.
 4. Rebuild token-first w `src/simulators/<client>/`, reużyj inline-SVG robohash `Avatar` + `data:` media. Zachowaj interfejs komend toura + `data-tour`.
@@ -60,7 +62,7 @@ Pełny how-to w pamięci `[[fidelity-repro-playbook]]`.
 
 ## Proces (powtarzalny, per klient)
 
-1. **Ground truth.** Web (Snort, Primal, Coracle, YakiHonne) → otwórz żywą instancję i czytaj wyliczone zmienne CSS w devtools (te SPA są za Cloudflare — `WebFetch` dostaje pustą skorupę, trzeba realnego browsera). Mobile/desktop (Damus, Amethyst, Olas, Keychat, Gossip) → czytaj plik motywu w repo (mapa niżej). Layout → screeny App Store / Google Play.
+1. **Ground truth.** Web (Snort, Primal, Coracle, YakiHonne) → otwórz żywą instancję i czytaj wyliczone zmienne CSS w devtools (te SPA są za Cloudflare — `WebFetch` dostaje pustą skorupę, trzeba realnego browsera). Mobile/desktop (Damus, Amethyst, Keychat, Gossip) → czytaj plik motywu w repo (mapa niżej). Layout → screeny App Store / Google Play.
 2. **Spec tokenów PRZED kodem:** accent (light+dark), tła/warstwy, radius, spacing, skala typografii, ikonografia, **struktura nawigacji**.
 3. **Napraw „szkielet" — 2–3 detale-zabójcy** (nawigacja, gęstość kart, styl ikon). Decydują o rozpoznawalności bardziej niż kolor.
 4. **Wpompuj realne tokeny do `src/simulators/<client>/<client>.theme.css`.** Architektura jest token-driven → wierność to głównie podmiana wartości, nie przepisywanie.
@@ -152,13 +154,6 @@ Pełny how-to w pamięci `[[fidelity-repro-playbook]]`.
 - **Nav / killer:** **3-tab CupertinoTabBar**: Chats / Browser / Me (nie drawer, nie 4–5 tabów); Material 3 bez ripple (NoSplash); sygnatura = „super app" (szyfrowany czat kosztujący ecash „stamps" + Cashu/Lightning wallet + browser mini-appów); badge trybu szyfrowania per-room; „Red Pocket" (czerwona koperta); onboarding tworzy nsec/seed, bez telefonu/emaila.
 - ⚠️ **Korekta AUDIT.md:** brand **NIE** jest niebieski `#2D7FF9` — jest fioletowo-pomarańczowy.
 - **Opt-in:** zespół aktywny na Nostr (npub w README).
-
-### Olas — iOS/Android (repo `pablof7z/olas`, MIT)
-- ⚠️ **Branch:** shipping = `master` (React Native); `main` to STARA implementacja SwiftUI. Nie mylić.
-- **Tokeny:** `theme/colors.ts` (master — osobne zestawy iOS i Android!) + `tailwind.config.js` (NativeWind) + `global.css`. Assety: `assets/logo.svg` itd.
-- **Paleta (confirmed):** accent iOS `#112FED` (light+dark) · Android dark primary **IG-pink `#E1306C`**, Android light `#0070E9` · iOS light bg `#F2F2F7`/card `#FFF`, dark bg `#000`/card `#1C1C1E` · muted = foreground @ 60% opacity. **Celowo mono** (biel/czerń/systemowe szarości) + jeden akcent.
-- **Nav / killer:** bottom-tab 5: Home / Reels / **centralny Publish „+"** / **Wallet** / Profile(avatar); tab-bar **chowa się przy scrollu w dół** (reanimated); ikony **lucide** (~2px stroke, active = strokeWidth 3); picture-first edge-to-edge single-column (niska gęstość); story-ring „flare"; sygnatura non-IG = **wbudowany ecash wallet + zapy**; publish → kind:20 + Blossom.
-- **Opt-in:** pablof7z (Sanity Island LLC), mały indie, ryzyko trade-dress niskie; bardzo dostępny.
 
 ### Gossip — desktop (repo `mikedilger/gossip`, MIT)
 - **Tokeny:** `gossip-bin/src/ui/theme/default.rs` (`Color32::from_rgb`) + `mod.rs` (roundness/spacing) + `test_page.rs` (mapa token→widget). Screeny: `assets/gossip_screenshot_{dark,light}.png`. Brak DOM — czytaj Rust.
