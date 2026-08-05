@@ -29,10 +29,10 @@ derive no code from them. If that ever changes, this file changes with it.
 
 | Client | Upstream repo | Upstream license | Referenced | Copied |
 | --- | --- | --- | --- | --- |
-| [Damus](https://damus.io) | [damus-io/damus](https://github.com/damus-io/damus) | GPL-3.0 | `DamusColors.swift` tokens, `MainTabView`/`EventActionBar`/`SideMenu` structure, action order, gradients | app icon (`public/icons/damus.png`), UI labels |
+| [Damus](https://damus.io) | [damus-io/damus](https://github.com/damus-io/damus) | GPL-3.0 | `DamusColors.swift` tokens, `MainTabView`/`EventActionBar`/`SideMenu` structure, action order, gradients | app icon (`public/icons/damus.webp`), UI labels |
 | [Amethyst](https://amethyst.social) | [vitorpamplona/amethyst](https://github.com/vitorpamplona/amethyst) | MIT | Material 3 token values, navigation structure, action order | app icon, UI labels |
 | [Primal](https://primal.net) | [PrimalHQ/primal-web-app](https://github.com/PrimalHQ/primal-web-app) | MIT | `palette.scss` (Midnight/Ice), NavMenu + NoteFooter structure, three-column layout | app icon, UI labels, **logo swirl path** — see caveat |
-| [Snort](https://snort.social) | [v0l/snort](https://github.com/v0l/snort) | MIT (© 2023 Kieran / v0l) | `packages/app/src/index.css` `@theme` tokens, nav + feed-picker structure, note action order, settings menu grouping and tile colours, UI label strings | app icon (`public/icons/snort.png`), UI labels. **Not** the `nostrich_*.png` mark — deliberately replaced with our own monogram |
+| [Snort](https://snort.social) | [v0l/snort](https://github.com/v0l/snort) | MIT (© 2023 Kieran / v0l) | `packages/app/src/index.css` `@theme` tokens, nav + feed-picker structure, note action order, settings menu grouping and tile colours, UI label strings | app icon (`public/icons/snort.webp`), UI labels. **Not** the `nostrich_*.png` mark — deliberately replaced with our own monogram |
 | [YakiHonne](https://yakihonne.com) | [YakiHonne/web-app](https://github.com/YakiHonne/web-app) | MIT | brand orange, navigation, settings/notification copy | app icon, UI labels |
 | [Wisp](https://wisp.mobile) | [barrydeen/wisp](https://github.com/barrydeen/wisp) | MIT (© 2025 Barry Deen) | `Theme.kt`/`Themes.kt` tokens, `BottomBar`/`ActionBar`/drawer structure, action order, settings copy (verified against a 2026-07-30 recording — `docs/refs/wisp/screen-map.md`) | app icon (`public/icons/wisp.svg` — the `ic_wisp_logo.xml` glyph path + radial gradient), UI labels |
 | [Coracle](https://coracle.social) | [coracle-social/coracle](https://github.com/coracle-social/coracle) | MIT | rough layout only (*Early preview*) | app icon |
@@ -49,9 +49,12 @@ reproduces nobody's work.
   and gradient stops as taken verbatim from Primal's `logo_blue.svg`. That is
   copied artwork and should be replaced with our own mark or kept only with
   Primal's consent.
-- **Client icons.** `public/icons/` ships each project's real app icon. A
-  monogram fallback already exists in `src/host/ClientGlyph.tsx`, so any team
-  that prefers we not use their mark can be honoured immediately.
+- **Client icons.** `public/icons/` ships each project's real app icon. They are
+  not byte-identical originals: each is downscaled to 128 px (the gallery draws
+  them at 64) and re-encoded, four of them to WebP, purely to cut page weight —
+  no recolouring, no redrawing. A monogram fallback already exists in
+  `src/host/ClientGlyph.tsx`, so any team that prefers we not use their mark can
+  be honoured immediately.
 - **Olas copyright line.** Its `LICENSE.md` is MIT text but the copyright holder
   named in it is leftover `create-expo-app` boilerplate, not the Olas author.
   The SPDX id (MIT) is recorded above; the name deliberately is not. To be
