@@ -7,7 +7,7 @@
   "author": "ptrio42",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender.mjs",
+    "build": "vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender.mjs && node scripts/verify-headers.mjs",
     "build:client": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"

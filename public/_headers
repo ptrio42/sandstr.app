@@ -1,0 +1,56 @@
+# Response headers for the static build. Cloudflare Pages and Netlify parse this
+# same format, which is the whole reason changing host stays a ten-minute job:
+# nothing about the deploy lives in a vendor dashboard except the domain itself.
+#
+# Rules match the REQUEST path, and public/_redirects rewrites deep links to
+# index.html only after that match. So the security block has to be `/*` — a
+# rule written for /index.html would leave every /c/<client> URL bare.
+
+/*
+  # The mitigation the disclaimer strip cannot be. Without it a pixel-faithful
+  # /c/damus can be framed on someone else's domain, chrome-less, and read as
+  # the real client — the exact identity confusion robots.txt and the SIMULATION
+  # banner exist to prevent. X-Frame-Options repeats it for pre-CSP-Level-2
+  # browsers, which ignore frame-ancestors entirely.
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Cross-Origin-Opener-Policy: same-origin
+
+  # The app asks for none of these. Denying them now means a future dependency
+  # cannot quietly start asking.
+  Permissions-Policy: accelerometer=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()
+
+  # .app is on the HSTS preload list, so browsers already refuse plaintext. This
+  # line is for everything that is not a browser.
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+
+  # CSP, one line because the format allows no continuations.
+  #
+  # connect-src 'self': the app makes zero fetch/XHR/WebSocket calls — grep is
+  # empty across src/ — so this costs nothing today and pins that property
+  # against a future regression. Same reasoning for form-action (no <form> in
+  # the tree) and frame-src (no <iframe>).
+  #
+  # img-src carries the two hotlink origins: ~72 DiceBear/Unsplash URLs still
+  # live in the mock data, the top cross-cutting task in CLAUDE.md. When they
+  # are gone, delete both origins and the policy collapses into a true
+  # `default-src 'self'` — which is the moment the "runs behind a hostile or
+  # absent network" claim becomes checkable rather than aspirational.
+  #
+  # style-src needs 'unsafe-inline' for style ATTRIBUTES: the prerendered
+  # gallery ships 11 of them and framer-motion writes more at runtime.
+  # style-src-attr would be the precise way to say that, but Firefox does not
+  # implement it and would fall back to blocking them.
+  #
+  # The script hash is index.html's inline deep-link guard (the one that clears
+  # the prerendered gallery on /c/* before first paint). scripts/verify-headers.mjs
+  # recomputes it from the built HTML and fails the build if the two drift, so
+  # this string can never go stale in silence.
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-qD9nls13n7ZCQmhw8X/YYLZkvwG4A+HM9Xx5NICl96U='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://api.dicebear.com https://images.unsplash.com; font-src 'self'; connect-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+
+/assets/*
+  # Vite content-hashes every filename under here, so the bytes at a given URL
+  # can never change. Anything else in the build (og.png, the icons, the
+  # manifest) can be replaced in place and keeps the host's shorter default.
+  Cache-Control: public, max-age=31536000, immutable
