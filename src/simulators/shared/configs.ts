@@ -249,6 +249,38 @@ export const wispConfig: SimulatorConfig = {
 };
 
 /**
+ * Nostur - iOS/iPadOS/macOS Nostr client
+ * Native SwiftUI client by Fabian Lachman. Colors from
+ * docs/refs/nostur/screen-map.md §1: the shipped "default" theme's accent is
+ * stored as display-p3(51,162,166) in
+ * Themes.xcassets/defaultAccentColor.colorset — which the device paints as
+ * #00BDA9 (sampled from the recording; a colorimetric conversion would give
+ * #00A5A8). Secondary is theme.listBackground, i.e. pure black: the feed sits
+ * on #000000, not on theme.background.
+ */
+export const nosturConfig: SimulatorConfig = {
+  id: SimulatorClient.NOSTUR,
+  name: 'Nostur',
+  description:
+    'Native SwiftUI client for iPhone, iPad and Mac — teal on pure black, ten built-in themes, and an unusually deep settings tree.',
+  platform: 'ios',
+  primaryColor: '#00BDA9', // theme.accent, "default" theme (Theme.swift)
+  secondaryColor: '#000000', // theme.listBackground — the feed's surface
+  icon: '/icons/nostur.png',
+  supportedFeatures: [
+    SimulatorFeature.DM,
+    SimulatorFeature.ZAPS,
+    SimulatorFeature.THREADS,
+    SimulatorFeature.SEARCH,
+    SimulatorFeature.RELAYS,
+    SimulatorFeature.BADGES,
+    SimulatorFeature.NIP05,
+    SimulatorFeature.MUTE_LIST,
+  ],
+  defaultView: SimulatorView.FEED,
+};
+
+/**
  * All simulator configs collection
  */
 export const allSimulatorConfigs: Record<SimulatorClient, SimulatorConfig> = {
@@ -261,6 +293,7 @@ export const allSimulatorConfigs: Record<SimulatorClient, SimulatorConfig> = {
   [SimulatorClient.GOSSIP]: gossipConfig,
   [SimulatorClient.KEYCHAT]: keychatConfig,
   [SimulatorClient.WISP]: wispConfig,
+  [SimulatorClient.NOSTUR]: nosturConfig,
 };
 
 /**

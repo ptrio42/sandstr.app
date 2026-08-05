@@ -198,6 +198,27 @@ const MOUNTS: Record<
     installNote: 'Google Play, or Zapstore (zapstore.yaml ships in the repo)',
     load: () => import('./simulators/wisp/WispSimulatorWithTour'),
   },
+  nostur: {
+    frame: 'ios',
+    tour: true,
+    // Reference-verified 2026-08-05: the owner's recording +
+    // nostur-com/nostur-ios-public@11bcebb recon → docs/refs/nostur/screen-map.md,
+    // then a live side-by-side pass per surface.
+    status: 'ready',
+    // Nostur has no theme preference of its own — Themes.preferredColorScheme is
+    // nil for every theme except dark_garnet, so appearance follows iOS. The
+    // recording is a dark-mode device, which is the state we open in.
+    theme: 'dark',
+    // Verified 2026-08-05 against nostur.com + the repo itself (GPL-3.0; the
+    // LICENSE is stock GPLv3 with no per-project copyright line, so authorship
+    // is evidenced by the source headers — "Created by Fabian Lachman" — and by
+    // the commit history, not by a copyright notice. App Store id 1672780508.)
+    homepage: 'https://nostur.com',
+    repo: 'https://github.com/nostur-com/nostur-ios-public',
+    upstreamLicense: 'GPL-3.0',
+    installNote: 'iOS App Store; macOS also as a direct .dmg from nostur.com',
+    load: () => import('./simulators/nostur/NosturSimulatorWithTour'),
+  },
   coracle: {
     frame: null,
     tour: false,

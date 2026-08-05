@@ -22,6 +22,7 @@ export enum SimulatorClient {
   GOSSIP = 'gossip',
   KEYCHAT = 'keychat',
   WISP = 'wisp',
+  NOSTUR = 'nostur',
 }
 
 export interface SimulatorConfig {
