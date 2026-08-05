@@ -1,11 +1,12 @@
 # Sandstr — CLAUDE.md
 
 Samodzielny, w 100% kliencki produkt: **„try Nostr clients in your browser — no keys, no install"**.
-(Bez liczby w taglinie — publiczna narracja to „7 wiernych reprodukcji + 2 early previews",
+(Bez liczby w taglinie — publiczna narracja to „8 wiernych reprodukcji + 2 early previews",
 sterowana osią `status` w `src/registry.tsx`, nie „N klientów". Od 2026-08-05 **wszystko, co widoczne,
 jest reprodukcją realnego klienta** — Nostr Kitten wyszedł z listy, Olas wyleciał z repo.)
 **Rdzeń wartości = REAL-CLIENTS-FIRST:** wierne, wysokiej wierności, przeglądarkowe reprodukcje **realnych,
-brandowanych klientów Nostr** (Damus, Amethyst, Primal, Snort, YakiHonne, Wisp, Coracle, Keychat, Gossip) —
+brandowanych klientów Nostr** (Damus, Amethyst, Primal, Snort, YakiHonne, Wisp, Coracle, Nostur, Keychat,
+Gossip) —
 bez kluczy, bez instalacji. **Wierność wobec prawdziwych appek JEST produktem** — użytkownik ma naprawdę
 przetestować klienta, nie „jakiś losowy twór".
 Wyodrębniony (extraction spike, 2026-07-14) z feature'u symulatorów klientów, który żył w przewodniku
@@ -100,8 +101,9 @@ w `public/robots.txt`. Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` 
   (Amethyst 8 powierzchni; Damus 11) — inline-SVG robohash avatary, lokalne media postów jako `data:`-URI,
   offline/CSP-safe, tokeny z repo klienta + weryfikacja side-by-side z realnym recordingiem. Do nich równamy.
 - **READY (status w `registry.tsx`): Amethyst, Damus, YakiHonne, Primal (web)** (2026-07-28) **+ Snort
-  + Wisp** (2026-07-30) **+ Coracle** (2026-08-05) — zweryfikowane referencyjnie (screen-map + fidelity
-  pass). (Nostr Kitten `kind: 'original'` istnieje nadal, ale jest NIELISTOWANY — patrz sekcja Branding.)
+  + Wisp** (2026-07-30) **+ Coracle + Nostur** (2026-08-05) — zweryfikowane referencyjnie (screen-map +
+  fidelity pass). (Nostr Kitten `kind: 'original'` istnieje nadal, ale jest NIELISTOWANY — patrz sekcja
+  Branding.)
 - **Wisp (ZROBIONE 2026-07-30):** recon (`barrydeen/wisp@11ac08f`, v1.2.1, MIT © Barry Deen; homepage
   `wisp.mobile`) + recording → `docs/refs/wisp/screen-map.md` (autorytatywny) i `src/simulators/wisp/`
   (13 powierzchni: login/feed/thread/profile/notifications/chat/wallet/search/compose/zap/drawer/
@@ -135,6 +137,31 @@ w `public/robots.txt`. Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` 
   **Login NIE MA pola na klucz** — same delegacje (extension/bunker), więc reprodukcja też go nie ma
   (`keySafety.ts` celowo nieużyty). Groups = tylko notka „Groups are going away!". [REC vs REPO]:
   polskie ekrany w nagraniu to **nstart** (`start.njump.me`), osobny projekt — nie odtwarzamy.
+- **Nostur (ZROBIONE 2026-08-05):** recon (`nostur-com/nostur-ios-public@11bcebb`, **GPL-3.0**, autor
+  Fabian Lachman; homepage `nostur.com`, App Store id `1672780508`, także macOS `.dmg`) + recording
+  → `docs/refs/nostur/screen-map.md` (autorytatywny, 19 sekcji) i `src/simulators/nostur/`
+  (13 powierzchni: welcome/feed×3/thread/profile/notifications/messages+DM/search/bookmarks/compose/
+  zap/drawer/settings×6). SwiftUI, iOS. **10 nazwanych motywów; default to dosłownie `"default"`**
+  (`Theme.swift:39`), a light/dark to preferencja SYSTEMU (`preferredColorScheme` = `nil` dla
+  wszystkich poza `dark_garnet`) → robimy oba, registry otwiera dark.
+  Accent = `display-p3(51,162,166)` z `Themes.xcassets/defaultAccentColor.colorset` — naiwny hex
+  `#33A2A6`, kolorymetryczny sRGB `#00A5A8`, a urządzenie maluje **`#00BDA9`** i to bierzemy (recording
+  wygrywa). **Feed siedzi na `listBackground` = czysta czerń `#000`**, nie na `background` `#1C1C1E`.
+  `lineColor` jest **akcentowy @35%** (hairline'y są turkusowe), ale separator postów to zwykły
+  `Divider()`. Akcje: **reply→repost→SERCE→zap(suma satów + słowo „sats")→bookmark**, rozstrzelone
+  `space-between`, cały rząd akcentowy, aktywny stan barwi DOKŁADNIE jedną ikonę (red/green/yellow/orange).
+  Default `footerButtons: "💬🔄+⚡️🔖"` (`SettingsStore.swift:228`), gdzie `+` = `EmojiButton` = SERCE.
+  **Zabójca wierności: `TabButton` ma label ZAWSZE `theme.accent`** — zaznaczenie to WYŁĄCZNIE 1px
+  podkreślenie (typowe „szary→biały" czyta się natychmiast jako inna appka).
+  Sygnatury: **żółw** Low Data Mode w toolbarze (przygaszony do 30% gdy OFF) + toast
+  „Low Data mode: enabled/disabled" i bloki „Loading paused (Low data mode) / Load anyway";
+  akcentowy chip **chevron.compact.down** (show-more); media **edge-to-edge bez zaokrągleń**
+  (`fullWidthImages` = true); brak awatara = **płaska, seedowana barwa** (bez inicjałów);
+  „∞ Followers"; 16 pomarańczowych monet w „Send sats" (21 preselected); stopka drawera
+  „Nostur 1.30.2 (Build: 527)" + „Source code". [REC vs REPO]: recording to **pre-iOS-26 `MainTabs15`**
+  (5. zakładka = koperta Messages + osobny FAB); repo ma też `MainTabs26`, gdzie Messages znika z paska
+  i wchodzi do drawera, a 5. zakładką jest „New Post" — bierzemy recording. Podobnie: 3 zakładki feedu
+  (Following/Discover/Explore), bo pozostałe 10 jest za bramką `viewFollowingPublicKeys.count > 10`.
 - **Druga fala / PREVIEW** (słabsza wierność / bugi): Keychat, Gossip.
   (Primal-MOBILE stub, nieroutowany.) Galeria etykietuje je „Early preview" +
   `statusNote`; nie przedstawiaj ich jako skończonych.

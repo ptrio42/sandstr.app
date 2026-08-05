@@ -63,28 +63,32 @@ export function NavBar({
   trailing?: React.ReactNode;
 }) {
   return (
+    // Three lanes: the back label may shrink to nothing, the title takes what is
+    // left and truncates, the trailing control never wraps. Without the explicit
+    // min-w-0/shrink split, "< Following" and a centred display name collided
+    // and "Edit profile" broke onto three lines at phone width.
     <div
-      className="flex shrink-0 items-center gap-1 px-3 py-2"
+      className="flex shrink-0 items-center gap-2 px-3 py-2"
       style={{ background: 'var(--nostur-list-bg)', minHeight: 44 }}
     >
-      <div className="flex min-w-0 flex-1 items-center">
-        {back && (
-          <button
-            type="button"
-            onClick={back.onClick}
-            className="-ml-1 flex items-center text-[17px]"
-            style={{ color: 'var(--nostur-accent)' }}
-          >
-            <ChevronLeft className="h-5 w-5" strokeWidth={2.5} />
-            <span className="truncate">{back.label}</span>
-          </button>
-        )}
-      </div>
-      <div className="flex min-w-0 shrink-0 items-center justify-center gap-1.5">
+      {back && (
+        <button
+          type="button"
+          onClick={back.onClick}
+          className="-ml-1 flex min-w-0 shrink items-center text-[17px]"
+          style={{ color: 'var(--nostur-accent)' }}
+        >
+          <ChevronLeft className="h-5 w-5 shrink-0" strokeWidth={2.5} />
+          <span className="truncate">{back.label}</span>
+        </button>
+      )}
+      <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5">
         {center}
         {title && <span className="truncate text-[17px] font-bold">{title}</span>}
       </div>
-      <div className="flex min-w-0 flex-1 items-center justify-end gap-3">{trailing}</div>
+      {trailing && (
+        <div className="flex shrink-0 items-center gap-3 whitespace-nowrap">{trailing}</div>
+      )}
     </div>
   );
 }

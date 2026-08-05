@@ -437,6 +437,36 @@ the onboarding key field goes through `shared/utils/keySafety.ts`; the theme is 
 because the recording is dark and Nostur's default theme has no opinion of its own
 (`preferredColorScheme` is `nil`).
 
-## 19. Fidelity pass — side-by-side verdicts
+## 19. Fidelity pass — side-by-side verdicts (2026-08-05, sim vs recording frames)
 
-_(filled in after the build — see the table appended at the end of this file)_
+Live click-through of `src/simulators/nostur/` at 1440×900 (framed) and 390×844 (full-bleed):
+**0 console errors** in a fresh tab, **0 external hosts** in `performance` resource entries
+(only `localhost`), **0 nested buttons**, no invalid `<div>`-in-`<p>` nesting, no horizontal
+overflow, `--nostur-accent` computes `#00bda9`, SIMULATION strip present at both widths.
+
+| Surface | vs frame | Verdict |
+|---|---|---|
+| Welcome / add existing account | repo-only | ✅ `wowBackground` gradient (cyan bottom-right → green top-leading), three capsule buttons, Terms block at 60 %; key field refuses a real-looking nsec via `keySafety.ts` |
+| Feed + toolbar | `f_032`, `f_044` | ✅ avatar / circular app mark / dimmed tortoise / gear; three accent tabs with the underline as the only selection cue; flat black rows, repost header, two-line author block, `•••` in accent |
+| Post card actions | `f_044`, `f_057` | ✅ reply → repost → heart → bolt → bookmark, space-between, counts hidden at 0, zap dimmed without a lightning address, bookmark fills orange |
+| Media + Low Data Mode | `f_034`, `f_044` | ✅ full-bleed no-radius images; tortoise toggles the "Loading paused (Low data mode)" block + "Load anyway" and posts the "Low Data mode: enabled/disabled" toast |
+| Show-more chevron | `f_044` | ✅ accent chip, radius 5, white `chevron.compact.down` |
+| Discover (follow packs) | `sheet_1` | ✅ title + accent "Show preview" chip, overlapping member avatars, "…and N more", "by {curator}" |
+| Post detail | `f_034` | ✅ "< {origin} / Post" bar + the gray "N reactions · N reposts · N mentions · N zaps" row |
+| Profile | `f_057` | ✅ nav bar (back / avatar+name / "Edit profile"), teal→black banner fallback, ringed avatar, "Last seen", "∞ Followers", six-tab scrollable rail |
+| Notifications | `f_051` | ✅ centred title + gear, six icon-only tabs with red unread capsules, grouped-reaction rows + "Show more" |
+| Messages + conversation | `f_145`, `sheet_5` | ✅ centred title, compose+gear, Accepted/Requests, "Upgrade your DMs" pill and its NIP-17 sheet, new-conversation sheet (X / title / disabled "Start" / Following‑All), recipient card, accent right-aligned own bubbles, circular send |
+| Search | `sheet_3`, `sheet_5` | ✅ account avatar + centred "Search", "Search..." prompt, profile rows with Follow, hashtag header row with its own Follow chip |
+| Compose | `f_059`-adjacent | ✅ X / paperplane, "What's happening?", attachment strip (photo · camera · video · GIF · voice) |
+| Zap sheet | `f_021` | ✅ "Send sats", 4×4 orange coins with fiat captions, **21 preselected**, "Add public note (optional)", accent "Send 21 sats to {name}", three toggles |
+| Sidebar | `f_059` | ✅ banner gradient, 3 pt-ringed avatar, account switcher + `ellipsis.circle`, npub + copy glyph, "**2** Following", eight accent rows in the repo's order (no Messages row), "Nostur 1.30.2 (Build: 527)" + "Source code" |
+| Settings root + Relay Connections + Spam | `sheet_2`, `sheet_3` | ✅ grouped rows, DATA USAGE / ACCOUNT sections, red "Delete account"; Autopilot / Follow relay hints / VPN detection with the red "VPN not detected" line; relay list copy + read/write dots + "Add new relay..."; Dunbar segmented control |
+| Lists & Feeds / Bookmarks / Badges | `sheet_2` | ✅ "DEFAULT FEEDS" toggle rows with captions; Bookmarks/Private Notes + search field; Issued/Received + "Create new badge" |
+| Guided tour | — | ✅ 9 steps drive sign-in / feed / turtle / action row / zap sheet / sidebar / settings, one command per step, completes with no errors |
+| Light appearance | repo-only | ✅ the same "default" theme's light colorset values via `useParentTheme`; registry still opens dark |
+
+Known deltas (accepted): lucide icons approximate SF Symbols; the feed shows the recording's three
+sub-tabs rather than the repo's full thirteen (the rest are gated on following > 10 people — §16);
+thread replies are stand-ins drawn from the same mock roster rather than a real reply tree; Badges,
+Block list and Signer are empty states because the recording never populates them; profile tabs
+other than Posts/Relays reuse the same note set.

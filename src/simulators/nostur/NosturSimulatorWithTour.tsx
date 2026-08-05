@@ -43,16 +43,18 @@ export function NosturSimulatorWithTour() {
       if (lastStepRef.current === stepIndex) return;
       lastStepRef.current = stepIndex;
 
-      // Max 2 commands per step — the queue drops the third (tour gotchas).
+      // ONE command per step. The shared queue only reliably carries the first
+      // (see the tour gotchas), so every command in NosturSimulator signs in on
+      // its own rather than needing a paired { type: 'login' } ahead of it.
       const stepCommands: Record<number, SimulatorCommand[]> = {
         0: [], // Welcome
         1: [], // Sign in — the welcome sheet is the default unauthenticated view
-        2: [{ type: 'login' }, { type: 'openFeed', payload: 'Following' }], // Feeds
-        3: [{ type: 'login' }, { type: 'navigate', payload: 'home' }], // Turtle
-        4: [{ type: 'login' }, { type: 'navigate', payload: 'home' }], // Action row
-        5: [{ type: 'login' }, { type: 'zap' }], // Send sats
-        6: [{ type: 'login' }, { type: 'openDrawer' }], // Side menu
-        7: [{ type: 'login' }, { type: 'openSettings' }], // Settings
+        2: [{ type: 'openFeed', payload: 'Following' }], // Three feeds
+        3: [{ type: 'openFeed', payload: 'Following' }], // The turtle
+        4: [{ type: 'openFeed', payload: 'Following' }], // Action row
+        5: [{ type: 'zap' }], // Send sats
+        6: [{ type: 'openDrawer' }], // Side menu
+        7: [{ type: 'openSettings' }], // Settings
         8: [], // Complete
       };
 

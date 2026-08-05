@@ -125,6 +125,16 @@
   scrollbar-width: none;
 }
 
+/* Horizontal tab rails (profile sections) — same hidden-scrollbar treatment. */
+.nostur-scroll-x::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.nostur-scroll-x {
+  scrollbar-width: none;
+}
+
 /* --- toolbar / tabs ----------------------------------------------------- */
 
 .nostur-toolbar {

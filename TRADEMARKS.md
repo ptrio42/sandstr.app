@@ -3,8 +3,8 @@
 The MIT license in [LICENSE](LICENSE) covers **the code in this repository
 only**. It does not grant any rights to third-party names, logos, or designs.
 
-Damus, Amethyst, Primal, Snort, YakiHonne, Wisp, Coracle, Keychat, Gossip,
-and their respective logos and visual designs are the property of their
+Damus, Amethyst, Primal, Snort, YakiHonne, Wisp, Nostur, Coracle, Keychat,
+Gossip, and their respective logos and visual designs are the property of their
 respective teams and creators. This project is an **unofficial, educational simulation**:
 it reproduces the look and feel of these clients so that people can try Nostr
 in a browser before choosing a real client. It is not affiliated with,

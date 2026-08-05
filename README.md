@@ -6,9 +6,9 @@ Interactive, in-browser simulations of real Nostr clients, with guided tours and
 No backend, no network, no real crypto — everything is static and computed in your browser
 ([PRIVACY.md](PRIVACY.md)).
 
-**Honest state of the shelf:** 7 reproductions are reference-verified and ready to try
-(Damus, Amethyst, Primal, YakiHonne, Snort, Wisp, Coracle — rebuilt screen by screen against
-recordings of the real apps) and 2 more are clickable early previews (Gossip, Keychat). The
+**Honest state of the shelf:** 8 reproductions are reference-verified and ready to try
+(Damus, Amethyst, Primal, YakiHonne, Snort, Wisp, Coracle, Nostur — rebuilt screen by screen
+against recordings of the real apps) and 2 more are clickable early previews (Gossip, Keychat). The
 gallery labels each one accordingly. Every client on the shelf is a reproduction of a real
 one — that is the whole point of the shelf.
 

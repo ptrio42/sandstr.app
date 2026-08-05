@@ -189,20 +189,23 @@ export function NosturSimulator({
   /**
    * The tour command contract (CLAUDE.md: non-negotiable). Every branch must
    * end in onCommandHandled() or the wrapper's queue stalls on that step.
+   *
+   * EVERY command signs in first. The shared queue only reliably carries one
+   * command per step (see the tour gotchas), so pairing "login" with the real
+   * command wastes the slot and risks the second one being dropped — instead
+   * each command is self-sufficient and a step needs exactly one.
    */
   useEffect(() => {
     if (!tourCommand) return;
+    setAuthenticated(true);
     switch (tourCommand.type) {
       case 'login':
-        setAuthenticated(true);
         break;
       case 'navigate':
-        setAuthenticated(true);
         closeOverlays();
         setTab((tourCommand.payload as NosturTab) || 'home');
         break;
       case 'openFeed':
-        setAuthenticated(true);
         closeOverlays();
         setTab('home');
         setFeed((tourCommand.payload as NosturFeed) || 'Following');
@@ -211,28 +214,38 @@ export function NosturSimulator({
         const first = followingFeed[0];
         if (first) {
           closeOverlays();
+          setTab('home');
           setOverlays([{ kind: 'thread', noteId: first.note.id, origin: 'Following' }]);
         }
         break;
       }
       case 'viewProfile':
         closeOverlays();
+        setTab('home');
         setOverlays([{ kind: 'profile', user: DEMO_USER, origin: 'Following' }]);
         break;
       case 'compose':
+        closeOverlays();
+        setTab('home');
         setCompose({ open: true, replyToId: null });
         break;
       case 'zap': {
         const first = followingFeed.find(({ author }) => author.lightningAddress);
+        closeOverlays();
+        setTab('home');
+        setFeed('Following');
         if (first) setZapTarget(first.author);
         break;
       }
       case 'openDrawer':
         closeOverlays();
+        setTab('home');
+        setFeed('Following');
         setDrawer(true);
         break;
       case 'openSettings':
         closeOverlays();
+        setTab('home');
         setOverlays([{ kind: 'settings', screen: 'root' }]);
         break;
     }

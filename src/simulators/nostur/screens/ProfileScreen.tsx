@@ -64,14 +64,14 @@ export function ProfileScreen({
         back={{ label: origin, onClick: onBack }}
         center={
           <>
-            <Avatar seed={user.pubkey} size={24} />
-            <span className="max-w-[130px] truncate text-[17px] font-bold">{user.displayName}</span>
+            <Avatar seed={user.pubkey} size={22} className="shrink-0" />
+            <span className="truncate text-[16px] font-bold">{user.displayName}</span>
           </>
         }
         trailing={
           isSelf ? (
             <span
-              className="rounded-full px-3 py-1.5 text-[13px] font-bold"
+              className="rounded-full px-2.5 py-1 text-[12px] font-bold"
               style={{ background: 'var(--nostur-fill)', color: 'var(--nostur-primary)' }}
             >
               Edit profile
@@ -119,9 +119,15 @@ export function ProfileScreen({
           )}
         </div>
 
-        <div className="mt-3 flex overflow-x-auto" role="tablist" aria-label="Profile sections">
+        {/* ScrollableTabRow upstream — six tabs fit a 414 pt device, so at this
+            width the row scrolls rather than squeezing the labels. */}
+        <div
+          className="nostur-scroll-x mt-3 flex overflow-x-auto"
+          role="tablist"
+          aria-label="Profile sections"
+        >
           {TABS.map((t) => (
-            <div key={t} className="shrink-0" style={{ minWidth: 92 }}>
+            <div key={t} className="shrink-0" style={{ minWidth: 66 }}>
               <TabButton label={t} selected={tab === t} onClick={() => setTab(t)} />
             </div>
           ))}
