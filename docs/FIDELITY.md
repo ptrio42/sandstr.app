@@ -46,6 +46,28 @@
   (`start.njump.me`), osobny projekt — poza zakresem. Opt-in: Jon Staab (`hodlbod`), FUTO Fellow,
   bardzo opt-in-friendly.
 
+- ✅ **Nostur (iOS)** (13 powierzchni: welcome+add-account/feed×3/thread/profile/notifications/
+  messages+DM/search/bookmarks/compose/zap/drawer/settings×6) — `docs/refs/nostur/screen-map.md`
+  (autorytatywny, 19 sekcji; recording 2026-08-05 + `nostur-com/nostur-ios-public@11bcebb`).
+  SwiftUI, **GPL-3.0**, autor Fabian Lachman; `nostur.com`, App Store `1672780508` (+ macOS `.dmg`).
+  **10 nazwanych motywów, default dosłownie `"default"`** (`Theme.swift:39`); light/dark to preferencja
+  systemu (`preferredColorScheme` = `nil` poza `dark_garnet`) → robimy oba, registry otwiera dark.
+  Accent w repo to **`display-p3(51,162,166)`** (`Themes.xcassets/defaultAccentColor.colorset`) —
+  naiwny hex `#33A2A6`, kolorymetryczny sRGB `#00A5A8`, a urządzenie maluje **`#00BDA9`**; bierzemy
+  recording. **Feed na `listBackground` = `#000`** (nie na `background` `#1C1C1E`); `lineColor` jest
+  **akcentowy @35%**, ale separator postów to zwykły `Divider()`.
+  Akcje **reply→repost→SERCE→zap(suma satów + „sats")→bookmark**, `space-between`, cały rząd akcentowy,
+  aktywny stan barwi dokładnie jedną ikonę (red/green/yellow/orange); default
+  `footerButtons: "💬🔄+⚡️🔖"` gdzie `+` = `EmojiButton` = serce. **Killer: `TabButton` ma label ZAWSZE
+  akcentowy** — zaznaczenie to wyłącznie 1px podkreślenie. Dalsze sygnatury: **żółw** Low Data Mode
+  (30% gdy OFF) + toast i bloki „Loading paused"; akcentowy chip `chevron.compact.down`; media
+  edge-to-edge bez radiusa; brak awatara = **płaska seedowana barwa**; „∞ Followers"; 16 pomarańczowych
+  monet w „Send sats" (21 default); stopka drawera „Nostur 1.30.2 (Build: 527)" + „Source code".
+  [REC vs REPO]: recording to pre-iOS-26 `MainTabs15` (koperta Messages + osobny FAB), repo ma też
+  `MainTabs26` bez Messages i z zakładką „New Post" — bierzemy recording; tak samo 3 zakładki feedu,
+  bo reszta jest za bramką `viewFollowingPublicKeys.count > 10`. Opt-in: `fabian@nostur.com`,
+  `npub1n0stur…`; **`LICENSE` nie ma linii copyright** — autorstwo tylko z nagłówków plików.
+
 **Do zrobienia (druga fala, słabsza wierność / stare stuby):** Keychat, Gossip. Tokeny + killery każdego są niżej w tym pliku; korekty kolorów w `[[client-fidelity-ground-truth]]`. (Primal-MOBILE nadal stary stub — zrobiony tylko web.)
 
 **USUNIĘTE 2026-08-05 — Olas.** Upstream `pablof7z/olas` bez pushu od 2025-07 (a `olas-nmp` to nielicencjonowany, niedokończony rewrite), więc nie ma stabilnego ground truth do odwzorowania, a nasza wersja była generycznym klonem Instagrama ze Stories/Follow Requests, których Nostr nie ma. Wypadły: `src/simulators/olas/`, `olas-tour.ts`, `public/icons/olas.svg`, wpisy w rejestrze/configs/typach oraz sekcja tokenów w tym pliku. Historia jest w gicie — gdyby upstream ożył, wracamy przez normalny proces reference-first, nie przez `git revert`.

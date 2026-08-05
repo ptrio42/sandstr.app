@@ -1,0 +1,573 @@
+/**
+ * Nostur theme — real tokens from nostur-com/nostur-ios-public@11bcebb.
+ *
+ * Sources (every value cited in docs/refs/nostur/screen-map.md §1):
+ *   Nostur/Theme.swift                                   — the Theme struct + the 10 named themes
+ *   Themes.xcassets/default*.colorset/Contents.json      — the shipped "default" theme's colours
+ *   Nostur/Utils/View+wowBackground.swift                — the one brand gradient (onboarding)
+ *
+ * The accent is stored upstream in Display P3, so there is no single "correct"
+ * sRGB hex: naive components give #33A2A6, a colorimetric conversion gives
+ * #00A5A8 (red clamps — it is outside sRGB), and the device actually paints
+ * #00BDA9. Per the screen-map's rule the recording wins.
+ *
+ * Nostur has no light/dark switch of its own — Themes.preferredColorScheme is
+ * nil for every theme but dark_garnet, so appearance follows iOS. We mirror that
+ * with useParentTheme and let the registry open it dark (the recording's state).
+ *
+ * EVERY selector below is scoped under .nostur-simulator. An unscoped utility
+ * class once bled between two simulators in this repo; do not add a bare one.
+ */
+
+.nostur-simulator {
+  /* --- default theme, dark appearance (what the recording shows) ---------- */
+  --nostur-accent: #00bda9;
+  --nostur-on-accent: #ffffff;
+  /* theme.background — chrome, media placeholders. NOT the feed. */
+  --nostur-bg: #1c1c1e;
+  /* theme.listBackground — the feed and every list. Pure black. */
+  --nostur-list-bg: #000000;
+  --nostur-secondary-bg: #1c1c1e;
+  --nostur-elevated: #2c2c2e;
+  --nostur-primary: #ffffff;
+  --nostur-secondary: rgba(235, 235, 245, 0.6);
+  --nostur-tertiary: rgba(235, 235, 245, 0.3);
+  /* theme.lineColor is ACCENT-tinted at 35% — Nostur's hairlines are teal. */
+  --nostur-line: rgba(0, 189, 169, 0.35);
+  /* ...but the divider between feed posts is a plain SwiftUI Divider(). */
+  --nostur-separator: rgba(255, 255, 255, 0.13);
+  --nostur-fill: rgba(118, 118, 128, 0.24);
+
+  /* iOS system colours, dark variants — the action row's active states */
+  --nostur-badge: #ff453a; /* theme.badge = Color.red */
+  --nostur-red: #ff453a; /* reaction active (EmojiButton.swift:33) */
+  --nostur-green: #30d158; /* repost active (RepostButton.swift) */
+  --nostur-yellow: #ffd60a; /* zap active (ZapButton.swift:924) */
+  --nostur-orange: #ff9f0a; /* bookmark active + zap coins */
+  --nostur-gray: #8e8e93; /* DetailFooterFragment stats row */
+
+  /* The only brand gradient in the app (View+wowBackground.swift) */
+  --nostur-wow-a: #2bf5eb;
+  --nostur-wow-b: #267a40;
+
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* The host mounts this in a fixed-height app shell: fill the container with a
+     closed percentage chain, never size off vh. */
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--nostur-list-bg);
+  color: var(--nostur-primary);
+  font-size: 15px;
+  line-height: 1.35;
+  /* Mock notes carry long URLs; without this a single token widens the scroller
+     and (because a set overflow-y computes overflow-x to auto) the whole feed
+     starts sliding sideways. */
+  overflow-wrap: anywhere;
+}
+
+/* Same reason, inverted: counts and labels inside buttons must not mid-break. */
+.nostur-simulator button {
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+/* Light appearance — the same "default" theme, light colorset entries. */
+.nostur-simulator[data-theme='light'] {
+  --nostur-bg: #f2f2f7;
+  --nostur-list-bg: #ffffff;
+  --nostur-secondary-bg: #f2f2f7;
+  --nostur-elevated: #e5e5ea;
+  --nostur-primary: #000000;
+  --nostur-secondary: rgba(60, 60, 67, 0.6);
+  --nostur-tertiary: rgba(60, 60, 67, 0.3);
+  --nostur-line: rgba(0, 189, 169, 0.4);
+  --nostur-separator: rgba(60, 60, 67, 0.2);
+  --nostur-badge: #ff3b30;
+  --nostur-red: #ff3b30;
+  --nostur-green: #34c759;
+  --nostur-yellow: #ffcc00;
+  --nostur-orange: #ff9500;
+}
+
+.nostur-layout {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--nostur-list-bg);
+}
+
+/* --- scrollers ---------------------------------------------------------- */
+
+.nostur-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.nostur-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.nostur-scroll {
+  scrollbar-width: none;
+}
+
+/* Horizontal tab rails (profile sections) — same hidden-scrollbar treatment. */
+.nostur-scroll-x::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.nostur-scroll-x {
+  scrollbar-width: none;
+}
+
+/* --- toolbar / tabs ----------------------------------------------------- */
+
+.nostur-toolbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--nostur-list-bg);
+  min-height: 44px;
+}
+
+/* TabButton (ViewFragments/TabButton.swift). The label is theme.accent whether
+   selected or not — selection is ONLY the 1px underline. Copying the usual
+   "gray inactive / white active" pattern reads as the wrong app immediately. */
+.nostur-tabbtn {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--nostur-accent);
+  font-size: 15px; /* .subheadline */
+}
+
+.nostur-tabbtn-label {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  padding: 0 5px;
+  height: 41px;
+}
+
+.nostur-tabbtn-secondary {
+  font-size: 12px; /* .caption */
+  opacity: 0.5;
+}
+
+.nostur-tabbtn-rule {
+  height: 1px;
+  width: 100%;
+  background: var(--nostur-accent);
+  opacity: 0;
+}
+
+.nostur-tabbtn[aria-selected='true'] .nostur-tabbtn-rule {
+  opacity: 1;
+}
+
+.nostur-tabrow {
+  flex-shrink: 0;
+  display: flex;
+  align-items: stretch;
+  height: 42px; /* MAINFEEDS_TABS_HEIGHT */
+  background: var(--nostur-list-bg);
+  border-bottom: 1px solid var(--nostur-separator);
+}
+
+/* --- bottom tab bar ----------------------------------------------------- */
+
+.nostur-tabbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  /* Bottom inset clears the home indicator the frame draws at bottom:8px. */
+  padding: 8px 0 calc(16px + env(safe-area-inset-bottom, 0px));
+  background: var(--nostur-bg);
+  border-top: 1px solid var(--nostur-separator);
+}
+
+.nostur-tabbar-item {
+  position: relative;
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 0;
+  padding: 2px 0;
+  cursor: pointer;
+  color: var(--nostur-gray);
+}
+
+.nostur-tabbar-item[aria-selected='true'] {
+  color: var(--nostur-accent);
+}
+
+.nostur-tabbar-badge {
+  position: absolute;
+  top: 2px;
+  left: 55%;
+  min-width: 17px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--nostur-badge);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 17px;
+  text-align: center;
+}
+
+/* --- post card ---------------------------------------------------------- */
+
+.nostur-post {
+  padding: 10px 20px 0;
+  background: var(--nostur-list-bg);
+  border-bottom: 1px solid var(--nostur-separator);
+}
+
+/* fullWidthImages defaults true (SettingsStore.swift:216): media runs to the
+   screen edges with no corner radius. Cancel the row's horizontal padding. */
+.nostur-post-media {
+  margin: 8px -20px 0;
+  width: calc(100% + 40px);
+  display: block;
+}
+
+.nostur-post-body a,
+.nostur-mention,
+.nostur-hashtag {
+  color: var(--nostur-accent);
+  text-decoration: none;
+}
+
+/* ShowMoreChevronButton — RoundedRectangle(cornerRadius: 5) filled theme.accent
+   with a white chevron.compact.down (Post/ReadMoreButton.swift). */
+.nostur-showmore {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px 5px;
+  padding-top: 10px;
+  border: 0;
+  border-radius: 5px;
+  background: var(--nostur-accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+/* Action row: HStack(spacing: 0) with a Spacer() between every button, i.e.
+   space-between across the full width, 14pt, tinted theme.footerButtons. */
+.nostur-actionbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 5px;
+  padding-bottom: 16px;
+  color: var(--nostur-accent);
+  font-size: 14px;
+}
+
+.nostur-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: 0;
+  padding: 5px 0;
+  cursor: pointer;
+  color: inherit;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.nostur-action[data-active='true'][data-role='react'] { color: var(--nostur-red); }
+.nostur-action[data-active='true'][data-role='repost'] { color: var(--nostur-green); }
+.nostur-action[data-active='true'][data-role='zap'] { color: var(--nostur-yellow); }
+.nostur-action[data-active='true'][data-role='bookmark'] { color: var(--nostur-orange); }
+.nostur-action[data-active='true'][data-role='reply'] { color: var(--nostur-accent); }
+.nostur-action[disabled] { opacity: 0.3; cursor: default; }
+
+/* --- compose FAB -------------------------------------------------------- */
+
+/* NewPostButton: .font(.title) bold plus, tint accent,
+   buttonBorderShape(.roundedRectangle(radius: 45)) — a squircle, not a circle. */
+.nostur-fab {
+  position: absolute;
+  right: 14px;
+  bottom: 63px;
+  z-index: 30;
+  width: 58px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 26px;
+  background: var(--nostur-accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+/* --- sidebar ------------------------------------------------------------ */
+
+/* NOSTUR_SIDEBAR_WIDTH = 310pt on a 414pt screen ≈ 75%. */
+.nostur-sidebar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 60;
+  width: 75%;
+  max-width: 310px;
+  display: flex;
+  flex-direction: column;
+  background: var(--nostur-list-bg);
+}
+
+/* ProfileBanner fallback: LinearGradient([listBackground, accent]) */
+.nostur-banner-fallback {
+  background: linear-gradient(180deg, var(--nostur-accent) 0%, var(--nostur-list-bg) 100%);
+}
+
+.nostur-sidebar-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  padding: 8px 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--nostur-accent);
+  font-size: 17px;
+  text-align: left;
+}
+
+.nostur-sidebar-row-icon {
+  width: 30px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+}
+
+/* --- forms / settings --------------------------------------------------- */
+
+.nostur-group {
+  margin: 18px 16px;
+  border-radius: 10px;
+  background: var(--nostur-bg);
+  overflow: hidden;
+}
+
+.nostur-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--nostur-separator);
+  color: var(--nostur-primary);
+  font-size: 16px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nostur-row:last-child {
+  border-bottom: 0;
+}
+
+.nostur-section-title {
+  padding: 0 30px 6px;
+  color: var(--nostur-secondary);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* iOS switch */
+.nostur-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 51px;
+  height: 31px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--nostur-fill);
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.nostur-switch[aria-checked='true'] {
+  background: var(--nostur-green);
+}
+
+.nostur-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: transform 0.18s ease;
+}
+
+.nostur-switch[aria-checked='true'] .nostur-switch-thumb {
+  transform: translateX(20px);
+}
+
+/* Segmented control (Nostr Dunbar Number, Bookmarks/Private Notes, Following/All) */
+.nostur-segmented {
+  display: flex;
+  padding: 2px;
+  border-radius: 9px;
+  background: var(--nostur-fill);
+}
+
+.nostur-segmented button {
+  flex: 1 1 0;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--nostur-primary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.nostur-segmented button[aria-selected='true'] {
+  background: var(--nostur-elevated);
+  font-weight: 600;
+}
+
+/* --- zap sheet ---------------------------------------------------------- */
+
+/* ZapAmountButton: 75x75 circle, .orange fill, 5pt stroke, 0.75 opacity unselected. */
+.nostur-coin {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 4px solid var(--nostur-bg);
+  background: var(--nostur-orange);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.1;
+  opacity: 0.75;
+  cursor: pointer;
+}
+
+.nostur-coin[aria-selected='true'] {
+  border-color: var(--nostur-orange);
+  opacity: 1;
+}
+
+.nostur-coin-fiat {
+  font-size: 10px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* --- misc --------------------------------------------------------------- */
+
+/* Follow pill — FollowButtonInner is deliberately MONOCHROME, not accent
+   (Screens/Layout/NosturStyles.swift): 105x30, caption heavy, capsule, gray rule. */
+.nostur-followbtn {
+  width: 105px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 20px;
+  border: 1px solid #8e8e93;
+  background: var(--nostur-primary);
+  color: var(--nostur-list-bg);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.nostur-followbtn[data-following='true'] {
+  background: var(--nostur-list-bg);
+  color: var(--nostur-primary);
+}
+
+/* The "Low Data mode: enabled/disabled" status toast (AnyStatus, APP_NOTICE). */
+.nostur-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 58px;
+  z-index: 70;
+  transform: translateX(-50%);
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: var(--nostur-accent);
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.nostur-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.5);
+  border: 0;
+  padding: 0;
+}
+
+/* The onboarding backdrop — the app's only brand gradient. SwiftUI's
+   startPoint: .bottomTrailing / endPoint: .topLeading puts the bright cyan at
+   the bottom-right and the green at the top-left, which is what `to top left`
+   with the stops in this order gives us. */
+.nostur-wow {
+  background: linear-gradient(to top left, var(--nostur-wow-a) 0%, var(--nostur-wow-b) 100%);
+  color: #fff;
+}
+
+/* --- frame integration -------------------------------------------------- */
+
+.mobile-phone-frame-wrapper .nostur-simulator {
+  border-radius: 40px;
+  height: 100%;
+}
+
+/* Below sm the host drops the bezel and the sim goes full-bleed — a screen that
+   reaches the real device edges must not carry a bezel's corner radius. */
+@media (max-width: 639px) {
+  .mobile-phone-frame-wrapper .nostur-simulator {
+    border-radius: 0;
+  }
+  .nostur-simulator {
+    border-radius: 0;
+  }
+}

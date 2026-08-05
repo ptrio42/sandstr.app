@@ -1,6 +1,6 @@
 # Third-party attribution
 
-sandstr reproduces the interfaces of nine real, open-source Nostr clients. This
+sandstr reproduces the interfaces of ten real, open-source Nostr clients. This
 file records, per client, **what was referenced and what was copied** — because
 those are different things with different obligations, and being precise about
 it is part of asking each team for their blessing (see [TRADEMARKS.md](TRADEMARKS.md)).
@@ -22,8 +22,9 @@ the "Get the real *X*" link on every client view.
 
 **No upstream source code is included in sandstr.** Every screen is an
 independent React re-implementation. Consequently the copyleft terms of Damus
-(GPL-3.0) and Keychat (AGPL-3.0) are not triggered by this repository — we
-derive no code from them. If that ever changes, this file changes with it.
+and Nostur (GPL-3.0) and Keychat (AGPL-3.0) are not triggered by this
+repository — we derive no code from them. If that ever changes, this file
+changes with it.
 
 ## Per client
 
@@ -36,6 +37,7 @@ derive no code from them. If that ever changes, this file changes with it.
 | [YakiHonne](https://yakihonne.com) | [YakiHonne/web-app](https://github.com/YakiHonne/web-app) | MIT | brand orange, navigation, settings/notification copy | app icon, UI labels |
 | [Wisp](https://wisp.mobile) | [barrydeen/wisp](https://github.com/barrydeen/wisp) | MIT (© 2025 Barry Deen) | `Theme.kt`/`Themes.kt` tokens, `BottomBar`/`ActionBar`/drawer structure, action order, settings copy (verified against a 2026-07-30 recording — `docs/refs/wisp/screen-map.md`) | app icon (`public/icons/wisp.svg` — the `ic_wisp_logo.xml` glyph path + radial gradient), UI labels |
 | [Coracle](https://coracle.social) | [coracle-social/coracle](https://github.com/coracle-social/coracle) | MIT (© Jon Staab / hodlbod) | `.env.template` `VITE_DARK_THEME`/`VITE_LIGHT_THEME` colour tokens and `tailwind.config.cjs` naming, `MenuDesktop`/`Nav`/`Routes` shell structure, `NoteActions` action order, `RelayCard`/`RelayCardActions` anatomy, `Login`/`Onboarding`/settings copy (verified against a 2026-08-05 recording — `docs/refs/coracle/screen-map.md`) | app icon (`public/icons/coracle.webp`), UI labels. **Not** `wordmark-dark.png`/`logo.png` — the wordmark is set in type beside our own glyph. **Not** Font Awesome: every icon is re-drawn (`components/Icon.tsx`), so no FA artwork and no CC BY 4.0 obligation is inherited |
+| [Nostur](https://nostur.com) | [nostur-com/nostur-ios-public](https://github.com/nostur-com/nostur-ios-public) | GPL-3.0 (see caveat) | `Theme.swift` + the `Themes.xcassets/default*.colorset` values, `MainTabs15` tab set, `TabButton`'s accent-always/underline-only selection rule, `CustomizableFooter` + the `footerButtons: "💬🔄+⚡️🔖"` default and each button's active colour, `HomeTab` toolbar (PFP / logo / `tortoise` / `gearshape`), `Sidebar` row set and order, `ZapCustomizer` amounts, `SettingsStore` defaults, settings/relay/spam copy (verified against a 2026-08-05 recording — `docs/refs/nostur/screen-map.md`) | app icon (`public/icons/nostur.png`), UI labels. **Not** `Logo Black.svg` — the in-app toolbar mark is our own redrawing of the ostrich silhouette (`components/NosturMark.tsx`) |
 | [Gossip](https://github.com/mikedilger/gossip) | [mikedilger/gossip](https://github.com/mikedilger/gossip) | MIT | rough layout only (*Early preview*); no website exists, so the handoff links the repo | app icon |
 | [Keychat](https://keychat.io) | [keychat-io/keychat-app](https://github.com/keychat-io/keychat-app) | AGPL-3.0 | rough layout only (*Early preview*) | app icon |
 
@@ -65,6 +67,12 @@ reproduces nobody's work. It is no longer listed in the gallery either.
 - **Gossip license detection.** GitHub reports `NOASSERTION` only because
   `LICENSE.txt` carries a modified header; the README states MIT explicitly, so
   MIT is recorded.
+- **Nostur copyright holder.** Its `LICENSE` is the stock GPLv3 text with no
+  per-project copyright line — only the FSF boilerplate. Authorship is evidenced
+  by the source-file headers ("Created by Fabian Lachman", e.g. `Theme.swift:5`),
+  the README contact (`fabian@nostur.com`) and the commit history, so the SPDX
+  id is recorded above and a copyright holder deliberately is not. To be
+  confirmed with the author.
 
 ## Runtime dependencies
 
