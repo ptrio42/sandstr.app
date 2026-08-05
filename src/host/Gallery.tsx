@@ -17,13 +17,6 @@ function PlatformBadge({ platform }: { platform: ClientEntry['platform'] }) {
  * by shouting on every card.
  */
 function StatusChip({ c }: { c: ClientEntry }) {
-  if (c.kind === 'original') {
-    return (
-      <span className="absolute left-4 top-4 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
-        Original
-      </span>
-    );
-  }
   if (c.status === 'preview') {
     return (
       <span className="absolute left-4 top-4 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
@@ -113,10 +106,12 @@ function Section({ title, note, items }: { title: string; note?: string; items: 
   );
 }
 
+// Every listed client is a reproduction of a real one — that is the whole
+// sentence the shelf makes. Our own Nostr Kitten is unlisted (see `registry.tsx`),
+// so there is no third section here to break it.
 export default function Gallery() {
-  const ready = clients.filter((c) => c.kind === 'reproduction' && c.status === 'ready');
-  const previews = clients.filter((c) => c.kind === 'reproduction' && c.status === 'preview');
-  const originals = clients.filter((c) => c.kind === 'original');
+  const ready = clients.filter((c) => c.status === 'ready');
+  const previews = clients.filter((c) => c.status === 'preview');
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-12">
@@ -156,11 +151,6 @@ export default function Gallery() {
         title="Early previews"
         note="Clickable, but not yet verified against the real clients. Treat the look as approximate."
         items={previews}
-      />
-      <Section
-        title="Not a real Nostr client"
-        note="Our own creation — no real-world counterpart, no trademark, just proof the shell can host anything."
-        items={originals}
       />
     </main>
   );

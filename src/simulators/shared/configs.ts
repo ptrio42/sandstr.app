@@ -222,28 +222,6 @@ export const keychatConfig: SimulatorConfig = {
 };
 
 /**
- * Olas - Photo-first Nostr client
- * Instagram-style interface for sharing photos and videos
- */
-export const olasConfig: SimulatorConfig = {
-  id: SimulatorClient.OLAS,
-  name: 'Olas',
-  description: 'Photo-first Nostr client for sharing and discovering visual content.',
-  platform: 'ios',
-  primaryColor: '#FF6B6B', // Coral
-  secondaryColor: '#FF8E53', // Orange
-  icon: '/icons/olas.svg',
-  supportedFeatures: [
-    SimulatorFeature.ZAPS,
-    SimulatorFeature.SEARCH,
-    SimulatorFeature.RELAYS,
-    SimulatorFeature.NIP05,
-    SimulatorFeature.MUTE_LIST,
-  ],
-  defaultView: SimulatorView.FEED,
-};
-
-/**
  * Wisp - Android Nostr client
  * "a wee interface to scroll posts" — outbox-model client by Barry Deen.
  * Colors from docs/refs/wisp/screen-map.md: accent #FF9800 (Theme.kt "custom"
@@ -282,7 +260,6 @@ export const allSimulatorConfigs: Record<SimulatorClient, SimulatorConfig> = {
   [SimulatorClient.CORACLE]: coracleConfig,
   [SimulatorClient.GOSSIP]: gossipConfig,
   [SimulatorClient.KEYCHAT]: keychatConfig,
-  [SimulatorClient.OLAS]: olasConfig,
   [SimulatorClient.WISP]: wispConfig,
 };
 

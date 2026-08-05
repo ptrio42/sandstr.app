@@ -3,7 +3,7 @@
 Każde odwzorowanie klienta bazuje na **dwóch warstwach prawdy**, które się nawzajem sprawdzają:
 
 1. **Screenshoty** (`<client>/shots/`) — jak realna apka *wygląda*: proporcje, kolory, hierarchia, stan domyślny.
-   Native (Amethyst, Damus, Keychat, Olas) → listingi sklepów / repo / realne urządzenie. Web (Snort,
+   Native (Amethyst, Damus, Keychat, Wisp) → listingi sklepów / repo / realne urządzenie. Web (Snort,
    Coracle, Primal, YakiHonne) → złapane na żywo w przeglądarce. Desktop (Gossip) → `assets/` w repo.
 2. **Kod klienta** (open-source) — *czym* element jest i *jak działa*: że „All Follows ▾" to selektor
    feedu (dropdown), a nie logo. Chroni przed plausible-but-wrong z samego obrazka.

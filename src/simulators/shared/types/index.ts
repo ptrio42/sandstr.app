@@ -21,7 +21,6 @@ export enum SimulatorClient {
   CORACLE = 'coracle',
   GOSSIP = 'gossip',
   KEYCHAT = 'keychat',
-  OLAS = 'olas',
   WISP = 'wisp',
 }
 

@@ -8,9 +8,9 @@ No backend, no network, no real crypto — everything is static and computed in 
 
 **Honest state of the shelf:** 6 reproductions are reference-verified and ready to try
 (Damus, Amethyst, Primal, YakiHonne, Snort, Wisp — rebuilt screen by screen against recordings
-of the real apps), 4 more are clickable early previews (Coracle, Gossip, Keychat, Olas),
-plus **Nostr Kitten**, an original demo client of our own. The gallery labels each one
-accordingly.
+of the real apps) and 3 more are clickable early previews (Coracle, Gossip, Keychat). The
+gallery labels each one accordingly. Every client on the shelf is a reproduction of a real
+one — that is the whole point of the shelf.
 
 Every simulator is unofficial and unaffiliated; client names and designs belong to their
 teams ([TRADEMARKS.md](TRADEMARKS.md)). Each view carries a permanent
@@ -62,5 +62,6 @@ trademark/trade-dress risk, and the mitigation is **honesty plus consent, not ev
 - the primary mitigation is **opt-in consent from each client's maintainers**, who can have
   any fidelity error fixed or the whole reproduction removed on request, no questions asked.
 
-(Nostr Kitten, our original demo client, is deliberately the *last* card in the gallery —
-it exists to show the shell works with anything, not to lead the product.)
+(Nostr Kitten, our own GeoCities-parody client, is **unlisted** as of 2026-08-05 — it is not a
+real Nostr client, so it has no place on a shelf of reproductions. The code stays and
+`/c/nostr-kitten` still opens it, as the easter egg it always was.)
