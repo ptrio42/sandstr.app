@@ -592,6 +592,40 @@
   mask-image: linear-gradient(0deg, transparent 0px, black 100px);
 }
 
+/* Inline code and code blocks — `NoteContentCode.svelte`, which is a SINGLE
+   span for both forms:
+
+     rounded bg-neutral-700 px-1 py-px font-mono text-sm text-neutral-100
+     dark:bg-neutral-900
+     + block whitespace-pre overflow-auto  (only when the value has a newline)
+
+   Note the background is the one place in this file where the two themes need
+   DIFFERENT variables rather than the same one: upstream reads `neutral-900` in
+   dark and `neutral-700` in light, and because the ramp inverts, picking either
+   variable alone would give the wrong surface in one of the two themes. */
+.coracle-simulator .co-code {
+  border-radius: 0.25rem;
+  background: var(--co-neutral-900);
+  padding: 1px 0.25rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875rem;
+  color: var(--co-neutral-100);
+}
+.coracle-simulator.light .co-code {
+  background: var(--co-neutral-700);
+}
+.coracle-simulator .co-code.is-block {
+  display: block;
+  white-space: pre;
+  overflow: auto;
+  /* Scrollbars are hidden app-wide (app.css:362-370), and a code block is the
+     one element here that can actually overflow horizontally. */
+  scrollbar-width: none;
+}
+.coracle-simulator .co-code.is-block::-webkit-scrollbar {
+  display: none;
+}
+
 /* Thread rails: a 4px bar in the alternate colour, plus a stroked arc elbow
    drawn inline in the component (FeedItem.svelte:119-136). */
 .coracle-simulator .co-thread-rail {
