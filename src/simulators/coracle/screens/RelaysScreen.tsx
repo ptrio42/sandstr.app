@@ -1,293 +1,373 @@
+/**
+ * Relays — `RelayList.svelte` + `RelayCard.svelte`, spec §10.
+ *
+ * Two sections with DIFFERENT icons (server vs circle-nodes — deliberate
+ * upstream), and the Add Relay button's icon is a COMPASS, not a plus.
+ *
+ * The action buttons are the tell: INFO and EXPLORE are near-white
+ * (`bg-tinted-100-l`), JOIN is accent, LEAVE is dark — and LEAVE only appears
+ * when you hold more than one relay, because Coracle will not let you drop your
+ * last one. They are `uppercase` utility, not Staatliches, so they are caps for
+ * a different reason than the rest of the UI.
+ */
 import React, { useState } from 'react';
 import type { MockRelay } from '../../../data/mock';
-import type { CoracleScreen } from '../CoracleSimulator';
+import { Icon } from '../components/Icon';
+import { displayRelayUrl, quantify, seededCount } from '../coracleUtils';
 
 interface RelaysScreenProps {
   relays: MockRelay[];
-  connectedRelays: string[];
-  onConnectRelay: (relayUrl: string) => void;
-  onNavigate: (screen: CoracleScreen) => void;
-  isRelayConnected: (relayUrl: string) => boolean;
+  joined: Set<string>;
+  onJoin: (url: string) => void;
+  onLeave: (url: string) => void;
+  onExplore: (relay: MockRelay) => void;
+}
+
+/** `RelayCardActions.svelte:24-49` — raw buttons, `rounded-md px-6 py-1`. */
+function ActionButton({
+  label,
+  variant,
+  onClick,
+}: {
+  label: string;
+  variant: 'plain' | 'accent' | 'dark';
+  onClick: () => void;
+}) {
+  const base: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    borderRadius: '0.375rem',
+    padding: '0.25rem 1.5rem',
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    border: 'none',
+    cursor: 'pointer',
+    letterSpacing: '0.02em',
+  };
+  const skin: Record<typeof variant, React.CSSProperties> = {
+    plain: { background: 'var(--co-tinted-100-l)', color: 'var(--co-tinted-700-d)' },
+    accent: { background: 'var(--co-accent)', color: '#fff' },
+    dark: { background: 'var(--co-tinted-700-d)', color: 'var(--co-neutral-100)' },
+  } as const;
+  return (
+    <button type="button" style={{ ...base, ...skin[variant] }} onClick={onClick}>
+      {label}
+    </button>
+  );
+}
+
+/** Read / Write / Messaging. Off is expressed ONLY as opacity-50 (§10). */
+function PolicyChip({
+  icon,
+  label,
+  on,
+  onToggle,
+}: {
+  icon: 'book-open' | 'feather' | 'inbox';
+  label: string;
+  on: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="co-chip"
+      style={{ opacity: on ? 1 : 0.5, padding: '0.25rem 0.5rem' }}
+      onClick={onToggle}
+    >
+      <Icon name={icon} size={12} style={{ color: 'var(--co-neutral-300)' }} />
+      {label}
+    </button>
+  );
+}
+
+function RelayCard({
+  relay,
+  alt,
+  isJoined,
+  showControls,
+  canLeave,
+  onJoin,
+  onLeave,
+  onExplore,
+}: {
+  relay: MockRelay;
+  alt: boolean;
+  isJoined: boolean;
+  showControls: boolean;
+  canLeave: boolean;
+  onJoin: () => void;
+  onLeave: () => void;
+  onExplore: () => void;
+}) {
+  const [details, setDetails] = useState(false);
+  const [policy, setPolicy] = useState({ read: true, write: true, messaging: false });
+  const connections = 1 + seededCount(relay.url, 17, 40);
+
+  return (
+    <div
+      className={`co-card ${alt ? 'co-card-alt' : ''}`}
+      style={{ borderRadius: '0.375rem', padding: '1.5rem' }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '0.5rem',
+        }}
+      >
+        <div style={{ display: 'flex', minWidth: 0, flex: '1 1 12rem', alignItems: 'center', gap: '0.75rem' }}>
+          {/* `h-9 w-9 rounded-full border` with an `fa fa-server` fallback. */}
+          <span
+            style={{
+              display: 'flex',
+              height: '2.25rem',
+              width: '2.25rem',
+              flexShrink: 0,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '9999px',
+              border: '1px solid var(--co-neutral-600)',
+            }}
+          >
+            <Icon name="server" size={16} />
+          </span>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span
+                style={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {displayRelayUrl(relay.url)}
+              </span>
+              {showControls && (
+                <span
+                  aria-label={relay.isOnline ? 'Connected' : 'Not connected'}
+                  style={{
+                    height: '0.5rem',
+                    width: '0.5rem',
+                    borderRadius: '9999px',
+                    background: relay.isOnline ? 'var(--co-success)' : 'var(--co-neutral-600)',
+                  }}
+                />
+              )}
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '0 1rem',
+                fontSize: '0.75rem',
+                color: 'var(--co-neutral-400)',
+              }}
+            >
+              <span style={{ whiteSpace: 'nowrap' }}>{relay.supportedNips.length} NIPs</span>
+              <span style={{ whiteSpace: 'nowrap' }}>Connected {quantify(connections, 'time')}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginLeft: 'auto', display: 'flex', flexShrink: 0, gap: '0.75rem' }}>
+          <ActionButton label="Info" variant="plain" onClick={() => setDetails((v) => !v)} />
+          <ActionButton label="Explore" variant="plain" onClick={onExplore} />
+          {isJoined ? (
+            canLeave && <ActionButton label="Leave" variant="dark" onClick={onLeave} />
+          ) : (
+            <ActionButton label="Join" variant="accent" onClick={onJoin} />
+          )}
+        </div>
+      </div>
+
+      {details && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.5rem 0' }}>
+          <div style={{ fontSize: '0.875rem' }}>{relay.description}</div>
+          <div style={{ fontSize: '0.875rem', opacity: 0.75 }}>
+            Supported NIPs: {relay.supportedNips.join(', ')}
+          </div>
+        </div>
+      )}
+
+      {showControls && (
+        <>
+          <div
+            style={{
+              margin: '0.25rem -1.5rem',
+              height: '1px',
+              background: 'var(--co-tinted-700)',
+            }}
+          />
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', paddingTop: '0.25rem' }}>
+            <PolicyChip
+              icon="book-open"
+              label="Read"
+              on={policy.read}
+              onToggle={() => setPolicy((p) => ({ ...p, read: !p.read }))}
+            />
+            <PolicyChip
+              icon="feather"
+              label="Write"
+              on={policy.write}
+              onToggle={() => setPolicy((p) => ({ ...p, write: !p.write }))}
+            />
+            <PolicyChip
+              icon="inbox"
+              label="Messaging"
+              on={policy.messaging}
+              onToggle={() => setPolicy((p) => ({ ...p, messaging: !p.messaging }))}
+            />
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 export const RelaysScreen: React.FC<RelaysScreenProps> = ({
   relays,
-  connectedRelays,
-  onConnectRelay,
-  onNavigate,
-  isRelayConnected,
+  joined,
+  onJoin,
+  onLeave,
+  onExplore,
 }) => {
-  const [filter, setFilter] = useState<'all' | 'connected' | 'paid' | 'free'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newRelayUrl, setNewRelayUrl] = useState('');
+  const [tab, setTab] = useState<'search' | 'reviews'>('search');
+  const [query, setQuery] = useState('');
 
-  const filteredRelays = relays.filter(relay => {
-    const matchesFilter = 
-      filter === 'all' ? true :
-      filter === 'connected' ? isRelayConnected(relay.url) :
-      filter === 'paid' ? relay.isPaid :
-      !relay.isPaid;
-    
-    const matchesSearch = 
-      relay.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      relay.url.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      relay.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    return matchesFilter && matchesSearch;
-  });
-
-  const handleAddRelay = () => {
-    if (newRelayUrl.trim()) {
-      console.log('[Coracle] Adding relay:', newRelayUrl);
-      setNewRelayUrl('');
-      setShowAddModal(false);
-    }
-  };
-
-  const getStatusColor = (relay: MockRelay) => {
-    if (!relay.isOnline) return 'bg-red-500';
-    if (isRelayConnected(relay.url)) return 'bg-green-500';
-    return 'bg-gray-400';
-  };
-
-  const getStatusText = (relay: MockRelay) => {
-    if (!relay.isOnline) return 'Offline';
-    if (isRelayConnected(relay.url)) return 'Connected';
-    return 'Available';
-  };
+  const yours = relays.filter((r) => joined.has(r.url)).sort((a, b) => a.url.localeCompare(b.url));
+  const others = relays
+    .filter((r) => !joined.has(r.url))
+    .filter((r) => !query.trim() || r.url.toLowerCase().includes(query.trim().toLowerCase()));
 
   return (
-    <div className="coracle-screen">
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Relay Manager</h1>
-          <p className="text-gray-600">
-            Connect to relays to send and receive notes. You're currently connected to{' '}
-            <span className="font-semibold text-indigo-600">{connectedRelays.length}</span> relays.
-          </p>
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Icon name="server" size={20} />
+          <h2 className="co-staatliches" style={{ fontSize: '1.5rem' }}>
+            Your relays
+          </h2>
         </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <p className="text-2xl font-bold text-indigo-600">{connectedRelays.length}</p>
-            <p className="text-xs text-gray-500 mt-1">Connected</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <p className="text-2xl font-bold text-green-600">
-              {relays.filter(r => r.isOnline).length}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">Online</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <p className="text-2xl font-bold text-orange-600">
-              {relays.filter(r => r.isPaid).length}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">Paid</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <p className="text-2xl font-bold text-blue-600">
-              {relays.filter(r => !r.isPaid).length}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">Free</p>
-          </div>
-        </div>
-
-        {/* Search and Filter */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Search relays..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="coracle-input"
-              />
-            </div>
-            <div className="flex gap-2">
-              <select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value as any)}
-                className="coracle-input"
-              >
-                <option value="all">All Relays</option>
-                <option value="connected">Connected</option>
-                <option value="paid">Paid Only</option>
-                <option value="free">Free Only</option>
-              </select>
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="coracle-btn-primary whitespace-nowrap"
-              >
-                Add Relay
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Relay List */}
-        <div className="space-y-4">
-          {filteredRelays.length === 0 ? (
-            <div className="bg-white rounded-xl p-8 text-center shadow-sm border border-gray-100">
-              <p className="text-gray-500">No relays found matching your criteria</p>
-            </div>
-          ) : (
-            filteredRelays.map(relay => (
-              <div
-                key={relay.id}
-                className={`bg-white rounded-xl p-6 shadow-sm border transition-all ${
-                  isRelayConnected(relay.url) 
-                    ? 'border-indigo-300 ring-1 ring-indigo-200' 
-                    : 'border-gray-100'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-gray-900">{relay.name}</h3>
-                      <span className={`w-2 h-2 rounded-full ${getStatusColor(relay)}`} />
-                      <span className="text-xs text-gray-500">{getStatusText(relay)}</span>
-                      {relay.isPaid && (
-                        <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full font-medium">
-                          Paid
-                        </span>
-                      )}
-                    </div>
-                    
-                    <code className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                      {relay.url}
-                    </code>
-                    
-                    <p className="text-sm text-gray-600 mt-2">{relay.description}</p>
-                    
-                    <div className="flex flex-wrap gap-4 mt-3 text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                        {relay.userCount.toLocaleString()} users
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        {relay.latency}ms latency
-                      </span>
-                      {relay.software && (
-                        <span className="flex items-center gap-1">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                          </svg>
-                          {relay.software}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Supported NIPs */}
-                    <div className="flex flex-wrap gap-1 mt-3">
-                      {relay.supportedNips.slice(0, 8).map(nip => (
-                        <span
-                          key={nip}
-                          className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded"
-                        >
-                          NIP-{nip}
-                        </span>
-                      ))}
-                      {relay.supportedNips.length > 8 && (
-                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">
-                          +{relay.supportedNips.length - 8} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="ml-4">
-                    <button
-                      onClick={() => onConnectRelay(relay.url)}
-                      disabled={!relay.isOnline}
-                      className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                        !relay.isOnline
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : isRelayConnected(relay.url)
-                          ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                          : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
-                      }`}
-                    >
-                      {!relay.isOnline 
-                        ? 'Offline' 
-                        : isRelayConnected(relay.url) 
-                        ? 'Disconnect' 
-                        : 'Connect'}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Payment Info */}
-                {relay.isPaid && relay.paymentTerms && (
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <p className="text-sm text-orange-600">
-                      <span className="font-medium">Payment Required:</span> {relay.paymentTerms}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Info Box */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            About Relays
-          </h4>
-          <p className="text-sm text-blue-800">
-            Relays are servers that store and distribute Nostr events. Connecting to more relays 
-            increases your reach, but may slow down loading. Paid relays often offer better 
-            performance and spam protection.
-          </p>
-        </div>
+        <button type="button" className="co-btn co-btn-accent" onClick={() => setTab('search')}>
+          <Icon name="compass" size={14} /> Add Relay
+        </button>
       </div>
+      <p>
+        Relays are hubs for your content and connections. At least one is required to interact with
+        the network, but you can join as many as you like.
+      </p>
 
-      {/* Add Relay Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Add Custom Relay</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Enter the WebSocket URL of the relay you want to connect to.
-            </p>
-            <input
-              type="text"
-              value={newRelayUrl}
-              onChange={(e) => setNewRelayUrl(e.target.value)}
-              placeholder="wss://relay.example.com"
-              className="coracle-input mb-4"
+      {yours.length === 0 ? (
+        <div
+          style={{
+            marginTop: '2rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            textAlign: 'center',
+          }}
+        >
+          <Icon name="triangle-exclamation" size={14} /> No relays connected
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: '1rem' }}>
+          {yours.map((relay, i) => (
+            <RelayCard
+              key={relay.url}
+              relay={relay}
+              alt={i % 2 === 1}
+              isJoined
+              showControls
+              canLeave={yours.length > 1}
+              onJoin={() => onJoin(relay.url)}
+              onLeave={() => onLeave(relay.url)}
+              onExplore={() => onExplore(relay)}
             />
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="coracle-btn-secondary flex-1"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddRelay}
-                className="coracle-btn-primary flex-1"
-              >
-                Add Relay
-              </button>
-            </div>
-          </div>
+          ))}
         </div>
       )}
-    </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+        <Icon name="circle-nodes" size={20} />
+        <h2 className="co-staatliches" style={{ fontSize: '1.5rem' }}>
+          Other relays
+        </h2>
+      </div>
+      <p>
+        Below are relays used by people in your network. Adding these may improve your ability to
+        load profiles and content.
+      </p>
+
+      <div style={{ display: 'flex' }}>
+        <button
+          type="button"
+          className={`co-tab ${tab === 'search' ? 'co-tab-active' : ''}`}
+          onClick={() => setTab('search')}
+        >
+          Search
+        </button>
+        <button
+          type="button"
+          className={`co-tab ${tab === 'reviews' ? 'co-tab-active' : ''}`}
+          onClick={() => setTab('reviews')}
+        >
+          Reviews
+        </button>
+      </div>
+
+      {tab === 'search' ? (
+        <>
+          <div style={{ position: 'relative' }}>
+            <input
+              className="co-input"
+              style={{ paddingLeft: '2.25rem', height: '2.25rem' }}
+              placeholder="Search relays or add a custom url"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label="Search relays"
+            />
+            <span
+              style={{
+                position: 'absolute',
+                left: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'var(--co-neutral-500)',
+                pointerEvents: 'none',
+              }}
+            >
+              <Icon name="search" size={13} />
+            </span>
+          </div>
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            {others.map((relay, i) => (
+              <RelayCard
+                key={relay.url}
+                relay={relay}
+                alt={i % 2 === 1}
+                isJoined={false}
+                showControls={false}
+                canLeave={false}
+                onJoin={() => onJoin(relay.url)}
+                onLeave={() => onLeave(relay.url)}
+                onExplore={() => onExplore(relay)}
+              />
+            ))}
+            {others.length === 0 && (
+              <p style={{ padding: '2rem 0', textAlign: 'center' }}>
+                No relays matching &quot;{query}&quot;
+              </p>
+            )}
+          </div>
+        </>
+      ) : (
+        <p style={{ padding: '3rem 0', textAlign: 'center' }}>No reviews found.</p>
+      )}
+    </>
   );
 };
-
-export default RelaysScreen;

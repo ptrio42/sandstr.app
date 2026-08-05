@@ -29,7 +29,24 @@
   obiecuje Amber/NIP-55, ale **kod NIP-55 nie istnieje** w repo. Opt-in: Barry Deen (`barrydeen`),
   OpenSats-funded, aktywny na Nostr; homepage `wisp.mobile`, Play `com.wisp.app`, MIT.
 
-**Do zrobienia (druga fala, słabsza wierność / stare stuby):** Keychat, Olas, Coracle, Gossip. Tokeny + killery każdego są niżej w tym pliku; korekty kolorów w `[[client-fidelity-ground-truth]]`. (Primal-MOBILE nadal stary stub — zrobiony tylko web.)
+- ✅ **Coracle (web)** (15 powierzchni: feeds/note-detail/compose/login/bunker/signup×4/relays/profile/
+  notifications/messages/start-conversation/groups/lists/invite/settings×5) —
+  `docs/refs/coracle/screen-map.md` (autorytatywny, 19 sekcji; recording 2026-08-05 +
+  `coracle-social/coracle@efea13f`, 12-agentowy recon). Svelte 4 + Tailwind 3, tokeny wstrzykiwane
+  **runtime z `.env.template`** (`VITE_DARK_THEME`/`VITE_LIGHT_THEME`) do `:root`. **Default = DARK**
+  (`state.ts:36-40`; **brak `prefers-color-scheme`**), accent **`#FC560E` identyczny w light i dark**,
+  **zero gradientów marki**. Killer #1 = **ciepły ramp `tinted-*`** (`#3E3A38`) na sidebarze i kartach
+  nad **zimnym `neutral-*`** (`#262626` strona, `#171717` top bar) + **alternacja kart** wg zagnieżdżenia
+  (`AltColor.svelte`) — stary sim miał jeden zimny szary i light-first, czyli podwójnie źle.
+  Nav = 6 pozycji **tylko tekst**, aktywna **rośnie** + akcentowe podkreślenie (`elasticOut`).
+  Akcje: **reply→zap→like→repost→open-with**, ikony **obrysowe** (własny 17×16 partial) poza
+  wypełnionym `fa-rotate`; zap = **suma satów**, default 21. Sygnatura = panel **„Your Feeds"**
+  (composable feeds). **Login bez pola na klucz** — same delegacje; `.btn` bazowy jest **biały na
+  czarnym**, akcent tylko dla akcji głównej. [REC vs REPO]: polskie ekrany w nagraniu to **nstart**
+  (`start.njump.me`), osobny projekt — poza zakresem. Opt-in: Jon Staab (`hodlbod`), FUTO Fellow,
+  bardzo opt-in-friendly.
+
+**Do zrobienia (druga fala, słabsza wierność / stare stuby):** Keychat, Olas, Gossip. Tokeny + killery każdego są niżej w tym pliku; korekty kolorów w `[[client-fidelity-ground-truth]]`. (Primal-MOBILE nadal stary stub — zrobiony tylko web.)
 
 **Start następnej sesji (agent robiący kolejny symulator):**
 1. **Użytkownik NAJPIERW wrzuca referencję** do `docs/refs/<client>/shots/` — screen-RECORDING (mobile: Keychat/Olas/Primal-mobile) albo screeny/live-capture (web za Cloudflare: Snort/Primal-web/Coracle — `WebFetch` daje pustą skorupę). Bez realnego renderu nie startuj (layout ≠ pamięć).
@@ -120,10 +137,13 @@ Pełny how-to w pamięci `[[fidelity-repro-playbook]]`.
 - **Nav / killer:** dokładnie **4 taby + centralny compose FAB**; kolejność (MainTabView): Home / DMs / [FAB] / Search(=Universe) / Notifications(bell); **własne ikony** (selected = `.fill` wariant), nie SF Symbols; poza tym natywny iOS (SF Pro, systemowe nav/sheets); gradient purple→pink na follow/banner/QR; „Purple" subscription (numer subskrybenta + badge + DeepL).
 - **Opt-in:** William Casarin (`@jb55`), aktywny; marka rozpoznawalna → wymagana wyraźna zgoda.
 
-### Coracle — web (repo `coracle-social/coracle`, MIT)
-- **Tokeny:** `.env.template` (`VITE_DARK_THEME`/`VITE_LIGHT_THEME` — listy `key:hex`) + `tailwind.config.cjs` (`var(--accent)`, `--neutral-N`, `--tinted-N`) + `src/app.css` (fonty). Żywa: `app.coracle.social` (SPA, realny browser).
-- **Paleta (confirmed):** accent **burnt-orange `#FC560E`** (light+dark) · dark bg `#0A0A0A`/`#171717`, surface `#262626` · **ciepłe brązowe „tinted"** `#332f2d`/`#3E3A38`/`#5A524F`… (definiują przytulny ciemny look) · success teal `#12D2B0` · warning `#FCAB0E` · danger `#dc0c0c`.
-- **Nav / killer:** **dark-first + ciepłe brązy** (sim: light+cold = podwójnie źle); **lewy sidebar** (Feeds/Relays/Communities/Calendar/Market); fonty **Lato** (body) + **Staatliches** (wordmark, condensed all-caps); sygnatura = composable **Custom Feeds** + rating relayów + web-of-trust; gęsty, utylitarny layout.
+### Coracle — web (repo `coracle-social/coracle`, MIT) — ✅ ZROBIONE 2026-08-05
+- 📄 **Pełny spec: `docs/refs/coracle/screen-map.md`** (19 sekcji, cytaty do plików repo). Niżej streszczenie.
+- **Tokeny:** `.env.template` (`VITE_DARK_THEME`/`VITE_LIGHT_THEME` — listy `key:hex`, parsowane w `src/partials/state.ts:29-34` i wstrzykiwane jako `:root` w `App.svelte:359-363`) + `tailwind.config.cjs` (`var(--accent)`, `--neutral-N`, `--tinted-N`, warianty `-l`/`-d` liczone w JS ±10%) + `src/app.css` (fonty). Żywa: `app.coracle.social`.
+- **Paleta (confirmed):** accent **burnt-orange `#FC560E`** — **identyczny w light i dark** · dark bg `#262626` (strona) / `#171717` (top bar) · **ciepłe brązowe „tinted"** `#3E3A38` (sidebar+karty) / `#332f2d` / `#5A524F` · success teal `#12D2B0` · warning `#FCAB0E` · danger `#dc0c0c`. **Zero gradientów marki.**
+- ⚠️ **Korekta:** `LogoSvg.svelte:8` ma inny oranż `#EB5E28` jako fallback `--logo-color`, ale ten komponent **nie ma żadnych importerów** — martwy. Brand to `#FC560E`.
+- **Nav / killer:** **dark-first + ciepłe brązy** (stary sim: light+cold = podwójnie źle); **lewy sidebar `w-72`** z 6 pozycjami **TYLKO TEKST, bez ikon**: Feeds/Relays/Notifications/Messages/Groups/Lists (NIE Communities/Calendar/Market — te nie istnieją), aktywna **rośnie** `text-2xl`→`text-3xl` + akcentowe podkreślenie; fonty **Lato** (body) + **Staatliches** (wszystkie `.btn`/nagłówki — to typeface **all-caps**, stąd kapitaliki w UI mimo Title case w kodzie); sygnatura = panel **„Your Feeds"** (composable feeds) + rating relayów + **WoT dial przy każdej nazwie** (nie checkmark!); gęsty, utylitarny layout; prawie wszystko to **modale**.
+- ⚠️ **Bazowy `.btn` jest BIAŁY na CZARNYM** (`app.css:374-376`) — akcent jest opt-in, tylko dla akcji głównej.
 - **Opt-in:** Jon Staab (`hodlbod`), FUTO Fellow, bardzo opt-in-friendly.
 
 ### Keychat — cross-platform (repo `keychat-io/keychat-app`, **AGPL-3.0**)

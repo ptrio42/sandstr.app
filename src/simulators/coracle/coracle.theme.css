@@ -1,218 +1,728 @@
 /**
- * Coracle Theme
- * Simple, accessible, beginner-friendly Nostr client
- * High contrast, clean design with indigo accent
+ * Coracle theme — real tokens.
+ *
+ * Every value here is traceable to `coracle-social/coracle@efea13f`; the
+ * citation table is `docs/refs/coracle/screen-map.md` §1–§3. The previous
+ * version of this file was invented (generic indigo `#6366f1`, cold greys,
+ * light-first, `:root` scope) and matched nothing in the real client.
+ *
+ * Three things to keep straight, because they are the ways to get Coracle wrong:
+ *   1. The accent is BURNT ORANGE `#FC560E` and it is IDENTICAL in both
+ *      themes (`.env.template:1-2`). There is no second brand colour and no
+ *      brand gradient anywhere in the app — it is a flat colour system.
+ *   2. The dark surfaces are WARM. `tinted-*` is a brown-grey ramp
+ *      (`#3E3A38`, `#332f2d`, …) that carries the sidebar, the cards and the
+ *      low-emphasis buttons; `neutral-*` is the cold ramp under the page and
+ *      the top bar. Cards ALTERNATE between the two by nesting depth
+ *      (`AltColor.svelte:9-30`) — that alternation IS the thread rendering.
+ *   3. Dark is the shipping default (`state.ts:36-40`,
+ *      `synced({key: "ui/theme", defaultValue: "dark"})`), and light is a real
+ *      shipped theme: it inverts the neutral ramp in place, so `neutral-100`
+ *      means "foreground" in BOTH themes.
+ *
+ * The real app injects these as `:root` custom properties at runtime from two
+ * env strings (`App.svelte:359-363`). Sandstr is one page hosting ten clients,
+ * so the same values live here under a `--co-` namespace, and EVERY selector is
+ * scoped under `.coracle-simulator`: an unscoped `.action-btn` in this
+ * directory once rendered Amethyst in Comic Sans.
  */
 
-/* CSS Variables */
-:root {
-  --coracle-primary: #6366f1;
-  --coracle-primary-dark: #4f46e5;
-  --coracle-primary-light: #818cf8;
-  --coracle-secondary: #8b5cf6;
-  --coracle-success: #22c55e;
-  --coracle-warning: #f59e0b;
-  --coracle-error: #ef4444;
-  --coracle-orange: #f97316;
-  
-  /* Grays - High Contrast */
-  --coracle-gray-50: #f9fafb;
-  --coracle-gray-100: #f3f4f6;
-  --coracle-gray-200: #e5e7eb;
-  --coracle-gray-300: #d1d5db;
-  --coracle-gray-400: #9ca3af;
-  --coracle-gray-500: #6b7280;
-  --coracle-gray-600: #4b5563;
-  --coracle-gray-700: #374151;
-  --coracle-gray-800: #1f2937;
-  --coracle-gray-900: #111827;
-}
-
-/* Base Styles */
 .coracle-simulator {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  line-height: 1.6;
-  color: var(--coracle-gray-900);
+  /* The host's swap wrapper gives us h-full, but the root ignores the
+     className the host passes, so the height chain has to be closed here.
+     This is the fix for the documented clipping bug: the old file used
+     `min-height: calc(100vh - 64px)` and LoginScreen used `min-h-screen`, so
+     inside a fixed-height card roughly 18vh fell off the bottom with no
+     scroller to reach it. */
+  height: 100%;
+  min-height: 0;
+
+  /* Containing block for the modal scrim, which is absolutely positioned. */
+  position: relative;
+  overflow: hidden;
+
+  /* ---- Accents. Identical in light and dark (.env.template:1-2). ---- */
+  --co-accent: #fc560e;
+  --co-warning: #fcab0e;
+  --co-danger: #dc0c0c;
+  --co-success: #12d2b0;
+
+  /* ---- Cold ramp. DARK is the base, exactly as the client ships. ---- */
+  --co-neutral-50: #fafafa;
+  --co-neutral-100: #f5f5f5; /* app-wide foreground (Routes.svelte:53) */
+  --co-neutral-200: #e5e5e5;
+  --co-neutral-300: #d4d4d4;
+  --co-neutral-400: #a3a3a3;
+  --co-neutral-500: #737373;
+  --co-neutral-600: #525252; /* every hairline border in the app */
+  --co-neutral-700: #404040;
+  --co-neutral-800: #262626; /* page background AND modal panel */
+  --co-neutral-900: #171717; /* top bar */
+  --co-neutral-950: #0a0a0a;
+
+  /* ---- Warm ramp. This is the "cosy" a cold-grey clone loses. ---- */
+  --co-tinted-100: #f1eae7;
+  --co-tinted-200: #ded3cf; /* body text colour (App.svelte:454) */
+  --co-tinted-400: #b9a69e; /* inactive nav label */
+  --co-tinted-500: #756a65;
+  --co-tinted-600: #5a524f;
+  --co-tinted-700: #3e3a38; /* sidebar + alternating card */
+  --co-tinted-800: #332f2d;
+
+  /* Derived -l/-d variants. The client computes these in JS at ±10% per
+     channel (`state.ts:77-102`); only a handful are consumed, so the ones
+     that are get written out rather than recomputed. */
+  --co-tinted-100-l: #ffffff;
+  --co-tinted-700-d: #38352f;
+
+  /* ---- Geometry ----
+     The sidebar is `w-72` (288px) and the right rail `xl:w-80` (320px) against
+     the recording's 1434px viewport. Sandstr hands a frameless client a
+     `max-w-5xl` card — 1022px at every viewport — so the three columns cannot
+     all keep their upstream widths (288+672+320 = 1280 > 1022). They are
+     scaled to the card in the same spirit as Snort's breakpoints: the
+     proportions and the degradation ORDER survive, the absolute pixels cannot.
+     Documented as a deviation in the screen-map rather than hidden. */
+  --co-sidebar-w: 228px;
+  --co-rail-w: 236px;
+  --co-topbar-h: 56px;
+
+  font-family: 'Lato', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--co-neutral-100);
+  background: var(--co-neutral-800);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Screen Container */
-.coracle-screen {
-  min-height: calc(100vh - 64px);
-  padding-bottom: 2rem;
+/* Light theme. The client swaps the VALUES of the same variable names rather
+   than adding overrides, which is why `neutral-100` still means "foreground"
+   below. Reproduced literally from VITE_LIGHT_THEME (.env.template:2). */
+.coracle-simulator.light {
+  --co-neutral-50: #0a0a0a;
+  --co-neutral-100: #171717;
+  --co-neutral-200: #262626;
+  --co-neutral-300: #404040;
+  --co-neutral-400: #525252;
+  --co-neutral-500: #737373;
+  --co-neutral-600: #a3a3a3;
+  --co-neutral-700: #d4d4d4;
+  --co-neutral-800: #f5f5f5;
+  --co-neutral-900: #fafafa;
+  --co-neutral-950: #fafafa;
+
+  --co-tinted-100: #525252;
+  --co-tinted-200: #737373;
+  --co-tinted-400: #a3a3a3;
+  --co-tinted-500: #d4d4d4;
+  --co-tinted-600: #f5f5f5;
+  --co-tinted-700: #fafafa;
+  --co-tinted-800: #ffffff;
+
+  --co-tinted-100-l: #5a5a5a;
+  --co-tinted-700-d: #e1e1e1;
 }
 
-/* Welcome Banner */
-.coracle-welcome-banner {
-  background: linear-gradient(135deg, var(--coracle-primary) 0%, var(--coracle-secondary) 100%);
-  color: white;
+/* ---------------------------------------------------------------------------
+ * Typography
+ *
+ * Body is Lato, display is Staatliches, both self-hosted TTFs upstream
+ * (`app.css:36-79`). Sandstr ships neither: no new dependencies, and a webfont
+ * would be the external request this repo forbids. Both resolve through a
+ * fallback stack instead.
+ *
+ * Staatliches has no true lowercase — its lowercase codepoints draw capitals —
+ * which is why the real nav reads "FEEDS" while the markup says "Feeds". With a
+ * substitute face that stops being true, so `text-transform: uppercase` is
+ * applied here deliberately. It is the one property this reproduction adds that
+ * the client does not have, and it exists to preserve what the client LOOKS
+ * like rather than what it declares.
+ * ------------------------------------------------------------------------- */
+.coracle-simulator .co-staatliches {
+  font-family: 'Staatliches', 'Oswald', 'Arial Narrow', 'Helvetica Neue', Impact, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 400;
 }
 
-/* Buttons */
-.coracle-btn-primary {
+/* ---------------------------------------------------------------------------
+ * The button system (app.css:374-415).
+ * Base `.btn` is WHITE on BLACK — that is the default variant, not the accent.
+ * ------------------------------------------------------------------------- */
+.coracle-simulator .co-btn {
+  font-family: 'Staatliches', 'Oswald', 'Arial Narrow', 'Helvetica Neue', Impact, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   display: inline-flex;
+  height: 1.75rem; /* h-7 */
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  background-color: var(--coracle-primary);
-  color: white;
-  font-weight: 600;
-  font-size: 0.875rem;
-  border-radius: 0.5rem;
+  white-space: nowrap;
+  border-radius: 0.25rem; /* bare `rounded` */
+  border: none;
+  background: #ffffff;
+  padding: 0 1.5rem; /* px-6 */
+  font-size: 1.25rem; /* text-xl */
+  line-height: 1;
+  color: #000000;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.coracle-simulator .co-btn-low {
+  background: var(--co-tinted-700);
+  color: var(--co-tinted-200);
+}
+.coracle-simulator .co-btn-low:hover {
+  background: var(--co-tinted-600);
+}
+.coracle-simulator .co-btn-accent {
+  background: var(--co-accent);
+  color: #ffffff;
+}
+/* Upstream's `.btn-accent:hover` re-declares the same background — the accent
+   button deliberately does not change on hover (app.css:394-396). */
+.coracle-simulator .co-btn-danger {
+  background: transparent;
+  border: 1px solid var(--co-danger);
+  color: var(--co-danger);
+}
+.coracle-simulator .co-btn-tall {
+  height: 2.5rem; /* h-10 */
+}
+.coracle-simulator .co-btn-circle {
+  border-radius: 9999px;
+  aspect-ratio: 1 / 1;
+  width: 1.75rem;
+  padding: 0;
+}
+.coracle-simulator .co-btn:disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Chip — `inline-block rounded-full border border-solid` (Chip.svelte:13-22).
+   The feed filter pills in the right rail are these. */
+.coracle-simulator .co-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid var(--co-neutral-100);
+  background: transparent;
+  color: inherit;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.coracle-simulator .co-chip-accent {
+  background: var(--co-accent);
+  border-color: var(--co-accent);
+  color: #fff;
+}
+
+/* Card — AltColor background + `rounded text-neutral-100 px-7 py-5`
+   (Card.svelte:53-59). `interactive` hovers a RIGHT BORDER, never a fill. */
+.coracle-simulator .co-card {
+  border-radius: 0.25rem;
+  padding: 1.25rem 1.75rem;
+  color: var(--co-neutral-100);
+  background: var(--co-tinted-700);
+}
+.coracle-simulator .co-card-alt {
+  background: var(--co-neutral-800);
+}
+.coracle-simulator .co-card-interactive {
+  cursor: pointer;
+  border-right: 4px solid transparent;
+  transition: border-color 0.15s ease;
+}
+.coracle-simulator .co-card-interactive:hover {
+  border-right-color: var(--co-neutral-600);
+}
+
+/* Inputs. `h-7 rounded`, white by default, `bg-neutral-900` with the `dark`
+   prop (Input.svelte:30-37). The two look nothing alike and the client uses
+   both: white on the relay search, dark in the top bar. */
+.coracle-simulator .co-input {
+  height: 1.75rem;
+  width: 100%;
+  border-radius: 0.25rem;
+  border: none;
+  background: #ffffff;
+  color: #171717;
+  padding: 0 0.75rem;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  outline: none;
+}
+.coracle-simulator .co-input::placeholder {
+  color: var(--co-neutral-400);
+}
+.coracle-simulator .co-input-dark {
+  background: var(--co-neutral-900);
+  color: var(--co-neutral-100);
+  border: 1px solid var(--co-tinted-700);
+}
+.coracle-simulator textarea.co-input {
+  height: auto;
+  padding: 0.5rem 0.75rem;
+  resize: none;
+  line-height: 1.5;
+}
+
+/* Tabs — neutral, NOT accent (Tabs.svelte:12-19). Active is a brighter bottom
+   border on an otherwise identical label. */
+.coracle-simulator .co-tab {
+  flex: 1 1 0%;
+  border: none;
+  border-bottom: 1px solid var(--co-neutral-700);
+  background: transparent;
+  padding: 0.5rem 0;
+  text-align: center;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.75;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+.coracle-simulator .co-tab-active {
+  border-bottom-color: var(--co-neutral-500);
+  opacity: 1;
+}
+
+/* Anchors are underlined app-wide (app.css:281-283) and are NOT tinted with
+   the accent — the reflex to colour links is wrong for this client. */
+.coracle-simulator .co-link {
+  text-decoration: underline;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Scrollbars are only ever HIDDEN upstream, never skinned (app.css:362-370). */
+.coracle-simulator .co-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.coracle-simulator .co-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * Shell geometry
+ * ------------------------------------------------------------------------- */
+.coracle-simulator .co-layout {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  background: var(--co-neutral-800);
+}
+
+.coracle-simulator .co-sidebar {
+  width: var(--co-sidebar-w);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--co-tinted-700);
+  transition: background-color 0.15s ease;
+}
+
+/* The publish HUD: three counters over a hairline (MenuDesktop.svelte:208-228). */
+.coracle-simulator .co-hud {
+  display: flex;
+  height: 3rem;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 1.5rem;
+  border-top: 1px solid var(--co-neutral-600);
+  padding: 0 3rem 0 1.75rem;
+  background: transparent;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  width: 100%;
+}
+
+.coracle-simulator .co-account-row {
+  display: flex;
+  height: 5rem;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.75rem;
+  border-top: 1px solid var(--co-neutral-600);
+  padding: 1rem 1.75rem;
+  width: 100%;
+  background: transparent;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+/* Nav item — active is `text-3xl text-accent` plus an accent underline that
+   flies in; inactive is `text-2xl text-tinted-400`. No pill, no tint, no icon.
+   (MenuDesktopItem.svelte:12-32.) */
+.coracle-simulator .co-nav-item {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 2.75rem;
+  padding: 0 0 0 2rem;
+  text-align: left;
+  background: transparent;
   border: none;
   cursor: pointer;
+  font-size: 1.5rem; /* text-2xl */
+  line-height: 2.75rem;
+  color: var(--co-tinted-400);
   transition: all 0.2s ease;
-  box-shadow: 0 1px 2px 0 rgba(99, 102, 241, 0.1);
+}
+.coracle-simulator .co-nav-item:hover {
+  color: var(--co-tinted-100);
+}
+.coracle-simulator .co-nav-item.is-active {
+  font-size: 1.875rem; /* text-3xl */
+  color: var(--co-accent);
+}
+.coracle-simulator .co-nav-underline {
+  position: absolute;
+  left: 2rem;
+  right: 0;
+  bottom: 0.25rem;
+  height: 1px;
+  background: var(--co-accent);
+  transform-origin: left;
+  animation: co-underline 0.7s cubic-bezier(0.16, 1.4, 0.5, 1) both;
+}
+@keyframes co-underline {
+  from {
+    transform: translateX(50px) scaleX(0.25);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) scaleX(1);
+    opacity: 1;
+  }
 }
 
-.coracle-btn-primary:hover {
-  background-color: var(--coracle-primary-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);
+/* The nav badge is a 6px accent dot with `rounded`, NOT `rounded-full`
+   (MenuDesktop.svelte:96) — it reads as a tiny block, not a bead. */
+.coracle-simulator .co-nav-dot {
+  position: absolute;
+  top: 0.35rem;
+  right: -0.625rem;
+  height: 0.375rem;
+  width: 0.375rem;
+  border-radius: 0.25rem;
+  background: var(--co-accent);
 }
 
-.coracle-btn-primary:active {
-  transform: translateY(0);
-}
-
-.coracle-btn-primary:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
-}
-
-.coracle-btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.coracle-btn-secondary {
-  display: inline-flex;
+.coracle-simulator .co-topbar {
+  display: flex;
+  height: var(--co-topbar-h);
+  flex-shrink: 0;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  background-color: white;
-  color: var(--coracle-gray-700);
-  font-weight: 600;
-  font-size: 0.875rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--coracle-gray-300);
-  cursor: pointer;
-  transition: all 0.2s ease;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  background: var(--co-neutral-900);
+  padding: 0 1.25rem;
 }
 
-.coracle-btn-secondary:hover {
-  background-color: var(--coracle-gray-50);
-  border-color: var(--coracle-gray-400);
+.coracle-simulator .co-page {
+  position: relative;
+  flex: 1 1 0%;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.coracle-btn-secondary:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  border-color: var(--coracle-primary);
-}
-
-/* Inputs */
-.coracle-input {
+/* `m-auto w-full max-w-2xl` → `flex max-w-2xl flex-grow flex-col gap-4 p-4`
+   (Routes.svelte:61-62). */
+.coracle-simulator .co-column {
+  margin: 0 auto;
+  display: flex;
   width: 100%;
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-  line-height: 1.5;
-  color: var(--coracle-gray-900);
-  background-color: white;
-  border: 2px solid var(--coracle-gray-200);
-  border-radius: 0.5rem;
-  transition: all 0.2s ease;
+  max-width: 42rem;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+
+  /* Load-bearing pair. Without them the column keeps its min-CONTENT width in
+     the row it shares with the rail, the row overflows, and `overflow: hidden`
+     on the sim root silently clips the rail's right edge — which is exactly
+     what happened at a 1024px viewport (918px card). */
+  flex: 1 1 0%;
+  min-width: 0;
 }
 
-.coracle-input:hover {
-  border-color: var(--coracle-gray-300);
+/* The right rail is `xl:fixed xl:right-4 xl:top-20 xl:w-80` on the FEED page
+   only (FeedControls.svelte:99-102) — it is the feed selector card promoted to
+   a sidebar, not a global third column. Below xl it collapses back into a card
+   above the feed, which is exactly what the narrow state does here. */
+.coracle-simulator .co-rail {
+  width: var(--co-rail-w);
+  flex-shrink: 0;
+  padding: 1rem 1rem 1rem 0;
+  min-height: 0;
 }
 
-.coracle-input:focus {
-  outline: none;
-  border-color: var(--coracle-primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-}
+/* ---------------------------------------------------------------------------
+ * Note card internals
+ * ------------------------------------------------------------------------- */
 
-.coracle-input::placeholder {
-  color: var(--coracle-gray-400);
-}
-
-.coracle-input:disabled {
-  background-color: var(--coracle-gray-100);
-  cursor: not-allowed;
-}
-
-/* Key Display */
-.coracle-key-display {
+/* Action buttons lift 1px on hover — `pt-1 … hover:pb-1 hover:pt-0`
+   (NoteActions.svelte:268). Reproduced with padding, not transform, because
+   that is what upstream does and it shifts the row the same way. */
+.coracle-simulator .co-action {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  background-color: var(--coracle-gray-50);
-  border: 2px solid var(--coracle-gray-200);
-  border-radius: 0.5rem;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 0.75rem;
-}
-
-.coracle-copy-btn {
-  flex-shrink: 0;
-  padding: 0.375rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--coracle-primary);
-  background-color: white;
-  border: 1px solid var(--coracle-gray-300);
-  border-radius: 0.375rem;
+  gap: 0.25rem;
+  padding-top: 0.25rem;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 0.875rem;
+  font-family: inherit;
   cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.coracle-simulator .co-action:hover:not(:disabled) {
+  padding-top: 0;
+  padding-bottom: 0.25rem;
+}
+.coracle-simulator .co-action:disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+.coracle-simulator .co-action.is-on {
+  color: var(--co-accent);
 }
 
-.coracle-copy-btn:hover {
-  background-color: var(--coracle-primary);
-  color: white;
-  border-color: var(--coracle-primary);
+/* The "N relays" / PoW chips on the right of the action row
+   (NoteActions.svelte:354-379): small dark pills, count in accent. */
+.coracle-simulator .co-meta-chip {
+  display: inline-flex;
+  height: 1.5rem;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 0.25rem;
+  background: var(--co-neutral-800);
+  padding: 0 0.5rem;
+  font-size: 0.75rem;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+}
+/* Cards alternate, so a chip on the alternate card needs the opposite surface
+   or it vanishes into it. */
+.coracle-simulator .co-card-alt .co-meta-chip,
+.coracle-simulator .co-card-alt .co-overflow-btn {
+  background: var(--co-tinted-700);
 }
 
-/* Cards */
-.coracle-card {
-  background-color: white;
-  border-radius: 1rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  border: 1px solid var(--coracle-gray-100);
-  transition: box-shadow 0.2s ease;
+.coracle-simulator .co-overflow-btn {
+  display: flex;
+  height: 1.5rem;
+  width: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  background: var(--co-neutral-800);
+  color: var(--co-neutral-50);
+  border: none;
+  cursor: pointer;
+}
+.coracle-simulator .co-overflow-btn:hover {
+  background: var(--co-neutral-700);
 }
 
-.coracle-card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+/* The like animation: FA's `fa-beat` retuned to scale 1.4 over 0.4s, once
+   (app.css:6-11). */
+.coracle-simulator .co-beat {
+  animation: co-beat 0.4s ease-in-out 1;
+}
+@keyframes co-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.4);
+  }
 }
 
-/* Line clamp */
-.line-clamp-6 {
-  display: -webkit-box;
-  -webkit-line-clamp: 6;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+/* "Show N more replies" — a gradient fading to the left (FeedItem.svelte:179). */
+.coracle-simulator .co-more-replies {
+  width: 100%;
+  border-radius: 0.375rem;
+  background-image: linear-gradient(
+    to left,
+    transparent,
+    var(--co-tinted-700),
+    var(--co-tinted-700)
+  );
+  padding: 0.5rem 0;
+  color: var(--co-neutral-100);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9375rem;
 }
 
-/* Focus visible for accessibility */
-*:focus-visible {
-  outline: 2px solid var(--coracle-primary);
-  outline-offset: 2px;
+/* Truncated long notes get a mask, then a centred "See more"
+   (NoteContentKind1.svelte:92-93). */
+.coracle-simulator .co-truncated {
+  -webkit-mask-image: linear-gradient(0deg, transparent 0px, black 100px);
+  mask-image: linear-gradient(0deg, transparent 0px, black 100px);
 }
 
-/* Animations */
-@keyframes coracle-fade-in {
+/* Thread rails: a 4px bar in the alternate colour, plus a stroked arc elbow
+   drawn inline in the component (FeedItem.svelte:119-136). */
+.coracle-simulator .co-thread-rail {
+  position: absolute;
+  width: 0.25rem;
+  background: var(--co-tinted-700);
+}
+
+/* ---------------------------------------------------------------------------
+ * Modal — an opaque neutral-800 panel over a 50% black scrim, offset past the
+ * sidebar on desktop (`ml-72`, Modal.svelte:114-116). The close control is a
+ * ROUND ACCENT button at the top right, one of the loudest Coracle tells.
+ * ------------------------------------------------------------------------- */
+.coracle-simulator .co-scrim {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0.5;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+.coracle-simulator .co-modal-close {
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid var(--co-accent);
+  background: var(--co-accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+/* Toast — `shadow-xl`; the warning variant keeps the tinted body and only
+   swaps the border (Toast.svelte:108-112). */
+.coracle-simulator .co-toast {
+  border-radius: 0.25rem;
+  border: 1px solid var(--co-neutral-600);
+  background: var(--co-tinted-700);
+  padding: 0.75rem 1rem;
+  color: var(--co-neutral-100);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.4);
+  font-size: 0.875rem;
+}
+.coracle-simulator .co-toast-warning {
+  border-color: var(--co-warning);
+}
+
+/* The publish progress bar under a just-sent note (NotePending.svelte:9,58). */
+.coracle-simulator .co-loading-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: var(--co-accent);
+  transition: width 0.4s ease;
+}
+
+/* Range input — accent track and thumb (RangeInput.svelte:70-81). */
+.coracle-simulator .co-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--co-neutral-600);
+  outline: none;
+}
+.coracle-simulator .co-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 1.25rem;
+  width: 1.25rem;
+  border-radius: 9999px;
+  background: var(--co-accent);
+  cursor: pointer;
+  border: none;
+}
+.coracle-simulator .co-range::-moz-range-thumb {
+  height: 1.25rem;
+  width: 1.25rem;
+  border-radius: 9999px;
+  background: var(--co-accent);
+  cursor: pointer;
+  border: none;
+}
+
+/* Toggle. The client uses react-switch with a neutral-600 hairline
+   (app.css:341-343); ON is the accent. */
+.coracle-simulator .co-toggle {
+  position: relative;
+  height: 1.5rem;
+  width: 2.75rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  border: 1px solid var(--co-neutral-600);
+  background: var(--co-neutral-700);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  padding: 0;
+}
+.coracle-simulator .co-toggle.is-on {
+  background: var(--co-accent);
+  border-color: var(--co-accent);
+}
+.coracle-simulator .co-toggle span {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  height: 1.125rem;
+  width: 1.125rem;
+  border-radius: 9999px;
+  background: #fff;
+  transition: transform 0.15s ease;
+}
+.coracle-simulator .co-toggle.is-on span {
+  transform: translateX(1.25rem);
+}
+
+/* Entrance used on feed items and modals — `in:fly={{y: 20}}`. Kept short and
+   non-looping so a paused preview never freezes content at opacity 0. */
+.coracle-simulator .co-fly {
+  animation: co-fly 0.25s ease-out both;
+}
+@keyframes co-fly {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -220,69 +730,10 @@
   }
 }
 
-.animate-fade-in {
-  animation: coracle-fade-in 0.3s ease-out;
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .coracle-btn-primary {
-    border: 2px solid var(--coracle-primary-dark);
-  }
-  
-  .coracle-input {
-    border-width: 3px;
-  }
-  
-  .coracle-key-display {
-    border-width: 3px;
-  }
-}
-
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  .coracle-simulator .co-fly,
+  .coracle-simulator .co-nav-underline,
+  .coracle-simulator .co-beat {
+    animation: none;
   }
-}
-
-/* Mobile optimizations */
-@media (max-width: 640px) {
-  .coracle-screen {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-  
-  .coracle-btn-primary,
-  .coracle-btn-secondary {
-    padding: 0.75rem 1rem;
-  }
-  
-  .coracle-input {
-    font-size: 16px; /* Prevents zoom on iOS */
-  }
-}
-
-/* Scrollbar styling */
-.coracle-simulator ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.coracle-simulator ::-webkit-scrollbar-track {
-  background: var(--coracle-gray-100);
-  border-radius: 4px;
-}
-
-.coracle-simulator ::-webkit-scrollbar-thumb {
-  background: var(--coracle-gray-400);
-  border-radius: 4px;
-}
-
-.coracle-simulator ::-webkit-scrollbar-thumb:hover {
-  background: var(--coracle-gray-500);
 }
