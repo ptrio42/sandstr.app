@@ -53,7 +53,19 @@ export default function Layout() {
           here strengthens rather than weakens the CLAUDE.md mitigation. */}
       {!onClient && (
         <footer className="border-t border-gray-200 py-8 text-center text-xs text-gray-400 dark:border-gray-800">
-          Sandstr — interactive simulations for learning. Not affiliated with any client. Mock data only.
+          <p>Sandstr — interactive simulations for learning. Not affiliated with any client. Mock data only.</p>
+          <p className="mt-2">
+            New to Nostr?{' '}
+            <a
+              href="https://nostrich.love"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              Learn the basics on Nostrich.love
+            </a>{' '}
+            — guides in 7 languages, keys, relays, zaps.
+          </p>
         </footer>
       )}
 
