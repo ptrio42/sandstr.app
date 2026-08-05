@@ -66,6 +66,17 @@ export default function Layout() {
             </a>{' '}
             — guides in 7 languages, keys, relays, zaps.
           </p>
+          <p className="mt-1">
+            Sandstr is free and open source.{' '}
+            <a
+              href="https://nostrich.love/support"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              ⚡ Support the builder
+            </a>
+          </p>
         </footer>
       )}
 
