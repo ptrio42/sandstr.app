@@ -45,6 +45,51 @@
       content="The Sandstr logo above the line: try Nostr clients in your browser."
     />
     <meta name="twitter:card" content="summary_large_image" />
+
+    <!--
+      Structured data describes SANDSTR ONLY. The reproduced clients are
+      deliberately absent: marking up Damus or Primal as software this site
+      offers is exactly the identity confusion the rest of the strategy avoids
+      (robots.txt Disallow'ing /c/, the SIMULATION banner, the outbound
+      handoff). No aggregateRating either — there are no ratings, and inventing
+      them would be the one lie a reviewer can check in a search result.
+    -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://sandstr.app/#website",
+            "url": "https://sandstr.app/",
+            "name": "Sandstr",
+            "description": "Feel what Nostr is like before you commit to a client — interactive, in-browser simulations with mock data. No keys, no signup, no install.",
+            "inLanguage": "en",
+            "creator": { "@id": "https://sandstr.app/#creator" }
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://sandstr.app/#app",
+            "name": "Sandstr",
+            "url": "https://sandstr.app/",
+            "description": "Interactive, in-browser reproductions of real Nostr clients, running entirely on the visitor's device. Unofficial and not affiliated with the clients it depicts.",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Any (runs in a web browser)",
+            "browserRequirements": "Requires JavaScript.",
+            "isAccessibleForFree": true,
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+            "license": "https://opensource.org/licenses/MIT",
+            "isPartOf": { "@id": "https://sandstr.app/#website" },
+            "creator": { "@id": "https://sandstr.app/#creator" }
+          },
+          {
+            "@type": "Person",
+            "@id": "https://sandstr.app/#creator",
+            "name": "ptrio42"
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

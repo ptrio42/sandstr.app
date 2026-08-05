@@ -3,3 +3,7 @@
 # the textbook confusion pattern, and the gallery is the page that should rank.
 User-agent: *
 Disallow: /c/
+
+# With no inbound links yet, this is the only active signal that the site
+# exists. It lists "/" alone, for the reason above.
+Sitemap: https://sandstr.app/sitemap.xml
