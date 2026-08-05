@@ -9,6 +9,8 @@ import { FeedSourceSheet, type FeedSource } from './components/FeedSelector';
 import { ZapIcon } from './components/icons';
 
 import { LoginScreen } from './screens/LoginScreen';
+import { SignInScreen } from './screens/SignInScreen';
+import { SignUpScreen } from './screens/SignUpScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { MediaScreen } from './screens/MediaScreen';
 import { WalletScreen } from './screens/WalletScreen';
@@ -71,6 +73,9 @@ export function YakiHonneSimulator({ className = '', tourCommand, onCommandHandl
   const registerAction = (a: string) => tourContext?.registerAction?.(a);
 
   const [authed, setAuthed] = useState(false);
+  // Logged-off routing: landing → "Log in" (keys/remote signer) or the 5-step
+  // "Create account" wizard. "Continue as a guest" skips straight to the feed.
+  const [authRoute, setAuthRoute] = useState<'welcome' | 'signin' | 'signup'>('welcome');
   const [tab, setTab] = useState<YakiTab>('home');
   const [source, setSource] = useState<FeedSource>('recent');
   const [sourceSheetOpen, setSourceSheetOpen] = useState(false);
@@ -199,7 +204,17 @@ export function YakiHonneSimulator({ className = '', tourCommand, onCommandHandl
   return (
     <div className={`yakihonne-simulator ${className}`} data-theme={parentTheme}>
       {!authed ? (
-        <LoginScreen onLogin={login} />
+        <>
+          {authRoute === 'welcome' && (
+            <LoginScreen
+              onSignIn={() => setAuthRoute('signin')}
+              onSignUp={() => setAuthRoute('signup')}
+              onGuest={login}
+            />
+          )}
+          {authRoute === 'signin' && <SignInScreen onBack={() => setAuthRoute('welcome')} onLogin={login} />}
+          {authRoute === 'signup' && <SignUpScreen onBack={() => setAuthRoute('welcome')} onDone={login} />}
+        </>
       ) : (
         <>
           <div className="yakihonne-content">{renderTab()}</div>

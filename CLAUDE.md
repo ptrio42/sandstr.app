@@ -98,7 +98,7 @@ w `public/robots.txt`. Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` 
 ## Liderzy vs reszta
 
 - **Wzorzec wierności:** **Amethyst** i **Damus** — głębokie, zweryfikowane referencyjnie flagowce/szablony
-  (Amethyst 8 powierzchni; Damus 11) — inline-SVG robohash avatary, lokalne media postów jako `data:`-URI,
+  (Amethyst 9 powierzchni; Damus 11) — inline-SVG robohash avatary, lokalne media postów jako `data:`-URI,
   offline/CSP-safe, tokeny z repo klienta + weryfikacja side-by-side z realnym recordingiem. Do nich równamy.
 - **READY (status w `registry.tsx`): Amethyst, Damus, YakiHonne, Primal (web)** (2026-07-28) **+ Snort
   + Wisp** (2026-07-30) **+ Coracle + Nostur** (2026-08-05) — zweryfikowane referencyjnie (screen-map +
@@ -223,7 +223,7 @@ w `public/robots.txt`. Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` 
   źródło klienta czytane razem → tokeny → weryfikacja side-by-side.** Biblioteka referencji żyje w
   **`docs/refs/<client>/`** (`screen-map.md` + `shots/`). Zawiera **korekty błędnych rekomendacji kolorów
   z `AUDIT.md`** (YakiHonne jest oranż, nie fiolet; Keychat fiolet, nie blue; Primal domyślnie blue).
-  Wzorzec wykonany na Amethyście: głęboki, zweryfikowany referencyjnie (8 powierzchni, realny fiolet
+  Wzorzec wykonany na Amethyście: głęboki, zweryfikowany referencyjnie (9 powierzchni, realny fiolet
   `#7F67BE` + OLED czerń + kolejność akcji reply/boost/react/zap, inline-SVG avatary, lokalne `data:` media).
 - `README.md` — przegląd + jak dokładnie wyodrębniono feature z oryginału.
 - Origin: audyt powstał w sesji w `../nostr-beginner-guide` (pamięć `sandstr-simulators-spinoff`); ten

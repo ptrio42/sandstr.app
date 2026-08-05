@@ -2,6 +2,9 @@
 
 **Źródła:** kod `vitorpamplona/amethyst` @ tag **v1.12.6** (Kotlin/Compose, MD3) + oficjalny screenshot
 `docs/screenshots/home.png` → [`shots/home.png`](shots/home.png). Każdy wpis: co widać (screen) + czym jest (kod).
+**Dogrywka 2026-08-05:** dwa brakujące ekrany logged-off od użytkownika — [`shots/login.png`](shots/login.png)
+i [`shots/signup.png`](shots/signup.png) — zweryfikowane razem z `main` (`LoginScreen.kt`, `SignUpScreen.kt`,
+`KeyTextField.kt`, `res/values/strings.xml`, `res/drawable/amethyst.xml`). Patrz sekcja „Login / Sign up".
 
 ## Home — app bar (góra)
 Ze screena, od lewej:
@@ -68,6 +71,55 @@ Ze screena, od lewej: **Home (dom, aktywny fiolet) · Messages (koperta) · Shor
 - ⚠️ **BRAK limitu znaków** (grep `maxLength/280` = 0). Bez licznika, bez kółka postępu. Post gated przez `canPost`, nie długość.
 - ⚠️ SIM ma **fejkowy 280-limit + kółko postępu** + selektor Public/Followers (nie istnieje) — do usunięcia.
 
+## Login / Sign up ([`shots/login.png`](shots/login.png) + [`shots/signup.png`](shots/signup.png) — screeny od użytkownika 2026-08-05) — ZROBIONE
+Dwa ekrany logged-off, ten sam szkielet. Kod: `ui/screen/loggedOff/login/LoginScreen.kt` (`LoginPage`) i
+`.../signup/SignUpScreen.kt` (`SignUpPage`) — obydwa to wyśrodkowana `Column` (padding **20dp**,
+`verticalScroll`, `imePadding`), więc treść **jest wyśrodkowana w pionie**, bez app-bara i bez footera.
+
+**Wspólna kolejność (verbatim z Compose):**
+logo **150dp** (`CustomHashTagIcons.Amethyst`, `ContentScale.Inside`) → **Spacer 40dp** → pole → [tekst błędu,
+`colorScheme.error`, `bodySmall`] → **Spacer 10dp** → `TorSettingsSetup` → [`TermsGate`] → **Spacer 10dp** →
+**wypełniony pill** → **Spacer 40dp** → pytanie krzyżowe → **Spacer 20dp** → **pill obrysowy**.
+
+- **Logo:** ta sama ikona co launcher — struś wycięty z litery „A". Ścieżki **verbatim** z
+  `res/drawable/amethyst.xml` (viewport 512×512, dwie ścieżki: oczko + korpus), gradient **`#652D80` →
+  `#2598CF`** (`userSpaceOnUse`, x 22.6 → 489.54).
+  ⚠️ **[REC vs REPO]** drawable deklaruje gradient oczka w przestrzeni viewportu (startX 42.27 → endX 55.73),
+  co dałoby płaski błękit; realny render (i screen) pokazuje **rampę fiolet→błękit w obrębie samej kropki** —
+  reprodukcja używa gradientu `objectBoundingBox`.
+- **Pole klucza** (`KeyTextField.kt`): M3 `OutlinedTextField` przy **domyślnej szerokości 280dp**, czyli
+  **68% szerokości ekranu** (411dp) — **NIE full-bleed**; ten margines to najbardziej rozpoznawalny detal ekranu.
+  `leadingIcon` = **QR** (`ic_qrcode`, 24dp, `tint = colorScheme.primary` → **fioletowy**),
+  `trailingIcon` = **oko** (`MaterialSymbols.Visibility`/`VisibilityOff`, kolor on-surface, biały),
+  `visualTransformation = PasswordVisualTransformation` (maskowanie), placeholder **„nsec.. or npub.."**
+  (`nsec_npub_hex_private_key`). Pod polem warunkowe `PasswordField` (ncryptsec) — na screenie nieobecne.
+- **Linia Tor:** `connect_via_tor1` **„Adjust"** (kolor tekstu) + `connect_via_tor2` **„Tor Settings"**
+  (akcentowy fiolet). Cały wiersz jest klikalny, ale tylko druga połowa jest zabarwiona.
+- **Przyciski:** `Button`/`OutlinedButton`, `RoundedCornerShape(35dp)`, **wysokość 50dp**, etykieta z
+  `padding(horizontal = 40dp)` → pill **dopasowany do treści**, nie na całą szerokość.
+  ⚠️ **[REC vs REPO]** M3 barwi etykietę `OutlinedButton` kolorem `primary`; realny render trzyma ją
+  **białą (on-surface)** przy neutralnym obrysie — bierzemy screen.
+- **Login** (`shots/login.png`): pole klucza → „Adjust Tor Settings" → **„Login"** (wypełniony) →
+  **„Don't have a Nostr account?"** → **„Sign Up"** (obrysowy).
+  `ExternalSignerButton` („Login with Amber") renderuje się **tylko gdy Amber jest zainstalowany** — na
+  screenie go nie ma, więc reprodukcja go nie ma.
+- **Sign up** (`shots/signup.png`): **„Welcome Ostrich!"** (`titleLarge`) → Spacer 20dp →
+  **„How should we call you?"** (`titleMedium`) → Spacer 20dp → pole z placeholderem **„Ostrich McAwesome"**
+  (`my_awesome_name`) → „Adjust Tor Settings" → **„Create Account"** (wypełniony) →
+  **„Already have a Nostr account?"** → **„Login"** (obrysowy).
+  `TermsGate` (checkbox regulaminu) jest w kodzie bezwarunkowo, ale na screenie go **nie ma** — reprodukcja
+  pomija, zgodnie z zasadą „recording wygrywa dla layoutu".
+- Wszystkie literały potwierdzone verbatim w `res/values/strings.xml`: `welcome`, `how_should_we_call_you`,
+  `my_awesome_name`, `nsec_npub_hex_private_key`, `login`, `sign_up`, `create_account`,
+  `don_t_have_an_account`, `already_have_an_account`, `connect_via_tor1/2`.
+- ⚠️ **Świadome odstępstwo (bezpieczeństwo, nie wierność):** pole klucza używa `DEMO_KEY_PLACEHOLDER`
+  zamiast prawdziwego „nsec.. or npub.." i odrzuca wklejony realny nsec — patrz
+  `src/simulators/shared/utils/keySafety.ts`. Ta sama reguła obowiązuje w każdej reprodukcji.
+- ⚠️ **SIM BŁĄD (naprawiony 2026-08-05):** poprzedni `LoginScreen.tsx` był generycznym stubem — fioletowy
+  app bar z ikoną „checkmark w kółku", nagłówek „Welcome", **taby Sign In / Create Account**, osobne pola
+  npub i nsec, generator kluczy z toastem „Copied to clipboard!" i stopka „By signing in, you agree to the
+  Terms of Service". Nic z tego nie istnieje w prawdziwym Amethyście.
+
 ## Domknięte z wideo (screen recording od użytkownika, 37 klatek scene-detect)
 Wideo (`shots/*.mp4`, gitignored) + contact sheets → potwierdziło 5 zbudowanych ekranów i ujawniło resztę.
 - **Thread / note-detail** — ZROBIONE: tap notatki (`MaterialCard.onOpenThread`) → `ThreadScreen` (parent + wcięte odpowiedzi z linią-łącznikiem + composer „reply here.." + back). Overlay `z-[60]` (musi być nad app-barem, który jest `md-app-bar-enhanced` sticky z-50 — inaczej home app bar przebija i jego avatar jest klikalny → otwierał drawer).
@@ -88,4 +140,10 @@ Wideo (`shots/*.mp4`, gitignored) + contact sheets → potwierdziło 5 zbudowany
 7. ✅ Bottom nav: **5 ikon: Home/Messages/Shorts/Discover/Notifications** (bez etykiet, bez Profile; kropka-badge na Notifications; nawigacja tourem programowa, `data-tour` zachowane).
 8. ✅ Avatary: DiceBear (sieć) → **lokalne robohash-owe roboty** — `components/Avatar.tsx` (deterministyczny FNV-1a hash → inline-SVG robot: głowa/antena/uszy/oczy/usta, kolory z seedu). CSP-safe, offline. Podmienione wszędzie (feed/thread/profile-notes via MaterialCard, Messages DM, Notifications, Search, Video, app-bar/compose/drawer/profile = ten sam robot usera `pitiunited`). Grupy/logo/live-bubble zostają. **Zdjęcia w postach:** `getSampleImages` (`src/data/mock/utils.ts`) przepisane na lokalne inline-SVG gradient-„photo" jako `data:`-URI (było głównie martwe fake-URL-e + zdalny picsum). Amethyst = **zero zdalnych żądań obrazów** (avatary inline-SVG, media data:-URI), offline/CSP-safe.
 
+9. ✅ **Login / Sign up** (2026-08-05): generyczny stub (fioletowy app bar, taby „Sign In / Create Account",
+   osobne pola npub+nsec, generator kluczy, stopka ToS) → **dwa realne ekrany logged-off** — verbatim logo
+   z `amethyst.xml`, pole 280dp z fioletowym QR + okiem, „Adjust **Tor Settings**", pill 50dp/r35dp,
+   przełączanie Login ↔ Sign Up. Nowy `components/AmethystLogo.tsx`.
+
 _Zweryfikowane side-by-side z [`shots/home.png`](shots/home.png): build OK, 0 błędów w konsoli, struktura zgodna z v1.12.6._
+_Login/Sign-up zweryfikowane side-by-side z [`shots/login.png`](shots/login.png) i [`shots/signup.png`](shots/signup.png)._
