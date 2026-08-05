@@ -50,24 +50,113 @@ export interface NoteCardProps {
 }
 
 /**
- * Note text with the two inline treatments the client actually has: hashtags
- * become underlined, and nothing is tinted. Deliberately NOT a markdown or
- * link renderer — Coracle's kind-1 content is plain text plus parsed segments,
- * and inventing richer rendering would be inventing fidelity.
+ * Note text, segmented the way the real client segments it.
+ *
+ * Coracle parses kind-1 content with `@welshman/content`, whose `parsers` array
+ * is tried IN ORDER at each position (`parser.js:186-198`). The three segment
+ * types this reproduction supports are matched with upstream's own regexes,
+ * verbatim from `@welshman/content@0.9.0-pre4`:
+ *
+ *   parseTopic      /^#[^\s!"#$%&'()*+,-./:;<=>?@[\\\]^_`{|}~]+/   (skips /^#\d+$/)
+ *   parseCodeBlock  /^```([^]*?)```/
+ *   parseCodeInline /^`(.*?)`/
+ *
+ * Order matters and is preserved: topic is tried before code, and the block
+ * fence before the inline backtick. Everything else (links, mentions, invoices,
+ * emoji) falls through to plain text — deliberately, because inventing richer
+ * rendering than the client has would be inventing fidelity.
+ *
+ * Two details worth not "fixing":
+ *  - The topic charset EXCLUDES `_`, so `#stacking_sats` is the topic
+ *    `#stacking` followed by the literal text `_sats`. That is upstream's
+ *    behaviour, not a bug in this port.
+ *  - `parseCodeBlock` captures everything between the fences INCLUDING the
+ *    language tag, and `NoteContentCode` only calls `.trim()` on it. So real
+ *    Coracle renders ```` ```rust ```` with `rust` as the first line of the
+ *    code block. Reproduced.
  */
+type Segment =
+  | { kind: 'text'; value: string }
+  | { kind: 'topic'; value: string }
+  | { kind: 'code'; value: string };
+
+const TOPIC_RE = /^#[^\s!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]+/;
+const CODE_BLOCK_RE = /^```([^]*?)```/;
+const CODE_INLINE_RE = /^`(.*?)`/;
+
+export function parseNoteContent(input: string): Segment[] {
+  const segments: Segment[] = [];
+  let text = '';
+  let i = 0;
+
+  const flush = () => {
+    if (text) {
+      segments.push({ kind: 'text', value: text });
+      text = '';
+    }
+  };
+
+  while (i < input.length) {
+    const rest = input.slice(i);
+
+    const topic = TOPIC_RE.exec(rest);
+    if (topic && !/^#\d+$/.test(topic[0])) {
+      flush();
+      segments.push({ kind: 'topic', value: topic[0].slice(1) });
+      i += topic[0].length;
+      continue;
+    }
+
+    const block = CODE_BLOCK_RE.exec(rest);
+    if (block) {
+      flush();
+      segments.push({ kind: 'code', value: block[1] });
+      i += block[0].length;
+      continue;
+    }
+
+    const inline = CODE_INLINE_RE.exec(rest);
+    if (inline) {
+      flush();
+      segments.push({ kind: 'code', value: inline[1] });
+      i += inline[0].length;
+      continue;
+    }
+
+    text += input[i];
+    i += 1;
+  }
+
+  flush();
+  return segments;
+}
+
 function NoteText({ content }: { content: string }) {
-  const parts = content.split(/(#[\p{L}\d_]+)/gu);
+  const segments = parseNoteContent(content);
   return (
     <p style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-      {parts.map((part, i) =>
-        part.startsWith('#') && part.length > 1 ? (
-          <span key={i} style={{ textDecoration: 'underline' }}>
-            {part}
-          </span>
-        ) : (
-          <React.Fragment key={i}>{part}</React.Fragment>
-        ),
-      )}
+      {segments.map((segment, i) => {
+        if (segment.kind === 'topic') {
+          // `NoteContentTopic.svelte` — an underlined Button printing `#{value}`.
+          return (
+            <span key={i} style={{ textDecoration: 'underline' }}>
+              #{segment.value}
+            </span>
+          );
+        }
+        if (segment.kind === 'code') {
+          // `NoteContentCode.svelte` is ONE span for both forms; a value
+          // containing a newline additionally gets `block whitespace-pre
+          // overflow-auto`, which is what turns it into a scrollable block.
+          const isBlock = segment.value.includes('\n');
+          return (
+            <span key={i} className={`co-code ${isBlock ? 'is-block' : ''}`}>
+              {segment.value.trim()}
+            </span>
+          );
+        }
+        return <React.Fragment key={i}>{segment.value}</React.Fragment>;
+      })}
     </p>
   );
 }

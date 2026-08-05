@@ -411,6 +411,39 @@ dismissible via a white circular `fa fa-times`); non-media links become an OG pr
 **white footer** (`bg-white px-4 py-2 text-black`) holding a bold title and a 140-char description — the
 recording's "Design Engineer Tools" card. **Hashtags render underlined, not accent-coloured.**
 
+#### 7.3.1 Segmentation, and the code quirk
+
+Content is segmented by `@welshman/content`, whose `parsers` array is tried **in order** at each
+position (`parser.js:186-198`: newline · legacyMention · **topic** · **codeBlock** · **codeInline** ·
+address · profile · emoji · event · cashu · invoice · email · link). The three that matter for kind-1
+plain text, verbatim from `@welshman/content@0.9.0-pre4`:
+
+```js
+parseTopic       /^#[^\s!"#$%&'()*+,-./:;<=>?@[\\\]^_`{|}~]+/   // skips /^#\d+$/, value = slice(1)
+parseCodeBlock   /^```([^]*?)```/
+parseCodeInline  /^`(.*?)`/
+```
+
+Two consequences that look like bugs and are not:
+
+1. **The topic charset excludes `_`.** `#stacking_sats` parses as the topic `#stacking` followed by
+   the literal text `_sats`. Numeric topics (`#840000`) are skipped entirely and stay text.
+2. **`parseCodeBlock` captures the language tag.** The capture group is everything between the
+   fences, and `NoteContentCode` only calls `.trim()` on it — so ```` ```rust ```` renders with
+   `rust` as the **first line of the code block**. Coracle has no syntax highlighting and no info-string
+   handling.
+
+**`NoteContentCode.svelte` is a single `<span>` for both forms** — there is no separate `<pre>`:
+
+```
+rounded bg-neutral-700 px-1 py-px font-mono text-sm text-neutral-100 dark:bg-neutral-900
++ block whitespace-pre overflow-auto   ← only when the value contains a newline
+```
+
+Note the background is the one place that needs **different variables per theme**: `neutral-900` in
+dark, `neutral-700` in light. Because the ramp inverts, picking either variable alone would give the
+wrong surface in one theme.
+
 ### 7.4 Details modal (`NoteInfo.svelte:75-167`)
 
 Sections in order: **Zapped By · Liked By · Reposted By · Relays · In this conversation · Apps ·
@@ -766,6 +799,12 @@ a contact sheet it says so.
    right-aligned group.
 8. Relay policy chips and two section headers used the wrong stand-in glyphs (star/edit/message rather
    than book-open/feather/inbox, globe rather than compass, star rather than bell).
+
+**Follow-up landed 2026-08-05** (separate commit): kind-1 content was rendering fenced code as raw
+``` markers, because the segmenter only handled hashtags. It now mirrors upstream's parser order and
+regexes, including both quirks in §7.3.1. Verified against six cases (underscore topic, numeric topic,
+inline backticks, fence-beats-inline, topic-before-code, plain text) plus the rendered block's
+computed background in each theme: `#171717` dark, `#D4D4D4` light.
 
 **Known gaps, stated rather than papered over:**
 
