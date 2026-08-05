@@ -6,6 +6,10 @@ CLAUDE.local.md
 .DS_Store
 .vite
 
+# Local state from `wrangler dev` (the .claude/launch.json "sandstr-workers"
+# config) — caches and a simulated asset store, none of it reproducible input.
+.wrangler
+
 # Reference recordings/screenshots of the real clients (docs/FIDELITY.md).
 # Local-only by owner decision (2026-07-28): they are working reference
 # material, not something to publish. Purged from git history the same day —

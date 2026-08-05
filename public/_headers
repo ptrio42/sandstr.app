@@ -2,9 +2,11 @@
 # same format, which is the whole reason changing host stays a ten-minute job:
 # nothing about the deploy lives in a vendor dashboard except the domain itself.
 #
-# Rules match the REQUEST path, and public/_redirects rewrites deep links to
-# index.html only after that match. So the security block has to be `/*` — a
-# rule written for /index.html would leave every /c/<client> URL bare.
+# Rules match the REQUEST path, and the SPA fallback (wrangler.jsonc,
+# not_found_handling) serves index.html only after that match. So the security
+# block has to be `/*` — a rule written for /index.html would leave every
+# /c/<client> URL bare. Verified against `wrangler dev`: a request for
+# /c/damus carries the CSP below.
 
 /*
   # The mitigation the disclaimer strip cannot be. Without it a pixel-faithful

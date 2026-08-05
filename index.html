@@ -95,12 +95,13 @@
     <div id="root"></div>
     <!--
       The build injects the GALLERY's markup into #root (scripts/prerender.mjs).
-      `public/_redirects` serves this same file for every deep link, so without
-      the line below someone opening a shared /c/damus would stare at the
-      gallery until the bundle boots and React replaces it — the wrong page, on
-      the exact entry path people arrive by. Classic inline script, not a
-      module: it runs during parsing, before first paint and before the
-      deferred bundle. On `/` it does nothing, which is where crawlers look.
+      The SPA fallback (wrangler.jsonc, not_found_handling) serves this same
+      file for every deep link, so without the line below someone opening a
+      shared /c/damus would stare at the gallery until the bundle boots and
+      React replaces it — the wrong page, on the exact entry path people arrive
+      by. Classic inline script, not a module: it runs during parsing, before
+      first paint and before the deferred bundle. On `/` it does nothing, which
+      is where crawlers look.
     -->
     <script>
       if (location.pathname !== '/' && location.pathname !== '/index.html') {

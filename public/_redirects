@@ -1,5 +1,0 @@
-# SPA fallback. The app uses BrowserRouter, so deep links like /c/damus must be
-# served index.html instead of 404ing on refresh or on a shared link.
-# Netlify serves real files in publish/ first, so /favicon.svg, /icon-*.png and
-# /site.webmanifest are unaffected by this rule.
-/*    /index.html   200
