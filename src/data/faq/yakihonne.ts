@@ -133,7 +133,7 @@ export const yakihonneFaq: ClientFaq = {
         {
           target: '[data-tour="yakihonne-post"]',
           title: 'Publish',
-          content: 'The paper-plane sends the note — it only lights up once you have typed something.',
+          content: 'The paper-plane in the orange circle publishes the note; the grey X beside it discards.',
           position: 'bottom',
           commands: cmd({ type: 'compose' }),
         },
@@ -211,18 +211,11 @@ export const yakihonneFaq: ClientFaq = {
         'Open the side menu with your avatar and tap "Articles" — long-form is what YakiHonne is built around.',
         'The Discover screen sorts everything into four tabs: All, Articles, Videos and Curations.',
         'An article card carries the author on top with an orange "N min read" beside the time, the title and summary on the left and a rounded thumbnail on the right.',
-        'You can also read a feed of nothing but articles by picking "Trending" or "Articles" in the feed selector.',
+        'Tap a card to open the reader.',
       ],
-      showMe: [
-        {
-          target: '[data-tour="yakihonne-drawer"]',
-          title: 'The side menu',
-          content:
-            '"Articles" and "Relay orbits" both live here, behind the avatar in the top-left.',
-          position: 'right',
-          commands: cmd({ type: 'openDrawer' }),
-        },
-      ],
+      note: 'Long-form is its own screen, not a feed source — the home feed selector\'s six sources are all note feeds.',
+      // No showMe: this reproduction has no Discover screen (gaps yak-28), and
+      // its side menu has no "Articles" row to point at.
     },
     {
       // §Article reader
@@ -241,7 +234,7 @@ export const yakihonneFaq: ClientFaq = {
           target: '[data-tour="yakihonne-article"]',
           title: 'The article reader',
           content:
-            'A full reading view: author row with Follow and zap, summary, tags, cover, and the action bar pinned to the bottom.',
+            'The reading view: the "Posted by" row with Follow and a bordered zap button, the title, "Posted from", the cover image, and the action bar pinned to the bottom.',
           position: 'center',
           spotlightPadding: 0,
           commands: cmd({ type: 'openArticle' }),
@@ -271,17 +264,8 @@ export const yakihonneFaq: ClientFaq = {
         'To put one in a note, open the composer and tap the tools icon in the toolbar (fourth, between "@" and the scheduler).',
         'Your own widgets are listed on your profile under "Others" → "Smart widgets".',
       ],
-      showMe: [
-        {
-          target: '[data-tour="yakihonne-feed"]',
-          title: 'The Widgets feed',
-          content:
-            'Picking "Widgets" in the feed selector leaves nothing but smart widgets in the timeline.',
-          position: 'center',
-          spotlightPadding: 0,
-          commands: cmd({ type: 'setSource', payload: 'widgets' }),
-        },
-      ],
+      // No showMe: this reproduction renders the ordinary note feed for every
+      // source, so a "Widgets" demo would frame a timeline with no widgets.
     },
 
     // ----------------------------------------------------- Finding things --
@@ -301,7 +285,7 @@ export const yakihonneFaq: ClientFaq = {
           target: '[data-tour="yakihonne-search"]',
           title: 'Search',
           content:
-            'Before you type, the screen offers "Find people and content" and a row of recent searches. Results split into People, Notes, Articles and Media.',
+            'Results split into People, Notes, Articles and Media — each person comes back with their NIP-05 address under the name.',
           position: 'center',
           spotlightPadding: 0,
           commands: cmd({ type: 'openSearch' }),
@@ -325,7 +309,7 @@ export const yakihonneFaq: ClientFaq = {
           target: '[data-tour="yakihonne-profile-screen"]',
           title: 'A profile',
           content:
-            'The Follow button sits under the bio, filled orange until you follow. On your own profile that slot reads "Edit profile" instead.',
+            'Filled orange until you follow, then it flips to Unfollow. On your own profile that same slot reads "Edit profile".',
           position: 'center',
           spotlightPadding: 0,
           commands: cmd({ type: 'viewProfile', payload: 'other' }),
@@ -368,7 +352,7 @@ export const yakihonneFaq: ClientFaq = {
         {
           target: '[data-tour="yakihonne-notifications"]',
           title: 'Notifications',
-          content: 'Everything that happened, in one list — the red dot on the bell clears when you open it.',
+          content: 'Everything that happened, in one list — replies, reactions, reposts, zaps and mentions together.',
           position: 'center',
           spotlightPadding: 0,
           commands: cmd({ type: 'navigate', payload: 'notifications' }),
@@ -394,7 +378,7 @@ export const yakihonneFaq: ClientFaq = {
           target: '[data-tour="yakihonne-relays"]',
           title: 'Relay orbits',
           content:
-            'YakiHonne\'s relay browser: online pills, who follows each relay, latency, and a link to read any of them as a feed.',
+            'YakiHonne\'s relay browser. It opens on Following — switch to Network, Collections or Global, or use "Search relay", to see relay cards with their status and latency.',
           position: 'center',
           spotlightPadding: 0,
           commands: cmd({ type: 'navigate', payload: 'relays' }),

@@ -152,6 +152,10 @@ export function YakiHonneSimulator({ className = '', tourCommand, onCommandHandl
         setDrawerOpen(false);
         setSourceSheetOpen(false);
         setTab('home');
+        // Back to the LANDING, not to whichever auth screen the visitor last
+        // used — authRoute sticks at 'signin' after a manual "Log in", and the
+        // landing (with its yakihonne-keys anchor) would never mount again.
+        setAuthRoute('welcome');
         setAuthed(false);
         break;
       case 'navigate': {
