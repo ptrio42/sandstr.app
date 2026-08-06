@@ -17,6 +17,7 @@ const CATEGORIES = [
   'Finding things',
   'Relays',
   'Account & keys',
+  'Advanced',
 ];
 
 type Step = FaqShowMeStep;
@@ -458,6 +459,51 @@ export const damusFaq: ClientFaq = {
           commands: openDrawer,
         },
       ],
+    },
+
+    // ------------------------------------------------------------ Advanced --
+    // Grounded in the damus-io/damus upstream source (master, checked
+    // 2026-08-06) — the reference recording never visits these screens, so
+    // these entries are TEXT-ONLY (no showMe) until the sim grows the
+    // surfaces to demo them (Settings sub-screens, Wallet).
+    {
+      // AppearanceSettingsView.swift: "Image uploader" Picker;
+      // MediaUploader.swift: nostrBuild (default) / nostrcheck ("nostrcheck.me").
+      id: 'change-media-uploader',
+      category: 'Advanced',
+      question: 'How do I switch the media uploader (nostr.build → nostrcheck.me)?',
+      answer: [
+        'Tap your profile picture to open the side menu, then choose "Settings".',
+        'Open "Appearance and filters".',
+        'Use the "Image uploader" picker — Damus ships with nostr.build (the default) and nostrcheck.me.',
+      ],
+      note: 'The choice applies to future image and video uploads from the composer.',
+    },
+    {
+      // ConfigView.swift: Storage row; StorageSettingsView.swift: usage chart
+      // (NostrDB / Snapshot Database / Image Cache) + Clear Cache section.
+      id: 'clear-cache',
+      category: 'Advanced',
+      question: 'How do I clear the cache?',
+      answer: [
+        'Tap your profile picture to open the side menu, then choose "Settings".',
+        'Open "Storage" — it charts what Damus keeps on your device (NostrDB, snapshot database, image cache).',
+        'Tap the clear-cache button and confirm.',
+      ],
+    },
+    {
+      // §5 Side menu row 2 (Wallet); ConnectWalletView.swift: "AUTOMATIC
+      // SETUP / Create new wallet" (Coinos) + NWC attach ("Setup Wallet" →
+      // "Connect"); NWCScannerView.swift: QR scan.
+      id: 'connect-wallet',
+      category: 'Advanced',
+      question: 'How do I connect a Lightning wallet (for zaps)?',
+      answer: [
+        'Tap your profile picture to open the side menu, then choose "Wallet".',
+        'Either tap "Create new wallet" (one-click Coinos setup), or attach an existing wallet that supports Nostr Wallet Connect: paste or scan its NWC connection string.',
+        'Confirm on the "Setup Wallet" screen — from then on zaps are paid straight from Damus.',
+      ],
+      note: 'The one-click Coinos setup requires being signed in with your nsec. Coinos is a third-party service — the Damus team has no access to your wallet.',
     },
   ],
 };
