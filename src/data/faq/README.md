@@ -19,6 +19,17 @@ ignores a topic **does not typecheck**. Each topic maps to:
 Adding a topic to `CANONICAL_TOPICS` intentionally breaks every client file
 until each declares it — that is the mechanism working, not a nuisance.
 
+**A topic is a user's question, not a feature name — enumerate its kinds.**
+`mute` is the worked example: the clients variously mute *people*, *words*,
+*hashtags* and *threads*, in different places and under different
+vocabulary (Nostur blocks people and only mutes threads and words; Damus
+files all four on one screen with an optional duration). A single "how do
+I mute someone" answers a quarter of the question. Ask the recon agent to
+enumerate the kinds the client supports and where each is managed, and say
+plainly when a kind does not exist. The same test applies elsewhere:
+`manage-relays` (read/write/inbox/outbox splits), `notifications` (the
+list vs the settings), `connect-wallet` (built-in vs NWC vs handoff).
+
 ## Grounding tiers (fidelity is the product)
 
 1. **`docs/refs/<client>/screen-map.md`** — authoritative for everything the

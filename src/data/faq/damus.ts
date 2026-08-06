@@ -442,14 +442,19 @@ export const damusFaq: ClientFaq = {
       ],
     },
     {
-      // §5 Side menu (row 6, Muted → MuteList)
+      // §5 Side menu (row 6, Muted → MuteList). Section list and the add-item
+      // form verified upstream: MutelistView.swift (Hashtags / Words / Threads
+      // / Users) and AddMuteItemView.swift ("npub, #hashtag, phrase" + Duration).
       id: 'muted',
       category: 'Account & keys',
-      question: "Where do I see the accounts I've muted?",
+      question: 'How do I mute a person, a word or a hashtag?',
       answer: [
-        'Tap your profile picture to open the side menu.',
-        'Choose "Muted" to open your mute list.',
+        'Tap your profile picture to open the side menu, then choose "Muted".',
+        'The screen has four sections — Users, Words, Hashtags and Threads — so you can silence a person, a phrase, a #tag or one conversation.',
+        'Use "Add mute item" to add any of them: the field takes an npub, a #hashtag or a plain phrase.',
+        'Pick a Duration in the same form if you only want it muted for a while rather than for good.',
       ],
+      note: 'Muting a word hides every note containing it, so it is the tool for a topic you are tired of — muting the person is a different, blunter thing.',
       showMe: [
         {
           target: '[data-tour="damus-menu-muted"]',
