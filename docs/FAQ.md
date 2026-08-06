@@ -76,6 +76,46 @@ Stąd zasada: cytuj plik i symbol przy każdym twierdzeniu z warstwy Advanced.
   przycina się do prostokąta celu), i **w tej gałęzi**, którą montuje komenda;
 - stan ustawiony komendą (wymuszona zakładka, przełączony tryb) **przeżywa demo** i psuje kolejne.
 
+## Jak pracowaliśmy (lekcje procesowe — najbardziej przenośne)
+
+**Schemat wyjścia to miejsce, w którym egzekwuje się lekcję — nie proza w prompcie.** Po YakiHonne
+(dziesięć na dziesięć znalezisk to podpisy sprzeczne z ekranem) dodałem do schematu reconu **wymagane**
+pole `verifiedOnScreen`: agent musi opisać, co użytkownik dosłownie widzi w zakotwiczonym elemencie.
+To zadziałało mocniej niż jakiekolwiek zdanie w instrukcji — bo pola wymaganego nie da się pominąć,
+a prozę można przeczytać i nie zastosować. Snort i Wisp miały po nim mniej znalezisk tej klasy.
+
+**Prompt uczył się między klientami.** Każdy kolejny recon dostawał znaleziska z poprzedniej rewizji
+wpisane wprost: po Snorcie doszły dwie pułapki inżynierskie, po pytaniu właściciela — obowiązek
+wyliczania rodzajów tematu, po Wispie — dwie zasady o kotwiczeniu. Efekt jest mierzalny: Coracle
+**nie miał** ani jednego znaleziska klasy „nieświeży `currentUser`" czy „kotwica w złej gałęzi", bo oba
+były zaprojektowane poprawnie od pierwszego podejścia.
+
+**Jedno pytanie właściciela znalazło lukę, której nie znalazło 68 agentowych znalezisk.** Rewizje
+adwersaryjne sprawdzały, czy *napisane* odpowiedzi są prawdziwe — i były. Nikt nie spytał, czy pytanie
+jest **kompletne**, dopóki właściciel nie zapytał o rodzaje mute. To jest systematyczna ślepota:
+weryfikator sprawdza tezę, którą dostał, a nie tezę, której brakuje. Stąd „completeness critic" jako
+osobny krok jest wart więcej niż kolejny weryfikator.
+
+**Rewizja adwersaryjna TREŚCI znalazła 8 bugów KODU.** Demo przechodzi ścieżki, których nie przechodzi
+żaden test: montuje ekran komendą, kotwiczy element, mierzy prostokąt spotlightu. Dlatego wyszły rzeczy
+niewidoczne w testach — profil własny zamiast cudzego, wątek bez odpowiedzi, arkusz zapa nad komponerem.
+Wniosek: gdy budujesz warstwę, która *steruje* istniejącym kodem, jej przegląd jest zarazem testem
+integracyjnym tego kodu.
+
+**Skrypty do edycji zbiorczych muszą raportować, nie przerywać.** Dwa razy skrypt z `assert` przerwał
+się na pierwszym niedopasowaniu, zapisując część zmian albo nic — a wyglądało to jak sukces poprzednich.
+Wzorzec, który się sprawdził: pętla po poprawkach, `if old in s` → zamień i licz, `else` → wypisz `MISS`,
+na końcu `applied N of M`. Wtedy widać dokładnie, co zostało.
+
+**Wstawianie kotwic skryptem wymaga weryfikacji sztuka po sztuce.** Skrypt brał „pierwszy `<div>` po
+deklaracji komponentu" — i w `MessagesScreen` trafił w gałąź rozmowy zamiast listy, przez co demo DM-ów
+nie miało celu w ogóle. Kotwica wygląda tak samo w diffie niezależnie od tego, czy jest w dobrej gałęzi.
+
+**Weryfikuj przez DOM, nie po obrazku.** Panel przeglądarki potrafi przestać kompozytować klatki —
+screenshot pokazuje szkielet, a `document.querySelector` widzi kompletne drzewo. Straciłem na tym
+kilkanaście minut przy Coracle, przekonany, że zepsułem montowanie. Objaw rozpoznawczy: *kilku* klientów
+naraz przestaje się renderować, w tym taki, który działał godzinę wcześniej.
+
 ## Inne znaleziska (poza FAQ)
 
 - **Brak `ErrorBoundary` w całym `src/`** — wyjątek z symulatora kładzie hosta razem z banerem
