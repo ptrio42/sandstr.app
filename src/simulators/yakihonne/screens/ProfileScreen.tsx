@@ -37,8 +37,10 @@ export const ProfileScreen: React.FC<Props> = ({ profile, onBack, onOpenThread, 
   const notes = homeNotes.filter((n) => n.seed === profile.seed);
   const list = notes.length ? notes : homeNotes.slice(0, 3).map((n) => ({ ...n, seed: profile.seed, name: profile.name }));
 
+  // gaps yak-40: 'yakihonne-profile' is the app-bar avatar (earlier in the
+  // DOM), so this screen root needs a name of its own to be reachable.
   return (
-    <div className="absolute inset-0 z-[55] bg-[var(--yh-bg)] overflow-y-auto" data-tour="yakihonne-profile">
+    <div className="absolute inset-0 z-[55] bg-[var(--yh-bg)] overflow-y-auto" data-tour="yakihonne-profile-screen">
       {/* banner */}
       <div className="relative h-40">
         <div className="absolute inset-0" style={{ background: 'linear-gradient(120deg,#7a117e 0%,#b026c9 45%,#5b1170 100%)' }} />

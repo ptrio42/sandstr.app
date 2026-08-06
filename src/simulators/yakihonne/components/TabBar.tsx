@@ -39,7 +39,10 @@ export const TabBar: React.FC<TabBarProps> = ({ active, fabVisible, onNavigate, 
               key={id}
               className={`yakihonne-tab ${isActive ? 'active' : ''}`}
               aria-label={id}
-              data-tour={id === 'home' ? 'yakihonne-feed' : undefined}
+              // Unique per tab (gaps yak-91): 'yakihonne-feed' also names the
+              // Home SCREEN root, which sits earlier in the DOM and always won
+              // the querySelector, so this button could never be spotlighted.
+              data-tour={`yakihonne-tab-${id}`}
               onClick={() => onNavigate(id)}
             >
               <Icon className="w-[26px] h-[26px]" filled={isActive} />

@@ -5,20 +5,31 @@
 
 import React, { useState, useRef, useCallback } from 'react';
 import { TourWrapper } from '../../components/tour';
+import type { TourStep } from '../../components/tour';
+import { FaqMiniTourLauncher, isFaqStepId } from '../../components/faq/FaqMiniTourLauncher';
 import { yakihonneTourConfig } from '../../data/tours';
+import { yakihonneFaq } from '../../data/faq/yakihonne';
 import { YakiHonneSimulator as YakiHonneSimulatorBase } from './YakiHonneSimulator';
-import type { TabId } from './YakiHonneSimulator';
+import type { SimulatorCommand } from './YakiHonneSimulator';
 
-export interface SimulatorCommand {
-  type: 'login' | 'navigate' | 'compose' | 'post' | 'viewProfile';
-  payload?: any;
-}
+export type { SimulatorCommand };
 
 export function YakiHonneSimulatorWithTour() {
   const [commandQueue, setCommandQueue] = useState<SimulatorCommand[]>([]);
   const [currentCommand, setCurrentCommand] = useState<SimulatorCommand | null>(null);
   const lastStepRef = useRef<number>(-1);
   const isProcessingRef = useRef(false);
+  // Step-id → commands for the ACTIVE FAQ mini-tour, set at launch. A ref, not
+  // state: handleStepChange reads it synchronously right after launch.
+  const faqCommandsRef = useRef<Record<string, unknown[]>>({});
+  // Timers armed by the queue. A step change replaces the queue, but an
+  // already-armed timer still holds the OLD queue in its closure — left alive
+  // it would dispatch a dropped step's command after the new step's command.
+  const pendingTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const clearPendingTimers = useCallback(() => {
+    pendingTimersRef.current.forEach(clearTimeout);
+    pendingTimersRef.current = [];
+  }, []);
 
   const processNextCommand = useCallback(() => {
     if (isProcessingRef.current || commandQueue.length === 0) return;
@@ -33,33 +44,52 @@ export function YakiHonneSimulatorWithTour() {
     setCurrentCommand(null);
     isProcessingRef.current = false;
     
-    setTimeout(() => {
+    const t = setTimeout(() => {
       if (commandQueue.length > 1) {
         const nextCmd = commandQueue[1];
         setCurrentCommand(nextCmd);
         setCommandQueue(prev => prev.slice(1));
       }
     }, 100);
+    pendingTimersRef.current.push(t);
   }, [commandQueue]);
 
   const queueCommands = useCallback((commands: SimulatorCommand[]) => {
     console.log('[YakiHonneSimulator] Queueing commands:', commands);
+    clearPendingTimers();
     setCommandQueue(commands);
     if (commands.length > 0) {
-      setTimeout(() => {
+      const t = setTimeout(() => {
         setCurrentCommand(commands[0]);
       }, 50);
+      pendingTimersRef.current.push(t);
     }
+  }, [clearPendingTimers]);
+
+  const handleFaqLaunch = useCallback((commandsByStepId: Record<string, unknown[]>) => {
+    faqCommandsRef.current = commandsByStepId;
+    // New mini-tour, fresh dedup — relaunching the same entry reuses indices.
+    lastStepRef.current = -1;
   }, []);
 
-  const handleStepChange = useCallback((stepIndex: number) => {
+  const handleStepChange = useCallback((stepIndex: number, step: TourStep) => {
     if (lastStepRef.current === stepIndex) {
       console.log('[YakiHonneSimulator] Ignoring duplicate step:', stepIndex);
       return;
     }
     lastStepRef.current = stepIndex;
-    
+
     console.log('[YakiHonneSimulator] Tour step changed to:', stepIndex);
+
+    // FAQ mini-tour steps carry their own commands (set at launch); the
+    // index map below belongs to the main yakihonne-tour only.
+    if (isFaqStepId(step.id)) {
+      const commands = (faqCommandsRef.current[step.id] ?? []) as SimulatorCommand[];
+      if (commands.length > 0) {
+        queueCommands(commands);
+      }
+      return;
+    }
     
     const stepCommands: Record<number, SimulatorCommand[]> = {
       0: [], // Welcome
@@ -96,6 +126,7 @@ export function YakiHonneSimulatorWithTour() {
         tourCommand={currentCommand}
         onCommandHandled={handleCommandHandled}
       />
+      <FaqMiniTourLauncher faq={yakihonneFaq} onLaunch={handleFaqLaunch} />
     </TourWrapper>
   );
 }

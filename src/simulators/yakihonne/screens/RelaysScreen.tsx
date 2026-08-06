@@ -16,7 +16,7 @@ export const RelaysScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const showList = tab !== 'Following';
 
   return (
-    <div className="absolute inset-0 z-[58] bg-[var(--yh-bg)] flex flex-col">
+    <div className="absolute inset-0 z-[58] bg-[var(--yh-bg)] flex flex-col" data-tour="yakihonne-relays">
       <OverlayHeader title="Relay orbits" subtitle="Browse and explore relay feeds" onBack={onBack} logo />
 
       <div className="px-4">

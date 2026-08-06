@@ -13,7 +13,7 @@ interface Props {
 }
 
 export const MediaScreen: React.FC<Props> = ({ currentUserSeed, onOpenDrawer, onOpenSearch }) => (
-  <div className="min-h-full">
+  <div className="min-h-full" data-tour="yakihonne-media">
     <header className="sticky top-0 z-30 bg-[color-mix(in_srgb,var(--yh-bg)_88%,transparent)] backdrop-blur-xl">
       <div className="flex items-center justify-between px-3.5 pt-3 pb-2.5">
         <button onClick={onOpenDrawer} aria-label="Menu">

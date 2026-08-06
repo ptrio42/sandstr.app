@@ -29,7 +29,7 @@ export const SearchScreen: React.FC<Props> = ({ onBack, onViewProfile }) => {
   const [q, setQ] = useState('utxo');
 
   return (
-    <div className="absolute inset-0 z-[56] bg-[var(--yh-bg)] flex flex-col">
+    <div className="absolute inset-0 z-[56] bg-[var(--yh-bg)] flex flex-col" data-tour="yakihonne-search">
       {/* search bar */}
       <div className="px-4 pt-4 pb-2">
         <div className="flex items-center gap-2.5 rounded-full bg-[var(--yh-surface-2)] px-4 py-3">

@@ -53,7 +53,10 @@ const yakihonneTourSteps: TourStep[] = [
   },
   {
     id: 'yakihonne-profile',
-    target: '.yakihonne-profile, [data-tour="yakihonne-profile"]',
+    // The profile SCREEN, which this step's viewProfile command opens. The old
+    // target resolved to the app-bar avatar — same name, earlier in the DOM,
+    // and by then hidden behind the profile overlay.
+    target: '[data-tour="yakihonne-profile-screen"]',
     title: 'Your profile',
     content: 'Your profile has a NOSTR banner, NIP-05 verification, and tabs for Notes, Articles, Media and more. The account drawer also opens your Yaki-chest dashboard and Relay orbits.',
     position: 'bottom',

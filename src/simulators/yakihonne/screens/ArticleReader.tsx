@@ -16,7 +16,7 @@ interface Props {
 }
 
 export const ArticleReader: React.FC<Props> = ({ article, onBack, onViewProfile }) => (
-  <div className="absolute inset-0 z-[55] bg-[var(--yh-bg)] flex flex-col">
+  <div className="absolute inset-0 z-[55] bg-[var(--yh-bg)] flex flex-col" data-tour="yakihonne-article">
     <OverlayHeader title="Article" onBack={onBack} logo />
 
     <div className="flex-1 overflow-y-auto px-4 pb-4">

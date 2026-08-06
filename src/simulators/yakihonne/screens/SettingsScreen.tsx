@@ -56,7 +56,7 @@ export const SettingsScreen: React.FC<Props> = ({ currentUserSeed, onBack, onNav
   ];
 
   return (
-    <div className="absolute inset-0 z-[58] bg-[var(--yh-bg)] flex flex-col">
+    <div className="absolute inset-0 z-[58] bg-[var(--yh-bg)] flex flex-col" data-tour="yakihonne-settings">
       <OverlayHeader title="Settings" onBack={onBack} logo />
 
       <div className="flex-1 overflow-y-auto">

@@ -9,7 +9,7 @@ interface Props {
 }
 
 export const MessagesScreen: React.FC<Props> = ({ currentUserSeed, onOpenDrawer }) => (
-  <div className="min-h-full relative">
+  <div className="min-h-full relative" data-tour="yakihonne-dms">
     <header className="sticky top-0 z-30 bg-[color-mix(in_srgb,var(--yh-bg)_88%,transparent)] backdrop-blur-xl">
       <div className="flex items-center justify-between px-3.5 pt-3 pb-2">
         <button onClick={onOpenDrawer} aria-label="Menu">

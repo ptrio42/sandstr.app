@@ -30,7 +30,7 @@ const DownArrow = ({ className = 'w-5 h-5' }: { className?: string }) => (
 );
 
 export const WalletScreen: React.FC<Props> = ({ currentUserSeed, balance, onOpenDrawer }) => (
-  <div className="min-h-full">
+  <div className="min-h-full" data-tour="yakihonne-wallet">
     <header className="flex items-center justify-between px-3.5 pt-3.5 pb-2">
       <button onClick={onOpenDrawer} aria-label="Menu">
         <Avatar seed={currentUserSeed} className="w-9 h-9" rounded="rounded-full" />

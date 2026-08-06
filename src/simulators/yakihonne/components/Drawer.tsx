@@ -39,7 +39,7 @@ export const Drawer: React.FC<Props> = ({ seed, onClose, onNav }) => {
   return (
     <div className="absolute inset-0 z-[64]">
       <div className="absolute inset-0 bg-black/55" onClick={onClose} />
-      <div className="absolute left-0 top-0 bottom-0 w-[82%] max-w-[320px] bg-[var(--yh-bg)] border-r border-[var(--yh-divider)] flex flex-col">
+      <div className="absolute left-0 top-0 bottom-0 w-[82%] max-w-[320px] bg-[var(--yh-bg)] border-r border-[var(--yh-divider)] flex flex-col" data-tour="yakihonne-drawer">
         {/* account header */}
         <div className="px-5 pt-8 pb-4 border-b border-[var(--yh-divider)]">
           <button onClick={() => onNav('profile')} className="flex items-center gap-3">

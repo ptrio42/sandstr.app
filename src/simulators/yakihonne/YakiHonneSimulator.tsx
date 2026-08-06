@@ -25,12 +25,22 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { NotificationSettingsScreen } from './screens/NotificationSettingsScreen';
 import { RelaysScreen } from './screens/RelaysScreen';
 import { DashboardScreen } from './screens/DashboardScreen';
-import { homeNotes, type YakiArticle, type YakiNoteData } from './data';
+import { homeNotes, yakiArticles, type YakiArticle, type YakiNoteData } from './data';
 
 export type TabId = 'feed' | 'articles' | 'media' | 'profile' | 'wallet' | 'settings';
 
 export interface SimulatorCommand {
-  type: 'login' | 'navigate' | 'compose' | 'post' | 'viewProfile';
+  type:
+    | 'login'
+    | 'logout'
+    | 'navigate'
+    | 'compose'
+    | 'post'
+    | 'viewProfile'
+    | 'openDrawer'
+    | 'setSource'
+    | 'openArticle'
+    | 'openSearch';
   payload?: any;
 }
 
@@ -128,27 +138,89 @@ export function YakiHonneSimulator({ className = '', tourCommand, onCommandHandl
   // Tour command bridge (interface preserved)
   useEffect(() => {
     if (!tourCommand) return;
+    // Every command is SELF-SUFFICIENT: it signs in on its own, so a step
+    // never has to pair {login} with the real command and risk the queue
+    // dropping the second one. `logout` is the sole exception.
+    if (tourCommand.type !== 'logout' && !authed) login();
     switch (tourCommand.type) {
       case 'login':
-        if (!authed) login();
+        break;
+      case 'logout':
+        // gaps yak-01 — the landing (and its yakihonne-keys anchor) was gone
+        // for the rest of the session after the first login.
+        setOverlays([]);
+        setDrawerOpen(false);
+        setSourceSheetOpen(false);
+        setTab('home');
+        setAuthed(false);
         break;
       case 'navigate': {
         const p = tourCommand.payload as string;
-        if (p === 'feed' || p === 'home') goTab('home');
-        else if (p === 'profile') { setOverlays([{ type: 'profile', profile: SELF }]); }
-        else if (p === 'settings') { setOverlays([{ type: 'settings' }]); }
-        else if (p === 'wallet') { setOverlays([]); setTab('wallet'); }
+        // Every destination closes the drawer and the source sheet: both sit
+        // above the tab content, so a stale one covers the spotlit surface.
+        if (p === 'feed' || p === 'home') { goTab('home'); setSource('recent'); }
+        else if (p === 'profile') { setDrawerOpen(false); setOverlays([{ type: 'profile', profile: SELF }]); }
+        else if (p === 'settings') { setDrawerOpen(false); setOverlays([{ type: 'settings' }]); }
+        else if (p === 'wallet') goTab('wallet');
+        // gaps yak-17 — these three tabs had no payload at all.
+        else if (p === 'media') goTab('media');
+        else if (p === 'dms') goTab('dms');
+        else if (p === 'notifications') goTab('notifications');
+        // Drawer destinations, each otherwise three hops deep (yak-61/76/79).
+        else if (p === 'relays') { setDrawerOpen(false); setOverlays([{ type: 'relays' }]); }
+        else if (p === 'dashboard') { setDrawerOpen(false); setOverlays([{ type: 'dashboard' }]); }
+        else if (p === 'notifSettings') { setDrawerOpen(false); setOverlays([{ type: 'notifSettings' }]); }
         break;
       }
+      case 'openDrawer':
+        // gaps yak-77 — the drawer was reachable only by tapping the app bar.
+        setOverlays([]);
+        setSourceSheetOpen(false);
+        setTab('home');
+        setDrawerOpen(true);
+        break;
+      case 'setSource':
+        // gaps yak-94 — Articles/Trending are YakiHonne's signature surface
+        // and no command could select them.
+        goTab('home');
+        setSource((tourCommand.payload as FeedSource) || 'recent');
+        break;
+      case 'openArticle': {
+        // gaps yak-29 — the article reader needed Trending + a tap.
+        const article = yakiArticles[0];
+        if (article) {
+          setDrawerOpen(false);
+          setSourceSheetOpen(false);
+          setTab('home');
+          setOverlays([{ type: 'article', article }]);
+        }
+        break;
+      }
+      case 'openSearch':
+        // gaps yak-66 — search was pushed only from the app bar.
+        setDrawerOpen(false);
+        setSourceSheetOpen(false);
+        setOverlays([{ type: 'search' }]);
+        break;
       case 'compose':
+        setDrawerOpen(false);
+        setSourceSheetOpen(false);
         setOverlays((s) => [...s, { type: 'compose', replyTo: null }]);
         break;
       case 'post':
         setOverlays([]); setTab('home'); showToast('Note published! 🎉');
         break;
-      case 'viewProfile':
-        setOverlays([{ type: 'profile', profile: SELF }]);
+      case 'viewProfile': {
+        // payload 'other' opens SOMEONE ELSE's profile — the Follow button
+        // only exists there; own profile shows "Edit profile" (gaps yak-93).
+        const profile =
+          tourCommand.payload === 'other'
+            ? buildProfile(homeNotes[0].seed, homeNotes[0].name)
+            : SELF;
+        setDrawerOpen(false);
+        setOverlays([{ type: 'profile', profile }]);
         break;
+      }
     }
     onCommandHandled?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
