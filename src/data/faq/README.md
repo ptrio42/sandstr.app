@@ -87,6 +87,16 @@ profile, find another author) must use the value you just signed in with,
 not the `currentUser` in scope. Snort shipped a demo of the Follow button
 that opened the visitor's own profile because of exactly this.
 
+**Anchor the surface your caption describes, not a control inside it.** The
+spotlight is clipped to the target's own rect, so a caption about "the
+sheet" pinned to its send button leaves everything it names under the
+scrim. Whole-surface captions belong on the surface root.
+
+**When you add an anchor, check which BRANCH you put it in.** A screen that
+renders a list or a detail view depending on local state has two roots; the
+command mounts one of them. Wisp's DM anchor went on the conversation
+branch, which no command reaches — the demo had no target at all.
+
 **Mock data does not join up by default.** Two mock modules that both mint
 ids will never match each other, so a lookup like "find the thread
 containing this note" silently returns null and the demo frames an empty
