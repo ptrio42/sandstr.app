@@ -59,7 +59,14 @@ Every client's adversarial review has caught at least one of these:
   walk-through by switching it back.
 - **A caption describing the real app while the spotlight frames the sim.**
   Both must be true at once: ground the claim upstream AND check the sim
-  renders it (counts, colors, empty states differ).
+  renders it (counts, colors, empty states differ). This is the one that
+  bites hardest — YakiHonne's review returned ten findings and every single
+  one was this. Before shipping a `showMe`, open the sim on that screen and
+  read the caption against it out loud: a screen that mounts on an empty
+  tab, a search box that starts pre-filled, a menu missing the row you
+  named, a button that never dims — all shipped past a "grounded" answer.
+  When the sim cannot show it, drop the `showMe`; a text-only entry is a
+  better answer than a demo that contradicts itself.
 
 ## Adding a client
 
