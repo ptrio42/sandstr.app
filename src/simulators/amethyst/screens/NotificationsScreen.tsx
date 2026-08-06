@@ -21,7 +21,7 @@ const BLUE = '#3B9EFF';
 // then reactions grouped by type with avatar clusters.
 export function NotificationsScreen({ onOpenDrawer }: NotificationsScreenProps) {
   return (
-    <div className="flex flex-col h-full bg-[var(--md-background)]">
+    <div className="flex flex-col h-full bg-[var(--md-background)]" data-tour="amethyst-notifications">
       <AppTopBar onOpenDrawer={onOpenDrawer} center={<FeedSelector defaultFeed="All Follows" />} />
 
       <div className="flex-1 overflow-y-auto">

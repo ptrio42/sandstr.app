@@ -24,7 +24,7 @@ import { TourContext } from '../../components/tour';
 export type TabId = 'home' | 'search' | 'video' | 'notifications' | 'messages' | 'profile';
 
 export interface SimulatorCommand {
-  type: 'login' | 'navigate' | 'compose' | 'post' | 'viewProfile' | 'back' | 'openSettings';
+  type: 'login' | 'navigate' | 'compose' | 'post' | 'viewProfile' | 'back' | 'openSettings' | 'openDrawer';
   payload?: any;
 }
 
@@ -161,11 +161,20 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         if (['home', 'search', 'video', 'notifications', 'messages', 'profile'].includes(tab)) {
           setActiveTab(tab);
           setIsComposeOpen(false); // don't let an open composer linger over later steps
+          // Navigation also dismisses the one-way overlays (settings/drawer/
+          // thread) — otherwise every step after openSettings spotlights
+          // elements buried under the z-[55] overlay (gaps ame-56).
+          setIsSettingsOpen(false);
+          setIsDrawerOpen(false);
+          setThreadPost(null);
         }
         break;
-        
+
       case 'compose':
         if (isAuthenticated) {
+          setIsSettingsOpen(false);
+          setIsDrawerOpen(false);
+          setThreadPost(null);
           setIsComposeOpen(true);
         }
         break;
@@ -185,13 +194,38 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         if (isAuthenticated) {
           setActiveTab('profile');
           setIsComposeOpen(false);
+          setIsSettingsOpen(false);
+          setIsDrawerOpen(false);
+          // ThreadScreen is an absolute z-[60] overlay above the tab content —
+          // without this, a user-opened thread stays painted over the profile.
+          setThreadPost(null);
         }
         break;
 
-      case 'openSettings':
+      case 'openSettings': {
         if (isAuthenticated) {
+          // Optional payload picks the section (gaps ame-43) — without it the
+          // Relays/Security sections were reachable only by a drawer tap.
+          const section = tourCommand.payload;
+          if (section === 'relays' || section === 'security' || section === 'preferences') {
+            setSettingsSection(section);
+          }
           setIsSettingsOpen(true);
           setIsComposeOpen(false);
+          setIsDrawerOpen(false);
+        }
+        break;
+      }
+
+      case 'openDrawer':
+        // The account drawer holds the whole keys/relays/media-servers branch
+        // — without a command it was reachable only by tapping the app-bar
+        // avatar (gaps ame-30).
+        if (isAuthenticated) {
+          setIsComposeOpen(false);
+          setIsSettingsOpen(false);
+          setThreadPost(null);
+          setIsDrawerOpen(true);
         }
         break;
         

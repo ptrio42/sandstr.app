@@ -45,7 +45,7 @@ export function Drawer({ isOpen, onClose, onTabChange, onOpenSettings }: DrawerP
           nav painted over the drawer and swallowed the taps on its last two
           items ("App Preferences", "User Preferences"). */}
       <div className="absolute inset-0 bg-black/50 z-[110]" onClick={onClose} />
-      <div className="absolute left-0 top-0 bottom-0 w-[86%] max-w-[300px] bg-[var(--md-surface)] z-[120] overflow-y-auto shadow-2xl">
+      <div className="absolute left-0 top-0 bottom-0 w-[86%] max-w-[300px] bg-[var(--md-surface)] z-[120] overflow-y-auto shadow-2xl" data-tour="amethyst-drawer">
             {/* Account header */}
             <div className="h-28 bg-gradient-to-br from-[#3a1d6e] via-[#7b2ff7] to-[#c026d3]" />
             <div className="px-4 -mt-8 pb-3 border-b border-[var(--md-outline-variant)]">
@@ -75,6 +75,7 @@ export function Drawer({ isOpen, onClose, onTabChange, onOpenSettings }: DrawerP
                   key={m.label}
                   onClick={() => handle(m.action)}
                   className="w-full flex items-center gap-4 px-5 py-3 text-left hover:bg-[var(--md-surface-variant)]/50 transition-colors"
+                  data-tour={`amethyst-drawer-${m.label.toLowerCase().replace(/\s+/g, '-')}`}
                 >
                   <m.Icon className={`w-6 h-6 shrink-0 ${m.accent ? 'text-[var(--md-primary)]' : 'text-[var(--md-on-surface)]'}`} />
                   <span className="flex-1 text-[var(--md-on-surface)]">{m.label}</span>

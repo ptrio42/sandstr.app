@@ -25,15 +25,22 @@ export function TourOverlay() {
     padding
   );
 
-  // Auto-scroll to element on step change
+  // Auto-scroll to element on step change. Keyed on target AVAILABILITY, not
+  // just the step: command-driven steps mount their target ~150-200ms after
+  // the step becomes active (login → open drawer → row exists), so a one-shot
+  // scroll fired into a not-yet-mounted element and below-the-fold targets
+  // (e.g. a drawer row) stayed out of view. The boolean dep re-fires the
+  // scroll exactly once when the rect first resolves, and stays inert while
+  // the rect merely updates during user scrolling.
+  const targetFound = spotlightRect !== null;
   useEffect(() => {
-    if (state.isActive && currentStepData) {
+    if (state.isActive && currentStepData && targetFound) {
       const timer = setTimeout(() => {
         scrollToElement();
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [state.isActive, currentStepData, scrollToElement]);
+  }, [state.isActive, currentStepData, scrollToElement, targetFound]);
 
   // Keyboard navigation
   useEffect(() => {

@@ -58,7 +58,7 @@ export function MessagesScreen({ onOpenDrawer }: MessagesScreenProps) {
   const [tab, setTab] = useState<'known' | 'requests'>('known');
 
   return (
-    <div className="flex flex-col h-full bg-[var(--md-background)]">
+    <div className="flex flex-col h-full bg-[var(--md-background)]" data-tour="amethyst-messages">
       <AppTopBar
         onOpenDrawer={onOpenDrawer}
         center={<img src="/icons/amethyst.png" alt="Amethyst" className="w-8 h-8 object-contain" />}
