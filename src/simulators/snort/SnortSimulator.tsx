@@ -59,7 +59,7 @@ export type SnortScreen =
   | 'search';
 
 export interface SimulatorCommand {
-  type: 'login' | 'navigate' | 'compose' | 'post' | 'viewProfile';
+  type: 'login' | 'logout' | 'navigate' | 'compose' | 'post' | 'viewProfile' | 'openThread';
   payload?: any;
 }
 
@@ -282,58 +282,78 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
   useEffect(() => {
     if (!tourCommand) return;
 
+    // Every command is SELF-SUFFICIENT: it signs in on its own, so a step never
+    // has to pair {login} with the real command and risk the queue dropping the
+    // second one. `logout` is the sole exception.
+    if (tourCommand.type !== 'logout' && !isAuthed) {
+      handleLogin(
+        mock.users[0] ?? {
+          pubkey: 'npub1snortdemo',
+          displayName: 'Snort User',
+          username: 'snortuser',
+          avatar: '',
+          bio: 'Exploring Nostr with Snort',
+          nip05: 'demo@snort.social',
+          // Fixed constants, never Date.now(): the tour must replay
+          // identically on every pass. Mirrors LoginScreen's DEMO_USER.
+          createdAt: 1_700_000_000,
+          lastActive: 1_700_000_000,
+        },
+      );
+    }
     switch (tourCommand.type) {
       case 'login':
-        if (!isAuthed) {
-          handleLogin(
-            mock.users[0] ?? {
-              pubkey: 'npub1snortdemo',
-              displayName: 'Snort User',
-              username: 'snortuser',
-              avatar: '',
-              bio: 'Exploring Nostr with Snort',
-              nip05: 'demo@snort.social',
-              followersCount: 256,
-              followingCount: 128,
-              // Fixed constants, never Date.now(): the tour must replay
-              // identically on every pass. Mirrors LoginScreen's DEMO_USER.
-              createdAt: 1_700_000_000,
-              lastActive: 1_700_000_000,
-            },
-          );
-        }
         break;
+
+      case 'logout':
+        // gaps sno-01/sno-63 — the signed-out shell (and the snort-login
+        // anchor) had no command; navigate:'login' only swapped the screen.
+        setCurrentUser(null);
+        setComposeOpen(false);
+        setSelectedThread(null);
+        setSelectedNote(null);
+        setScreen('login');
+        break;
+
+      case 'openThread': {
+        // gaps sno-37 — navigate:'thread' set the screen but no note, so the
+        // thread rendered "This note could not be loaded."
+        const note = mock.notes[0];
+        if (note) viewThread(note);
+        setComposeOpen(false);
+        break;
+      }
 
       case 'navigate': {
         const next = tourCommand.payload as SnortScreen;
         setScreen(next);
         setComposeOpen(false);
+        // A thread opened earlier would otherwise still be the selected note
+        // when the visitor navigates back to it.
+        if (next !== 'thread') { setSelectedThread(null); setSelectedNote(null); }
         break;
       }
 
       case 'compose':
-        if (isAuthed) {
-          setReplyTo(null);
-          setComposeOpen(true);
-        }
+        setReplyTo(null);
+        setComposeOpen(true);
         break;
 
       case 'post':
-        if (isAuthed) setComposeOpen(true);
+        setComposeOpen(true);
         break;
 
-      case 'viewProfile':
-        if (isAuthed) {
-          const other = mock.users.find((u) => u.pubkey !== currentUser?.pubkey);
-          setSelectedProfile(tourCommand.payload === 'other' ? other ?? currentUser : currentUser);
-          setScreen('profile');
-          setComposeOpen(false);
-        }
+      case 'viewProfile': {
+        const other = mock.users.find((u) => u.pubkey !== currentUser?.pubkey);
+        setSelectedProfile(tourCommand.payload === 'other' ? other ?? currentUser : currentUser);
+        setScreen('profile');
+        setComposeOpen(false);
         break;
+      }
     }
 
     onCommandHandled?.();
-  }, [tourCommand, isAuthed, currentUser, mock.users, handleLogin, onCommandHandled]);
+  }, [tourCommand, isAuthed, currentUser, mock.users, mock.notes, handleLogin, viewThread, onCommandHandled]);
 
   // ---- Render ----
   if (!isAuthed || screen === 'login') {
@@ -667,6 +687,9 @@ function Rail({
               key={item.screen}
               type="button"
               className={`snort-nav-item ${active ? 'active' : ''}`}
+              // gaps sno-44 — the rail was the only navigation and had no
+              // anchor at all, so no mini-tour could point at a nav item.
+              data-tour={`snort-nav-${item.screen}`}
               onClick={() => onNavigate(item.screen)}
             >
               <Icon name={`${item.icon}-${active ? 'solid' : 'outline'}` as IconName} size={24} />

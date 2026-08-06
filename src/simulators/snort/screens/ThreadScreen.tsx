@@ -107,7 +107,7 @@ export function ThreadScreen({ thread, rootNote, users, onViewProfile, onReply }
   const lastIndex = replies.length - 1;
 
   return (
-    <div className="snort-thread">
+    <div className="snort-thread" data-tour="snort-thread">
       {/* Root: no hover tint (`isRoot`), 2px violet outline (`highlight`), and a
           bottom connector only when something hangs off it. */}
       <ThreadNote

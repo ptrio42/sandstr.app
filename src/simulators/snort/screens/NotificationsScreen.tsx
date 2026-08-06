@@ -191,7 +191,7 @@ export function NotificationsScreen({ currentUser, notes, users }: Notifications
   const visible = groups.filter((g) => enabled[g.kind]);
 
   return (
-    <div className="flex flex-col pb-8">
+    <div className="flex flex-col pb-8" data-tour="snort-notifications">
       {/* ---- §9.1 Four independent icon toggles, right-aligned ---- */}
       <div className="px-2 pt-2">
         <div className="flex justify-between items-center mx-1">

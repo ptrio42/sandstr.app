@@ -209,7 +209,7 @@ export function MessagesScreen({ currentUser, users }: MessagesScreenProps) {
   const headerName = activeKey === SELF_KEY ? 'Note to Self' : activeUser?.displayName ?? 'Chat';
 
   return (
-    <div className="relative flex min-h-0 flex-1 overflow-hidden">
+    <div className="relative flex min-h-0 flex-1 overflow-hidden" data-tour="snort-messages">
       {/* ---- Conversation list. `overflow-y-auto p-2 w-full md:w-1/3
            flex-shrink-0 flex flex-col gap-2` upstream. The 1px edge is the same
            `rt-border` §10 puts on the desktop pane, moved to the seam so the two

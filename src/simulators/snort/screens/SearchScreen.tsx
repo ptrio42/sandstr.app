@@ -111,7 +111,7 @@ export function SearchScreen({
   }, [users, term]);
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col" data-tour="snort-search">
       {/* §13 — the entire header block, verbatim geometry. */}
       <div className="flex flex-col gap-2 px-3 py-2">
         <input
