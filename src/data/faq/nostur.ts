@@ -499,14 +499,15 @@ export const nosturFaq: ClientFaq = {
       // words. Vocabulary matters here — see the note.
       id: 'block-list',
       category: 'Account & keys',
-      question: 'How do I block someone (or mute a thread)?',
+      question: 'How do I block a person, or mute a thread or a word?',
       answer: [
-        'Open the "•••" menu on any of their posts and choose "Block {name}" — you can block permanently or for a set time, from one hour up to a month.',
-        'The same menu has "Mute conversation", which silences just that thread.',
-        'To manage everything, open the side menu with your avatar and tap "Block list": tabs for Blocked, Muted conversations and Muted words.',
-        'Swipe a row in Blocked to unblock; the Muted words tab has a "+" for adding keywords.',
+        'Open the "•••" menu on any of their posts and tap "Block {name}" — the screen it opens offers "Block" or a timed one: "Block for 1 hour", "4 hours", "8 hours", "1 day", "1 week" or "1 month".',
+        'A profile\'s "•••" (and the same menu in a DM) also has "Block {name}", but only permanently — no duration.',
+        'To silence one thread instead of a person, use "Mute conversation" in that same post menu.',
+        'Open the side menu with your avatar and tap "Block list" for all of it: tabs for Blocked, Muted conversations and Muted words. On "Muted words", tap "Add" to open "Add muted word", type into "Specific word or sentence", leave "Activate this filter" on and Save.',
+        'Swipe any row in any of the three tabs to remove it — that unblocks a person, unmutes a thread or drops a word; tap a muted word instead to edit it or switch it Off without deleting it.',
       ],
-      note: 'Nostur\'s wording differs from other clients: people are BLOCKED, while "mute" applies only to a conversation or a word.',
+      note: 'Nostur has no hashtag muting — people are BLOCKED, and "mute" only applies to a conversation or a word. A muted word matches anywhere in a post, so muting "nft" also hides "#nft": that is the workaround. Blocked rows say "blocked until {date}" while a timed block is running. All of this lives on your Apple devices and syncs over iCloud, not to Nostr relays, so it will not follow you into another client.',
       showMe: [
         {
           target: '[data-tour="nostur-drawer-blocklist"]',

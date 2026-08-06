@@ -424,11 +424,15 @@ export const primalFaq: ClientFaq = {
       // §Settings menu item 6.
       id: 'mute',
       category: 'Account & keys',
-      question: 'How do I mute someone?',
+      question: 'How do I mute a person, a word, a hashtag or a thread?',
       answer: [
-        'Click the "…" beside a note\'s timestamp and choose "Mute User" (or "Mute Thread" to silence one conversation).',
-        'Manage the list under Settings → "Muted Content" — with tabs for Users, Words, Hashtags and Threads.',
+        'To mute a person or a conversation, click the "…" beside a note\'s timestamp and choose "Mute User" or "Mute Thread" — both rows appear only on other people\'s notes.',
+        'Confirm in the dialog that follows ("Add … to your mute list?" or "Mute this thread?") — nothing is muted until you accept it.',
+        'Words and hashtags cannot be muted from a note: go to Settings → "Muted Content", open the "Words" or "Hashtags" tab, type into the "# Mute new word..." / "# Mute new hashtag..." box and press "mute".',
+        'On that screen the "Users", "Words" and "Hashtags" tabs carry an "unmute" button on every row; the "Threads" tab only lists the muted notes, so unmute a thread from its own "…" menu with "Unmute Thread".',
+        'To adopt someone else\'s mute list, open their profile "…" menu and choose "Follow user\'s mute list", then tune it under Settings → "Content Moderation".',
       ],
+      note: 'Primal has no timed mutes — every mute lasts until you undo it. All four kinds go into a single Nostr mute list published on your account, so what you mute here is muted wherever else you sign in with the same key.',
       // Text-only: the sim's "…" menu is inert (gaps pri-14) and the Muted
       // Content sub-screen does not exist (pri-51).
     },

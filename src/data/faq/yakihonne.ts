@@ -415,14 +415,15 @@ export const yakihonneFaq: ClientFaq = {
       // §Note "⋯" menu + §Profile "⋯" + §Settings → Content moderation
       id: 'mute',
       category: 'Account & keys',
-      question: 'How do I mute someone or silence a thread?',
+      question: 'How do I mute a person or a thread — and can I mute words?',
       answer: [
-        'Tap the "⋯" at the far end of the action row under any of their notes.',
-        'Choose "mute" — printed in red — and confirm in the "Mute user" dialog. "Mute thread" silences just that conversation.',
-        'A profile\'s "⋯" (top-right of the banner) holds the same, alongside copy npub, copy hex and user relays.',
-        'To see or undo it: Settings → "Content moderation" → "Mute list", which has separate "People" and "notes" tabs.',
+        'Open the "⋯" at the end of a note\'s action row: "Mute thread" silences that conversation, "Mute" just below it hides its author — both are red and both ask you to confirm.',
+        'Use a profile\'s "⋯" for the same "Mute" row; there is no thread option there, and neither appears at all in a read-only session.',
+        'Review or undo both in Settings → "Content moderation" → "Mute list" → "Edit", which opens tabs "People" and "Notes" with an "Unmute" on every card.',
+        'Do not go looking for muted words or muted hashtags — YakiHonne\'s mute list holds only people and threads, and no mute can be given a time limit.',
+        'To hide a word instead, tap the filter icon in the top bar, use "Add filter" and fill "Excluded words": matching notes disappear from that one feed, and the icon gains an orange dot.',
       ],
-      note: 'YakiHonne says "mute", not "block" — the only place the word "blocked" appears is the description on the mute list itself. That same note "⋯" is also the only route to Bookmark, Share, "Share as image" and "Copy note id".',
+      note: 'YakiHonne says "mute", never "block" — the word "blocked" survives only in the Mute list\'s own description. Muting needs a signing key: a read-only session has no "Content moderation" row at all and reaches the "Mute list" under "Crashlytics & cache" instead. That same note "⋯" is also the only route to Bookmark, Share, "Share as image" and "Copy note ID".',
     },
     {
       // Upstream (YakiHonne/mobile-app main, checked 2026-08-06): there is no

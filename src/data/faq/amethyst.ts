@@ -391,14 +391,15 @@ export const amethystFaq: ClientFaq = {
       // §Settings suite (Security Filters); §Account drawer
       id: 'mute',
       category: 'Account & keys',
-      question: 'How do I mute or block someone, and where do I manage the list?',
+      question: 'How do I mute a person, a word, a thread or a hashtag?',
       answer: [
-        'To block someone: long-press their note and choose "Block", then confirm with "Block & Hide User" — or open their profile, tap the top-bar menu and pick "Block & Hide User" there.',
-        'To manage the list: tap your profile picture to open the account drawer, then tap "Security Filters".',
-        'Switch between the Blocked, Spammers and Hidden tabs to see filtered accounts.',
-        'Tap "Unblock" next to someone to let them back into your feeds.',
+        'To block a person: long-press their note, tap "Block", then confirm with the red "Block" button in the "Block & Hide User" dialog — or open their profile, tap the ⋮ menu and pick "Block & Hide User".',
+        'To mute a word or phrase: tap your profile picture to open the account drawer, tap "Security Filters", open "Hidden Words" and type it into "Hide new word or sentence".',
+        'To mute a thread: long-press any note in it and tap "Mute thread" — the same menu then offers "Unmute thread", and Security Filters lists them under "Muted threads".',
+        'To mute a hashtag: tap the #tag to open its feed, then tap ⋮ beside Follow in the top bar and pick "Mute hashtag" — that menu is also the only way to unmute it.',
+        'To manage the lists: account drawer → "Security Filters" → the "Blocked Users", "Spammers" and "Hidden Words" tabs, each row with an "Unblock" button.',
       ],
-      note: 'Amethyst says "Block" where other clients say "Mute" — muting is for threads and words. Blocking hides content in your app and writes your public mute list; the other person\'s notes stay visible to everyone else.',
+      note: 'Amethyst says "Block" only about people; words, threads and hashtags are "muted" — and nothing can be muted for a limited time, every entry stays until you remove it. Blocking hides that account inside your app and adds it to your mute list encrypted, so their notes stay visible to everyone else; "Spammers" fills itself from the "Filter spam" toggle above the tabs and resets when the app restarts. Newer versions replace the tabs with a list of screens — Blocked Users, Spammers, Hidden Words and "Muted threads" — reached from Settings, and add "Mute hashtag", the one kind that never gets a list. Relays are blocked separately, in the "Blocked Relays" section of the relay editor.',
       showMe: [
         {
           target: '[data-tour="amethyst-drawer-security-filters"]',
