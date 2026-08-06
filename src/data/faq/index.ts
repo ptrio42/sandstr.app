@@ -5,6 +5,7 @@ import { primalFaq } from './primal';
 import { nosturFaq } from './nostur';
 import { yakihonneFaq } from './yakihonne';
 import { snortFaq } from './snort';
+import { wispFaq } from './wisp';
 
 const faqs: Record<string, ClientFaq> = {
   damus: damusFaq,
@@ -13,6 +14,7 @@ const faqs: Record<string, ClientFaq> = {
   nostur: nosturFaq,
   yakihonne: yakihonneFaq,
   snort: snortFaq,
+  wisp: wispFaq,
 };
 
 // The coverage contract is enforced by types at compile time; this catches

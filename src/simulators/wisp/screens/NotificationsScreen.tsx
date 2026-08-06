@@ -219,7 +219,7 @@ export function NotificationsScreen({
     setFilters((f) => ({ ...f, [key]: !f[key] }));
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col">
+    <div data-tour="wisp-notifications" className="relative flex h-full min-h-0 flex-col">
       {/* Top bar */}
       <div className="flex h-12 shrink-0 items-center px-4">
         <div className="flex min-w-0 flex-1 items-baseline">

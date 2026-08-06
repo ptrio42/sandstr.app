@@ -92,7 +92,7 @@ export function MessagesScreen({
   // ---------------------------------------------------------------- CONVERSATION
   if (peer) {
     return (
-      <div className="flex h-full min-h-0 flex-col">
+      <div data-tour="wisp-messages" className="flex h-full min-h-0 flex-col">
         {/* Top bar */}
         <div className="flex h-12 shrink-0 items-center gap-2 px-2">
           <button

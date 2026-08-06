@@ -68,7 +68,7 @@ export function SearchScreen({ onOpenThread, onOpenProfile, onZap, onReply }: Se
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div data-tour="wisp-search" className="flex h-full min-h-0 flex-col">
       {/* Top block — the one top bar on SURFACE, not background */}
       <div className="shrink-0 space-y-2 px-4 py-2" style={{ background: 'var(--wisp-surface)' }}>
         {/* Segmented Profiles | Notes pill */}

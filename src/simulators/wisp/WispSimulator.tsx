@@ -20,7 +20,7 @@ import {
   KeysScreen,
   SocialGraphScreen,
 } from './screens/SettingsScreens';
-import { DEMO_USER, userByPubkey } from './wispData';
+import { DEMO_USER, userByPubkey, wispFeedNotes } from './wispData';
 import type {
   SimulatorCommand,
   WispSimulatorProps,
@@ -141,9 +141,16 @@ export function WispSimulator({ className = '', tourCommand, onCommandHandled }:
   // Tour command handling — the interface CLAUDE.md marks non-negotiable.
   useEffect(() => {
     if (!tourCommand) return;
+    // Every command is SELF-SUFFICIENT: it signs in on its own, so a step never
+    // pairs {login} with the real command and risks the queue dropping the
+    // second. `back` (logout) is the sole exception.
+    // NOTE the trap: handleLogin's state is NOT visible to this same effect
+    // pass, so anything reasoning about "me" below must use `me`, never the
+    // stale `currentUser`.
+    const me = currentUser ?? DEMO_USER;
+    if (tourCommand.type !== 'back' && !isAuthenticated) handleLogin(DEMO_USER);
     switch (tourCommand.type) {
       case 'login':
-        if (!isAuthenticated) handleLogin(DEMO_USER);
         break;
       case 'navigate': {
         const tab = tourCommand.payload as WispTab;
@@ -155,15 +162,14 @@ export function WispSimulator({ className = '', tourCommand, onCommandHandled }:
         break;
       }
       case 'compose':
-        if (isAuthenticated) {
-          setThreadNote(null);
-          setSettingsScreen(null);
-          setComposeState({ open: true, replyTo: null });
-          registerAction('compose');
-        }
+        setThreadNote(null);
+        setSettingsScreen(null);
+        setDrawerOpen(false);
+        setComposeState({ open: true, replyTo: null });
+        registerAction('compose');
         break;
       case 'post':
-        if (isAuthenticated) {
+        {
           setComposeState({ open: true, replyTo: null });
           window.setTimeout(() => {
             registerAction('post');
@@ -172,20 +178,45 @@ export function WispSimulator({ className = '', tourCommand, onCommandHandled }:
           }, 500);
         }
         break;
-      case 'viewProfile':
-        if (isAuthenticated && currentUser) {
-          closeOverlays();
-          setProfileUser(currentUser);
-          registerAction('view_profile');
-        }
+      case 'viewProfile': {
+        // payload 'other' opens SOMEONE ELSE's profile — the follow circle
+        // only exists there (gaps wis-74).
+        closeOverlays();
+        const other = wispFeedNotes.map((n) => userByPubkey(n.pubkey)).find((u) => u.pubkey !== me.pubkey);
+        setProfileUser(tourCommand.payload === 'other' ? other ?? me : me);
+        registerAction('view_profile');
         break;
-      case 'openSettings':
-        if (isAuthenticated) {
-          closeOverlays();
-          setSettingsScreen('interface');
-          registerAction('navigate_settings');
-        }
+      }
+      case 'openDrawer':
+        // gaps wis-71 — nothing could open the side menu, and the whole
+        // settings branch hangs off it.
+        closeOverlays();
+        setDrawerOpen(true);
         break;
+      case 'openThread': {
+        // gaps wis-73 — the thread (and its sticky reply bar) was click-only.
+        const note = wispFeedNotes[0];
+        if (note) { closeOverlays(); setThreadNote(note); }
+        break;
+      }
+      case 'zap': {
+        // gaps wis-72 — the zap sheet was click-only.
+        const note = wispFeedNotes[0];
+        if (note) { closeOverlays(); setZapTarget({ note, author: userByPubkey(note.pubkey) }); }
+        break;
+      }
+      case 'openSettings': {
+        // gaps wis-75 — the payload was hardcoded to 'interface', so Relays,
+        // Keys and Social Graph had no command at all.
+        const screens: WispSettingsScreen[] = ['interface', 'relays', 'keys', 'social-graph'];
+        const screen = screens.includes(tourCommand.payload as WispSettingsScreen)
+          ? (tourCommand.payload as WispSettingsScreen)
+          : 'interface';
+        closeOverlays();
+        setSettingsScreen(screen);
+        registerAction('navigate_settings');
+        break;
+      }
       case 'back':
         setIsAuthenticated(false);
         setCurrentUser(null);

@@ -11,7 +11,17 @@ export type WispSettingsScreen = 'interface' | 'relays' | 'keys' | 'social-graph
 
 /** Tour command contract (CLAUDE.md: non-negotiable interface shape). */
 export interface SimulatorCommand {
-  type: 'login' | 'navigate' | 'compose' | 'post' | 'viewProfile' | 'openSettings' | 'back';
+  type:
+    | 'login'
+    | 'navigate'
+    | 'compose'
+    | 'post'
+    | 'viewProfile'
+    | 'openSettings'
+    | 'openDrawer'
+    | 'openThread'
+    | 'zap'
+    | 'back';
   payload?: any;
 }
 

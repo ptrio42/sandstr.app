@@ -125,7 +125,7 @@ export function InterfaceScreen({ onBack }: SettingsScreenBaseProps) {
   );
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div data-tour="wisp-set-interface" className="flex h-full min-h-0 flex-col">
       <TopBar title="Interface" onBack={onBack} />
       <div className="min-h-0 flex-1 overflow-y-auto px-4">
         <SectionHeader>Language</SectionHeader>
@@ -293,7 +293,7 @@ export function RelaysScreen({ onBack }: SettingsScreenBaseProps) {
     setLists((prev) => ({ ...prev, [tab]: prev[tab].filter((u) => u !== url) }));
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div data-tour="wisp-set-relays" className="flex h-full min-h-0 flex-col">
       <TopBar title="Relays" onBack={onBack} />
 
       <div className="flex shrink-0">
@@ -434,7 +434,7 @@ export function KeysScreen({ onBack }: SettingsScreenBaseProps) {
   const [revealed, setRevealed] = useState(false);
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div data-tour="wisp-set-keys" className="flex h-full min-h-0 flex-col">
       <TopBar title="Keys" onBack={onBack} />
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4">
         <h3 className="mt-4 text-sm font-medium text-[var(--wisp-on-surface-variant)]">
@@ -512,7 +512,7 @@ export function SocialGraphScreen({ onBack }: SettingsScreenBaseProps) {
   const [phase, setPhase] = useState<GraphPhase>('notComputed');
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div data-tour="wisp-set-social" className="flex h-full min-h-0 flex-col">
       <TopBar title="Social Graph" onBack={onBack} />
 
       {phase === 'notComputed' && (
