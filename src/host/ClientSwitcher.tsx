@@ -170,6 +170,12 @@ export default function ClientSwitcher() {
   useEffect(() => {
     if (!id || tourActive) return;
     const onKey = (e: KeyboardEvent) => {
+      // A host modal owned by another component (the FAQ panel portals into
+      // <body> with data-sandstr-modal) gets the keyboard to itself — same
+      // contract as paletteOpen/sheetOpen below, probed via DOM because the
+      // panel lives in ClientView. Keeps ] from switching clients (and ⌘K
+      // from stacking the palette) under an open dialog.
+      if (document.querySelector('[data-sandstr-modal]')) return;
       if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
         e.preventDefault();
         setPaletteOpen((o) => !o);

@@ -19,10 +19,13 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { SideMenu, type MenuDest } from './screens/SideMenu';
 import { TabBar, type DamusTab } from './components/TabBar';
 
-export type DamusScreen = 'login' | 'home' | 'profile' | 'compose' | 'settings';
+export type DamusScreen =
+  | 'login' | 'home' | 'profile' | 'compose' | 'settings'
+  // navigate-payload additions for FAQ mini-tours:
+  | 'relays' | 'dms' | 'search' | 'notifications' | 'drawer';
 
 export interface DamusSimulatorCommand {
-  type: 'login' | 'navigate' | 'compose' | 'post' | 'viewProfile' | 'back';
+  type: 'login' | 'logout' | 'navigate' | 'compose' | 'post' | 'viewProfile' | 'viewUser' | 'back';
   payload?: any;
 }
 
@@ -95,22 +98,42 @@ export const DamusSimulator: React.FC<DamusSimulatorProps> = ({ className = '', 
       case 'login':
         if (!authed) login(mockUsers[0]);
         break;
+      case 'logout':
+        if (authed) logout();
+        break;
       case 'navigate': {
         const s = tourCommand.payload as DamusScreen;
+        // Every non-drawer destination closes the drawer: SideMenu sits at
+        // z-[60], above every overlay, so a stale open drawer would cover the
+        // screen a mini-tour step is spotlighting.
         if (s === 'home') goTab('home');
-        else if (s === 'profile' && currentUser) { setOverlays([{ type: 'profile', user: currentUser }]); }
-        else if (s === 'settings') { setOverlays([{ type: 'settings' }]); }
+        else if (s === 'profile' && currentUser) { setDrawerOpen(false); setOverlays([{ type: 'profile', user: currentUser }]); }
+        else if (s === 'settings') { setDrawerOpen(false); setOverlays([{ type: 'settings' }]); }
+        else if (s === 'relays') { setDrawerOpen(false); setOverlays([{ type: 'relays' }]); }
+        else if (s === 'dms') goTab('dms');
+        else if (s === 'search') goTab('search');
+        else if (s === 'notifications') goTab('notifications');
+        else if (s === 'drawer') { setOverlays([]); setDrawerOpen(true); }
         break;
       }
       case 'compose':
+        setDrawerOpen(false);
         setOverlays((s) => [...s, { type: 'compose' }]);
         break;
       case 'post':
         setOverlays([]); setTab('home');
         break;
       case 'viewProfile':
-        if (currentUser) setOverlays([{ type: 'profile', user: currentUser }]);
+        if (currentUser) { setDrawerOpen(false); setOverlays([{ type: 'profile', user: currentUser }]); }
         break;
+      case 'viewUser': {
+        // SOMEONE ELSE's profile (login uses mockUsers[0]) — the FAQ follow
+        // demo needs the Follow pill, which own-profile replaces with Edit.
+        const other = mockUsers.find((u) => u.username !== currentUser?.username) ?? mockUsers[1];
+        setDrawerOpen(false);
+        setOverlays([{ type: 'profile', user: other }]);
+        break;
+      }
       case 'back':
         setOverlays([]); setDrawerOpen(false); setTab('home');
         break;

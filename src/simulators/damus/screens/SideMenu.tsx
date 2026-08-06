@@ -35,7 +35,7 @@ export const SideMenu: React.FC<Props> = ({ currentUser, onClose, onNav }) => {
 
   return (
     <div className="absolute inset-0 z-[60] flex">
-      <div className="w-[80%] max-w-[300px] h-full bg-[var(--damus-bg)] px-5 pt-4 overflow-y-auto">
+      <div className="w-[80%] max-w-[300px] h-full bg-[var(--damus-bg)] px-5 pt-4 overflow-y-auto" data-tour="damus-menu">
         {/* header */}
         <div className="flex items-start justify-between">
           <Avatar seed={handle} className="w-16 h-16" />
@@ -48,7 +48,7 @@ export const SideMenu: React.FC<Props> = ({ currentUser, onClose, onNav }) => {
           <div className="font-bold text-[22px] text-[var(--damus-text)]">{name}</div>
           <div className="text-[15px] text-[var(--damus-text-secondary)]">@{handle}</div>
         </div>
-        <button className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--damus-bg-secondary)] text-[13px] text-[var(--damus-text-secondary)]">
+        <button className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--damus-bg-secondary)] text-[13px] text-[var(--damus-text-secondary)]" data-tour="damus-npub">
           {npub} <CopyIcon className="w-4 h-4" />
         </button>
 
@@ -59,6 +59,7 @@ export const SideMenu: React.FC<Props> = ({ currentUser, onClose, onNav }) => {
               key={d}
               onClick={() => onNav(d)}
               className={`w-full flex items-center gap-4 py-3 ${dim ? 'opacity-45' : ''}`}
+              data-tour={`damus-menu-${d}`}
             >
               <Icon className={`w-6 h-6 ${special ? 'text-[var(--damus-deep-purple)]' : 'text-[var(--damus-text)]'}`} />
               <span className={`text-[19px] font-semibold ${special ? 'text-[var(--damus-deep-purple)]' : 'text-[var(--damus-text)]'}`}>{label}</span>

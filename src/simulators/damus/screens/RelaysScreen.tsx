@@ -19,7 +19,7 @@ export const RelaysScreen: React.FC<Props> = ({ onBack }) => {
   const relays = mockRelays.slice(0, seg === 'mine' ? 12 : 8);
 
   return (
-    <div className="absolute inset-0 z-[52] flex flex-col bg-[var(--damus-bg)]">
+    <div className="absolute inset-0 z-[52] flex flex-col bg-[var(--damus-bg)]" data-tour="damus-relays">
       <header className="flex items-center px-4 pt-3 pb-2">
         <button onClick={onBack} className="w-8"><ChevronLeft className="w-6 h-6 text-[var(--damus-text)]" /></button>
         <span className="flex-1 text-center font-bold text-[17px] text-[var(--damus-text)]">Relays</span>

@@ -37,8 +37,16 @@ function TourAutoStarter({
   onTourSkip?: () => void;
   onStepChange?: (stepIndex: number, step: TourStep) => void;
 }) {
-  const { startTour, restartTour, state, currentStepData } = useTour();
+  const { startTour, restartTour, state, currentStepData, config } = useTour();
   const lastStepRef = React.useRef<number>(-1);
+
+  // A new active config object is a new tour (e.g. an FAQ mini-tour replayed
+  // via restartTour). Without this reset, a fresh tour starting at step 0
+  // never fires onStepChange when the previous tour also last notified at 0.
+  // Runs before the notify effect below (declaration order).
+  useEffect(() => {
+    lastStepRef.current = -1;
+  }, [config]);
 
   useEffect(() => {
     const shouldStart = shouldAutoStartTour(tourConfig.id);

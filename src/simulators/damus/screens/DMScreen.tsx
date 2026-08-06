@@ -21,7 +21,7 @@ export const DMScreen: React.FC<Props> = ({ currentUser, users, onOpenDrawer, on
   const convos = users.slice(3, 13);
 
   return (
-    <div className="min-h-full bg-[var(--damus-bg)]">
+    <div className="min-h-full bg-[var(--damus-bg)]" data-tour="damus-dms">
       <header className="damus-topbar">
         <div className="flex items-center gap-3 px-4 pt-2 pb-2">
           <button onClick={onOpenDrawer}><Avatar seed={me} className="w-9 h-9" /></button>
