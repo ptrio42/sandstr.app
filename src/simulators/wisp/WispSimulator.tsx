@@ -162,9 +162,10 @@ export function WispSimulator({ className = '', tourCommand, onCommandHandled }:
         break;
       }
       case 'compose':
-        setThreadNote(null);
-        setSettingsScreen(null);
-        setDrawerOpen(false);
+        // closeOverlays(), not a hand-picked subset: the zap sheet and a
+        // mounted profile survived the old version and painted over the
+        // composer the next step was spotlighting.
+        closeOverlays();
         setComposeState({ open: true, replyTo: null });
         registerAction('compose');
         break;

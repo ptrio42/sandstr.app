@@ -62,7 +62,7 @@ export function ZapDialog({ author, onClose, onZap }: ZapDialogProps) {
       <div className="absolute inset-0 bg-black/50" aria-hidden="true" onClick={onClose} />
 
       {/* Bottom sheet — final state, no entry animation */}
-      <div className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-[var(--wisp-surface)] px-5 pt-3 pb-6">
+      <div className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-[var(--wisp-surface)] px-5 pt-3 pb-6" data-tour="wisp-zap">
         {/* 1. Drag handle */}
         <div className="mx-auto h-1 w-9 rounded-full bg-[var(--wisp-outline)]" />
 
@@ -212,8 +212,7 @@ export function ZapDialog({ author, onClose, onZap }: ZapDialogProps) {
         {/* 9. Zap button */}
         <button
           type="button"
-          data-tour="wisp-zap"
-          onClick={fireZap}
+                    onClick={fireZap}
           className="mt-4 flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] bg-[var(--wisp-accent)] text-[17px] font-bold text-white"
         >
           <Zap size={18} fill="white" className="text-white" />

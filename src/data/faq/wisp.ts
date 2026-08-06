@@ -94,7 +94,7 @@ export const wispFaq: ClientFaq = {
         'The pill in the middle of the feed\'s top bar is the feed selector — tap it and a dropdown opens.',
         'It starts on "For You".',
       ],
-      note: 'The pills beside it are status, not controls: one shows how many people are online, the other how many relays you are connected to.',
+      note: 'The pills beside it look like labels but are buttons in the real app: one opens an "Online Now" sheet, the other a list of the relays you are connected to.',
       showMe: [
         {
           target: '[data-tour="wisp-selector"]',
@@ -112,8 +112,8 @@ export const wispFaq: ClientFaq = {
       question: 'Where is everything? The bottom bar only has a few tabs.',
       answer: [
         'Tap your avatar in the top-left of the feed — that opens the drawer.',
-        'Wallet, Settings, your profile and the logout row all live there, not in the bottom bar.',
-        '"Settings" expands in place into Interface, Relays, Media Servers, Keys, Safety and Social Graph.',
+        'Your profile, the settings and the logout row live there — the bottom bar carries only Home, Wallet, Search, Messages and Notifications.',
+        '"Settings" expands in place into ten rows: Interface, Relays, Media Servers, Keys, Safety, Proof of Work, Social Graph, Custom Emojis, Relay Health and Console.',
       ],
       showMe: [
         {
@@ -153,7 +153,7 @@ export const wispFaq: ClientFaq = {
           target: '[data-tour="wisp-compose"]',
           title: 'The compose button',
           content:
-            'The orange pencil, bottom-right — one of only two orange things on the feed.',
+            'The orange pencil, bottom-right. It fades to a ghost while the list scrolls rather than sliding away.',
           position: 'left',
           commands: feed,
         },
@@ -199,15 +199,15 @@ export const wispFaq: ClientFaq = {
       category: 'Reactions & zaps',
       question: 'How do I react to a note?',
       answer: [
-        'Tap the second icon in the row under the note to send Wisp\'s default reaction.',
-        'Press and hold it to pick a different emoji instead.',
+        'Tap the second icon in the row under the note — that opens Wisp\'s emoji popup, seventeen of them to choose from.',
+        'Press and hold the same icon instead to send the default reaction straight away.',
       ],
       note: 'Wisp does something no other client here does: the emoji you pick REPLACES the icon rather than colouring it. So a reacted note shows your emoji sitting where the heart was, in the same neutral shade — the row never lights up.',
       showMe: [
         actionStep(
           '[data-tour="wisp-actions"]',
           'React',
-          'The second slot. Whatever emoji you send takes the icon\'s place — it is never tinted.',
+          'The second slot — tapping it opens the emoji popup. Whatever you send takes the icon\'s place rather than colouring it.',
         ),
       ],
     },
@@ -217,16 +217,17 @@ export const wispFaq: ClientFaq = {
       category: 'Reactions & zaps',
       question: 'How do I zap (tip sats to) a note?',
       answer: [
-        'Tap the lightning bolt — fourth in the row under the note.',
+        'Tap the ₿ — fourth in the row under the note. Wisp shows a bitcoin sign there, not a lightning bolt, unless you switch it to fiat.',
         'The zap sheet opens with preset amounts: 21, 100, 500, 1000 and 5000 sats.',
         'Or tap "Custom", type an amount, and use its "+" to keep that amount as a preset of your own.',
       ],
-      note: 'The number beside the bolt is the total sats a note has earned. Wisp shows a ₿ by default rather than a fiat value — you can switch that in Interface settings.',
+      note: 'The number beside it is the total sats a note has earned. Switching to fiat in Interface settings swaps both the number and the ₿ for a bolt.',
       showMe: [
         {
           target: '[data-tour="wisp-zap"]',
           title: 'The zap sheet',
-          content: 'Presets across the top, a Custom pill for anything else, and the send button naming the amount.',
+          content:
+            'Who you are paying, the amount in large type, a row of preset chips with a Custom one beside them, and a send button that names the amount.',
           position: 'center',
           spotlightPadding: 0,
           commands: cmd({ type: 'zap' }),
@@ -241,13 +242,13 @@ export const wispFaq: ClientFaq = {
       question: 'How do I search?',
       answer: [
         'Open the search tab in the bottom bar.',
-        'Type a name, a word or a hashtag — results appear as you type.',
+        'The screen opens on the Profiles tab: type a name and matching people appear as you type. Switch to Notes to search post text instead.',
       ],
       showMe: [
         {
           target: '[data-tour="wisp-search"]',
           title: 'Search',
-          content: 'The search tab starts empty; results only appear once you have typed something.',
+          content: 'It starts empty, on the Profiles tab — the segmented control switches between Profiles and Notes.',
           position: 'center',
           spotlightPadding: 0,
           commands: cmd({ type: 'navigate', payload: 'search' }),
@@ -286,7 +287,7 @@ export const wispFaq: ClientFaq = {
         {
           target: '[data-tour="wisp-notifications"]',
           title: 'Notifications',
-          content: 'Everything that happened, with a filter above it — the bell in the bar carries Wisp\'s flower badge when something is new.',
+          content: 'Everything that happened, with a filter above it. The bell in the bottom bar carries a small dot while something is unread.',
           position: 'center',
           spotlightPadding: 0,
           commands: cmd({ type: 'navigate', payload: 'notifications' }),
@@ -302,7 +303,7 @@ export const wispFaq: ClientFaq = {
         {
           target: '[data-tour="wisp-messages"]',
           title: 'Messages',
-          content: 'Your conversation list. Wisp keeps DMs in the bottom bar rather than behind the drawer.',
+          content: 'Your conversation list, titled Chat — reachable from the bottom bar and from the drawer alike.',
           position: 'center',
           spotlightPadding: 0,
           commands: cmd({ type: 'navigate', payload: 'messages' }),

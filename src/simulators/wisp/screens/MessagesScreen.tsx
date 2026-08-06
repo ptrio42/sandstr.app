@@ -92,7 +92,7 @@ export function MessagesScreen({
   // ---------------------------------------------------------------- CONVERSATION
   if (peer) {
     return (
-      <div data-tour="wisp-messages" className="flex h-full min-h-0 flex-col">
+      <div className="flex h-full min-h-0 flex-col">
         {/* Top bar */}
         <div className="flex h-12 shrink-0 items-center gap-2 px-2">
           <button
@@ -208,7 +208,7 @@ export function MessagesScreen({
   const visibleRooms = ROOMS;
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col">
+    <div data-tour="wisp-messages" className="relative flex h-full min-h-0 flex-col">
       {/* Title bar */}
       <div className="flex h-12 shrink-0 items-center px-4">
         <h1 className="text-[20px] font-bold">Chat</h1>
