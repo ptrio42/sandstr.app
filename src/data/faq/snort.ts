@@ -92,7 +92,7 @@ export const snortFaq: ClientFaq = {
       answer: [
         'There are none — Snort has no tab bar anywhere.',
         'The label in the middle of the header IS the picker: click it and a dropdown opens.',
-        'Choose from For you, Following, Trending Notes, Conversations, Followed by friends, Trending Hashtags and Media.',
+        'Choose from For you, Following, Trending Notes, Conversations, Follow Sets, Followed by friends, Trending Hashtags and Media.',
       ],
       note: 'The only thing marking your current feed is which label the button shows, so the header doubles as a status line.',
       showMe: [
@@ -151,7 +151,7 @@ export const snortFaq: ClientFaq = {
         actionStep(
           '[data-tour="snort-interactions"]',
           'The action row',
-          'Four actions under every note — reply, repost, heart, zap — followed by the avatars of whoever zapped it.',
+          'Four actions under every note, always in this order: reply, repost, heart, zap.',
         ),
       ],
     },
@@ -202,15 +202,16 @@ export const snortFaq: ClientFaq = {
       category: 'Reactions & zaps',
       question: 'How do I zap (tip sats to) a note?',
       answer: [
-        'Click the lightning bolt — the last of the four actions.',
-        'Pick or type an amount and send it from your connected wallet.',
-        'The avatars beside the row are the people who already zapped that note.',
+        'A single click on the lightning bolt sends a fast zap straight away — your default amount, 50 sats out of the box.',
+        'Press and hold it instead to open the zap dialog, where you can pick a different amount and add a message.',
+        'The bolt is the last of the four actions under a note.',
       ],
+      note: 'Fast-zapping means a stray click spends sats — worth knowing before clicking around a feed.',
       showMe: [
         actionStep(
           '[data-tour="snort-interactions"]',
           'Zap',
-          'The bolt is last, and the little avatars after it are the note\'s zappers — Snort shows who paid, not just how much.',
+          'The bolt is last in the row. One click fast-zaps; a long press opens the amount dialog.',
         ),
       ],
     },
@@ -229,7 +230,8 @@ export const snortFaq: ClientFaq = {
         {
           target: '[data-tour="snort-search"]',
           title: 'Search',
-          content: 'Snort keeps search in its own screen, reachable from the rail as well as the right column.',
+          content:
+            'Search gets a screen of its own. Careful with the left rail: its magnifier is Discover, not Search — only the narrow-window bottom bar has a magnifier that opens this.',
           position: 'center',
           spotlightPadding: 0,
           commands: cmd({ type: 'navigate', payload: 'search' }),
@@ -243,14 +245,14 @@ export const snortFaq: ClientFaq = {
       question: 'How do I find people to follow?',
       answer: [
         'Open "Discover" in the left rail.',
-        'It suggests people and topics you are not following yet.',
+        'It lists people to follow, grouped by pills: Popular, Followed By Friends, Follow Sets and Suggested Follows.',
         'You can also switch the feed picker to "Trending Notes" or "Followed by friends" to see beyond your own follows.',
       ],
       showMe: [
         {
           target: '[data-tour="snort-discover"]',
           title: 'Discover',
-          content: 'The rail\'s discovery screen — people and topics outside your current follows.',
+          content: 'The rail\'s discovery screen: pill-selected lists of people, plus a "Search sets…" box.',
           position: 'center',
           spotlightPadding: 0,
           commands: cmd({ type: 'navigate', payload: 'discover' }),
@@ -380,7 +382,7 @@ export const snortFaq: ClientFaq = {
         'To mute a word: open Settings → "Moderation", type it into the box under "Muted Words" (its own example is "crypto") and press "Add". "Delete" beside a word removes it.',
         'The same Moderation screen has "Show posts that have a content warning tag" if you would rather see flagged posts than have them hidden.',
       ],
-      note: 'Snort mutes people and words only — there is no muting of hashtags or of a single thread, though a muted word matches inside a hashtag too. A muted note is not deleted from view: it collapses to "This note has been muted" with a Show button. Preferences also offer a web-of-trust filter that hides anyone more than two follow-hops away.',
+      note: 'Snort mutes people and words only — no hashtags, no single threads. Worth knowing: at the version we reproduce, muted WORDS are stored but nothing filters on them yet; muting a person does work, and their notes collapse to "This note has been muted" with a Show button rather than vanishing. Preferences also carry a web-of-trust filter that hides anyone more than two follow-hops away.',
       showMe: [
         {
           target: '[data-tour="snort-settings"]',
@@ -435,8 +437,10 @@ export const snortFaq: ClientFaq = {
       answer: [
         'Open Settings from the left rail.',
         'Under Interaction, click "Cache" — the row with the cyan tile.',
+        'Each cache is listed separately — Profiles, Relays, Follow Lists and Gift Wraps — with its own item count and its own "Clear" button.',
+        'Clear the ones you want; there is no single button that empties everything.',
       ],
-      note: 'Snort is a web app, so its cache lives in your browser: clearing site data for the page does the same job from the outside.',
+      note: 'Snort is a web app, so all of this lives in your browser. Clearing the site data from browser settings wipes the lot at once, session included.',
     },
   ],
 };

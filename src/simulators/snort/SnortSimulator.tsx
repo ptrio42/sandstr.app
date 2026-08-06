@@ -285,6 +285,10 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
     // Every command is SELF-SUFFICIENT: it signs in on its own, so a step never
     // has to pair {login} with the real command and risk the queue dropping the
     // second one. `logout` is the sole exception.
+    // The user this pass is signed in AS. `currentUser` is still the previous
+    // render's value inside this same effect, so anything downstream that needs
+    // "me" must use this, not currentUser.
+    const demoUser = currentUser ?? mock.users[0] ?? null;
     if (tourCommand.type !== 'logout' && !isAuthed) {
       handleLogin(
         mock.users[0] ?? {
@@ -318,8 +322,16 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
       case 'openThread': {
         // gaps sno-37 — navigate:'thread' set the screen but no note, so the
         // thread rendered "This note could not be loaded."
-        const note = mock.notes[0];
-        if (note) viewThread(note);
+        // Take the root of a real THREAD, not mock.notes[0]: the two mock
+        // modules mint their ids independently, so a feed note never resolves
+        // to a thread and the screen would show one note with no replies.
+        const thread = mock.threads[0];
+        const root = thread?.notes.find((n) => n.id === thread.rootNoteId) ?? thread?.notes[0];
+        if (thread && root) {
+          setSelectedThread(thread);
+          setSelectedNote(root);
+          setScreen('thread');
+        }
         setComposeOpen(false);
         break;
       }
@@ -344,8 +356,8 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
         break;
 
       case 'viewProfile': {
-        const other = mock.users.find((u) => u.pubkey !== currentUser?.pubkey);
-        setSelectedProfile(tourCommand.payload === 'other' ? other ?? currentUser : currentUser);
+        const other = mock.users.find((u) => u.pubkey !== demoUser?.pubkey);
+        setSelectedProfile(tourCommand.payload === 'other' ? other ?? demoUser : demoUser);
         setScreen('profile');
         setComposeOpen(false);
         break;
@@ -353,7 +365,7 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
     }
 
     onCommandHandled?.();
-  }, [tourCommand, isAuthed, currentUser, mock.users, mock.notes, handleLogin, viewThread, onCommandHandled]);
+  }, [tourCommand, isAuthed, currentUser, mock.users, mock.threads, handleLogin, onCommandHandled]);
 
   // ---- Render ----
   if (!isAuthed || screen === 'login') {
@@ -606,6 +618,11 @@ function BottomBar({
       <button
         type="button"
         className="snort-btn primary mx-2 h-9 w-9 !px-0"
+        // Same anchor as the rail's New Note: exactly one of the two is ever
+        // mounted (rail above 768px container width, this bar below), so a
+        // mini-tour keeps a target at every width instead of losing one in the
+        // band where the rail is gone but the FAQ panel is still open.
+        data-tour="snort-compose"
         aria-label="New Note"
         onClick={onCompose}
       >
