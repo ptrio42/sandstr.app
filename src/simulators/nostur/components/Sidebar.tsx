@@ -89,7 +89,7 @@ export function Sidebar({
               <span>{label}</span>
             </button>
           ))}
-          <button type="button" className="nostur-sidebar-row" onClick={onLogout}>
+          <button type="button" className="nostur-sidebar-row" data-tour="nostur-drawer-logout" onClick={onLogout}>
             <span className="nostur-sidebar-row-icon">
               <LogOut className="h-[19px] w-[19px]" />
             </span>

@@ -197,6 +197,20 @@ export function NosturSimulator({
    */
   useEffect(() => {
     if (!tourCommand) return;
+    // `logout` is the one command that must NOT sign in — it exists so an FAQ
+    // entry can demo the welcome screen, which was otherwise unreachable for
+    // the rest of the session (gaps nos-02).
+    if (tourCommand.type === 'logout') {
+      closeOverlays();
+      setDrawer(false);
+      setCompose({ open: false, replyToId: null });
+      setZapTarget(null);
+      setTab('home');
+      setFeed('Following');
+      setAuthenticated(false);
+      onCommandHandled?.();
+      return;
+    }
     setAuthenticated(true);
     switch (tourCommand.type) {
       case 'login':
@@ -219,11 +233,18 @@ export function NosturSimulator({
         }
         break;
       }
-      case 'viewProfile':
+      case 'viewProfile': {
+        // payload 'other' opens SOMEONE ELSE's profile — the Follow pill only
+        // exists there, own-profile shows Edit instead (gaps nos-21).
+        const target =
+          tourCommand.payload === 'other'
+            ? followingFeed.find(({ author }) => author.username !== DEMO_USER.username)?.author ?? DEMO_USER
+            : DEMO_USER;
         closeOverlays();
         setTab('home');
-        setOverlays([{ kind: 'profile', user: DEMO_USER, origin: 'Following' }]);
+        setOverlays([{ kind: 'profile', user: target, origin: 'Following' }]);
         break;
+      }
       case 'compose':
         closeOverlays();
         setTab('home');
@@ -243,10 +264,29 @@ export function NosturSimulator({
         setFeed('Following');
         setDrawer(true);
         break;
-      case 'openSettings':
+      case 'openSettings': {
+        // Optional payload lands directly on a sub-screen (gaps nos-38): the
+        // Relay Connections and Lists & Feeds anchors were orphans because no
+        // command could mount the screen they live on.
+        const screens: NosturSettingsScreen[] = [
+          'root', 'appearance', 'zaps', 'relays', 'spam', 'feeds', 'badges',
+        ];
+        const screen = screens.includes(tourCommand.payload as NosturSettingsScreen)
+          ? (tourCommand.payload as NosturSettingsScreen)
+          : 'root';
         closeOverlays();
         setTab('home');
-        setOverlays([{ kind: 'settings', screen: 'root' }]);
+        setOverlays([{ kind: 'settings', screen }]);
+        break;
+      }
+      case 'lowData':
+        // Nostur's signature turtle. `payload: 'off'` turns it back off; the
+        // command sets the state directly rather than toggling so a mini-tour
+        // is idempotent no matter what the visitor tapped before.
+        closeOverlays();
+        setTab('home');
+        setFeed('Following');
+        setLowData(tourCommand.payload !== 'off');
         break;
     }
     onCommandHandled?.();

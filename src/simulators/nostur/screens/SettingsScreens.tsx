@@ -130,7 +130,7 @@ export function ZapSettings({ onBack }: { onBack: () => void }) {
   return (
     <>
       <NavBar back={{ label: 'Settings', onClick: onBack }} title="Zaps" />
-      <div className="nostur-scroll pb-6">
+      <div className="nostur-scroll pb-6" data-tour="nostur-zapsettings">
         <p className="nostur-section-title">Zapping</p>
         <div className="nostur-group">
           <SettingRow title="Lightning wallet" chevron />

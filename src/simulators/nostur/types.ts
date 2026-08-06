@@ -40,6 +40,7 @@ export type DrawerDestination =
 export interface SimulatorCommand {
   type:
     | 'login'
+    | 'logout'
     | 'navigate'
     | 'openFeed'
     | 'openThread'
@@ -47,7 +48,8 @@ export interface SimulatorCommand {
     | 'compose'
     | 'zap'
     | 'openDrawer'
-    | 'openSettings';
+    | 'openSettings'
+    | 'lowData';
   payload?: string;
 }
 

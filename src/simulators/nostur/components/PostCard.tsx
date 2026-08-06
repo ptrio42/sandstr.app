@@ -158,6 +158,10 @@ export function PostCard(props: PostCardProps) {
           <div
             className="nostur-post-media px-5 py-7 text-center"
             style={{ background: 'var(--nostur-bg)' }}
+            // Anchor so a mini-tour can spotlight an ACTUAL paused block:
+            // whether a given note carries media is randomised, so pointing at
+            // "the first post" would often frame a text-only card.
+            data-tour="nostur-lowdata-block"
           >
             <p className="text-[14px]">Loading paused (Low data mode)</p>
             <p className="mt-1 truncate text-[13px] italic" style={{ color: 'var(--nostur-secondary)' }}>

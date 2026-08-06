@@ -2,11 +2,13 @@ import type { ClientFaq } from './types';
 import { damusFaq } from './damus';
 import { amethystFaq } from './amethyst';
 import { primalFaq } from './primal';
+import { nosturFaq } from './nostur';
 
 const faqs: Record<string, ClientFaq> = {
   damus: damusFaq,
   amethyst: amethystFaq,
   primal: primalFaq,
+  nostur: nosturFaq,
 };
 
 // The coverage contract is enforced by types at compile time; this catches
