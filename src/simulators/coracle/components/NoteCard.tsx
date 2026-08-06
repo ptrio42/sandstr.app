@@ -300,6 +300,8 @@ export const NoteCard: React.FC<NoteCardProps> = ({
 
       {/* Action row — `flex w-full justify-between`, left group `gap-8`. */}
       <div
+        // gaps cor-23: the most-pointed-at surface in any FAQ had no anchor.
+        data-tour="coracle-actions"
         style={{
           display: 'flex',
           width: '100%',

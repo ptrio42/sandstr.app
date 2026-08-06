@@ -235,7 +235,10 @@ const MOUNTS: Record<
     repo: 'https://github.com/coracle-social/coracle',
     upstreamLicense: 'MIT',
     installNote: 'Web app, no install; installable as a PWA',
-    load: () => import('./simulators/coracle').then((m) => ({ default: m.CoracleSimulator })),
+    // Wrapped since 2026-08-06 (gaps cor-01): the wrapper carries no guided
+    // tour — Coracle has no entry in src/data/tours/ — it exists so the FAQ
+    // panel's "Show me" can drive the simulator. `tour` stays false.
+    load: () => import('./simulators/coracle/CoracleSimulatorWithTour'),
   },
   gossip: {
     frame: null,

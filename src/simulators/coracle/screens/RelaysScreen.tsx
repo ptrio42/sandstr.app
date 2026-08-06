@@ -244,7 +244,8 @@ export const RelaysScreen: React.FC<RelaysScreenProps> = ({
     .filter((r) => !query.trim() || r.url.toLowerCase().includes(query.trim().toLowerCase()));
 
   return (
-    <>
+    // gaps cor-49: the relay browser had no anchor at all.
+    <div data-tour="coracle-relays">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Icon name="server" size={20} />
@@ -368,6 +369,6 @@ export const RelaysScreen: React.FC<RelaysScreenProps> = ({
       ) : (
         <p style={{ padding: '3rem 0', textAlign: 'center' }}>No reviews found.</p>
       )}
-    </>
+    </div>
   );
 };

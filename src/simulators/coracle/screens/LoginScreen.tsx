@@ -30,6 +30,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   onExternal,
 }) => (
   <div
+    // gaps cor-11: the login modal had no anchor. Note the class selectors
+    // (.co-btn-accent) match the TOP BAR first — the layout renders before the
+    // modal overlay in document order — so this needs its own name.
+    data-tour="coracle-login"
     style={{
       display: 'flex',
       flexDirection: 'column',

@@ -75,7 +75,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'flex-start' }}>
             <Avatar seed={user.pubkey} size={128} />
-            <button type="button" className="co-btn" onClick={onFollow}>
+            <button type="button" className="co-btn" data-tour="coracle-follow" onClick={onFollow}>
               {isSelf ? 'Edit' : isFollowing ? 'Unfollow' : 'Follow'}
             </button>
           </div>

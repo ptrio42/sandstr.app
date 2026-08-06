@@ -1,4 +1,5 @@
 import type { ClientFaq } from './types';
+import { coracleFaq } from './coracle';
 import { damusFaq } from './damus';
 import { amethystFaq } from './amethyst';
 import { primalFaq } from './primal';
@@ -8,6 +9,7 @@ import { snortFaq } from './snort';
 import { wispFaq } from './wisp';
 
 const faqs: Record<string, ClientFaq> = {
+  coracle: coracleFaq,
   damus: damusFaq,
   amethyst: amethystFaq,
   primal: primalFaq,

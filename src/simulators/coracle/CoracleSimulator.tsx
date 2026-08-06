@@ -75,7 +75,17 @@ type CoracleModal =
   | { type: 'channel-create' };
 
 export interface SimulatorCommand {
-  type: 'login' | 'navigate' | 'compose' | 'post' | 'viewProfile';
+  type:
+    | 'login'
+    | 'logout'
+    | 'navigate'
+    | 'compose'
+    | 'post'
+    | 'viewProfile'
+    | 'openThread'
+    | 'zap'
+    | 'openSettings'
+    | 'showLogin';
   payload?: any;
 }
 
@@ -318,9 +328,32 @@ export const CoracleSimulator: React.FC<CoracleSimulatorProps> = ({
   useEffect(() => {
     if (!tourCommand) return;
 
+    // Every command is SELF-SUFFICIENT: it signs in on its own, so an FAQ step
+    // carries exactly ONE command and the queue can never drop a second.
+    // `logout` is the sole exception.
+    // TRAP: handleLogin's state is not visible to this same effect pass, so
+    // anything reasoning about "me" must use `me`, never the stale currentUser.
+    const me = currentUser ?? mock.users[0] ?? null;
+    if (tourCommand.type !== 'logout' && !isAuthed) handleLogin();
+
     switch (tourCommand.type) {
       case 'login':
-        if (!isAuthed) handleLogin();
+        break;
+      case 'showLogin':
+        // Sign out AND open the login modal in one command — `logout` alone
+        // lands on the logged-out feed, and nothing else pushes that modal.
+        setCurrentUser(null);
+        setProfileUser(null);
+        setSubmenu(null);
+        setScreen('feeds');
+        setModals([{ type: 'login' }]);
+        break;
+      case 'logout':
+        setCurrentUser(null);
+        setModals([]);
+        setSubmenu(null);
+        setProfileUser(null);
+        setScreen('feeds');
         break;
       case 'navigate': {
         const next = tourCommand.payload as CoracleScreen;
@@ -331,22 +364,63 @@ export const CoracleSimulator: React.FC<CoracleSimulatorProps> = ({
       }
       case 'compose':
       case 'post':
-        if (isAuthed) setModals([{ type: 'compose', replyTo: null }]);
+        setModals([{ type: 'compose', replyTo: null }]);
+        setSubmenu(null);
         break;
-      case 'viewProfile':
-        if (isAuthed) {
-          const other = mock.users.find((u) => u.pubkey !== currentUser?.pubkey);
-          const target = tourCommand.payload === 'other' ? other ?? currentUser : currentUser;
-          if (target) {
-            setProfileUser(target);
+      case 'openThread': {
+        // Coracle opens a note in a MODAL, like almost everything else — with
+        // the feed underneath rather than whatever screen was last shown.
+        const note = mock.notes[0];
+        if (note) {
+          setSubmenu(null);
+          setScreen('feeds');
+          setModals([{ type: 'note', note }]);
+        }
+        break;
+      }
+      case 'zap': {
+        // The action row lives on the feed card; land there and actually apply
+        // a zap so the row shows a sat total rather than an empty slot.
+        const note = mock.notes.find((n) => n.pubkey !== me?.pubkey) ?? mock.notes[0];
+        setSubmenu(null);
+        setModals([]);
+        setScreen('feeds');
+        if (note) setZapped((prev) => ({ ...prev, [note.id]: (prev[note.id] ?? 0) + 21 }));
+        break;
+      }
+      case 'openSettings': {
+        const pages: SettingsPage[] = ['app', 'content', 'data', 'keys', 'wallet'];
+        const page = pages.includes(tourCommand.payload as SettingsPage)
+          ? (tourCommand.payload as SettingsPage)
+          : 'app';
+        setSettingsPage(page);
+        setScreen('settings');
+        setModals([]);
+        setSubmenu(null);
+        break;
+      }
+      case 'viewProfile': {
+        // Your OWN profile is a page in Coracle; someone else's opens as a
+        // modal over the feed — the two routes are genuinely different and the
+        // screen-map records the page route for self.
+        const other = mock.users.find((u) => u.pubkey !== me?.pubkey);
+        const target = tourCommand.payload === 'other' ? other ?? me : me;
+        if (target) {
+          setSubmenu(null);
+          setProfileUser(target);
+          if (tourCommand.payload === 'other') {
             setModals([{ type: 'profile', user: target }]);
+          } else {
+            setModals([]);
+            setScreen('profile');
           }
         }
         break;
+      }
     }
 
     onCommandHandled?.();
-  }, [tourCommand, isAuthed, currentUser, mock.users, handleLogin, onCommandHandled]);
+  }, [tourCommand, isAuthed, currentUser, mock.users, mock.notes, handleLogin, onCommandHandled]);
 
   // ---- Render ----
   const topModal = modals[modals.length - 1];

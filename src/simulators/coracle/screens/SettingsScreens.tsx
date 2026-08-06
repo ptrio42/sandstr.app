@@ -88,7 +88,23 @@ function InlineField({
 
 const NOTE_ACTIONS = ['zaps', 'replies', 'reactions', 'reposts', 'recommended_apps'] as const;
 
+/**
+ * gaps cor-69: one anchor for the whole settings surface. The `page` prop
+ * decides what renders inside, so a mini-tour that opens a page frames
+ * exactly that page — no need for five separate anchors.
+ */
 export const SettingsScreen: React.FC<{
+  page: SettingsPage;
+  currentUser: MockUser | null;
+  onSave: () => void;
+  onCopy: (what: string) => void;
+}> = (props) => (
+  <div data-tour="coracle-settings">
+    <SettingsPages {...props} />
+  </div>
+);
+
+const SettingsPages: React.FC<{
   page: SettingsPage;
   currentUser: MockUser | null;
   onSave: () => void;

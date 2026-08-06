@@ -50,6 +50,8 @@ export const FeedSelector: React.FC<FeedSelectorProps> = ({
 }) => (
   <div
     className={`co-card ${className}`}
+    // gaps cor-20: "Your Feeds" is Coracle's signature panel and had no anchor.
+    data-tour="coracle-feed-selector"
     style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
   >
     <p className="co-staatliches" style={{ fontSize: '1.5rem', lineHeight: 1.1 }}>
