@@ -1,10 +1,13 @@
 import { Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ChevronDown, ChevronLeft, ExternalLink, Flag, Info, Monitor, Moon, Play, Sun } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ExternalLink, Flag, HelpCircle, Info, Monitor, Moon, Play, Sun } from 'lucide-react';
 import MobilePhoneFrame from '../simulators/shared/components/MobilePhoneFrame';
 import { ClientGlyph, platformLabel } from './ClientGlyph';
 import { clients, getClient, type ClientEntry } from '../registry';
+import { getFaq } from '../data/faq';
+import { showFaqInSimulator } from '../components/faq/FaqMiniTourLauncher';
+import FaqPanel from './FaqPanel';
 import { useMediaQuery, MOBILE_QUERY } from './useMediaQuery';
 import { useTheme } from './useTheme';
 import { fidelityReportUrl } from './contribute';
@@ -62,7 +65,15 @@ function SimSkeleton({ color }: { color: string }) {
  * former lived only in a `title=` tooltip, the latter existed on ClientEntry and
  * was rendered nowhere.
  */
-function ContextPanel({ entry, real }: { entry: ClientEntry; real: boolean }) {
+function ContextPanel({
+  entry,
+  real,
+  onOpenFaq,
+}: {
+  entry: ClientEntry;
+  real: boolean;
+  onOpenFaq?: () => void;
+}) {
   return (
     <aside className="hidden h-full w-[290px] shrink-0 flex-col justify-center gap-5 py-2 lg:flex">
       <div>
@@ -94,14 +105,27 @@ function ContextPanel({ entry, real }: { entry: ClientEntry; real: boolean }) {
         </div>
       )}
 
-      {entry.hasTour && (
-        <button
-          type="button"
-          onClick={() => window.dispatchEvent(new Event(`start-${entry.id}-tour`))}
-          className="inline-flex w-fit items-center gap-1.5 rounded-full border border-primary-300 bg-primary-50 px-3 py-1.5 text-xs font-medium text-primary-700 transition-colors hover:bg-primary-100 dark:border-primary-500/40 dark:bg-primary-500/10 dark:text-primary-300 dark:hover:bg-primary-500/20"
-        >
-          <Play className="h-3.5 w-3.5" /> Take a tour
-        </button>
+      {(entry.hasTour || onOpenFaq) && (
+        <div className="flex flex-wrap gap-2">
+          {entry.hasTour && (
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event(`start-${entry.id}-tour`))}
+              className="inline-flex w-fit items-center gap-1.5 rounded-full border border-primary-300 bg-primary-50 px-3 py-1.5 text-xs font-medium text-primary-700 transition-colors hover:bg-primary-100 dark:border-primary-500/40 dark:bg-primary-500/10 dark:text-primary-300 dark:hover:bg-primary-500/20"
+            >
+              <Play className="h-3.5 w-3.5" /> Take a tour
+            </button>
+          )}
+          {onOpenFaq && (
+            <button
+              type="button"
+              onClick={onOpenFaq}
+              className="inline-flex w-fit items-center gap-1.5 rounded-full border border-primary-300 bg-primary-50 px-3 py-1.5 text-xs font-medium text-primary-700 transition-colors hover:bg-primary-100 dark:border-primary-500/40 dark:bg-primary-500/10 dark:text-primary-300 dark:hover:bg-primary-500/20"
+            >
+              <HelpCircle className="h-3.5 w-3.5" /> How do I…?
+            </button>
+          )}
+        </div>
       )}
 
       <Disclaimer name={entry.name} real={real} />
@@ -285,9 +309,51 @@ export default function ClientView() {
   // opened in a theme the real app never defaults to. An explicit choice on the
   // host toggle (persisted as sandstr-theme) always wins; we never write that
   // key here, so auto-switching stops the moment the visitor picks a side.
+  // FAQ panel: open state, the entry to land on when (re)opened, and the entry
+  // whose "Show me" mini-tour we handed the sim — used to bring the panel back
+  // once that tour ends.
+  const [faqOpen, setFaqOpen] = useState(false);
+  const [faqFocusId, setFaqFocusId] = useState<string | null>(null);
+  const [faqResumeId, setFaqResumeId] = useState<string | null>(null);
+
   // The switcher can change client while the sheet is open — it describes a
   // specific reproduction, so it must not survive into the next one.
-  useEffect(() => setAboutOpen(false), [id]);
+  useEffect(() => {
+    setAboutOpen(false);
+    setFaqOpen(false);
+    setFaqFocusId(null);
+    setFaqResumeId(null);
+  }, [id]);
+
+  // After "Show me" hands off to a mini-tour, reopen the FAQ where it left off
+  // once the tour overlay goes away (same .tour-overlay signal the switcher
+  // watches — the overlay is portaled to <body>). `seen` bridges the gap
+  // before the overlay mounts; the failsafe stops waiting if the tour never
+  // materializes (e.g. a broken target selector).
+  useEffect(() => {
+    if (!faqResumeId) return;
+    let seen = false;
+    const check = () => {
+      if (document.querySelector('.tour-overlay')) {
+        seen = true;
+        return;
+      }
+      if (seen) {
+        setFaqFocusId(faqResumeId);
+        setFaqOpen(true);
+        setFaqResumeId(null);
+      }
+    };
+    const mo = new MutationObserver(check);
+    mo.observe(document.body, { childList: true, subtree: true });
+    const failsafe = setTimeout(() => {
+      if (!seen) setFaqResumeId(null);
+    }, 4000);
+    return () => {
+      mo.disconnect();
+      clearTimeout(failsafe);
+    };
+  }, [faqResumeId]);
 
   const clientTheme = entry?.defaultTheme;
   useEffect(() => {
@@ -322,6 +388,13 @@ export default function ClientView() {
   const { Component, frame, className, primaryColor } = entry;
   // Nostr Kitten is the only original (non-real) client in the set.
   const isReal = entry.id !== 'nostr-kitten';
+  // Curated per-client FAQ (prototype: Damus only). Null hides every affordance.
+  const faq = getFaq(entry.id);
+  const handleShowMe = (entryId: string) => {
+    setFaqOpen(false);
+    setFaqResumeId(entryId);
+    showFaqInSimulator({ clientId: entry.id, entryId });
+  };
   // Frameless clients are desktop web apps; at phone widths we gate instead of
   // mounting a sim whose own media queries have deleted its navigation.
   const gated = isMobile && !frame;
@@ -426,6 +499,16 @@ export default function ClientView() {
               <Play className="h-4 w-4" />
             </button>
           )}
+          {faq && !gated && (
+            <button
+              type="button"
+              aria-label={`${entry.name} FAQ`}
+              onClick={() => setFaqOpen(true)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-primary-600 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-500/10"
+            >
+              <HelpCircle className="h-4 w-4" />
+            </button>
+          )}
           <button
             type="button"
             onClick={toggle}
@@ -481,6 +564,15 @@ export default function ClientView() {
             <Play className="h-3.5 w-3.5" /> Take a tour
           </button>
         )}
+        {faq && !gated && (
+          <button
+            type="button"
+            onClick={() => setFaqOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-primary-300 bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 transition-colors hover:bg-primary-100 dark:border-primary-500/40 dark:bg-primary-500/10 dark:text-primary-300 dark:hover:bg-primary-500/20"
+          >
+            <HelpCircle className="h-3.5 w-3.5" /> How do I…?
+          </button>
+        )}
         {isReal && <Handoff entry={entry} compact />}
         {/* The frameless clients have no ContextPanel, so this row is their ONLY
             desktop home for the report link — hence it lives here and not just
@@ -510,10 +602,29 @@ export default function ClientView() {
         </div>
         {/* Framed clients only. A web client already fills its width — the panel
             would be taking room from the reproduction it is describing. */}
-        {frame && <ContextPanel entry={entry} real={isReal} />}
+        {frame && (
+          <ContextPanel
+            entry={entry}
+            real={isReal}
+            onOpenFaq={faq ? () => setFaqOpen(true) : undefined}
+          />
+        )}
       </div>
 
       {aboutOpen && <AboutSheet entry={entry} real={isReal} onClose={() => setAboutOpen(false)} />}
+      {faq && (
+        <FaqPanel
+          clientName={entry.name}
+          faq={faq}
+          open={faqOpen}
+          initialEntryId={faqFocusId}
+          onClose={() => {
+            setFaqOpen(false);
+            setFaqFocusId(null);
+          }}
+          onShowMe={handleShowMe}
+        />
+      )}
     </main>
   );
 }

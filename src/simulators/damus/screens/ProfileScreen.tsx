@@ -56,7 +56,7 @@ export const ProfileScreen: React.FC<Props> = ({ user, currentUser, notes, users
                   onClick={() => setFollowing((f) => !f)}
                   className={`damus-btn text-[15px] px-5 py-2 ${following ? 'damus-btn-outline' : 'bg-[var(--damus-text)] text-[var(--damus-bg)]'}`}
                 >
-                  {following ? 'Following' : 'Follow'}
+                  {following ? 'Unfollow' : 'Follow'}
                 </button>
               )}
             </div>
