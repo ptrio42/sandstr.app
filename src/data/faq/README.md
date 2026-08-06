@@ -79,6 +79,19 @@ Every client's adversarial review has caught at least one of these:
   When the sim cannot show it, drop the `showMe`; a text-only entry is a
   better answer than a demo that contradicts itself.
 
+**Making commands self-sufficient? Watch the stale `currentUser`.** Hoisting
+sign-in above the command switch is the right move (one command per step,
+nothing for the queue to drop) — but the state it sets is NOT visible to the
+same effect pass. Any branch that reasons about "me" (open someone else's
+profile, find another author) must use the value you just signed in with,
+not the `currentUser` in scope. Snort shipped a demo of the Follow button
+that opened the visitor's own profile because of exactly this.
+
+**Mock data does not join up by default.** Two mock modules that both mint
+ids will never match each other, so a lookup like "find the thread
+containing this note" silently returns null and the demo frames an empty
+shell. Verify the command lands on real data, not just on the right screen.
+
 ## Adding a client
 
 1. Draft entries from the screen-map (+ upstream recon for hard topics).
