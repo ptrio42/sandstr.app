@@ -39,9 +39,51 @@ export interface FaqEntry {
   showMe?: FaqShowMeStep[];
 }
 
+/**
+ * Canonical question bank — the topics EVERY client FAQ must account for.
+ * Sourced from real user pain (owner-supplied: wallet connect, media
+ * uploader, cache) plus the cross-cutting picture in docs/GAPS.md. The list
+ * is deliberately client-agnostic: it names the problem, not the UI.
+ */
+export const CANONICAL_TOPICS = [
+  'sign-in',
+  'backup-keys',
+  'logout',
+  'post',
+  'reply',
+  'reactions',
+  'zap',
+  'connect-wallet',
+  'media-uploader',
+  'clear-cache',
+  'manage-relays',
+  'mute',
+  'dms',
+  'search',
+  'notifications',
+  'follow',
+] as const;
+
+export type CanonicalTopic = (typeof CANONICAL_TOPICS)[number];
+
+/**
+ * Per-topic answer of the coverage contract:
+ * - an entry id from `entries` (getFaq dev-validates it resolves),
+ * - 'n/a'  — the REAL client has no such feature (e.g. no DMs), or
+ * - 'todo' — question still to be written; visible debt, not silence.
+ */
+export type TopicCoverage = string | 'n/a' | 'todo';
+
 export interface ClientFaq {
   clientId: string;
   /** Display order of category chips. */
   categories: string[];
   entries: FaqEntry[];
+  /**
+   * Compiler-enforced: a client FAQ that ignores a canonical topic does not
+   * typecheck. This is what guarantees the hard questions (wallet, uploader,
+   * cache…) exist for every client instead of only where an author thought
+   * of them.
+   */
+  coverage: Record<CanonicalTopic, TopicCoverage>;
 }

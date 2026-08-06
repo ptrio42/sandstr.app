@@ -36,6 +36,24 @@ const actionRowStep = (target: string, title: string, content: string): Step => 
 export const damusFaq: ClientFaq = {
   clientId: 'damus',
   categories: CATEGORIES,
+  coverage: {
+    'sign-in': 'sign-in',
+    'backup-keys': 'backup-keys',
+    logout: 'logout',
+    post: 'post-note',
+    reply: 'reply',
+    reactions: 'shaka',
+    zap: 'zap',
+    'connect-wallet': 'connect-wallet',
+    'media-uploader': 'change-media-uploader',
+    'clear-cache': 'clear-cache',
+    'manage-relays': 'manage-relays',
+    mute: 'muted',
+    dms: 'dms',
+    search: 'search',
+    notifications: 'notifications',
+    follow: 'follow',
+  },
   entries: [
     // ---------------------------------------------------- Getting started --
     {
@@ -382,7 +400,10 @@ export const damusFaq: ClientFaq = {
         {
           target: '[data-tour="damus-npub"]',
           title: 'Your npub',
-          content: 'Tap the pill to copy your public key; the QR button above shows it as a scannable code.',
+          // Descriptive, not imperative — the sim's pill is display-only
+          // (gaps/damus.md dam-13), so the caption must not invite a tap.
+          content:
+            'This pill holds your public key — in the real app, tapping it copies your npub and the QR button above shows it as a scannable code.',
           position: 'bottom',
           commands: openDrawer,
         },
