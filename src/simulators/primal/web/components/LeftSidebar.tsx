@@ -44,7 +44,9 @@ export function LeftSidebar({ activeTab, onTabChange, onNewNote, onOpenProfile, 
                 key={id}
                 className={`primal-nav-item${active ? ' active' : ''}`}
                 onClick={() => onTabChange(id)}
-                data-tour={id === 'settings' ? 'primal-settings' : undefined}
+                // Family anchor (gaps pri-02) — `primal-nav-<tab>` for every row;
+                // `primal-settings` kept as an alias for the main tour's target.
+                data-tour={id === 'settings' ? 'primal-settings' : `primal-nav-${id}`}
               >
                 <span className="primal-nav-icon">
                   <Icon size={26} strokeWidth={active ? 2.4 : 1.8} fill={active && fillable ? 'currentColor' : 'none'} />

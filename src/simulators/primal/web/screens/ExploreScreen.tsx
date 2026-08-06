@@ -7,9 +7,18 @@ import { exploreFeeds, explorePeople, hotTopics } from '../data';
 const TABS = ['Feeds', 'People', 'Zaps', 'Media', 'Topics'] as const;
 type ETab = (typeof TABS)[number];
 
-export function ExploreScreen() {
+export function ExploreScreen({ forcedTab }: { forcedTab?: { tab: string; n: number } | null }) {
   const [tab, setTab] = React.useState<ETab>('Feeds');
   const [following, setFollowing] = React.useState<Record<string, boolean>>({});
+
+  // A tour command can force a sub-tab (gaps pri-27); user clicks keep working
+  // through the local state afterwards. The nonce (`n`) re-fires the effect
+  // when the SAME sub-tab is commanded twice in a row.
+  React.useEffect(() => {
+    if (forcedTab && (TABS as readonly string[]).includes(forcedTab.tab)) {
+      setTab(forcedTab.tab as ETab);
+    }
+  }, [forcedTab]);
 
   return (
     <div>

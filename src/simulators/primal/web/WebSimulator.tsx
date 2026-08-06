@@ -21,7 +21,7 @@ export type TabId =
   | 'notifications' | 'downloads' | 'premium' | 'settings' | 'profile';
 
 export interface SimulatorCommand {
-  type: 'login' | 'navigate' | 'compose' | 'post' | 'viewProfile';
+  type: 'login' | 'logout' | 'navigate' | 'compose' | 'post' | 'viewProfile' | 'exploreTab';
   payload?: any;
 }
 
@@ -47,6 +47,11 @@ const RIGHT_VARIANT: Record<TabId, RightVariant | null> = {
 export function PrimalWebSimulator({ className = '', tourCommand, onCommandHandled }: PrimalWebSimulatorProps) {
   const parentTheme = useParentTheme();
   const [activeTab, setActiveTab] = useState<TabId>('home');
+  // Commanded Explore sub-tab (gaps pri-27); null = leave ExploreScreen's own
+  // local state alone. The nonce makes a REPEAT of the same command a fresh
+  // object — without it, relaunching a demo while already on Explore bails on
+  // same-value setState and the forcedTab effect never re-fires.
+  const [exploreTab, setExploreTab] = useState<{ tab: string; n: number } | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const [thread, setThread] = useState<PNote | null>(null);
@@ -62,6 +67,10 @@ export function PrimalWebSimulator({ className = '', tourCommand, onCommandHandl
     setThread(null);
     setActiveTab(tab);
     if (tab !== 'home') setComposeOpen(false);
+    // A commanded Explore sub-tab must not outlive the mini-tour that forced
+    // it — without this, a later USER click on Explore remounts the screen
+    // with the stale forcedTab and lands on People instead of Feeds.
+    setExploreTab(null);
   }, []);
 
   const openCompose = useCallback(() => {
@@ -87,7 +96,9 @@ export function PrimalWebSimulator({ className = '', tourCommand, onCommandHandl
         break;
       case 'navigate': {
         const tab = tourCommand.payload as TabId;
-        if (RIGHT_VARIANT[tab] !== undefined) { setThread(null); setActiveTab(tab); }
+        // Plain navigate lands on Explore's DEFAULT tab — only the exploreTab
+        // command below opts into a forced sub-tab.
+        if (RIGHT_VARIANT[tab] !== undefined) { setThread(null); setExploreTab(null); setActiveTab(tab); }
         break;
       }
       case 'compose':
@@ -101,6 +112,25 @@ export function PrimalWebSimulator({ className = '', tourCommand, onCommandHandl
         break;
       case 'viewProfile':
         if (authenticated) { setThread(null); setActiveTab('profile'); }
+        break;
+      case 'logout':
+        // gaps pri-04 — the login screen (and its primal-keys anchor) was
+        // unreachable for the rest of the session after the first login.
+        setAuthenticated(false);
+        setThread(null);
+        setActiveTab('home');
+        break;
+      case 'exploreTab':
+        // gaps pri-27 — Explore's sub-tabs (People with the Follow pill, Zaps,
+        // Topics…) were reachable only by a user click.
+        if (authenticated) {
+          const t = tourCommand.payload;
+          if (['Feeds', 'People', 'Zaps', 'Media', 'Topics'].includes(t)) {
+            setThread(null);
+            setExploreTab((prev) => ({ tab: t, n: (prev?.n ?? 0) + 1 }));
+            setActiveTab('explore');
+          }
+        }
         break;
     }
     onCommandHandled?.();
@@ -116,13 +146,13 @@ export function PrimalWebSimulator({ className = '', tourCommand, onCommandHandl
       case 'home':
         return <HomeScreen composeOpen={composeOpen} onOpenCompose={() => setComposeOpen(true)} onCloseCompose={() => setComposeOpen(false)} onPost={handlePost} onOpenThread={openThread} />;
       case 'reads': return <ReadsScreen />;
-      case 'explore': return <ExploreScreen />;
+      case 'explore': return <ExploreScreen forcedTab={exploreTab} />; {/* {tab,n} — see exploreTab state */}
       case 'messages': return <MessagesScreen />;
       case 'bookmarks': return <BookmarksScreen onOpenThread={openThread} />;
       case 'notifications': return <NotificationsScreen />;
       case 'downloads': return <PlaceholderScreen kind="downloads" />;
       case 'premium': return <PlaceholderScreen kind="premium" />;
-      case 'settings': return <SettingsScreen />;
+      case 'settings': return <SettingsScreen onLogout={() => { setAuthenticated(false); setThread(null); setActiveTab('home'); }} />;
       case 'profile': return <ProfileScreen onOpenThread={openThread} />;
       default: return null;
     }

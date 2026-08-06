@@ -346,6 +346,12 @@ export default function ClientView() {
     };
     const mo = new MutationObserver(check);
     mo.observe(document.body, { childList: true, subtree: true });
+    // Initial read, same as the switcher's useTourActive: if the overlay is
+    // ALREADY mounted when this effect arms (a relaunch that mutates no sim
+    // DOM commits the tour and this state in one pass), no mutation will ever
+    // report it — without this, `seen` stays false and the failsafe silently
+    // cancels the resume.
+    check();
     const failsafe = setTimeout(() => {
       if (!seen) setFaqResumeId(null);
     }, 4000);

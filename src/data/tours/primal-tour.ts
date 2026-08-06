@@ -79,7 +79,11 @@ const primalTourSteps: TourStep[] = [
   },
   {
     id: 'primal-settings',
-    target: '.primal-settings-screen, [data-tour="primal-settings"]',
+    // The settings SCREEN, not the sidebar nav row: querySelector resolves a
+    // comma list in document order, and the nav row's [data-tour="primal-settings"]
+    // sits earlier in the DOM — it always won, pinning the spotlight to the
+    // small sidebar row while the screen the copy describes sat dimmed behind.
+    target: '.primal-settings-screen, [data-tour="primal-settings-screen"]',
     title: 'Settings & Security',
     content: 'Manage your account, backup your keys, adjust notification preferences, and configure the app. Remember to backup your private key securely - if you lose it, you lose access to your account!',
     position: 'center',
