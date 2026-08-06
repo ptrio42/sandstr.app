@@ -225,6 +225,16 @@ w `public/robots.txt`. Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` 
   z `AUDIT.md`** (YakiHonne jest oranż, nie fiolet; Keychat fiolet, nie blue; Primal domyślnie blue).
   Wzorzec wykonany na Amethyście: głęboki, zweryfikowany referencyjnie (9 powierzchni, realny fiolet
   `#7F67BE` + OLED czerń + kolejność akcji reply/boost/react/zap, inline-SVG avatary, lokalne `data:` media).
+- **`docs/FAQ.md`** — **stan i wnioski z wdrożenia FAQ** (2026-08-06): 166 pytań w 8 klientach,
+  104 mini-toury, mechanizmy jakości (kontrakt pokrycia wymuszany przez kompilator, rejestr luk jako
+  bramka `showMe`, rewizja adwersaryjna) i lista tego, czego nauczyło nas 68 potwierdzonych znalezisk.
+  Kontrakt autorski (jak pisać wpisy) jest w `src/data/faq/README.md`.
+- **`docs/GAPS.md`** — **rejestr luk: czego brakuje w symulatorach** (audyt 2026-08-05, 586 zweryfikowanych
+  wierszy). Indeks + wnioski przekrojowe, a per klient `docs/gaps/<client>.md`: ekran po ekranie, kontrolka
+  po kontrolce, ze statusem `missing`/`dead`/`partial`/`unreachable`/`unanchored` i cytatem `plik:linia`.
+  Schemat: `docs/gaps/README.md`. **Czytaj przed pisaniem FAQ** (`src/data/faq/<client>.ts`) — mówi, czy
+  dana ścieżka w ogóle istnieje, ma kotwicę `data-tour` i jest osiągalna komendą toura, czyli czy wolno
+  dodać `showMe`. Relacja do `FIDELITY.md`: tam **jak realny klient wygląda**, tu **ile z tego mamy**.
 - `README.md` — przegląd + jak dokładnie wyodrębniono feature z oryginału.
 - Origin: audyt powstał w sesji w `../nostr-beginner-guide` (pamięć `sandstr-simulators-spinoff`); ten
   katalog to inny projekt, więc tamta pamięć **nie** ładuje się tu automatycznie — dlatego audyt jest
