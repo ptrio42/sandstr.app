@@ -43,6 +43,24 @@ Follow **docs/GAPS.md → „Zasady dla autora FAQ"** (and the per-client ledger
   control is dead in the sim; captions describe the real app instead,
 - entries without `showMe` are fine — the panel hides the button.
 
+## Recurring review findings (check these before shipping)
+
+Every client's adversarial review has caught at least one of these:
+
+- **A showMe step whose own command unmounts its target.** Only the top
+  overlay renders in most sims, so `openSettings` with a sub-screen payload
+  removes the settings-root anchor. Target the screen you actually open.
+- **A multi-match selector framing the wrong instance.** `querySelector`
+  returns the first match in DOCUMENT order — never selector-list order. If
+  what you describe (a media block, a Follow pill) exists on only some cards,
+  anchor that element itself instead of pointing at "the first post".
+- **Commanded state that outlives the demo.** A forced sub-tab or a toggled
+  mode silently changes every later demo. Reset it on navigation, or end the
+  walk-through by switching it back.
+- **A caption describing the real app while the spotlight frames the sim.**
+  Both must be true at once: ground the claim upstream AND check the sim
+  renders it (counts, colors, empty states differ).
+
 ## Adding a client
 
 1. Draft entries from the screen-map (+ upstream recon for hard topics).
