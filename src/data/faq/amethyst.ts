@@ -20,6 +20,7 @@ const CATEGORIES = [
   'Relays',
   'Account & keys',
   'Advanced',
+  'Troubleshooting',
 ];
 
 type Step = FaqShowMeStep;
@@ -42,6 +43,7 @@ export const amethystFaq: ClientFaq = {
     'sign-in': 'sign-in',
     'backup-keys': 'backup-keys',
     logout: 'logout',
+    'multi-account': 'multi-account',
     post: 'post-note',
     reply: 'reply',
     reactions: 'react-heart',
@@ -486,6 +488,190 @@ export const amethystFaq: ClientFaq = {
         'To free up space, use Android itself: long-press the Amethyst icon → App info → "Storage & cache" → "Clear cache".',
         'Logging out also wipes all local data — but only do that with your nsec safely backed up.',
       ],
+    },
+    {
+      // ui/navigation/drawer/DrawerContent.kt: ListContent → IconRow(title =
+      // R.string.drawer_accounts, icon = GroupAdd) at the bottom of the drawer,
+      // opening AccountSwitchBottomSheet.kt (DisplayAllAccounts / ActiveMarker /
+      // LogoutButton per row). "Add New Account" opens AddAccountDialog.kt,
+      // which hosts LoginOrSignupScreen(isFirstLogin = false) — hence sign-up
+      // and the NIP-55 external-signer button are available inside it too.
+      // AccountCacheState keeps MutableStateFlow<Map<HexKey, Account>>, and
+      // AccountPreferenceStores mints one DataStore per account.
+      //
+      // TEXT-ONLY: our drawer (components/Drawer.tsx:20-32) ships 11 rows and
+      // no "Accounts" row, so there is nothing to spotlight. The v1.12.6
+      // recording behind our screen-map did not capture the row either — treat
+      // as a version gap, not a fidelity bug.
+      id: 'multi-account',
+      category: 'Account & keys',
+      question: 'How do I add a second account or switch between accounts?',
+      answer: [
+        'Tap your avatar to open the drawer and scroll to the bottom — the last row is "Accounts".',
+        'A "Select Account" sheet slides up listing every account you have added, each with its picture, name and shortened npub. The one you are on is marked "Active account".',
+        'Tap any row to switch to it. Nothing is logged out — the others stay in the list.',
+        'To add one, tap "Add New Account" and paste an nsec into the key field. The same dialog also takes an npub (a read-only account), an ncryptsec (a password field appears), a "Sign Up" button for a brand-new identity, and the Amber button if you have a signer app installed.',
+        'Watch the "Log off on device lock" checkbox. Amethyst ticks it for you when the key arrives by QR scan or by opening a nostr link, and an account added that way is deliberately never written to the phone — it disappears from the list when the app restarts. Untick it if you want the account to stay.',
+        'To remove just one, tap the logout icon on that account\'s own row.',
+      ],
+      note: 'Each account keeps its own relays, mutes, bookmarks and feeds in its own store, and Notification Settings has an "Accounts active in the background" section with one switch per account. The account list itself does not sync between devices — your keys live only where you typed them.',
+      howNostrWorks:
+        'A second account is not a sub-account. On Nostr an account IS a keypair, so adding one means the app now holds a second private key and signs with whichever you picked — nothing is transferred and no server is told. Each key has its own profile, its own follow list, its own relay list and its own DMs, which are encrypted to that key and unreadable by the other. Because a key is just a string, the same identity can be added on any number of clients at once; conversely your list of accounts exists nowhere but the device you typed them into.',
+    },
+
+    // ------------------------------------------------------- Troubleshooting --
+    // "Why doesn't this work" answers. TEXT-ONLY on purpose: the simulator
+    // cannot stage a failure, so a demo here could only contradict itself.
+    // Grounded in vitorpamplona/amethyst main (2026-08-07). Where the recon
+    // could confirm a string ID but not its English value, the copy paraphrases
+    // rather than quotes — see the per-entry comments.
+    {
+      // settings/ResourceUsageScreen.kt: heap / image cache / image disk /
+      // native heap meters + cached note & user counts + relay connection hours
+      // and reconnect counts. Read-only: CachePruner runs inside the app and
+      // there is NO user-facing clear/prune/safe-mode control.
+      // AppSettingsScreen.kt binds each media row to ConnectivityType
+      // (ALWAYS / WIFI_ONLY / NEVER).
+      id: 'trouble-startup',
+      category: 'Troubleshooting',
+      question: 'Amethyst crashes or hangs when I open it — what can I do?',
+      answer: [
+        'There is a real diagnostics screen: Settings → Resource Usage. It shows live heap use (colour-coded), the image cache and image disk cache, how many notes and users are held in memory, plus relay connection hours and reconnect counts.',
+        'It is monitoring only — Amethyst has no in-app clear-cache, prune, reset or safe-mode button. Pruning happens automatically.',
+        'What you can actually turn down: four media settings each take Always / Unmetered WiFi / Never — Image Preview, Video Playback, URL Preview and Profile Picture. Setting them to Never removes most of the work a heavy launch is doing (Autoplay Videos is a separate on/off switch).',
+        'The other lever is your relay list: fewer relays means fewer simultaneous connections and a smaller flood of events at startup.',
+        'If the always-on background service is what wedges it, its master toggle and the per-account background switches are in Notification Settings.',
+        'Before any reinstall or clearing of app storage: drawer → "Backup Keys" → "Copy my secret key". Amethyst holds your keys in local encrypted storage, so wiping app storage removes every account from the device.',
+      ],
+      howNostrWorks:
+        'A Nostr client is not fetching one page from one server. On launch it opens a socket to every relay in your lists at once and pulls a firehose of events, then holds a live graph of notes and users in memory. The bigger your follows and relay list, the more lands in that graph — which is why a heavy account can hang where a fresh one starts instantly. Nothing about your identity is in that cache: your profile, follows and notes are events on relays under your public key, so a reinstall loses nothing permanent as long as you still hold the nsec. The nsec is the one thing that exists only on your device.',
+    },
+    {
+      // note/NoteQuickActionMenu.kt: LongPressToQuickAction → R.string.broadcast
+      // → accountViewModel.broadcast(note). relays/AllRelayListScreen.kt groups
+      // relays by purpose (home/outbox, notifications/inbox, private in/out,
+      // broadcast, proxy, indexer, search, local, trusted, favourite, blocked,
+      // connected) — the recon confirmed the section IDs but NOT their English
+      // labels, so this copy describes the grouping without quoting it.
+      id: 'trouble-not-delivered',
+      category: 'Troubleshooting',
+      question: 'My notes are not showing up for other people (or I cannot see theirs)',
+      answer: [
+        'Long-press the note and choose "Broadcast" — that republishes the exact same signed note to your relays.',
+        'Open the drawer and check the counter on the "Relays" row. It shows connected out of total; a number well below the total means you are writing to fewer relays than you think.',
+        'Open the relay settings screen. It is not one flat list — relays are grouped by job, each group with its own explainer: the ones your notes are written to, the ones other people reach you on, private in and out, broadcast, search, and a group listing what you are connected to right now.',
+        'Open a relay\'s own details. Relays advertise Auth Required, Payment Required, Restricted Writes and a minimum proof-of-work — any of these accepts your connection and then refuses your notes. An auth-required relay only works if Settings → Relay Authentication is set to authenticate it; on "Never authenticate" Amethyst ignores the challenge and the relay keeps nothing.',
+        'Use "Add a Relay" to publish somewhere else as well; a malformed address is rejected with a message about needing a host name or a bracketed IP.',
+        'On long-form posts and lists Amethyst may add "Source relays may be stale" — that flags relays whose monitor reports are over two weeks old, not a delivery failure of your own notes.',
+        'If nothing you write leaves at all, check you are not on a watch-only account — see "I cannot post at all".',
+      ],
+      howNostrWorks:
+        'There is no send button that reaches everyone. Publishing means pushing the signed note to each relay you are configured to write to, and a reader only sees it if their client reads from a relay that accepted and kept it. NIP-65 formalises this: you advertise a small set of write relays so followers know where to fetch you, and read relays so people can reach you. If your write relays are down, rate-limiting you, paid-only, or simply not the ones your audience reads, the note is perfectly valid and nobody fetches it. Relays can also silently drop events — accepting a message is not a promise to store it. That is why rebroadcasting is safe and normal: the note id and signature are unchanged, you are just handing the same event to more relays.',
+    },
+    {
+      // strings.xml, verbatim: user_does_not_have_a_lightning_address_setup…,
+      // no_zap_amount_setup_long_press_to_change, send_payment_no_methods,
+      // send_payment_requesting_invoice / _nostr / _paying_via /
+      // _sent_to_wallet, invoice_expired, podcast_value_keysend_requires_nwc,
+      // login_with_a_private_key_to_be_able_to_send_zaps.
+      // settings/NIP47SetupScreen.kt = the NWC wallet setup.
+      id: 'trouble-zap-failed',
+      category: 'Troubleshooting',
+      question: 'My zap failed — what went wrong?',
+      answer: [
+        'Amethyst names the stage that broke, so read the message. "User does not have a lightning address set up to receive sats" means the recipient has none — nothing on your side can fix that.',
+        '"No Zap Amount Setup. Long Press to change" means your own presets are empty: long-press the ⚡ on any note to open the zap-amount screen and add some.',
+        'On a watch-only account you get "You are using a public key and public keys are read-only. Login with a Private key to be able to send zaps" — the zap request itself has to be signed.',
+        'Watch which progress message it stalls on. "Requesting invoice…" hanging is the recipient\'s Lightning server; a stall after "Paying via…" is your wallet. Without a connected wallet Amethyst just hands the invoice over — "Invoice handed to your wallet app to complete the payment." — and the rest is that app\'s problem.',
+        'Attach a wallet properly: drawer → "Wallet" → "Add NWC Connection" → "Connect a Lightning wallet (NWC)". Some recipients require it outright ("Connect a Nostr Wallet Connect wallet to send to keysend (node) recipients.").',
+        'Check which method you are actually on. The Send Payment sheet has a "Receive on" row — Lightning, CLINK Offer, On-chain or Cashu — following what the recipient announced. Cashu fails with "Not enough balance in a mint this recipient accepts", on-chain with a minimum-sats message, and both CLINK and a plain bitcoin address pay directly with NO zap receipt, so the money moves and the ⚡ count never changes.',
+        'An invoice left too long is simply marked "Expired" — start again.',
+      ],
+      howNostrWorks:
+        'A zap is not a Nostr message that carries money — it chains three separate systems and each fails differently. First your client reads a lightning address out of the recipient\'s profile event; if that field is empty or the profile you fetched is stale, there is nothing to pay. Second it asks that address\'s server for an invoice, which can fail because the server is down or your amount is outside its limits. Third your wallet pays the invoice — no balance, no route, expired — and that leg happens entirely outside Nostr. Only afterwards does the recipient\'s server publish a zap receipt to relays, and that receipt is what everyone sees as the ⚡ count. So a zap can be paid and still look failed: the money moved, the receipt never reached a relay you read.',
+    },
+    {
+      // strings.xml: nine per-action refusals all opening "You are using a
+      // public key and public keys are read-only. Login with a Private key to
+      // be able to …" (reply / boost / like / zap / follow / unfollow / upload /
+      // sign events / hide word). AccountSwitchBottomSheet.kt renders no
+      // read-only badge, so the first signal really is the refusal.
+      id: 'trouble-read-only',
+      category: 'Troubleshooting',
+      question: 'I cannot post, like or follow anything',
+      answer: [
+        'You are signed in with an npub. Amethyst tells you the moment you try — every write action refuses with the same opening: "You are using a public key and public keys are read-only. Login with a Private key to be able to…" (reply, boost, like, zap, follow, upload, and more).',
+        'Two ways to land here without meaning to. Typing a NIP-05 address (name@domain) instead of a key logs you in read-only — Amethyst looks the name up and keeps only the public key it finds. And if you signed in through Amber, the same actions fail with "Signer not found — was the Signer app uninstalled?" instead: that account CAN write, its signer just is not answering, so reinstall the signer rather than pasting an nsec.',
+        'It does not warn you up front either: rows in the "Select Account" sheet look identical whether an account can sign or not, and there is no read-only badge anywhere in the app.',
+        'Fix it without losing the read-only account: drawer → "Accounts" → "Add New Account" → paste your nsec → Login. Then pick that account in the sheet. The npub one stays in the list.',
+        'If your key lives in Amber or another signer app, use the external-signer button in that same dialog instead of pasting anything — the key never enters Amethyst.',
+        'A soft second signal: read-only accounts are missing from the per-account background switches in Notification Settings, which are only offered for accounts that can write.',
+      ],
+      howNostrWorks:
+        'An npub is only the public half of the keypair. Everything that changes anything on Nostr — a note, a reply, a like, a repost, a follow, even a zap request — is an event that must carry a signature made with the private half, and relays reject anything unsigned. So a client holding only an npub genuinely cannot write; this is arithmetic, not the app being cautious. Reading needs no key at all, which is why a watch-only session shows a completely normal timeline. The way out is to give the app something that can sign: the nsec itself, or a delegate that holds it — an Android signer app like Amber, or a remote signer — which signs on request and hands back the signed event without ever revealing the key.',
+    },
+    {
+      // AppSettingsScreen.kt media section: automatically_load_images_gifs,
+      // automatically_play_videos, autoplay_videos,
+      // automatically_show_url_preview, automatically_show_profile_picture —
+      // each bound to ConnectivityType (ALWAYS / WIFI_ONLY / NEVER). Sensitive
+      // content defaults to Warn (screen-map §Settings suite). Tor: strings.xml
+      // tor_relay = "Forces Tor when connecting". Blossom (nipB7Blossom)
+      // governs YOUR uploads, not other people's images.
+      id: 'trouble-images',
+      category: 'Troubleshooting',
+      question: 'Images and videos are not loading',
+      answer: [
+        'Settings → Media & Data has four three-state controls — Image Preview, Video Playback, URL Preview and Profile Picture — each set to Always, Unmetered WiFi or Never, plus a separate on/off "Autoplay Videos" switch. Images blank on mobile data but fine on Wi-Fi means one of the three-state rows is on Unmetered WiFi.',
+        'Security Filters shows sensitive content as "Warn" by default, which hides flagged media behind a warning rather than failing to load it.',
+        'If you have Tor on — or a relay marked "Forces Tor when connecting" — media hosts that block Tor exits will fail while your notes keep arriving normally.',
+        'Settings → Resource Usage counts image traffic and image cache separately from relay traffic, so you can see whether images are being fetched at all.',
+        'Amethyst has no image-proxy or mirror setting: it loads media from whatever URL is in the note. Its media-server (Blossom) settings decide where YOUR uploads go, not where other people\'s images come from.',
+      ],
+      howNostrWorks:
+        'An image is not part of the note. A note is a small text event on relays; a picture in it is just a URL to an ordinary web host that has nothing to do with Nostr and owes you nothing. So the note can arrive perfectly while the image fails — the host deleted the file, went down, geo-blocks or Tor-blocks you, or rate-limits. None of that shows up as a relay problem, because it is not one. It also means images and notes rot on different clocks: a relay may keep your event for years — though nothing guarantees it, relays advertise their own retention limits — while the image host expires the file on its own schedule. Uploading is the mirror image — your client pushes the file to a media server and puts the returned URL in the note, which is why upload settings and relay settings are two different screens.',
+    },
+    {
+      // settings/NotificationSettingsScreen.kt: sections delivery / display /
+      // categories; master service toggle; per-account "keep active in
+      // background"; battery-optimization banner; per-channel state (on /
+      // silent / off) opening the system settings. PULL_NOTIFICATION.md: the
+      // always-on service is opt-in and OFF by default, and holds sockets to
+      // your inbox + DM relays.
+      id: 'trouble-notifications',
+      category: 'Troubleshooting',
+      question: 'My notifications stopped arriving',
+      answer: [
+        'Open Notification Settings — it is organised into delivery, display and categories.',
+        'If you have a UnifiedPush app installed (ntfy or similar), Delivery starts with a "Push provider" row — a separate delivery path that can read "None", which disables push entirely. Check it first.',
+        'Below it, Delivery holds the master switch for the always-on notification service and, crucially for multi-account, a section "Accounts active in the background" with one switch per account. If you added or switched accounts, the new one may simply never have been switched on.',
+        'Take the battery-optimisation banner seriously and use its fix button. Without that exemption Android cuts the app\'s network during maintenance windows and notifications stop until you open the app.',
+        'Categories lists each Android notification channel with its live state — on, silent or off — and tapping one opens the system settings for it. A channel Android quietly set to silent is the most common invisible cause.',
+        'If notifications work but the wrong things are missing, the cause is on the relay screen instead: mentions of you have to land on the relays you listen on.',
+      ],
+      howNostrWorks:
+        'Nostr has no notification server, and nobody holds a list of your devices. A notification is just an event someone published that tags your public key — a reply, a mention, a reaction, a zap receipt — and you find out only if something is subscribed to a relay that received it. NIP-65 is the agreed answer to "where do I send things so this person sees them": you advertise inbox relays and well-behaved clients write mentions there. DMs are separate again, with their own relay list and content encrypted to your key. That leaves two failures that look identical from outside: the phone stopped listening (battery optimisation, force-stopped app, service off), or nothing was ever delivered to a relay you listen on.',
+      note: 'The always-on service is opt-in and off by default — if you never enabled it, notifications only arrive while the app is open.',
+    },
+    {
+      // AccountSwitchBottomSheet.kt shows the shortened npub per row and marks
+      // the ActiveMarker, so "which key am I on" is answerable in the app.
+      // strings.xml stale_relay_hint_label = "Source relays may be stale".
+      // No dedicated republish-profile action was found — the copy therefore
+      // says "edit and save" rather than naming a button.
+      id: 'trouble-empty-profile',
+      category: 'Troubleshooting',
+      question: 'My profile is empty and my follows are gone',
+      answer: [
+        'Check which key you are on first. Drawer → "Accounts" shows every account with its shortened npub and marks the current one "Active account". An empty account is nearly always a different key than you think.',
+        'The drawer header shows your picture, name and Following/Followers counts, so "0 following" is visible without opening anything.',
+        'If it is the right key, the problem is relay-side: your profile and follow list have to exist on relays you are actually reading from. (Amethyst\'s "Source relays may be stale" warning will not help here — it only appears on addressable events such as long-form posts and lists, and it reports that the delivering relays have not been monitored recently, not that your data is missing.)',
+        'Use "Add a Relay" to add relays likely to still hold your old data, then let the client refetch. Follows reappearing after a re-sync is normal, not luck.',
+        'Before experimenting, secure the key itself: drawer → "Backup Keys" → "Copy my secret key" (or the encrypted version with a password). There is no account recovery without it.',
+        'There is no one-tap "republish my profile and follows" button. "Broadcast" in a note\'s long-press menu rebroadcasts that note only; for the profile, edit and save it so a fresh event goes out.',
+      ],
+      howNostrWorks:
+        'Your profile and follow list are not account records on a server — they are two ordinary events published under your public key, and they are "replaceable": each relay keeps only the newest one it has seen and discards the older. Three consequences explain almost every empty-profile report. A different key is a different, genuinely empty person — nothing links two keypairs, so one wrong character looks exactly like data loss. Connect to relays that never received your profile and follow list and the client honestly has nothing to show, while the data sits intact on relays you are not talking to. And because only the newest survives, a client that publishes a shorter follow list can overwrite a longer one on the relays that accept it — the fuller list still exists on the relays that missed the update, which is why follows sometimes come back.',
     },
   ],
 };
