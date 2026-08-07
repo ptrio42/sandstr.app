@@ -18,6 +18,7 @@ const CATEGORIES = [
   'Relays',
   'Account & keys',
   'Advanced',
+  'Troubleshooting',
 ];
 
 type Step = FaqShowMeStep;
@@ -40,6 +41,7 @@ export const damusFaq: ClientFaq = {
     'sign-in': 'sign-in',
     'backup-keys': 'backup-keys',
     logout: 'logout',
+    'multi-account': 'multi-account',
     post: 'post-note',
     reply: 'reply',
     reactions: 'shaka',
@@ -466,6 +468,41 @@ export const damusFaq: ClientFaq = {
       ],
     },
     {
+      // Damus stores exactly ONE identity: Keys.swift keeps a single Keychain
+      // item under the fixed account name "privkey" plus one UserDefaults
+      // "pubkey" — there is no accounts collection to switch between, and
+      // SideMenuView.swift has no Add/Switch row. Per-account settings survive
+      // because UserSettingsStore namespaces every setting by pubkey
+      // (pk_setting_key / globally_load_for(pubkey:)).
+      id: 'multi-account',
+      category: 'Account & keys',
+      question: 'How do I add a second account or switch between accounts?',
+      answer: [
+        'Damus has no account switcher — it holds one key at a time, so switching means signing out and signing back in with the other key.',
+        'Back up the key you are leaving FIRST: side menu → Settings → Keys → flip "Show" under "Secret Account Login Key", authenticate with Face ID, and copy the nsec.',
+        'Side menu → "Logout" and confirm the alert ("Make sure your nsec account key is saved before you logout or you will lose access to this account").',
+        'On "Welcome to Damus" tap "Sign In", paste the other account\'s nsec, and tap "Login".',
+        'Your settings for that key come back on their own — zap amount, blur, notification toggles are all stored per public key and survive the logout.',
+        'One thing does not come back: logging out disconnects your Lightning wallet, on BOTH keys. Reattach it in side menu → Wallet before you try to zap.',
+      ],
+      howNostrWorks:
+        'On Nostr an account IS a keypair — nothing more. The npub is your public identity and the nsec is the only thing that can produce a signature, so "switching accounts" means switching which private key the app signs with; there is no server-side session to switch. Everything that makes an account feel like an account is a set of events published under that one key: your name and picture, your follow list, your relay list. Sign in with a different key and a client rebuilds a completely different account from that key\'s events — which is why a wrong key looks indistinguishable from a lost one.',
+      note: 'Signing in with an npub is not a second account — it replaces your session with a read-only one. Damus also has no NIP-46 bunker, Amber or extension login, so the nsec has to go into the app itself. And do not reach for Settings → "Delete Account" to clear the key you are leaving: despite its all-caps warning it deletes nothing, it signs a replacement profile reading "nobody / account deleted" under that key and logs you out — your notes stay on relays and the key still works everywhere else.',
+      showMe: [
+        {
+          target: '[data-tour="damus-menu"]',
+          // Descriptive, not imperative: the point of the demo is what is NOT
+          // in this menu. Do not enumerate rows — the sim ships a subset of the
+          // real 11 (no Labs, no Live).
+          content:
+            'The side menu is the only place a switcher could live, and Damus has none — no "Add account", no picker in the header. Changing identity means Logout, then Sign In with the other key.',
+          title: 'No switcher, by design',
+          position: 'right',
+          commands: openDrawer,
+        },
+      ],
+    },
+    {
       // §5 Side menu (row 11, Logout confirm behavior)
       id: 'logout',
       category: 'Account & keys',
@@ -530,6 +567,150 @@ export const damusFaq: ClientFaq = {
         'Confirm on the "Setup Wallet" screen — from then on zaps are paid straight from Damus.',
       ],
       note: 'The one-click Coinos setup requires being signed in with your nsec. Coinos is a third-party service — the Damus team has no access to your wallet.',
+    },
+
+    // ------------------------------------------------------- Troubleshooting --
+    // "Why doesn't this work" answers. TEXT-ONLY on purpose: the simulator
+    // cannot stage a failure, so a demo here could only contradict itself.
+    // Every claim is grounded in damus-io/damus master (2026-08-07); `answer`
+    // is what to do IN DAMUS, `howNostrWorks` is the protocol half.
+    {
+      // Ndb.safemode() deletes data.mdb/lock.mdb and reopens fresh;
+      // ContentView.connect() calls it automatically and logs out if it also
+      // fails. CompactionView.swift owns the "Optimizing Database" screen.
+      // StorageSettingsView.swift: "Compact Database" + "Clear Cache".
+      id: 'trouble-startup',
+      category: 'Troubleshooting',
+      question: 'Damus crashes or hangs when I open it — what can I do?',
+      answer: [
+        'A launch stuck on "Optimizing Database" with a progress bar is not a hang — it is compaction, and the screen asks you to keep the app open. On a large database it says so explicitly and can take minutes.',
+        'Damus already repairs itself: if it cannot open its local database it silently wipes and recreates it, and your feed refills from relays. You never see a button for this.',
+        'To force the cleanup yourself: side menu → Settings → Storage → "Compact Database", confirm, then restart Damus when it says "Compaction scheduled."',
+        'Lighter option on the same screen: "Clear Cache" — it frees space and images simply reload more slowly afterwards.',
+        'For diagnostics, Settings → Developer → "Developer Mode" adds a "Relay Logs" section inside each relay\'s detail screen. That is the only log surface in the app.',
+      ],
+      howNostrWorks:
+        'Nothing you can see in a Nostr client lives only on your phone. Notes are signed events and the relays keep the copies, so a client\'s local database is a cache — deleting it is a cheap first move, not a last resort, because it refills from relays. The only things a wipe genuinely costs you are the ones never published: notes still queued to send, and a follow or relay list that only ever existed locally. Your identity is untouched either way — it is the private key in the keychain, not database state.',
+      note: 'If self-repair also fails, Damus logs you out and drops you at the welcome screen — which is exactly why the nsec backup matters. There is no user-facing crash log; Settings → First Aid prints support@damus.io.',
+    },
+    {
+      // EventMenu.swift / ShareAction.swift: "Broadcast" (globe).
+      // SignalView.swift renders only when signal < max_signal.
+      // PostBox.flush_event retries per relay with 1.5x backoff until OK.
+      // UserRelayListManager: NIP-65 kind 10002 under your pubkey.
+      id: 'trouble-not-delivered',
+      category: 'Troubleshooting',
+      question: 'My notes are not showing up for other people (or I cannot see theirs)',
+      answer: [
+        'Damus has a real re-send: tap the "…" button in the note\'s top-right corner → "Broadcast" (globe). It also sits in the note\'s share sheet. That pushes the same signed note to every relay you are connected to.',
+        'Check where you are connected: side menu → Relays. Each row carries a status pill — Online, Connecting or Error. A relay showing Error is receiving nothing you post.',
+        'Watch the small signal meter at the top-right of Home. It appears ONLY when some relays are disconnected, and tapping it opens Relays. But no meter only means every socket is up — it says nothing about whether those relays accepted you.',
+        'A relay can read "Online" and still refuse everything. Relays that require authentication challenge you on connect, and Damus reports the outcome in exactly one place: open that relay\'s detail screen and look for the Pending / Authenticated / Error badge. A read-only npub session can never pass the challenge, so those relays silently drop every post.',
+        'Tap a single relay to open its detail screen — but read the button carefully. "Disconnect" does not just drop the socket, it REMOVES that relay from your published relay list, and "Connect" adds it back. Use it to drop a relay that is failing, not as a refresh.',
+        'Publish somewhere else too: Relays → "Add relay" → wss://… . Damus adds every relay as read+write; there is no read/write choice in the UI.',
+        'If your relay list itself has gone missing, Settings → First Aid offers "Repair relay list" (it warns you may lose relays you added by hand).',
+      ],
+      howNostrWorks:
+        'A note only exists on the relays that actually accepted it, and a reader only sees it if they read from a relay that has it. Your client pushes to each relay independently and retries the slow ones in the background, so one relay refusing does not stop the others. Every relay does answer each publish with an accept-or-reject line saying why, but almost no client shows you those answers, so a refusal looks exactly like silence. Your relay set is itself a published event (a NIP-65 relay list under your key), and that is how other people\'s clients learn where to look for you. So a note can be perfectly published and still invisible: if your readers\' clients never fetched your relay list, or it points at relays they do not read, there is no relay in common. That is also why Broadcast helps — it widens the set of relays holding a copy.',
+    },
+    {
+      // ContentView `.onReceive(handle_notify(.zapping))` has `case .failed:
+      // break` — quick zaps fail silently. CustomizeZapView.receive_zap guards
+      // on zap_ev.is_custom before setting model.error, and NoteZapButton binds
+      // long-press to the custom sheet. EventActionBar: zap drawn only when
+      // lnurl != nil.
+      id: 'trouble-zap-failed',
+      category: 'Troubleshooting',
+      question: 'My zap failed or nothing happened when I tapped the lightning bolt',
+      answer: [
+        'A quick tap-zap that fails shows you nothing at all — Damus handles that case with an empty branch. If tapping seems to do nothing, LONG-PRESS the zap icon instead: the custom Zap sheet is the only place in the app that prints the reason.',
+        'Reasons it will show: "Invalid lightning address", "Error fetching lightning invoice", "Zap attempt from connected wallet was canceled.", "Zap attempt from connected wallet failed."',
+        'With a Nostr Wallet Connect wallet attached, wallet-side failures are translated for you — insufficient balance, rate limited, quota exceeded, not authorized, not implemented.',
+        'Check the zap TYPE while that sheet is open. "None" means, in the app\'s own words, "No zaps will be sent, only a lightning payment" — the sats leave and no receipt is ever created, so the counter cannot move. If you once tapped "Make Default" on None or Anonymous, every zap since has been that type.',
+        'No zap icon on a note at all is not a bug: Damus only draws it when that author has a lightning address. Nothing on your side can zap someone who has not set one up.',
+        'Tune the flow at Settings → Zaps: default amount, default wallet, and "Show wallet selector" — turn that on if the wrong wallet keeps opening.',
+      ],
+      howNostrWorks:
+        'A zap is three systems chained together and each fails differently. First the recipient must advertise a lightning address in their profile, which the client resolves to an LNURL endpoint — no address, no zap. Second, your client gets an invoice back and something pays it — hand it to a wallet app and that leg is pure Lightning, but a Nostr Wallet Connect wallet is reached by encrypted events over a relay. Either way that middle leg is where balance, cancellation and wallet-permission failures live. Third, the recipient\'s LNURL server — not your client — publishes the zap receipt that relays carry, and the count on a note is a count of those receipts. So a zap can be genuinely paid and still show as zero, because paying and appearing are two different events.',
+    },
+    {
+      // LoginView: orange bold warning on a public key; ParsedKey.is_pub is
+      // true for .nip05 too. PostingTimelineView gates the FAB on
+      // keypair.privkey != nil; EventActionBar gates the reply button the same
+      // way. KeySettingsView renders "Secret Account Login Key" only when a
+      // privkey exists — the reliable in-session check.
+      id: 'trouble-read-only',
+      category: 'Troubleshooting',
+      question: 'I cannot post at all — there is no compose button',
+      answer: [
+        'You are almost certainly in a read-only session. Damus warns about it in orange the moment you paste a public key on Sign In: "you will not be able to make notes or interact in any way".',
+        'Once you are inside there is no badge saying so. The gradient compose button is absent and the reply bubble is missing from every note — but repost, the shaka and zap are still drawn, and tapping them does nothing at all: no error, no explanation.',
+        'Check reliably: side menu → Settings → Keys. A signing session shows "Public Account ID" AND "Secret Account Login Key". A read-only session shows only the public one.',
+        'Fix it: side menu → Logout (a key-less session logs out with no confirmation), then Sign In with your nsec instead of your npub.',
+        'A NIP-05 address like name@domain resolves to a public key too, so it gives you the same read-only session.',
+      ],
+      howNostrWorks:
+        'Posting on Nostr IS signing — there is no separate permission any client or relay could grant you. Every event carries a signature made with the private key, and relays check it before accepting, so an unsigned note is refused everywhere by construction. An npub is only the public half: enough to read everything published under that identity, which makes npub sign-in genuinely useful for looking around, but mathematically incapable of producing a signature. A read-only session is not a broken account or a downgraded plan — the app is holding a public key where it needs a private one.',
+      note: 'There is no way to upgrade a read-only session in place, and no external signer to attach — Damus has no NIP-46 bunker, Amber or extension login.',
+    },
+    {
+      // AppearanceSettingsView Section("Images"): EnableAnimationsToggle,
+      // "Blur images", "Media previews", "Image uploader".
+      // UserSettingsStore: blur_images + media_previews both default TRUE.
+      // EventView.should_blur_images: never your own notes, never the
+      // friendosphere. No imgproxy/media-proxy anywhere in the source.
+      id: 'trouble-images',
+      category: 'Troubleshooting',
+      question: 'Images are blurred or will not load',
+      answer: [
+        'First tell blurred from missing — they have different causes. Damus blurs media by default, and only from people outside your circle: never your own notes, never someone you follow or someone they follow. A blurred thumbnail is the feature working.',
+        'Turn it off at side menu → Settings → "Appearance and filters" → the Images section → "Blur images".',
+        'If media is missing rather than blurred, check "Media previews" is on in that same section — with it off Damus replaces every image with a small tappable row showing how many attachments the note has, and only fetches them when you tap it.',
+        'If images used to load and now look broken, Settings → Storage → "Clear Cache". The confirmation says it plainly: images will just take longer to load again.',
+        'For images YOU post that others cannot see, the host is the variable: Settings → "Appearance and filters" → "Image uploader" switches between nostr.build and nostrcheck.me for future uploads.',
+      ],
+      howNostrWorks:
+        'An image is not part of the note. The note is text that happens to contain an https:// URL, and your phone fetches that URL straight from whatever third-party host the poster used. Relays never store, mirror or proxy the file — they only carry the text. A note can also carry the image\'s dimensions and a blurhash, which is why a client can show a blurry colour placeholder instantly and why a blurred image is no proof the file loaded at all. So a broken image means the host is down, deleted it, or is unreachable from your network — and no relay change, key change or cache clear brings back a file that no longer exists. The note stays perfectly valid with a dead link inside it, which is why it still appears in your feed.',
+      note: 'Damus has no media-proxy setting — it fetches media URLs directly, so there is no proxy to switch on when a host is unreachable.',
+    },
+    {
+      // NotificationSettingsView: Picker "Notifications mode" (Local/Push),
+      // Section("Notification Preferences") with per-kind toggles + follows-only
+      // + hellthread filter, PreferencesSyncState footer, and a SEPARATE
+      // Section("Notification Dots") that only drives the tab indicator.
+      id: 'trouble-notifications',
+      category: 'Troubleshooting',
+      question: 'My notifications stopped arriving',
+      answer: [
+        'Open side menu → Settings → Notifications (the gear in the Notifications tab toolbar goes to the same screen).',
+        '"Notifications mode" chooses Local or Push. Local means your own phone spots events while Damus is running; Push means the Damus server does. Switching to Push registers a device token, and a failed handshake shows an inline red error right there.',
+        'The "Notification Preferences" section is where a whole category goes quiet: separate toggles for Zaps, Mentions, Reposts, Likes and DMs, plus "Show only from users you follow" and a filter that hides notes tagging many profiles.',
+        'In Push mode those preferences sync to the server and the section footer reports it — "Successfully synced" with a green check, or a red sync error. A failed sync means the server is still acting on your old settings.',
+        'Do not confuse the "Notification Dots" section — it only controls the unread dot on the bell tab and cannot restore missing notifications.',
+        'Check the Notifications tab itself: its subtitle reads "All" or "Trusted Network", and the shield button toggles that filter, hiding notifications that did arrive.',
+      ],
+      howNostrWorks:
+        'Nostr has no notification service. A notification is just an ordinary event on a relay that happens to tag your public key — a reply, a mention, a reaction, a repost, a zap receipt. Something must actively watch relays for those tags and turn them into alerts. Locally that watcher is your own phone, so it only notices what arrives while the app is running and connected; background time and killed apps are gaps. Push mode hands the watching to a server, which is a second system that needs your device token and a synced copy of your preferences and can drift out of step with the app. Under both sits the same hard limit: if the reply mentioning you was published only to a relay you do not read from, nothing is watching, and no notification can exist to deliver.',
+      note: 'iOS\'s own per-app notification permission is separate and Damus has no screen for it — check it in the iOS Settings app.',
+    },
+    {
+      // FirstAidSettingsView: detects a missing contact list / relay list on
+      // appear and offers "Reset contact list" (verbatim ALL-CAPS warning) or
+      // "Repair relay list". make_first_contact_event tags only the Damus
+      // account + yourself — a reset does NOT restore follows.
+      id: 'trouble-empty-profile',
+      category: 'Troubleshooting',
+      question: 'My profile is empty and my follows are gone',
+      answer: [
+        'Check the key first — this is by far the most common cause and nothing has been lost. Side menu → Settings → Keys → "Public Account ID". If that npub is not yours, you signed in with a different key: log out and sign back in with the right nsec.',
+        'Then check you can reach relays at all. Side menu → Relays: an empty profile alongside rows showing Error is a connection problem, not missing data. Wait before doing anything destructive.',
+        'Damus ships a repair screen for exactly this: Settings → First Aid. It only offers a fix for something it has actually detected as missing, and tells you plainly when it finds nothing wrong.',
+        'If your contact list really is gone, First Aid offers a red "Reset contact list". Read its warning: resetting does NOT recover your follows — it publishes a brand-new list following only Damus and yourself. It is a fresh start, not a restore.',
+        'A missing relay list gets its own "Repair relay list", which warns you may lose relays you added by hand.',
+        'To fix a profile that looks blank to others, open your Profile → "Edit" → Save. That re-publishes your profile to your relays.',
+      ],
+      howNostrWorks:
+        'Your profile and follow list are not account records on a server — they are events you signed and published under one key, and a client rebuilds "your account" by re-fetching the newest of each from relays every time it starts. That gives an empty account three ordinary explanations: you are holding a different key (a different npub is a different account, full stop, and it will look pristine); the relays you are connected to do not have your profile and follow list; or you have simply not connected yet. The dangerous part is that these are replaceable events — relays keep only the newest one per kind per author. Publishing a fresh, nearly-empty follow list does not sit beside your old one, it becomes the newest, and every other client will honour it. Waiting for relays costs nothing; resetting can cost your follow graph.',
     },
   ],
 };
