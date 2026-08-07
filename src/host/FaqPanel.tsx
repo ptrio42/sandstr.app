@@ -28,7 +28,8 @@ function score(e: FaqEntry, q: string): number {
   if (question.includes(needle)) return 4;
   const tokens = needle.split(/\s+/).filter(Boolean);
   if (tokens.every((t) => question.includes(t))) return 3;
-  const hay = `${question} ${e.answer.join(' ')} ${e.note ?? ''} ${e.category}`.toLowerCase();
+  const hay =
+    `${question} ${e.answer.join(' ')} ${e.howNostrWorks ?? ''} ${e.note ?? ''} ${e.category}`.toLowerCase();
   if (tokens.every((t) => hay.includes(t))) return 2;
   let i = 0;
   for (const ch of question) {
@@ -255,6 +256,19 @@ export default function FaqPanel({ clientName, faq, open, initialEntryId, onClos
                           <li key={i}>{step}</li>
                         ))}
                       </ol>
+                      {/* The protocol half of a troubleshooting answer. Visually
+                          distinct on purpose: these sentences are true of Nostr
+                          everywhere, not instructions to follow in this client. */}
+                      {e.howNostrWorks && (
+                        <div className="mt-2.5 rounded-lg border-l-2 border-primary-400 bg-gray-100/70 px-3 py-2 dark:border-primary-500/50 dark:bg-gray-800/70">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            How Nostr works
+                          </p>
+                          <p className="mt-1 text-[13px] leading-relaxed text-gray-600 dark:text-gray-300">
+                            {e.howNostrWorks}
+                          </p>
+                        </div>
+                      )}
                       {e.note && (
                         <p className="mt-2 text-xs italic leading-relaxed text-gray-400 dark:text-gray-500">
                           {e.note}

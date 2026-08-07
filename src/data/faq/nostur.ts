@@ -22,6 +22,7 @@ const CATEGORIES = [
   'Relays',
   'Account & keys',
   'Advanced',
+  'Troubleshooting',
 ];
 
 type Step = FaqShowMeStep;
@@ -47,6 +48,7 @@ export const nosturFaq: ClientFaq = {
     'sign-in': 'sign-in',
     'backup-keys': 'backup-keys',
     logout: 'logout',
+    'multi-account': 'multi-account',
     post: 'post-note',
     reply: 'reply',
     reactions: 'react-heart',
@@ -609,6 +611,207 @@ export const nosturFaq: ClientFaq = {
         'In Normal mode a second control appears — the "Nostr Dunbar Number" (250 / 500 / 1000 / 2000 / All, default 1000). Follow lists longer than that are treated as low quality and left out of your web of trust.',
       ],
       note: 'The same screen can restrict media downloads to your web of trust, and verify message signatures.',
+    },
+    {
+      // Accounts/AccountsSheet.swift: navigationTitle "Accounts", rows carry a
+      // blue "Read only" badge (privateKey == nil), an indigo "remote signer"
+      // badge (account.isNC) and a checkmark on the active one; swipeActions →
+      // "Log out". Accounts/FastAccountSwitcher.swift: MAX_ACCOUNTS = 4
+      // alternates, tap → accountsState.changeAccount(). Sidebar.swift mounts
+      // both in a bottomTrailing overlay next to `ellipsis.circle`.
+      // AddExistingAccountSheet.swift prompt: "nostr address / npub / nsec /
+      // signer url"; pasting the nsec for an EXISTING read-only row attaches
+      // the key in place (flagsSet.insert("full_account")) — no duplicate.
+      // CloudAccount lives in the CloudKit-backed "Cloud" store
+      // (iCloud.com.nostur.data) and the nsec in a synchronizable Keychain.
+      id: 'multi-account',
+      category: 'Account & keys',
+      question: 'How do I add a second account or switch between accounts?',
+      answer: [
+        'Tap your avatar to open the side menu. At the bottom-right of the banner sit the fast switcher — small avatars of your other accounts — and a teal ⋯ circle.',
+        'Tap any small avatar to switch instantly. The fast switcher shows up to four alternates.',
+        'You do not have to switch the whole app to post from another account: the avatar to the left of the composer is a stack of your accounts — tap it once to fan them out, tap one to sign this post with it. Only accounts whose key is on the device appear there.',
+        'Tap the ⋯ circle for the full "Accounts" sheet. Every account is a row with its picture and name; a blue "Read only" badge means no private key, an indigo "remote signer" badge means NIP-46, and a teal checkmark marks the active one.',
+        '"Add existing account" takes anything in one field — an nsec, an npub or a nostr address (read-only), or a bunker:// URL, where the button becomes "Add (Remote Signer)". "Create new account" mints a fresh key instead.',
+        'To remove one, swipe its row left and tap "Log out" — for an account whose key is on this device the "Confirm log out" sheet offers to copy its nsec first; read-only and remote-signer rows have no key to back up, so that sheet is just a confirmation.',
+        'Log out is the one you want. The red "Delete account" in Settings is a different thing entirely: it wipes your public profile and following list ON THE NETWORK and deletes your nsec from the keychain, for whichever account you are signed in as.',
+      ],
+      note: 'Pasting the nsec for an account you added read-only upgrades that same row in place — do not log it out first. Your accounts, relays, feeds and bookmarks sync between iPhone, iPad and Mac over iCloud; app preferences like theme and default zap amount are global, not per account. One global setting decides what a second account SEES: Settings → Spam Filtering → "Main account" picks whose follow graph builds your web of trust and stays put when you switch — if a newly added account feels filtered down to nothing, point that picker at it.',
+      howNostrWorks:
+        'An account on Nostr IS a keypair — there is no server-side account, no password, no registration. "Adding an account" only means telling the app about another key, and "switching" means switching which key it signs with and whose follow list it reads. Everything you think of as the account — name and picture, follow list, DM relays — are ordinary signed events on relays under that one key, so any client holding the key rebuilds the same identity, and a different key is a genuinely different, empty one. A public key alone is enough to read everything, which is why watch-only accounts work; only the secret key can sign, which is why they cannot post.',
+      showMe: [
+        {
+          target: '[data-tour="nostur-switcher"]',
+          title: 'The fast account switcher',
+          content:
+            'The teal ⋯ opens the full "Accounts" sheet; the small avatar beside it is a fast switcher — one tap and you are signed in as that account.',
+          position: 'bottom',
+          commands: cmd({ type: 'openDrawer' }),
+        },
+      ],
+    },
+
+    // ------------------------------------------------------- Troubleshooting --
+    // "Why doesn't this work" answers. TEXT-ONLY on purpose: the simulator
+    // cannot stage a failure, so a demo here could only contradict itself.
+    // Grounded in nostur-com/nostur-ios-public (2026-08-07). None of these
+    // screens appear in the reference recording — they are source-verified, so
+    // the copy quotes labels and behaviour, never rendered appearance.
+    {
+      // DatabaseProblemView.swift, verbatim: "Something went wrong" / "The
+      // database could not be loaded." / "There are 2 solutions:" + "Error: 00".
+      // AppView.swift swaps the whole app for it on ViewState.databaseError.
+      // Settings/DatabaseAndCacheSettings.swift: "Database status" (+ "Last
+      // optimize", "Optimize now") and per-cache "Clear" buttons.
+      // NosturCloud xcdatamodel: NWCConnection sits in the device-only "Local"
+      // configuration, so the wallet pairing does NOT come back with a reinstall.
+      id: 'trouble-startup',
+      category: 'Troubleshooting',
+      question: 'Nostur crashes or hangs when I open it — what can I do?',
+      answer: [
+        'If the local database will not open, Nostur does not crash — it replaces the whole app with "Something went wrong" / "The database could not be loaded.", offers exactly two solutions (send a screenshot and wait for a fix, or reinstall and start fresh), and prints the raw error under "Error: 00". Screenshot that text: it is the only diagnostic the app gives you.',
+        'There is no safe mode, no crash-log viewer and no reset-without-reinstalling button on iOS.',
+        'For a slow rather than broken start: side menu → Settings → "Database & Cache". The "Database status" section counts your stored events and contacts and shows "Last optimize"; "Optimize now" runs the full maintenance pass.',
+        'The same screen has a "Clear" button beside each media cache — profile pictures, post content, banners, badges — plus a DM files sub-screen with its own size limit.',
+        'To cut work at launch, tap the tortoise in the Home toolbar (Low Data Mode), and in Settings → Appearance turn off "Enable animated profile pics" and "Fetch counts on timeline".',
+        'Take two backups before you reinstall. Settings → "Database & Cache" → Data export writes every note Nostur holds for this account to a file, and Settings → Private key gets you the nsec — the reinstall only restores it through the iCloud Keychain, so with that switched off a reinstall ends the account for good.',
+        'Otherwise a reinstall costs less than it sounds: accounts, relays, feeds, bookmarks, private notes and block list are in the iCloud-backed store. The cached notes, muted words and your Nostur Wallet Connect pairing are device-only and will be gone.',
+      ],
+      howNostrWorks:
+        'Nothing about your identity is stored inside the app. Your key is a key; your profile, follow list and every note you wrote are signed events sitting on relays. A local database that has to be thrown away costs you only a cache — on the next launch the client re-subscribes with the same public key and re-fetches. There is no Nostr account server to restore from and no server-side session a reinstall could break. The flip side is that no relay can help with a client-side database fault: relays speak the wire protocol and hold no state about your device.',
+    },
+    {
+      // PostDetailsMenuSheet.swift: "Sent to:" / "Received from:" + Republish.
+      // RepublishPostSheet.swift: "Republish to relays", per-relay checkboxes,
+      // red "auth required" badge → "Retry with authentication", "Using
+      // account: {name}". RelaysView.swift rows: green/gray dot + magnifier /
+      // arrow.down (read) / arrow.up (write) toggles. Kind10002ConfigurationWizard
+      // spells out read/write/dm semantics verbatim.
+      id: 'trouble-not-delivered',
+      category: 'Troubleshooting',
+      question: 'My notes are not showing up for other people (or I cannot see theirs)',
+      answer: [
+        'Start with the note itself: ••• → "Post details". At the bottom it lists the actual relays under "Sent to:" (your posts) or "Received from:" (other people\'s). A short or missing "Sent to:" means the note never left.',
+        'Same sheet → "Republish" opens a checkbox list of every configured relay, plus a row to type a new address. Relays that refuse get a red "auth required" badge and the button becomes "Retry with authentication".',
+        'Check the pipes: Settings → Relay Connections → "Configure your relays...". Each relay row has a leading dot (green = connected) and three toggles — search, read (down arrow) and write (up arrow). If no relay has the write arrow lit, nothing you post goes anywhere.',
+        'Tell the network where to look: Settings → Relay Connections → "Announce your relays…" → "Reconfigure announced relays…" walks you through which relays others should use to find you, reach you, and DM you, then publishes it.',
+        'Diagnose one relay: Settings → Relay Connections → "Relay connection stats" gives per-relay reconnects, messages and errors, the last ten error and notice messages, request latency, and which of the people you follow arrived from there.',
+        'Widen the net with "Autopilot" (connect to extra relays from people you follow) and "Follow relay hints". If you have VPN detection on, those extra connections are only made while a VPN is active.',
+      ],
+      howNostrWorks:
+        'A note only exists on the relays your client actually sent it to, and a reader only sees it if they read from a relay that has a copy — relays do not gossip to each other, so there is no network that propagates posts for you. NIP-65 bridges that gap: you publish a small event saying where to write to reach you and where you post. Nostur\'s own wizard states the semantics plainly — write means you post there so others read from there; read means you read there so others should post there. If you never published that list, other people\'s clients are guessing. And a relay can silently decline your note: many require authentication, some are paid or whitelist-only, some rate-limit. A rejected note is simply gone and nobody retries it for you, which is exactly why a manual republish button exists.',
+    },
+    {
+      // NWCZapQueue.swift: error strings "Could not fetch invoice" and, after
+      // 42s, "Time out (receiver wallet service down or not reachable?)" →
+      // PersistentNotification.createFailedNWCZap ("[Zap] failed."), and
+      // event.zapState = nil reverts the bolt. ZapButton.swift guards every
+      // path on isFullAccount(). screen-map §7: the bolt is opacity 0.3 and
+      // disabled when the author has no lightning address.
+      id: 'trouble-zap-failed',
+      category: 'Troubleshooting',
+      question: 'My zap failed — what went wrong?',
+      answer: [
+        'Look at the button first. The bolt is drawn faded and disabled when that author has no lightning address in their profile — there is nothing to pay and no setting fixes it.',
+        'A one-tap zap that fails shows no toast — it writes a notification you read on the Notifications tab → Zaps: "Zap failed" for that post or contact, with the reason. The two you will actually see are "Could not fetch invoice" (the recipient\'s Lightning server returned nothing) and, after 42 seconds of silence, "Time out (receiver wallet service down or not reachable?)". The yellow bolt reverts at the same time.',
+        'A zap you sent from the amount sheet is louder: the sheet stays open with a bold red "There was a problem, could not send sats", and a failed invoice fetch also flashes a short "Could not fetch invoice from: …" banner.',
+        'A third wording matters: "Zap MAY have failed" means your own wallet answered and refused — the line under it is your wallet\'s own words, which is where an empty balance or a spent wallet-connection budget shows up. Fix those at the wallet, not on the recipient\'s side.',
+        'Wallet side: Settings → Zaps holds the Lightning wallet picker and the default zap amount (21). Nostur Wallet Connect is what pays inside the app; with a plain external wallet Nostur just hands the invoice over and a failure there never comes back to Nostur at all.',
+        'If the bolt opens a sheet titled "Read-only mode" instead, you are signed in with an npub — see "I cannot post at all".',
+        'Multi-device gotcha: your wallet pairing is stored on one device only. A zap that works on your iPhone can fail on your iPad even though both show the same account — connect the wallet again there.',
+      ],
+      howNostrWorks:
+        'A zap is two things bolted together and either half can fail alone. First a real Lightning payment: your client reads the recipient\'s lightning address out of their profile event, asks that server for an invoice for your amount, and pays it. Then a receipt: the recipient\'s server — not your client — is supposed to publish a zap receipt to relays, and that receipt, not your payment, is what makes the counter go up for everyone. So the break can be at the profile (no address), at their server (down, or your amount is outside its limits), at your wallet (no balance, no route), or purely at the receipt stage — in which case the sats really did move and the post still reads zero.',
+    },
+    {
+      // ReadOnlyAccountInformationSheet.swift, verbatim: "Read-only mode" /
+      // "You are using a read-only account.\n\nSwitch to another account or add
+      // the private key to fully use this account." — with AccountsSheet
+      // embedded. NewPostButton/LoggedInAccount guard on isFullAccount().
+      // AddExistingAccountSheet.addExistingAccount upgrades an existing row in
+      // place rather than creating a second one.
+      id: 'trouble-read-only',
+      category: 'Troubleshooting',
+      question: 'I cannot post, zap or follow anything',
+      answer: [
+        'You added the account with an npub (or a nostr address, which resolves to one), so Nostur has no key to sign with. Its row in the "Accounts" sheet carries a blue "Read only" badge.',
+        'Or you tapped "Try guest account" on the welcome screen — a shared, keyless demo identity that can read and browse but never post. Fix B below does not apply to it: there is no nsec for that key, so use "Create new account" or add your own.',
+        'Nothing fails silently: compose, zap, reply and report each open a sheet headed "Read-only mode" — "You are using a read-only account. Switch to another account or add the private key to fully use this account." The account list is embedded right in that sheet. Delete is simply absent: the post menu hides that row entirely for a read-only account.',
+        'Fix A — switch: tap any account without the "Read only" badge, from that sheet or from side menu → ⋯ → Accounts.',
+        'Fix B — upgrade it in place: Accounts → "Add existing account" → paste the nsec for that same key → "Add". Nostur finds the existing row, attaches the key and switches to it. Do NOT log the read-only one out first, and do not expect a duplicate.',
+        'Fix C — keep the key off the phone: paste a bunker:// URL from a NIP-46 remote signer. The button becomes "Add (Remote Signer)" and the account posts normally with an indigo badge, while your nsec stays in the signer.',
+        'Reading, feeds, search, bookmarks and private notes all work read-only. Posting, replying, reacting, reposting, zapping, following, reporting and deleting do not.',
+      ],
+      howNostrWorks:
+        'An npub is only the public half of the keypair. Every action that changes anything on Nostr — a note, a reaction, a follow, a zap request, a profile edit — is an event that must carry a signature made with the secret half, and relays drop anything unsigned or mis-signed. So a client holding only an npub physically cannot produce a publishable event; this is not a permission the app is withholding. Reading needs no key at all, which is why watching someone else\'s feed from their npub works perfectly. A remote signer resolves this without moving the secret: the key stays in the signer, your client sends it an unsigned event over an encrypted channel and gets the signature back.',
+    },
+    {
+      // SettingsStore.swift registers AutodownloadLevel.onlyWoT as the DEFAULT
+      // for autoDownloadFrom → shouldAutodownload() gates media on the web of
+      // trust. MediaView.swift states: .dontAutoLoad "Tap to load media",
+      // .lowDataMode "Loading paused (Low data mode)" + "Load anyway",
+      // .httpBlocked "non-https media blocked", .imageTooLarge "Image is larger
+      // than 50 MB, not loaded.", .error "Failed to load image" + "Try again".
+      id: 'trouble-images',
+      category: 'Troubleshooting',
+      question: 'Images are not loading',
+      answer: [
+        'Most likely this is deliberate. Nostur ships with media downloading limited to your web of trust, so pictures from strangers are never fetched — the post shows "Tap to load media" with the URL underneath. Change it at Settings → Spam Filtering → "Media downloading".',
+        'Second most likely: Low Data Mode. The tortoise in the Home toolbar toggles it and every image becomes "Loading paused (Low data mode)" with a teal "Load anyway" link. The tortoise itself looks dimmed when the mode is OFF, which reads as broken but is normal.',
+        'A blurred placeholder with a bold "NSFW" over it is a third thing again: the poster tagged that post as sensitive, and Nostur never auto-loads sensitive media whatever "Media downloading" says. Tap the picture to load it.',
+        '"non-https media blocked" means the poster used a plain http:// URL and Nostur refuses it — nothing to fix on your side.',
+        '"Failed to load image" with a "Try again" button means the fetch genuinely failed, which is the host, not Nostur. Very large images get their own "Load anyway".',
+        'Suspect a poisoned cache: Settings → "Database & Cache" → Media cache → "Clear" beside profile pictures, post content, banners or badges.',
+      ],
+      howNostrWorks:
+        'An image is not part of the note. A note is a signed text event; a picture is nothing but a URL inside that text pointing at a third-party host the poster happened to use. Relays never store, proxy or serve the file and have no idea whether it still exists, so the picture vanishes for everyone the moment that host goes down, deletes it or blocks you — and no relay setting, reconnect or client can bring it back, while the note itself stays perfectly intact. This is also why clients gate media on trust: fetching that URL tells whoever the poster chose your IP address and roughly when you read the post, which is exactly what a web-of-trust default protects you from.',
+    },
+    {
+      // NotificationSettings.swift: Section("Show unread count badge") with
+      // per-type toggles; Section("Home/Lock screen notifications") whose
+      // footer reads, verbatim: "Home/Lock screen notifications are only active
+      // for the currently logged in account and can be a bit delayed".
+      // Toggling it off cancels BGTask "com.nostur.app-refresh".
+      // NotificationsScreen.swift: permission banner + "Open Settings".
+      id: 'trouble-notifications',
+      category: 'Troubleshooting',
+      question: 'My notifications stopped arriving',
+      answer: [
+        'Open the Notifications tab and tap the gear. The screen has two sections that fail for different reasons.',
+        '"Show unread count badge" holds per-type toggles — new followers, reposts, reactions, zaps, posts. If only one kind went quiet, check this list first: these drive the red unread counts on the tabs.',
+        '"Home/Lock screen notifications" is the background one, and its footer explains most complaints outright: notifications are only active for the account you are currently logged in as, and can be a bit delayed. If you switched accounts, notifications followed the switch.',
+        'The spam filter is the quietest cause of all: Nostur hides notifications from anyone outside your web of trust — mentions, reactions, reposts and small zaps simply never reach the tabs or the unread counts. If someone insists they replied to you, widen it at Settings → Spam Filtering, and check that "Main account" points at the account you are signed in as.',
+        'If iOS itself has permission off, a banner appears at the top of the Notifications tab saying so, with an "Open Settings" button.',
+        'Turning the background toggle off cancels the iOS background-refresh task; turning it back on re-requests permission and re-schedules it. iOS decides when that task actually runs — that is the "can be a bit delayed" part.',
+        'Entering the Notifications tab auto-selects the first tab with unread items, so a tab that looks empty may simply have been marked read.',
+      ],
+      howNostrWorks:
+        'Nostr has no push server, and this is the most common misunderstanding about it. Nobody can push to your phone because no server knows your device — there is no account server at all. A client learns you were mentioned only by holding an open subscription to relays and asking for events that tag your public key: replies and mentions, reposts, reactions, zap receipts, follows. So notifications are really "the app was awake and connected long enough to notice". They stop when the app is backgrounded and the OS declines to wake it, when the relays you read from simply do not have the event (the person who mentioned you wrote it somewhere you never read — which is what inbox relays exist to prevent), or when you switched to a different key, in which case nothing is addressed to you.',
+      note: 'Only one account gets home and lock-screen notifications at a time — the one you are signed in as.',
+    },
+    {
+      // Accounts/FollowingGuardian.swift + Utils/View+withSheets.swift: the
+      // confirmationDialog "It looks like N contacts were removed from your
+      // following list, perhaps from another nostr app" with "Remove N
+      // contacts" / "Restore N contacts" / "Ignore"; restoreFollowing() calls
+      // account.publishNewContactList(). listenForAccountChanged() debounces 7s
+      // then re-requests kind:0 + kind:3. NOTE the upstream TODO: the guard
+      // covers the ACTIVE account only.
+      id: 'trouble-empty-profile',
+      category: 'Troubleshooting',
+      question: 'My profile is empty and my follows are gone',
+      answer: [
+        'Nostur has a purpose-built guard for this. When a follow list arrives with fewer people than you had, it asks: "It looks like N contacts were removed from your following list, perhaps from another nostr app", and names them if there are fewer than ten. Choose "Restore N contacts" — it adds them back AND republishes your list. "Ignore" keeps them locally without republishing.',
+        'The same guard works quietly in your favour: follows you added in another client are merged in automatically.',
+        'Check your own taps too. Follow is a THREE-state button: tap once to follow, tap again and it becomes "🤫 Following" — a silent follow, which quietly takes that person out of the follow list Nostur publishes — and only the third tap unfollows. Silent follows live on your devices alone, so your public count really is smaller.',
+        'It also re-fetches your profile and follow list about seven seconds after every account switch, so wait a moment before concluding anything is gone.',
+        'If the profile is blank rather than shrunken, check which account you are on: the side menu prints your name, your npub and your following count, and the Accounts sheet marks the active row and badges read-only ones. An npub pasted by mistake looks exactly like an empty account.',
+        'If your follows are fine locally but nobody else sees your profile, your profile never reached the right relays: ••• → "Post details" → "Republish" shows where a note actually went, and Settings → Relay Connections → "Announce your relays…" publishes where to find you.',
+        'Reinstalling is safe here: accounts, relays, feeds, bookmarks and block list come back from iCloud, and the note cache simply refills from relays.',
+      ],
+      howNostrWorks:
+        'Your profile and your follow list are ordinary signed, replaceable events. Replaceable means each relay keeps exactly one per kind per key — the newest — and discards the older. That single rule is the whole story: if any client you used publishes a follow list containing fewer people, it overwrites the fuller one on every relay it reached, and nothing on the network remembers the old one. That is why lost follows almost always trace back to another app, or to a client that published before it had finished loading your list — never to a relay deleting things. The other half is that everything hangs off ONE key, so opening the app with a different key shows a genuinely empty account. There is nothing to recover in that case; it is simply a different identity.',
+      note: 'The follow-list guard watches the account you are signed in as. Upstream flags covering the others as still to do.',
     },
   ],
 };

@@ -33,6 +33,15 @@ export interface FaqEntry {
   question: string;
   /** Numbered, imperative steps describing the real app's UI. */
   answer: string[];
+  /**
+   * The protocol half of a troubleshooting answer, rendered as its own block.
+   * "Why doesn't this work" questions are only half a client question: the rest
+   * is how Nostr itself behaves (relays hold the copies, an account IS a
+   * keypair, a zap is a Lightning payment plus a receipt). Keeping it in a
+   * separate field forces the split instead of blurring protocol facts into
+   * steps the user is meant to follow in this app.
+   */
+  howNostrWorks?: string;
   /** Optional one-line tip or caveat rendered after the steps. */
   note?: string;
   /** Present only when the simulator can demonstrate the answer. */
@@ -49,6 +58,7 @@ export const CANONICAL_TOPICS = [
   'sign-in',
   'backup-keys',
   'logout',
+  'multi-account',
   'post',
   'reply',
   'reactions',

@@ -22,6 +22,7 @@ const CATEGORIES = [
   'Relays',
   'Account & keys',
   'Advanced',
+  'Troubleshooting',
 ];
 
 export const coracleFaq: ClientFaq = {
@@ -31,6 +32,7 @@ export const coracleFaq: ClientFaq = {
     'sign-in': 'sign-in',
     'backup-keys': 'backup-keys',
     logout: 'logout',
+    'multi-account': 'multi-account',
     post: 'post-note',
     reply: 'reply',
     reactions: 'react',
@@ -529,6 +531,206 @@ export const coracleFaq: ClientFaq = {
           commands: cmd({ type: 'navigate', payload: 'feeds' }),
         },
       ],
+    },
+    {
+      // app/MenuDesktop.svelte: subMenu "account" → MenuItem `fa-right-left
+      // Switch Account` → subMenu "accounts", which lists Object.values($sessions)
+      // filtered to s.pubkey !== $pubkey, each calling pubkey.set(s.pubkey),
+      // plus `fa-plus Add Account` → router.at("login").open().
+      // MenuMobile.svelte uses the PLURAL "Switch Accounts" in the account
+      // sheet footer beside Logout. shared/PersonActions.svelte pushes
+      // "Login as" (loginWithPubkey) on someone else's profile — the only way
+      // to get a watch-only session, since Login.svelte has no key field.
+      // views/Logout.svelte calls clearStorage() + localStorage.clear(), and
+      // the sessions map lives in localStorage — so logout drops EVERY account.
+      // dropSession exists upstream in @welshman/app and is imported nowhere.
+      id: 'multi-account',
+      category: 'Account & keys',
+      question: 'How do I add a second account or switch between accounts?',
+      answer: [
+        'Click your avatar and @name at the bottom of the sidebar, then choose "Switch Account".',
+        'You get one row per other account you are logged in with — avatar and name. Click one to switch instantly: no confirmation, no re-sync screen.',
+        'Instant because it is ONLY a switch: Coracle does not re-run the login-time fetch, so the account you land in shows whatever it already had cached and does not start listening for new notifications. Reload the page after switching if the feed or notifications look empty.',
+        '"Add Account" at the bottom of that list reopens Coracle\'s normal "Welcome!" login modal, and each login ADDS a session rather than replacing the one you have.',
+        'That modal offers a browser extension, a remote signer (bunker link or QR), or a signer app on the native builds — the login screen itself has no key field. The one exception is registering: "Register instead" hands off to nstart, and if you come back with a key rather than a bunker link, Coracle stores that key in this browser.',
+        'On a narrow window it is the same thing in a different place: the hamburger at bottom-right → your avatar → "Switch Accounts" in the sheet footer, next to Logout.',
+        'To add a watch-only identity there is exactly one route, and it is not the login screen: open someone else\'s profile, click the ⋮ in its top-right and choose "Login as". That npub joins the same switcher list.',
+      ],
+      note: 'There is no per-account logout. "Log Out" clears the local database and every stored session at once, so it signs you out of ALL your accounts, not just the one you are using. Your account list lives in this browser only and syncs nowhere.',
+      howNostrWorks:
+        'On Nostr an account IS a keypair, so switching accounts is literally switching which key the client signs and queries as — nothing about it happens on a server, and there is no account list anywhere but your own device. Your profile, follow list, mute list and relay list are events published under one public key, so a second account has a genuinely separate social graph, separate relays and separate settings; it is not a view of the first. Posting needs the private half, which is why a signer-backed account can write while an npub-only one can only read.',
+      showMe: [
+        {
+          target: '.co-account-row',
+          title: 'Switch Account lives here',
+          content:
+            'Click your avatar and @handle at the bottom of the sidebar: the account menu that slides up is where "Switch Account" lives, between "Create Invite" and "Log Out".',
+          commands: cmd({ type: 'navigate', payload: 'feeds' }),
+        },
+      ],
+    },
+
+    // ------------------------------------------------------- Troubleshooting --
+    // "Why doesn't this work" answers. TEXT-ONLY on purpose: the simulator
+    // cannot stage a failure, so a demo here could only contradict itself.
+    // Grounded in coracle-social/coracle master + the screen-map (2026-08-07).
+    {
+      // engine/storage.ts clearStorage() deletes the IndexedDB; views/
+      // Logout.svelte is the ONLY caller and also does localStorage.clear().
+      // engine/state.ts: initStorage("coracle", 9, …) with an events adapter
+      // capped at 10_000. views/UserData.svelte = "App Database" with
+      // Create Backup / Upload Backup. views/ChatEnable.svelte explains why
+      // DMs are off by default.
+      id: 'trouble-startup',
+      category: 'Troubleshooting',
+      question: 'Coracle is slow, stuck or misbehaving — how do I reset it?',
+      answer: [
+        'Back up first: sidebar → Settings → "Database". It shows every event you hold with Created / Author / Kind columns and gives you "Create Backup".',
+        'The reset is Log Out, and there is no gentler one: it prints "Clearing your local database...", deletes the local database outright, clears browser storage and reloads. Coracle ships no separate clear-cache button, no safe mode and no crash-report screen.',
+        'Restore afterwards from Settings → Database → "Upload Backup".',
+        'If the slowdown started when you enabled DMs, that is a cost the app warns you about up front: notes and direct messages are off by default because loading them means downloading and decrypting a lot of data.',
+        'The "Report errors and analytics" toggle in App Settings is not a crash reporter — it only gates a page-view ping.',
+      ],
+      howNostrWorks:
+        'Coracle is a browser app with no account server, so everything it keeps locally is a cache — a local database of events plus a little browser storage for your session and settings. Nothing irreplaceable lives there as long as a signer holds your key: your profile, follows, relay list and notes are all events on relays, re-fetchable by anyone who knows your public key. That is why "wipe the local database and log back in" is a safe and usually sufficient repair on Nostr in a way it would not be on a conventional app — the client is a viewer over relay data, not the system of record.',
+      note: 'One exception: if you signed up through nstart, your private key is stored in this browser and logging out destroys it. Copy it from your avatar → "Keys" first. Extension and remote-signer accounts keep the key elsewhere and are safe.',
+    },
+    {
+      // app/MenuDesktop.svelte: the publish HUD (hourglass / cloud-arrow-up /
+      // triangle-exclamation) is a Link to the /publishes modal.
+      // views/Publishes.svelte tabs = events / connections / notices.
+      // shared/PublishCard.svelte: "The following relays rejected your note:"
+      // + a per-relay Retry that republishes to that relay alone.
+      // shared/NoteActions.svelte: "Broadcast" (fa-rss) → publishThunk to
+      // Router.FromUser() with maximal fallbacks, toast "Note has been
+      // re-published!". shared/RelayCard.svelte Write chip tooltip is literal.
+      id: 'trouble-not-delivered',
+      category: 'Troubleshooting',
+      question: 'My notes are not showing up for other people (or I cannot see theirs)',
+      answer: [
+        'Coracle shows you the answer permanently: the three counters at the bottom of the sidebar are pending, succeeded and failed publishes. The failed one turns accent-orange the moment it is non-zero.',
+        'Click that strip — it is a link — for the "Published Events" modal, with Events, Connections and Notices tabs.',
+        'The Events tab gives you one card per note with succeeded / pending / failed / timed out counts, and "Show Details" expands into which relays accepted your note, which rejected it, and which never answered — each of the last two with its own "Retry" button that republishes to that relay alone.',
+        'The Notices tab is where a relay telling you "auth-required" or "restricted" actually shows up: raw protocol replies, searchable, colour-coded by verb.',
+        'The Connections tab lists every relay socket with a live state — connected, logging in, failed to log in, failed to connect, waiting to reconnect, unstable.',
+        'Before blaming relays, check what you asked for in the composer\'s "Note settings". A SCHEDULED post is not published at all — Coracle hands it to an outside scheduling service and publishes that request instead, so the counters go green for something that is not your note. "Post anonymously" signs with a throwaway key, so the note is real but not yours. An expiry lets relays delete it later. And a relay picked there replaces your write relays for that one note.',
+        'To re-send an older note, use its ⋮ → "Broadcast", which republishes to your write relays with maximal fallbacks and confirms with "Note has been re-published!".',
+        'To fix the cause: open "Relays" in the sidebar and look at each relay card\'s "Write" chip. Its tooltip is literal — dimmed means notes you publish will not be sent there. A dimmed Write chip on every relay is the usual cause: Coracle then falls back to a single default relay, so your notes technically publish but land somewhere almost nobody reads.',
+      ],
+      howNostrWorks:
+        'A note is not sent to people — it is handed to relays, and it exists only on the relays that actually accepted it. A reader sees it only if their client happens to query a relay holding a copy, and that pairing of your write relays with their read relays is what published relay lists are for. Two ordinary situations therefore look like censorship and are not: a relay silently refusing your event because it wants authentication, payment, or is rate-limiting you; and a reader whose relay set simply does not overlap yours. Publishing to more relays widens the overlap; it does not guarantee it.',
+    },
+    {
+      // app/util/zaps.ts: zap() checks session.wallet and opens the wallet
+      // connect route instead of the zap modal when there is none.
+      // views/Zap.svelte warning strings, verbatim: "Failed to zap: no zapper
+      // found" / "Failed to zap: {error}" / "Failed to zap {name}: {message}";
+      // amount defaults to the "default_zap" setting (21) with a log slider
+      // 21..1_000_000; the kind-9735 receipt request is wrapped in an 8s
+      // AbortSignal.timeout. screen-map §11: the lightning-address row IS the
+      // zap button — there is no separate zap control on a profile.
+      id: 'trouble-zap-failed',
+      category: 'Troubleshooting',
+      question: 'My zap failed, or clicking zap opens a wallet screen',
+      answer: [
+        'If clicking zap lands you on a wallet screen, that is the answer: with no wallet connected Coracle never opens the zap dialog at all.',
+        'Connect one at Settings → Wallet — a WebLN browser extension, or a Nostr Wallet Connect URL you paste or scan. Failures are named: "Wallet failed to connect", or "Your extension does not support lightning payments".',
+        'You can also skip the wallet entirely: the connect screen you were bounced to carries a "Pay manually" button, which opens the zap dialog anyway and then shows you the raw Lightning invoice to pay in whatever wallet you actually use.',
+        'A wallet belongs to one account, not to the app. If zap only started sending you to the wallet screen right after you switched accounts, that is why — connect one for this account too.',
+        'Read the failure toast, because it names which of the three stages broke. "Failed to zap: no zapper found" means the recipient has no usable lightning address. "Failed to zap:" with a message from their server means it refused to issue an invoice. "Failed to zap {name}:" means your wallet could not pay the invoice it did get.',
+        'On a profile, the lightning-address row IS the zap button — there is no separate zap control. A profile with no such row cannot be zapped by anyone.',
+        'The zap dialog itself starts at your default zap amount from App Settings (21 sats) and has a slider up to a million.',
+      ],
+      howNostrWorks:
+        'A zap is not a Nostr message carrying money — it is a Lightning payment with a Nostr receipt stapled to it, and it has three separate places to break. Your client asks the recipient\'s Lightning server for an invoice, attaching a signed zap request; that server can refuse, be down, or cap the amount. Your wallet pays the invoice, and a routing failure or empty balance stops it there — the stage the client has least visibility into. Finally the recipient\'s server publishes the zap receipt to relays, and only that receipt makes the zap visible to everyone else. So "the payment left my wallet but the counter did not move" is a normal, well-understood outcome: the sats arrived and the receipt did not.',
+      note: 'Coracle waits about eight seconds for that receipt before it stops looking, so a slow receipt can leave a paid zap looking unrecorded.',
+    },
+    {
+      // shared/PersonActions.svelte: "Login as" (loginWithPubkey) on someone
+      // else's profile — the only pubkey-only path, since views/Login.svelte
+      // has no key field at all (screen-map §9.1 confirms: no nsec paste).
+      // Nav.svelte: `{#if $signer} Post + {:else if !$pubkey} Log In {/if}` —
+      // a pubkey WITHOUT a signer matches neither branch.
+      // MenuDesktop.svelte: Relays / Notifications / Messages / Groups / Lists
+      // all carry disabled={!$signer}. NOTE: source-read, not runtime-verified.
+      id: 'trouble-read-only',
+      category: 'Troubleshooting',
+      question: 'I cannot post and there is no Post button',
+      answer: [
+        'You are in a watch-only session, and Coracle ships no read-only badge, banner or message to tell you so.',
+        'There is only one way to get here, and it is not the login screen: on someone else\'s profile, the ⋮ menu offers "Login as", which signs you in with their public key and nothing else. Coracle\'s own login screen has no key field at all — only extension, signer app and remote signer.',
+        'What you see instead of a message: the top bar shows neither "Post +" nor "Log In". Post appears only when a signer exists, Log In only when there is no key at all, and a key without a signer falls between the two.',
+        'The real tell is what is MISSING, not what is dimmed. Coracle marks Relays, Notifications, Messages, Groups and Lists as disabled but never actually dims them — they look and click exactly like normal, and the screens behind them are simply empty. Judge by the absent Post button.',
+        'Menus thin out too — a note loses Quote, Tag, Mute and Report, and a person loses Follow, Mute, Add to list and Mention.',
+        'The fix: avatar → "Switch Account" → "Add Account", then log in for that same key with your extension or a remote signer. Logging out works too, but it signs you out of every account.',
+      ],
+      howNostrWorks:
+        'An npub is only the public half of your keypair. It is enough to look someone up — a client can fetch everything ever published under it — but posting means producing a signature with the private half, which lives in your head, in a browser extension, or behind a remote signer. If the client holds only the public key there is nothing to sign with, so every write is impossible: not just notes and replies but likes, reposts, follows, mutes, relay-list changes, settings, even the zap request. This is not a permission the app is withholding, and no relay can grant it.',
+    },
+    {
+      // views/UserContent.svelte: "Show images and link previews" (show_media,
+      // default true) and "Hide sensitive content" (hide_sensitive, default
+      // true); "Minimum WoT score" range -10..10. shared/NoteCheckImages.svelte
+      // skips the check for your own notes and people you follow, else scores
+      // the URL and renders "This note contains sensitive content." + "Show
+      // anyway". partials/Image.svelte falls back to the original URL after an
+      // error or an 8s timeout, so a bad imgproxy is slow, not fatal.
+      id: 'trouble-images',
+      category: 'Troubleshooting',
+      question: 'Images are not loading',
+      answer: [
+        'Start at Settings → "Content Settings". The first thing to check is "Show images and link previews" — it defaults on, and off means no images anywhere.',
+        'On the same screen, "Hide sensitive content" is also on by default. With it on, media from people you do NOT follow is scored and, above the threshold, replaced by "This note contains sensitive content." with a "Show anyway" link. Your own notes and people you follow skip the check entirely — which is exactly why the same image shows for a friend and hides for a stranger.',
+        'App Settings has an "Imgproxy URL" for resizing images on the fly. It ships empty, so by default images load straight from wherever the note points. If you set one and it is wrong, Coracle falls back to the original URL after an error or about eight seconds — a bad proxy makes images slow rather than permanently missing.',
+        'If an image vanished together with its text, look at "Minimum WoT score" instead: it hides whole notes from low-scoring accounts, which is a far more likely culprit than anything image-specific.',
+        'What Coracle does not have: a per-image retry, a media cache you can clear on its own (the only reset is the full log-out wipe), or any way to repair a dead image.',
+      ],
+      howNostrWorks:
+        'An image is not part of the note. A note is plain text; an image is just a URL sitting inside it, pointing at an ordinary web host that has nothing to do with Nostr. Relays store and replicate the text and know nothing about the file. So when an image will not load the note is intact and undamaged — the host is down, the file was deleted, hotlinking is blocked, or your network is. No relay and no client can fix that, and rebroadcasting the note will not bring the picture back. It is also why the same note shows images in one client and not another: each client fetches that URL itself, sometimes through its own proxy, sometimes not at all.',
+    },
+    {
+      // engine/requests.ts loadNotifications() pulls kinds tagged #p = you
+      // from Router.ForUser() (your READ relays) over the last week.
+      // shared/RelayCard.svelte Read chip tooltip: "Notes intended for you will
+      // not be delivered to this relay." views/Notifications.svelte has exactly
+      // two tabs and NO settings screen; there is no push service worker.
+      id: 'trouble-notifications',
+      category: 'Troubleshooting',
+      question: 'My notifications stopped arriving',
+      answer: [
+        'First, know what Coracle does not have: there is no notification settings screen anywhere, and no push notifications of any kind. So this is never a permission or a device setting — it always means the events are not arriving.',
+        'The lever that matters is your READ relays: open "Relays" — the second item in the sidebar, not inside Settings — and look at each relay card\'s "Read" chip. Its tooltip says it outright: dimmed means notes intended for you will not be delivered there. With no Read relays at all Coracle falls back to its own default relays, so you get whatever happens to be there rather than what people actually sent you.',
+        'Check those relays are actually up: click the publish counters in the sidebar → "Connections", which lists each relay with a live state and counts. The "Notices" tab shows what the relays said back.',
+        'Each relay card also carries a small status dot with the same wording on hover — green connected, orange reconnecting or unstable, red a connection or auth failure, grey not connected.',
+        'If the relays are healthy but everything is thin, check Content Settings → "Minimum WoT score", and the "Minimum Proof of Work" slider under it. Notes from accounts below either threshold are hidden automatically, and that includes people mentioning you.',
+        'Check your mute list on that same page. Muted accounts, words and topics are filtered out of notifications exactly as they are out of the feed — and a muted WORD is matched against the note text, the sender\'s display name AND their NIP-05, so one broad word can quietly delete a whole class of mentions.',
+        'Direct messages are a separate mechanism and stay off until you accept the prompt to enable them — silence in Messages is not the same failure as silence in Notifications.',
+      ],
+      howNostrWorks:
+        'Nothing pushes a notification to you on Nostr. A mention is simply somebody else\'s event carrying a tag with your public key, sitting on whichever relays their client chose to publish to. Your client finds it by asking relays for events tagged with you — Coracle does exactly that against your read relays for the last week. Published relay lists are the convention that makes this work: yours advertises which relays are your inbox, and a well-behaved client sends replies there. So notifications go quiet in three ordinary ways — you never published a relay list, so nobody knows where to reach you; your read relays are unreachable or have dropped old events; or the sender\'s client only wrote to relays you do not read. Nothing is broken in the sense of a bug, and adding the right relay usually brings the backlog in at once.',
+    },
+    {
+      // views/LoginConnect.svelte: the non-dismissible "We're searching for
+      // your profile on the network." panel; after 8s it becomes "We're having
+      // a hard time finding your profile." with "Try again" / "Select relays
+      // manually" → "Use a custom relay" ("If you know which relay your profile
+      // is on, you can enter it below."), plus the skip warning. app/state.ts
+      // calls boot() only from the login handlers and "Login as", so this
+      // screen cannot be reopened later — later repair goes via Relays.
+      id: 'trouble-empty-profile',
+      category: 'Troubleshooting',
+      question: 'My profile is empty and my follows are gone',
+      answer: [
+        'Coracle has a screen for exactly this and it runs automatically at login: a panel reading "We\'re searching for your profile on the network." It queries your profile, relay list and follow list from its default and indexer relays first.',
+        'If eight seconds pass without finding all three it becomes "We\'re having a hard time finding your profile." and offers "Try again" and "Select relays manually". The second opens a field where you can name the relay your profile is actually on — this is the single most useful control for this symptom.',
+        'That screen also lets you skip it, warning that your profile and relays may not synchronise properly. Having skipped it is a common reason an account looks empty afterwards.',
+        'Repairing it later is manual, because that search only runs at login: open "Relays" in the sidebar → "Other relays" → add and join the relay your data is on, then reload.',
+        'Check you are in the right account first: avatar → "Keys" shows the public key of the session you are actually in. An unexpected npub explains everything at once.',
+        'Check whether the data ever arrived: Settings → Database lists every event in your local store by Created / Author / Kind — look for your own profile and follow-list events. If you have an earlier export, "Upload Backup" re-imports it.',
+      ],
+      howNostrWorks:
+        'Your display name, picture, bio and follow list are not stored in the app or on any Coracle server. They are events you signed, sitting on relays, and a client shows them only if it can reach a relay that still has a copy. That makes two very different situations look identical: you are signed in with a different key, in which case the account really is empty because nothing was ever published under it; or you are signed in with the right key and the client simply has not found your events yet. The second is far more common and fully recoverable — point the client at a relay that holds them and everything reappears. It is also why the relay list matters so much: it is the map telling any client where the rest of you lives, and losing it makes a well-populated account look brand new.',
+      note: 'There is no "restore my follows" button and no server-side backup — Coracle can only re-fetch from relays or re-import a file you made yourself.',
     },
   ],
 };

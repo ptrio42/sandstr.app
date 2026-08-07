@@ -21,6 +21,7 @@ const CATEGORIES = [
   'Relays',
   'Account & keys',
   'Advanced',
+  'Troubleshooting',
 ];
 
 type Step = FaqShowMeStep;
@@ -44,6 +45,7 @@ export const wispFaq: ClientFaq = {
     'sign-in': 'sign-in',
     'backup-keys': 'backup-keys',
     logout: 'logout',
+    'multi-account': 'multi-account',
     post: 'post-note',
     reply: 'reply',
     reactions: 'react',
@@ -457,6 +459,209 @@ export const wispFaq: ClientFaq = {
         'Open the drawer and tap the grey italic "Set status..." under your name to get the "Update Status" dialog.',
         'Statuses you set show up beside your name for other people using clients that read them.',
       ],
+    },
+    {
+      // repo/KeyRepository.kt: AccountInfo + SigningMode { LOCAL, READ_ONLY },
+      // addAccount / switchToAccount / removeAccount / moveAccount, and a
+      // migration that PURGES the old REMOTE signing mode — so there is no
+      // bunker and no Amber. ui/component/WispDrawerContent.kt mounts the
+      // header People chip with a "+N" badge (screen-map §15) which opens the
+      // account list; ui/component/AccountSwitcherSheet.kt is the current
+      // "Accounts" sheet on main, with a pinned "Sign in with another account".
+      // Per-account stores: wisp_prefs_<pubkey>, wisp_contacts_<pubkey>,
+      // wisp_notif_<pubkey>, wisp_spark_<pubkey>. Interface settings are
+      // GLOBAL (InterfacePreferences → "wisp_settings").
+      id: 'multi-account',
+      category: 'Account & keys',
+      question: 'How do I add a second account or switch between accounts?',
+      answer: [
+        'Open the drawer with your avatar, then tap the people icon beside your big avatar in the header — it carries a "+N" badge counting your other accounts.',
+        'Your account list opens: each one shows its avatar and name, an eye icon if it is watch-only, and a mark on the one you are using. Tap another to switch — Wisp rebuilds the whole session (feed, relays, media servers, wallet) and passes through the loading screen.',
+        'To add one, use "Sign in with another account" at the bottom of that list. It takes you back to the Wisp splash with your current account remembered: paste an nsec for a full account, an npub for a watch-only one, mint a fresh key, or restore an encrypted backup from Google Drive.',
+        'The Google route is its own account system: it opens "Your backed-up accounts" to restore one, or "Create another account" under the same Google login. It is gated by a 4–8 digit recovery PIN you set the first time, and forgetting it loses the key for good — there is no reset. Only accounts minted through that flow are in the Drive backup, so an account you added by pasting an nsec still needs that nsec written down.',
+        'Backing out of the splash without signing in returns you to the account you were on — nothing is lost.',
+        'To remove one, switch to it first, then drawer → the red "Logout" row. It deletes only that account and moves you to the first one remaining.',
+        'With two or more accounts each row gets up/down chevrons so you can reorder the list.',
+      ],
+      note: 'Signing in with the nsec of a key you already watch upgrades that entry instead of duplicating it. Relays, follows, notifications and the wallet are per account; theme, accent, language, media settings and notification filters are global and do not change when you switch. One global catches people out: minting a brand-new account switches the WHOLE app to fiat display, so every zap counter turns into dollars — Settings → Interface puts it back. Wisp has no bunker or Amber login, so the private key has to live on the device.',
+      howNostrWorks:
+        'On Nostr an account IS a keypair — there is no server-side account — so adding one just means storing a second key on the device, and switching means signing and subscribing as a different public key. Everything that feels like your account (profile, follow list, relay list, DM relays, mutes, bookmarks) are events published on relays under that one key, which is why each account arrives with its own relays and follows, and why the same key gives you the same account on any client or device. A public key alone is enough to read as that identity but never enough to sign, so an npub-added account is inherently read-only.',
+      showMe: [
+        {
+          target: '[aria-label="Switch account"]',
+          title: 'The account switcher',
+          // Descriptive: the chip is display-only in our reproduction. Do not
+          // invite a tap.
+          content:
+            'This people chip in the drawer header is Wisp\'s account switcher — in the real app it carries a "+N" badge and opens your list of accounts, with "Sign in with another account" pinned at the bottom.',
+          position: 'bottom',
+          commands: cmd({ type: 'openDrawer' }),
+        },
+      ],
+    },
+
+    // ------------------------------------------------------- Troubleshooting --
+    // "Why doesn't this work" answers. TEXT-ONLY on purpose: the simulator
+    // cannot stage a failure, so a demo here could only contradict itself.
+    // Grounded in barrydeen/wisp main + the screen-map (2026-08-07).
+    {
+      // CrashHandler.kt + ui/component/CrashReportDialog.kt: the next launch
+      // after a crash shows an AlertDialog titled "Wisp crashed" with the log
+      // and "Send Report" / "Dismiss"; the report is a NIP-17 gift-wrapped DM
+      // to the developer and silently does nothing on a watch-only account.
+      // LoadingScreen.kt has a 30s safety timeout. RelayLifecycleManager
+      // forceReconnectAll() when the app was backgrounded ≥30s.
+      // WispDrawerContent.kt: 7 avatar taps in 2s throws a TEST crash.
+      id: 'trouble-startup',
+      category: 'Troubleshooting',
+      question: 'Wisp crashes or hangs when I open it — what can I do?',
+      answer: [
+        'After a crash the very next launch shows a "Wisp crashed" dialog with the whole log — time, version, device, stack trace — and two buttons, "Send Report" and "Dismiss". Send Report messages the log to the developer as an encrypted DM. Either button deletes the stored log, so send it before dismissing.',
+        'On a watch-only account Send Report silently does nothing: there is no key to sign the message with.',
+        'A hang usually means the loading screen ("Connecting to relays…", "Searching for your profile…", "Finding your friends…"). It has a 30-second safety timeout, but that only lets you through once something has actually arrived — with no relay connected it can genuinely sit there.',
+        'Drawer → Settings → Console is the log view: one row per relay event marked REJECTED, NOTICE, FAILURE or CLOSED, with the relay\'s own message. Settings → Relay Health summarises it as "Connected X/Y" and "Bad N" with per-relay dots.',
+        'The nearest thing to a retry: background Wisp for at least 30 seconds and reopen it — that forces every relay to reconnect and re-subscribe. There is no Reconnect button anywhere.',
+        'For deeper logging, Settings → Interface → tap the version footer five times to reveal a Diagnostics section with a diagnostic-mode switch and a share/clear pair.',
+      ],
+      howNostrWorks:
+        'A Nostr client has no backend that can be "down". At launch it opens a connection to each relay in your list and asks for your own data first — your profile, your follow list, your relay list — then waits for those to arrive before it can build a feed. So a startup that hangs is almost always relays not answering (unreachable host, an authentication-gated relay, a TLS or DNS failure) rather than lost data: your events are still sitting on the relays that do answer.',
+      note: 'Wisp has no clear-cache screen, no storage reset and no safe mode. If you go to Android\'s App info, beware that "Clear storage" sits right beside "Clear cache" and is not the same thing — it deletes Wisp\'s stored keys, and an nsec you have not written down is gone for good. Curiosity warning: tapping your own avatar in the drawer header seven times fast deliberately throws a test crash.',
+    },
+    {
+      // relay/RelayPool.kt trackPublish → BroadcastState(accepted, sent);
+      // FeedScreen shows "Broadcasting (%d/%d)" then "Published to N relay(s)".
+      // OK-false is logged to the Console as REJECTED with the relay message.
+      // strings.xml: error_no_relays_connected, broadcast_nip65 = "Broadcast
+      // Relay List (NIP-65)", broadcast_mining = "Mining PoW (%dk)…".
+      // The note ⋮ menu has NO rebroadcast (btn_share / copy id / copy json /
+      // hide / pin / mute thread / add to list / block).
+      id: 'trouble-not-delivered',
+      category: 'Troubleshooting',
+      question: 'My notes are not showing up for other people (or I cannot see theirs)',
+      answer: [
+        'Watch the status row right after you post: "Broadcasting (n/m)" while relays answer, then "Published to N relay(s)". That N counts relays that actually accepted it, not attempts — if it stays at 0 or far below your write-relay count, the note did not land.',
+        'With nothing connected, Wisp refuses outright: "No relays connected — note was not published".',
+        'Drawer → Settings → Console explains a rejection: every relay that refused is logged with its own message — rate limit, paid relay, blocked key, proof-of-work required.',
+        'Settings → Relays → General: each relay row has read / write / auth chips, and a relay without write never receives your notes. The full-width "Broadcast Relay List (NIP-65)" button republishes your relay list so other clients know where to fetch you.',
+        'Relay Health shows "covers N" per relay — how many of your follows that relay actually carries — plus failure and rate-limit counters, which is how you spot a relay that accepts nothing.',
+        'Proof-of-work is on by default for notes, so "Mining PoW…" before broadcasting is normal and can be slow on an older phone. Settings → Proof of Work turns it down.',
+        'The other direction — you cannot see THEIR note — is usually a filter of yours, not a relay. Safety → Filters → "Spam replies" is ON by default and moves replies from people you do not follow into a "hidden replies from likely spam accounts" row at the bottom of the thread; expand it and tap "Not spam" to bring that person back for good. Muted words hide matching notes with no marker at all, and the Web of Trust switch on the same screen hides everything from outside your computed graph.',
+      ],
+      howNostrWorks:
+        'A note exists only on the relays that actually accepted it. Your client sends it to your write relays and each answers yes or no with a reason — a relay may refuse for rate-limiting, being paid-only, requiring authentication, or requiring proof-of-work. Readers see it only if they read from a relay that has it, which under the outbox model means your published write relays must overlap with the read relays of the people following you. So "nobody saw my note" is usually either zero acceptances, or a perfectly healthy note sitting on relays nobody else reads.',
+      note: 'There is no per-note rebroadcast in Wisp — its ⋮ menu has no republish. To get a note onto a new relay you have to add the relay and post again.',
+    },
+    {
+      // repo/ZapSender.kt failure strings, verbatim: "Could not resolve
+      // lightning address" / "Recipient does not support Nostr zaps" / "Amount
+      // out of range" / "Could not get invoice from lightning provider" /
+      // "Private zaps require DM relays on both sides"; FeedScreen renders them
+      // in an AlertDialog titled "Zap Failed". ZapDialog shows "Wallet Not
+      // Connected" first. SocialActionManager.subscribeZapReceipt closes the
+      // kind-9735 subscription after exactly 30 seconds.
+      id: 'trouble-zap-failed',
+      category: 'Troubleshooting',
+      question: 'My zap failed — what went wrong?',
+      answer: [
+        'With no wallet connected you get "Wallet Not Connected" — "Connect a Lightning wallet to send zaps." The Wallet tab offers Wisp\'s built-in wallet (its key derives from your Nostr key, so it restores anywhere) or Nostr Wallet Connect, where you paste a connection string from Alby, Zeus and friends.',
+        'Every other failure raises a "Zap Failed" alert naming the actual reason, and each points at a different stage: could not resolve the lightning address (their profile), the recipient does not support Nostr zaps (their provider — you can still pay them, just not zap), amount out of range, could not get an invoice, or your wallet\'s own error.',
+        'Check the recipient first: their profile shows a lightning row. No lightning address there means there is nothing to zap.',
+        'Private zaps need more than the others: "Private zaps require DM relays on both sides", plus a key held on this device and a specific note to zap — profile zaps fall back to public.',
+        'If the payment clearly went through but the count on the note never moves, that is the receipt half: after paying, Wisp listens for the zap receipt for exactly 30 seconds and then stops.',
+        'The zap sheet has its own guards — over 10k sats asks for confirmation and 1M is a hard cap — and the Public / Anonymous / Private choice changes which failures can bite.',
+      ],
+      howNostrWorks:
+        'A zap is five steps and any of them can fail. Your client reads the recipient\'s lightning address from their profile and resolves it; it builds and signs a zap request naming the relays where the receipt should be published; it asks that provider for an invoice, which requires the provider to support Nostr zaps and the amount to sit inside its limits; your wallet pays the invoice over Lightning; and finally the recipient\'s provider publishes the zap receipt to those relays. The counter you see on a note is built from that last step, so a payment that really went through can still look like a failed zap if the receipt never reaches a relay you read.',
+    },
+    {
+      // ui/screen/WatchOnlyOnboardingScreen.kt: full-screen "Watch-only mode"
+      // step with the verbatim copy and a "Start watching" button.
+      // BottomBar.kt drops WALLET and MESSAGES when isReadOnly; Navigation.kt
+      // sets onCompose = null and onReply = {} for READ_ONLY.
+      // SocialActionManager's write paths all `val s = getSigner() ?: return`,
+      // which is why follow/react/repost stay visible and do nothing.
+      // KeysScreen.kt prints "No private key is stored on this device."
+      id: 'trouble-read-only',
+      category: 'Troubleshooting',
+      question: 'I cannot post — I am in watch-only mode',
+      answer: [
+        'You signed in with an npub (or an nprofile, or a raw hex public key), so Wisp created a watch-only account. It tells you at the time with a full-screen "Watch-only mode" step: you can read, browse and follow, but posting, reacting and zapping need a private key.',
+        'The signed-in state looks different too: the bottom bar drops from five tabs to three (Wallet and Messages disappear), the orange compose button is not drawn at all, and replies do nothing.',
+        'Confirm which mode you are in: drawer → Settings → Keys shows your npub as usual, but under Private Key it reads "No private key is stored on this device." In the account list a watch-only account carries an eye icon.',
+        'Worth knowing, because the onboarding copy overpromises: following does not work either. Follow, react and repost all return early with no signer, so those controls stay visible and silently do nothing. Mute and pin are the exception — they take effect on the device, so a blocked user really does disappear from your feed, notifications and DMs — but neither list is ever published, so none of it follows your key to another client.',
+        'To fix it, open the account switcher → "Sign in with another account" and enter the nsec. Signing in with the nsec of the same key replaces the watch-only entry rather than adding a duplicate. Logging out first also works — its confirm dialog reassures you that you can sign back in with your npub any time.',
+      ],
+      howNostrWorks:
+        'Every action other people can see is an event you sign with your private key — a note, a reaction, a repost, a follow list, a zap request. An npub is only the public half of the keypair: a name others can address and a filter you can subscribe with, but it cannot produce a signature, so a client holding only an npub reads the whole network as you and writes nothing. Clients that support a remote signer can be key-less and still write, because something else does the signing.',
+      note: 'Wisp has no remote-signer or Amber login, so the private key has to live on the device.',
+    },
+    {
+      // strings.xml settings_auto_load_media / settings_auto_load_description
+      // (ships ON). RichContent.kt: when off, media renders as a "Tap to load"
+      // block over the blurhash; long-press gives "Copy URL" / "Download".
+      // PostCard.kt gates content-warning notes behind "Tap to reveal".
+      // LoadingAsyncImage's onError just stops the spinner — there is NO
+      // "failed to load" message. Blossom.kt is the UPLOAD server list.
+      id: 'trouble-images',
+      category: 'Troubleshooting',
+      question: 'Images are not loading',
+      answer: [
+        'Check the setting first: Settings → Interface → Media → "Auto-load media". It ships on; with it off every image is a placeholder captioned "Tap to load" over a blurred preview — by design, not a failure.',
+        'Notes flagged as sensitive are covered by a "Tap to reveal" panel instead of showing the media at all.',
+        'Long-press an image for "Copy URL" and "Download". Pasting that URL into a browser is the fastest way to tell whether the host is down, geo-blocked or rate-limiting you — the note itself is fine either way.',
+        'Settings → Media Servers is not the fix: it governs where YOUR uploads go and does not mirror or proxy other people\'s images.',
+        'There is no image-proxy setting, no media cache to clear, and no "failed to load" message — a failed fetch simply stops the spinner and leaves the placeholder, so a permanently grey block usually means the remote host.',
+        'If media fails everywhere at once, treat it as a network problem rather than a relay problem. Images travel over ordinary HTTPS, not over your relay connections, so a green Relay Health tells you nothing about them.',
+      ],
+      howNostrWorks:
+        'Images are not part of a Nostr note. A note is text, and an image is just an https URL inside that text — often described by a tag carrying dimensions and a blurhash so the client can draw a placeholder before the bytes arrive. The file itself lives on a third-party host that has no relationship to the relays. So relays can be perfectly healthy while every image fails, nothing any relay does can bring a dead image host back, and the same note shows pictures for one person and not another.',
+      note: 'Video autoplay and looping have their own switches in that same Media section — "the video does not start" is often just autoplay being off.',
+    },
+    {
+      // AndroidManifest.xml requests no POST_NOTIFICATIONS and build.gradle.kts
+      // has no Firebase / UnifiedPush / WorkManager: there is NO push at all.
+      // NotificationsScreen.kt: the Tune icon opens "Notification Filters"
+      // (Replies / Reactions / Zaps / Reposts / Mentions / Votes / DMs +
+      // Chat rooms + Enable all / Disable all). Safety "Spam replies" is ON by
+      // default and hides likely-bot replies from non-follows.
+      // Filters + sound live in the GLOBAL wisp_settings; only read/unread
+      // state is per account (wisp_notif_<pubkey>).
+      id: 'trouble-notifications',
+      category: 'Troubleshooting',
+      question: 'My notifications stopped arriving',
+      answer: [
+        'The single most important fact: Wisp has no push notifications at all. No lock-screen alerts, no background service, nothing accumulating while the app is closed — notifications exist only inside the app, only while it is running.',
+        'Check the filters first: on the Notifications tab, the tune icon (accent-coloured when filters are active) opens "Notification Filters" with switches for replies, reactions, zaps, reposts, mentions, votes and DMs, plus chat rooms and enable/disable-all. One switch left off is the usual cause of "reactions stopped but replies still work".',
+        'The speaker icon beside it mutes the notification sound.',
+        'Check Safety → Filters → "Spam replies" too. It is on by default and uses an on-device model to hide likely-bot replies from people you do not follow — silently.',
+        'Muted threads, muted users and muted words all suppress their notifications as well.',
+        'The 24-hour summary bar at the top is a FILTER, not a total: tapping a stat isolates that type. If the list suddenly looks empty, tap the highlighted stat again.',
+        'If everything stopped, check Relay Health and Console — mentions can only arrive on read relays that are actually connected. Backgrounding the app for 30 seconds and reopening forces a reconnect.',
+      ],
+      howNostrWorks:
+        'Notifications on Nostr are not pushed to you — they are ordinary events that happen to tag your public key, and a client finds them by keeping a live subscription open on your read relays. Whoever replied to or zapped you published their event to the relays THEY write to; you only learn about it if one of those is a relay you read from. That is why notifications can go quiet after a relay change, and why a client with no background service shows you nothing while it is closed: nobody is holding the events for you, they simply sit on relays until you ask again.',
+      note: 'The Notification Filters and the sound toggle are global — they stay put when you switch accounts. Read/unread state is per account, and so are the things that quietly suppress notifications: the Safety "Spam replies" switch and your muted users, words and threads all belong to the account you are signed in as.',
+    },
+    {
+      // FeedScreen.kt guards the first follow with "No follow list found":
+      // "…If you follow this person, your follow list will start at 1. If you
+      // believe this is wrong, rebroadcast your follow list from another client
+      // first, then try again." StartupCoordinator.subscribeSelfData() asks a
+      // fixed indexer set + your write relays for the replaceable kinds.
+      // There is no "refresh my profile" action anywhere.
+      id: 'trouble-empty-profile',
+      category: 'Troubleshooting',
+      question: 'My profile is empty and my follows are gone',
+      answer: [
+        'Identify the account first: drawer → Settings → Keys shows the npub you are actually signed in as, and the account list shows every account on the device. An empty profile is very often the wrong key, or a watch-only npub added by mistake.',
+        'Take the guard dialog seriously. The first time you follow someone while your follow list looks empty, Wisp warns: "No existing follow list was found on your relays… If you believe this is wrong, rebroadcast your follow list from another client first, then try again." Choosing "Follow anyway" publishes a follow list containing exactly one person. Cancel until you have checked.',
+        'On startup Wisp re-fetches your own profile, follows and relay list from a fixed set of indexer relays plus your own write relays — that is the "Searching for your profile…" and "Finding your friends…" step. If it passes with nothing, none of them answered with your list.',
+        'Add the relay you actually publish to in Settings → Relays → General (tick read and write), then press "Broadcast Relay List (NIP-65)" so other clients and Wisp\'s own next startup look in the right place.',
+        'There is no "refresh my profile" button. Background the app for 30 seconds and reopen, or switch accounts and back — both reload everything.',
+        'Relay Health and Console tell you whether the relays holding your history are connected: a follow list on an unreachable or authentication-gated relay looks identical to one that does not exist.',
+      ],
+      howNostrWorks:
+        'Your profile and your follow list are two events signed by your key and stored on relays. Two very different situations look identical in a client: a different key (a genuinely empty account — nothing was lost, you are simply someone else), and the same key queried against relays that never received those events (your data exists, you are looking in the wrong place). Because those events are replaceable, relays keep only the newest one per key — so a client that publishes a fresh, shorter follow list can overwrite a good one. That is exactly why a "start at 1" follow is dangerous, and why rebroadcasting the full list from a client that still has it is the fix.',
     },
   ],
 };

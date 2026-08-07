@@ -23,6 +23,7 @@ const CATEGORIES = [
   'Relays',
   'Account & keys',
   'Advanced',
+  'Troubleshooting',
 ];
 
 type Step = FaqShowMeStep;
@@ -47,6 +48,7 @@ export const yakihonneFaq: ClientFaq = {
     'sign-in': 'sign-in',
     'backup-keys': 'backup-keys',
     logout: 'logout',
+    'multi-account': 'multi-account',
     post: 'post-note',
     reply: 'reply',
     reactions: 'react',
@@ -501,6 +503,183 @@ export const yakihonneFaq: ClientFaq = {
         'Inside, the screen tracks your XP and your tier: Bronze, Silver, Gold, Platinum.',
         'Rewards come in two lists — "One-time rewards" and "Repeated rewards" — each with a "Claim" button and a countdown to the next claim.',
       ],
+    },
+    {
+      // YakiHonne/mobile-app main (what our screen-map reproduces — the spec is
+      // titled "YakiHonne Mobile"; registry's repo link points at web-app for
+      // attribution, but the WEB client has no switcher at all).
+      // lib/views/main_view/widgets/drawer_view.dart :: DrawerItem
+      // context.t.manageAccounts → accounts_manager.dart :: AccountManager
+      // (DraggableScrollableSheet), rows tagged by AppSigner —
+      // nSec/red · nPub/yellow "Read only" · Amber/orange · Bunker/green;
+      // onLoginTap(index) switches, _handleSlidableDisconnect removes one,
+      // onAllLogout() clears every account.
+      //
+      // TEXT-ONLY: our drawer (components/Drawer.tsx) ships 5 rows and no
+      // "Manage accounts", so there is nothing to spotlight.
+      id: 'multi-account',
+      category: 'Account & keys',
+      question: 'How do I add a second account or switch between accounts?',
+      answer: [
+        'Tap your avatar in the top-left to open the drawer, then tap "Manage accounts".',
+        'The sheet lists every account you are signed in with — avatar, name, NIP-05 and a small coloured type tag. A filled radio dot marks the one you are using.',
+        'Tap any other row to switch. Nothing is re-entered: the stored signer is reused and the app reloads as that identity.',
+        'Each account carries its own wallet, so switching swaps the Lightning and Cashu wallets along with the identity — a fresh account opens on an empty wallet and its zaps fail until you link one there too.',
+        '"Add account" opens the normal Log in screen, so a new account can be any sign-in type — a key ("npub, nsec or hex"), a remote signer via bunker QR or URL, or Amber on Android.',
+        'To remove one, swipe its row sideways and tap the red log-out button; if that account has wallets connected, YakiHonne offers to export them first. Removing the account you are CURRENTLY using does not sign you out — the app immediately switches you to the first account left in the list, so check the avatar before you post again. "Logout all accounts" clears everything.',
+        'When writing a note you can also switch author without leaving the composer, once more than one account is signed in: a small chevron appears below the avatar at the left of the text field — tap it to unfold your other accounts and tap one to post as them. (The avatar itself just opens a profile preview.)',
+      ],
+      note: 'The type tag prints the signer type verbatim and tells you what each account can do: "nPub" (yellow) is a public key with no signer and cannot post; "nSec" (red) means the key itself sits on this device; "Amber" (orange) and "Bunker" (green) post normally without YakiHonne ever holding the nsec. Rows show the name and NIP-05 but not the npub, so two accounts with the same display name are hard to tell apart.',
+      howNostrWorks:
+        'An account on Nostr IS a keypair, so adding one just means the client stores another key — or another connection to a signer that holds one — and switching means it starts signing and querying as a different public key. Everything that makes an account feel like an account (your name and picture, your follow list, your relay list, bookmarks, mutes) is a set of events on relays under that one key, which is why each account arrives with its own feed, follows and DMs and why nothing carries across. A read-only account is a public key with no signer attached: readable, never writable.',
+    },
+
+    // ------------------------------------------------------- Troubleshooting --
+    // "Why doesn't this work" answers. TEXT-ONLY on purpose: the simulator
+    // cannot stage a failure, so a demo here could only contradict itself.
+    // Grounded in YakiHonne/mobile-app main + the screen-map (2026-08-07).
+    {
+      // settings_view/widgets/property_analytics_cache.dart: "Crashlytics &
+      // cache" → App cache split into "Cached data" / "Cached media" with a
+      // "Clear app cache" action, "Automatic cache purge" (auto-clear at 2GB)
+      // and the Crashlytics toggle. main_view_appbar.dart mounts _offlineColumn
+      // ("Waiting for network...") when state.isConnected is false.
+      id: 'trouble-startup',
+      category: 'Troubleshooting',
+      question: 'YakiHonne crashes or hangs when I open it — what can I do?',
+      answer: [
+        'Settings → "Crashlytics & cache" is the screen for this. It breaks the app cache into "Cached data" and "Cached media" with sizes in MB — tick either and press "Clear app cache". It asks you to confirm, and afterwards advises restarting the app so the change takes effect properly.',
+        'The same screen has "Automatic cache purge", which clears the cache by itself once it reaches 2GB, and the app will warn you on its own when the cache is growing.',
+        'Leave the "Crashlytics" toggle on if you want the crash to reach the developers automatically — it is anonymous crash reporting. If you can describe what you were doing, the version footer at the bottom of Settings also has email and GitHub buttons.',
+        'If it hangs rather than crashes, look at the top of the home screen: with no working connection the app bar grows a "Waiting for network..." row with a pulsing line. Generic failures show "Something went wrong !" with a "Try again".',
+        'There is no safe mode, no in-app log viewer, and no way to start the app with relays disabled.',
+      ],
+      howNostrWorks:
+        'A Nostr client\'s startup is two jobs, and neither is a server you can restart: open connections to every relay in your list, and replay a local cache of events into the feed. A relay that accepts the connection but never answers leaves the client waiting rather than failing, which reads as a hang; a large or corrupted local cache makes the app churn before it draws anything. Clearing that cache costs nothing you cannot re-fetch — your profile, follows and notes are events living on relays and come back on the next launch. Your private key is the exception: it is stored only on your device, never on a relay.',
+      note: 'Not verified upstream: whether clearing the cache also clears your signed-in accounts or wallet connections. Back up your keys before you clear it.',
+    },
+    {
+      // widgets/relay_progress_bar.dart: per-relay check vs forbidden icon,
+      // "Successful relays" + details/dismiss. widgets/republish_view.dart:
+      // "Republish" with per-relay checkboxes, "Protected event" refusal.
+      // widgets/unsent_events_view.dart: "Pending events" (+ desc: they go
+      // automatically when connectivity returns — no manual resend).
+      // settings_view/widgets/relays_update.dart: Content / Private messages /
+      // Search sections, per-relay Read only / Write only / Read/Write, and the
+      // verbatim green / grey / red dot legend.
+      id: 'trouble-not-delivered',
+      category: 'Troubleshooting',
+      question: 'My notes are not showing up for other people (or I cannot see theirs)',
+      answer: [
+        'Watch the publish itself. YakiHonne shows a relay-progress banner counting successful relays against the total; tap "details" to expand it and every relay shows a check if it accepted the note or a forbidden icon if it refused or could not be reached.',
+        'To push an already-published note out again, use its "⋯" menu → "Republish". You get your relays as a checkbox list and pick exactly where to re-broadcast. Notes marked as protected are refused — only their author can republish those.',
+        'The "Pending events" screen lists what never went out at all: things created while offline or on a bad connection. They send themselves when the connection returns — there is no manual resend button.',
+        'Settings → "Relay settings" splits your relays into Content, Private messages and Search, and each relay is Read only, Write only or Read/Write. A relay left on "Read only" will never receive your notes. The dot legend is spelled out on the screen: green is connected, grey pending, red offline.',
+        'Check the composer too: the "Publish only to" relay indicator pins a note to one specific relay. If that is on, that relay is the only place your note went.',
+        'If it is THEIR notes you cannot see, turn on Settings → "Content moderation" → "Gossip model" ("automatically finds your followees\' posts across different relays"). It ships OFF, and while it is off YakiHonne only ever looks on the relays in your own list — anyone publishing elsewhere is invisible however healthy your relays look.',
+      ],
+      howNostrWorks:
+        'A note exists only on the relays that accepted it, and a reader only sees it if their client queries one of those same relays. There is no delivery, no retry, no central spool. NIP-65 is the convention that fixes this: you publish a relay list saying where to find your notes and where to reach you, and other clients read it to know where to look. So a note nobody sees usually means one of four things — it went only to relays your readers do not read; your write relays are down, paid, or required authentication and rejected it; your relay list is missing or stale so nobody knows where to look; or the publish never happened and is sitting in the pending queue. A green check from a relay means that relay stored it — an acknowledgement, not proof anyone will fetch it.',
+    },
+    {
+      // i18n/en.json error strings, verbatim: noWalletLinkedToYouProfile,
+      // noWalletConnectedToYourProfile, toBeAbleSendSats, selectDefaultWallet,
+      // noWalletCanBeFound, ensureLnSet, noLnInNwc, errorPayingInvoice,
+      // errorSendingSats, errorZappingUsers. screen-map §Wallet + zap: the zap
+      // sheet's "Min sats"/"Max sats" chips, "Zap splits", "Invoice" (QR) and
+      // "Send"; wallet home row 1 reads "No Wallet Linked" when empty.
+      id: 'trouble-zap-failed',
+      category: 'Troubleshooting',
+      question: 'My zap failed — what went wrong?',
+      answer: [
+        'Check the money half first, on the Wallet tab (third in the bottom bar). With no wallet connected at all you land on the empty-wallet screen; with a wallet connected but no lightning address on your profile you get a card telling you to link one from the menu above; when everything is set you see the balance and a "Copy LN" pill. Which wallet is selected is shown and changed in Settings → "Wallets".',
+        'Fix a missing or broken connection at Settings → "Wallets" — create a Yaki wallet, connect one over Nostr Wallet Connect, use Alby, or paste an NWC string. The same screen also has "Always use external wallet zaps", which hands payment to an installed wallet app instead.',
+        'Read the error literally, because YakiHonne names which half broke. Messages about no wallet linked or no default wallet selected are your side. Messages about your lightning address not being set, or not being retrievable from your NWC secret, are the address side. "Error occured while paying using invoice" or "…while zapping users" is the payment itself.',
+        'If in-app payment keeps failing, use the zap sheet\'s "Invoice" button. It produces a Lightning invoice and QR you can pay from any wallet outside YakiHonne — that is the reliable bypass.',
+        'Watch the "Min sats" and "Max sats" chips on the zap sheet: an amount outside the recipient\'s bounds is rejected by their provider, not by YakiHonne. And "Zap splits" divides one zap between several people, so it can partly succeed.',
+      ],
+      howNostrWorks:
+        'A zap is not a Nostr message with money inside it — it is a Lightning payment with a Nostr receipt wrapped around it, and there are four places it can die. Your client reads the recipient\'s lightning address from their profile event; if they never set one there is nothing to pay, and the zap button is dead through no fault of yours. Your client then asks that server for an invoice and attaches a signed zap request — the server can refuse for an amount below its minimum or above its maximum, or because it is down. Your wallet pays the invoice and can fail on balance, routing, or a wallet connection whose budget has run out. And finally the recipient\'s provider — not you — publishes the zap receipt to relays, so if it does not publish, or publishes where you do not read, the sats really moved and no zap ever appears under the note.',
+    },
+    {
+      // widgets/no_content_widgets.dart: HorizontalViewModeWidget /
+      // VerticalViewModeWidget — "You're using view mode" / "Sign in with your
+      // private key and join the community." + a Login button.
+      // accounts_manager.dart tags an AppSigner.nPub row yellow "Read only".
+      // en.json: usingExternalSign / amberNotInstalled / attemptConnectAmber.
+      id: 'trouble-read-only',
+      category: 'Troubleshooting',
+      question: 'I cannot post — the app says I am in view mode',
+      answer: [
+        'You signed in with an npub. YakiHonne marks it in two places: that account carries a yellow "nPub" type tag in "Manage accounts", and wherever a signing action would be you get a block headed "You\'re using view mode" — "Sign in with your private key and join the community." — with a Login button.',
+        'If you tapped "Continue as a guest" instead, you get the "View as" banner on the feed and a cut-down drawer with an orange Login button. Same cause, different entry point.',
+        'Fix it without losing the read-only entry: drawer → "Manage accounts" → "Add account", then either paste your key, pick the "Remote signer" card and connect a bunker, or use Amber on Android. Switch to that account from the same sheet, and swipe the npub row away afterwards if you want.',
+        'One trade-off worth knowing before you pick a signer: with a bunker the Messages tab is closed — it reads "Messages are disabled" with no new-message button, because YakiHonne will not push every encrypted message through a remote signer. With Amber it shows "Messages Not Loaded" until you tap to load them. Only a key held in the app gives you DMs without a detour.',
+        'A different failure that looks the same: if your key lives in an external signer, YakiHonne shows "Using an external signer" and signing breaks with messages like "Amber app is not installed" or a rejected connection attempt. That is a signer problem — reinstall or re-approve rather than re-entering keys.',
+      ],
+      howNostrWorks:
+        'Every note, like, repost, zap request and follow-list change is an event that must carry a signature made with your private key. An npub is only the public half — enough to identify you, fetch your profile and follow your timeline, but mathematically incapable of producing a signature, which is why a view-mode session reads everything and writes nothing. That is a property of the protocol, not a limitation the client chose. The signing key does not have to be inside the app, though: a remote signer, or Amber on Android, holds the key and signs on request, so you can post without ever pasting your nsec into YakiHonne. The identity on relays is identical either way — same key, same profile, same follows; only the ability to sign changes.',
+    },
+    {
+      // widgets/common_thumbnail.dart: ExtendedImage.network with
+      // LoadingMediaPlaceHolder / NoMediaPlaceHolder and a
+      // mediaServersCubit.fetchBlossomBlob() fallback by hash.
+      // settings_view/widgets/media_uploader_settings.dart is the UPLOAD side.
+      // property_customization.dart confirms there is no data-saver / autoplay /
+      // load-images control anywhere in Customization.
+      // NOT claimed: that images route through YakiHonne's imgproxy — the
+      // constant exists in constants.dart but common_thumbnail.dart never uses it.
+      id: 'trouble-images',
+      category: 'Troubleshooting',
+      question: 'Images are not loading',
+      answer: [
+        'YakiHonne does not simply give up on a broken image: it shows a loading placeholder, falls back to a "no media" placeholder, and before that tries to re-fetch the same file from your Blossom servers by its hash. An image that fails in other clients can still appear here if any of your mirrors holds it.',
+        'Settings → "Content moderation" → "Media uploader" is where those mirrors are configured — main server, mirror-all, your list, and Blossom content management. It decides where YOUR uploads go and which mirrors the fallback can use; it does not change how other people\'s images load.',
+        'For a poisoned cache: Settings → "Crashlytics & cache" → tick "Cached media" → "Clear app cache", then restart as the screen advises.',
+        'Two feed switches decide whether media is drawn at all: Settings → "Customization" → "Feed customization" → "Edit" holds "Hide non-followed media" ("Automatically hide images & videos from non-followed users until you tap to reveal."), which is ON by default and is the usual reason strangers\' pictures never appear, plus "Enable video auto play". Beyond those there is no data-saver or media-proxy control.',
+      ],
+      howNostrWorks:
+        'The picture is not inside the note. A note is a short text event whose content happens to contain a URL — sometimes with a tag hinting at the file\'s size, hash and mirrors — pointing at a completely separate third-party host. Relays store the note, never the file, which is why a broken image is almost never a relay problem: the host is down, the file was deleted, the link is hotlink- or geo-blocked, while the note itself is perfectly intact and other people may see the picture fine. Blossom is the useful exception: files there are addressed by their hash rather than their location, so the identical file can be pulled from any mirror that happens to hold it — which is exactly the second attempt YakiHonne makes before giving up.',
+    },
+    {
+      // screen-map §Settings + Relays + Notification toggles:
+      // notifications_customization.dart — eight switches in this order.
+      // en.json: notifDisabled = "Notifications are disabled!" /
+      // notifDisabledMessage. Push is a separate layer (FCM / APNS) from the
+      // relay subscription that fills the in-app list.
+      id: 'trouble-notifications',
+      category: 'Troubleshooting',
+      question: 'My notifications stopped arriving',
+      answer: [
+        'Settings → "Notifications" holds eight switches. Seven of them silence a whole category when they are OFF — push notifications, following, mentions / replies, reactions, reposts, zaps, private messages. "Max mentions" runs the other way: it is ON by default, and it is the ON state that hides things.',
+        'When a type is switched off the app tells you directly — "Notifications are disabled for this type, you can enable it in the notifications settings."',
+        '"Max mentions" is the sneaky one: it silently hides notifications from any note mentioning more than ten people, which looks exactly like mentions going missing.',
+        'The in-app list is filled from relays, so check those too. If the app bar shows "Waiting for network..." or Settings → "Relay settings" shows red dots, nothing arrives however the switches are set.',
+        'There is no per-type log, no test notification and no re-register-push button.',
+      ],
+      howNostrWorks:
+        'Nostr notifications are not pushed to you by a server that owes you delivery. They are other people\'s events that happen to reference your public key — a reply or mention tags you, a reaction and a repost are their own event kinds, a zap is a receipt published by the payer\'s Lightning provider, a DM is encrypted to you. Your client finds them by holding an open subscription on your read relays filtered to your key. Under NIP-65, other people\'s clients send things meant for you to the inbox relays in your published relay list — so if that list is stale, points at relays that have gone away, or was never published, strangers\' replies are written somewhere you never query and your notifications simply stop while everything else works. Mobile push adds a second, separate layer that can fail on its own: the in-app list can be full while the phone stays silent.',
+    },
+    {
+      // i18n/en.json: keys / myPublicKey / mySecretKey / copyNpub / showSecret.
+      // accounts_manager.dart: radio marks the active row, type tag shows
+      // "Read only". relays_update.dart: quickConnectRelay + the dot legend.
+      // republish_view.dart takes a generic Event — verified for notes via the
+      // ⋯ menu; the entry point for profile/contact events is NOT verified, so
+      // the copy does not promise one.
+      id: 'trouble-empty-profile',
+      category: 'Troubleshooting',
+      question: 'My profile is empty and my follows are gone',
+      answer: [
+        'Check which key you are on first. Drawer → "Manage accounts" lists every account with its type tag and puts a filled radio on the active one — if the empty profile is a "Read only" row, you pasted an npub.',
+        'Then compare the key itself: Settings → "Keys" shows "My public key" with a copy button (and "Show secret key!" behind a warning). An empty account is almost always a different key, and nothing has been lost.',
+        'If the key is right, the problem is relays: Settings → "Relay settings" — make sure the relays that hold your history are listed and showing green, and use "Quick connect to relay" to add one immediately. On anyone\'s profile the "⋯" menu also has "User\'s relays" so you can see where they actually publish.',
+        'Force a refetch rather than trusting a stale local copy: Settings → "Crashlytics & cache" → tick "Cached data" → "Clear app cache".',
+        'Your own numbers are on your profile as Followings and Followers — tapping them opens the connections sheet, the quickest way to see whether the list came back empty or merely short.',
+        'YakiHonne has no in-app backup or restore of your follow list, and no warning before an empty one is published.',
+      ],
+      howNostrWorks:
+        'There is no account record anywhere — your name and picture are one event and your follow list another, both signed by your key and stored on relays. That gives three distinct ways to look empty. You are signed in with a different key: a second nsec, or an npub you pasted, is a genuinely different identity with its own empty profile, and nothing was lost. Or your client is connected to relays that never had your events, in which case they still exist elsewhere and adding the right relay brings everything back. Or — the dangerous one — profile and follow list are replaceable events, and relays keep only the newest by timestamp, so a client that publishes an empty or partial follow list overwrites the good one on every relay it reached. Recovery then means finding a relay that still holds the good version and republishing it, not restoring an account.',
     },
   ],
 };

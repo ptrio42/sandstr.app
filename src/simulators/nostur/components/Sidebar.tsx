@@ -55,7 +55,11 @@ export function Sidebar({
             <Avatar seed={user.pubkey} size={78} />
           </div>
         </div>
-        <div className="absolute -bottom-6 right-3 flex items-center gap-2.5">
+        {/* FastAccountSwitcher.swift + Sidebar.swift's bottomTrailing overlay:
+            alternate accounts as small avatars, then the accent ellipsis.circle
+            that opens the Accounts sheet. Anchored as one surface — the FAQ
+            caption is about the pair, not either control alone. */}
+        <div className="absolute -bottom-6 right-3 flex items-center gap-2.5" data-tour="nostur-switcher">
           <Avatar seed={`switcher:${user.pubkey}`} size={34} />
           <MoreHorizontal
             className="h-[25px] w-[25px] rounded-full"
