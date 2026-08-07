@@ -19,6 +19,14 @@ ignores a topic **does not typecheck**. Each topic maps to:
 Adding a topic to `CANONICAL_TOPICS` intentionally breaks every client file
 until each declares it — that is the mechanism working, not a nuisance.
 
+**Worked example of the mechanism: `multi-account` (added 2026-08-07).**
+Adding it broke all eight files until each declared an answer, and the answers
+came out genuinely different: Amethyst, Nostur, YakiHonne and Wisp have a real
+switcher; Snort has one but ships no way to ADD a second account; Damus and
+Primal hold one key at a time and switching means logging out. "This client
+does not have it" is a first-class answer — provided it was verified, not
+inferred from silence.
+
 **A topic is a user's question, not a feature name — enumerate its kinds.**
 `mute` is the worked example: the clients variously mute *people*, *words*,
 *hashtags* and *threads*, in different places and under different
@@ -29,6 +37,30 @@ enumerate the kinds the client supports and where each is managed, and say
 plainly when a kind does not exist. The same test applies elsewhere:
 `manage-relays` (read/write/inbox/outbox splits), `notifications` (the
 list vs the settings), `connect-wallet` (built-in vs NWC vs handoff).
+
+## Two classes of question
+
+**Navigational — "where is X / how do I do X".** The original bank. Answer in
+`answer` as numbered imperative steps naming the real app's real labels, and
+add a `showMe` when the sim can honestly demonstrate it.
+
+**Troubleshooting — "why doesn't this work".** Added 2026-08-07, category
+`Troubleshooting`, one entry per symptom (`trouble-*`). Two rules make this
+class different:
+
+- **They are TEXT-ONLY.** The simulator cannot stage a failure — it has no
+  broken relay, no failed zap, no read-only session — so a `showMe` here could
+  only contradict itself. `showMe` is optional; omit it.
+- **The answer has two halves and `howNostrWorks` is where the second one
+  goes.** Half of "why doesn't this work" is not about the client at all: it
+  is relays, keys and NIPs. Keeping the protocol half in its own field (the
+  panel renders it as a labelled block) stops protocol facts being smuggled
+  into steps the reader is meant to *follow in this app*. The field must be
+  true of Nostr generally — a client-specific behaviour in there is a bug.
+
+The seven symptoms every client answers: startup crash/hang, notes not
+reaching others, zap failed, cannot post (read-only npub session), images not
+loading, notifications stopped, empty profile / lost follows.
 
 ## Grounding tiers (fidelity is the product)
 
