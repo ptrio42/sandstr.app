@@ -129,6 +129,53 @@ naraz przestaje się renderować, w tym taki, który działał godzinę wcześni
 - **Panel przeglądarki potrafi przestać kompozytować klatki** — screenshoty pokazują sam szkielet,
   podczas gdy DOM jest kompletny. Weryfikuj przez `javascript_exec` na DOM, nie po obrazku.
 
+## Następna sesja: rozszerzenie banku pytań
+
+Właściciel podsunął dwa pytania — „klient mi się ciągle wysypuje" i „jak używać kilku kont" — i one
+trafiają w **dwie różne luki**, nie jedną. Warto to rozdzielić, bo wymagają innej roboty.
+
+### Luka 1: brakuje całej KLASY pytań — troubleshooting
+
+Cały dzisiejszy bank jest **nawigacyjny**: „gdzie to jest / jak to zrobić". Ani jedno pytanie nie
+brzmi „dlaczego to nie działa". A to są dokładnie te pytania, które ludzie zadają publicznie na Nostrze:
+
+- klient się wysypuje / zawiesza przy starcie
+- moje notatki nie pojawiają się u innych (albo: nie widzę cudzych)
+- zap nie przechodzi / „payment failed"
+- nie mogę opublikować notatki (sesja read-only po zalogowaniu npubem — **to już wiemy z reconu**:
+  dotyczy Amethysta, Nostura, Damusa i Snorta)
+- obrazki się nie ładują
+- powiadomienia przestały przychodzić
+- „mój profil jest pusty / straciłem obserwowanych" (klasyk: zalogowanie innym kluczem)
+
+Charakterystyka tej klasy: odpowiedzi są **tekstowe**, bo symulator nie odtwarza awarii. To jest OK —
+model danych już to obsługuje (`showMe` jest opcjonalne), a wpis bez demo bije demo, które kłamie.
+Grounding jest trudniejszy niż przy nawigacji: część odpowiedzi to wiedza o **protokole** (relaye,
+klucze), nie o UI konkretnego klienta. Sugestia: osobna kategoria `Troubleshooting` i wyraźny podział
+w treści na „co zrobić w tym kliencie" vs „jak działa Nostr".
+
+### Luka 2: brakuje TEMATU w banku — wiele kont
+
+`CANONICAL_TOPICS` ma `logout`, ale nie ma „dodaj drugie konto / przełączaj się między nimi". To jest
+osobne pytanie użytkownika i realnie różni się per klient — z dzisiejszego reconu już wiemy:
+
+- **Amethyst**: szuflada → „Accounts" → arkusz z „Add New Account" i wylogowaniem per konto
+- **Nostur**: konta synchronizują się między iPhone/iPad/Mac przez iCloud
+- pozostałe: **do zweryfikowania** (nie pytaliśmy o to w reconach)
+
+Dodanie tematu do banku celowo zepsuje wszystkie osiem plików, dopóki każdy się nie zadeklaruje —
+i to jest właśnie mechanizm, który wymusi kompletność.
+
+### Jak to zrobić (proponowany kształt sesji)
+
+1. Rozszerz `CANONICAL_TOPICS` o `multi-account` (i ewentualnie kilka `trouble-*`). Kompilator wypisze
+   listę roboty.
+2. Jeden workflow reconowy na klienta, z pytaniami troubleshootingowymi jako osobną sekcją promptu —
+   z **wymaganym** polem na dowód ze źródła, tak jak `verifiedOnScreen` przy nawigacji.
+3. Weryfikacja i rewizja adwersaryjna jak dotąd, z jednym dodatkiem: **completeness critic** —
+   osobny przebieg pytający „czego w tym wpisie brakuje", bo weryfikator sprawdza tezę, którą dostał,
+   a nie tę, której nie ma (patrz sekcja „Jak pracowaliśmy").
+
 ## Możliwy kierunek (decyzja produktowa, nie techniczna)
 
 „How to change relays in Damus" to klasyczny long-tail search — ludzie to googlują i lądują na
