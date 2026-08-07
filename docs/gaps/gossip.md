@@ -15,23 +15,27 @@
 
 | missing | dead | partial | unreachable | unanchored | ok |
 |---|---|---|---|---|---|
-| 9 | 12 | 8 | 5 | 3 | 0 |
+| 9 | 11 | 6 | 5 | 4 | 2 |
 
-**Top 3 do zrobienia:** gos-01 · gos-29 (+gos-30) · gos-21
+**Top 3 do zrobienia:** gos-29 (+gos-30) · gos-21 · gos-02
+
+> **Aktualizacja 2026-08-07:** `gos-01`, `gos-05` i `gos-09` naprawione — wszystkie trzy były błędami
+> typów wyciszonymi przez martwy `npm run typecheck` (patrz Gotchas w `CLAUDE.md`). Rollup wyżej to
+> uwzględnia; `gos-01` zjechał z `dead` na `unanchored` (ekran działa, Gossip nadal nie ma kotwic).
 
 ## Gaps
 
 | ID | Surface (ścieżka w UI) | § | Status | Gap | Evidence | FAQ impact | Effort |
 |---|---|---|---|---|---|---|---|
-| gos-01 | Feed → klik w notatkę → Thread | — | dead | **Wywala CAŁĄ aplikację hosta na białą stronę.** Dwie przyczyny w jednym ekranie: `note.replies?.map(...)` woła `.map` na **liczbie** (`replies: number`), a `getUserByPubkey(n.author)` czyta pole `author`, którego `MockNote` nie ma → root note i tak by nie wyrenderował. W `src/` nie ma żadnego `ErrorBoundary`, więc TypeError odmontowuje topbar, disclaimer i switcher. Rzucającą linią jest 96 (`.map` na liczbie); 29 to druga bomba, która czeka na jej naprawę. Potwierdzone runtime (1440×900): klik w pierwszą notatkę → `#root.innerHTML.length === 0`, `document.body.innerText === ''`, cała strona hosta biała | `screens/ThreadScreen.tsx:29,96` · `src/data/mock/types.ts:61,70` | breaks-showme | S |
-| gos-02 | Thread → lista odpowiedzi | — | missing | Nawet po naprawie gos-01 wątek pokaże wyłącznie notę główną — ciało `map` to `return null` z komentarzem „In a real app, we'd fetch the reply note". **Korpus odpowiedzi jednak ISTNIEJE** (`mockThreads`: 21 wątków z pełnymi notami-odpowiedziami, eksportowany z `src/data/mock`) i Snort już z niego renderuje wątek — problem w tym, że roota wątków są generowane osobno od `mockNotes`, więc żadna nota z feedu nie ma dopasowanego wątku (Snort: `find(t => t.rootNoteId === note.id \|\| t.notes.some(...)) ?? null`) | `screens/ThreadScreen.tsx:96-99` · `src/data/mock/threads.ts:630,637` · `src/simulators/snort/SnortSimulator.tsx:249-251` | blocks-showme | M |
-| gos-03 | Thread → wiersz akcji (Reply / repost / like / zap) | — | dead | Cztery `<button>` **bez `onClick`** — żaden nie ma nawet `stopPropagation`. Dziś nieosiągalne, bo ekran się wywala (gos-01) | `screens/ThreadScreen.tsx:51,57,63,69` | breaks-showme | S |
+| gos-01 | Feed → klik w notatkę → Thread | — | ~~dead~~ → unanchored | **NAPRAWIONE 2026-08-07.** Było: wywalało CAŁĄ aplikację hosta na białą stronę. Dwie przyczyny w jednym ekranie: `note.replies?.map(...)` wołało `.map` na **liczbie** (`replies: number`), a `getUserByPubkey(n.author)` czytało pole `author`, którego `MockNote` nie ma. Fix: martwa pętla usunięta (odpowiedzi to nadal gos-02), `n.author` → `n.pubkey`. Potwierdzone runtime (1440×900): klik w pierwszą notatkę → nagłówek „Thread", nota główna z autorem „Pierre from Paris", `#root` 31 kB, baner disclaimera na miejscu, 0 błędów konsoli. **Zostaje `unanchored`** — ekran działa, ale Gossip nie ma ani jednej kotwicy `data-tour`. W `src/` **nadal nie ma `ErrorBoundary`** (osobna, otwarta rekomendacja) | `screens/ThreadScreen.tsx:29,96` · `src/data/mock/types.ts:61,70` | blocks-showme | S |
+| gos-02 | Thread → lista odpowiedzi | — | missing | Po naprawie gos-01 wątek pokazuje **wyłącznie notę główną** — martwa pętla (`return null` z komentarzem „In a real app, we'd fetch the reply note") została usunięta, bo to ona rzucała. **Korpus odpowiedzi jednak ISTNIEJE** (`mockThreads`: 21 wątków z pełnymi notami-odpowiedziami, eksportowany z `src/data/mock`) i Snort już z niego renderuje wątek — problem w tym, że roota wątków są generowane osobno od `mockNotes`, więc żadna nota z feedu nie ma dopasowanego wątku (Snort: `find(t => t.rootNoteId === note.id \|\| t.notes.some(...)) ?? null`) | `screens/ThreadScreen.tsx:96-99` · `src/data/mock/threads.ts:630,637` · `src/simulators/snort/SnortSimulator.tsx:249-251` | blocks-showme | M |
+| gos-03 | Thread → wiersz akcji (Reply / repost / like / zap) | — | dead | Cztery `<button>` **bez `onClick`** — żaden nie ma nawet `stopPropagation`. Od naprawy gos-01 (2026-08-07) ekran jest osiągalny, więc te cztery martwe przyciski są teraz **widoczne dla użytkownika** | `screens/ThreadScreen.tsx:51,57,63,69` | breaks-showme | S |
 | gos-04 | Feed → notatka → Reply / Repost / Like / Zap | — | dead | Wszystkie cztery mają `onClick={(e) => e.stopPropagation()}` i **nic więcej** — klik tylko blokuje otwarcie wątku. Liczniki się nie zmieniają, nie ma stanu „zalajkowane" | `screens/FeedScreen.tsx:90,96,102,108` | breaks-showme | S |
-| gos-05 | Feed → notatka → licznik odpowiedzi | — | partial | `{note.replies?.length \|\| 0}` na **liczbie** → `.length` jest `undefined` → **zawsze 0**, podczas gdy reposty/lajki/zapy pokazują realne wartości. Runtime: pierwsza nota renderuje `0 · 8 · 56 · 1` (te trzy są losowane przy każdym ładowaniu — stałe zero jest tylko przy odpowiedziach) | `screens/FeedScreen.tsx:94` · `src/data/mock/types.ts:70` | breaks-showme | S |
+| gos-05 | Feed → notatka → licznik odpowiedzi | — | ~~partial~~ → ok | **NAPRAWIONE 2026-08-07.** Było: `{note.replies?.length \|\| 0}` na **liczbie** → `.length` było `undefined` → **zawsze 0**, podczas gdy reposty/lajki/zapy pokazywały realne wartości. Fix: `{note.replies \|\| 0}`. Runtime: trzy pierwsze noty renderują `1·2·16·0`, `9·12·82·1`, `1·1·22·0` — licznik odpowiedzi wreszcie zmienny | `screens/FeedScreen.tsx:94` · `src/data/mock/types.ts:70` | none | S |
 | gos-06 | Feed → nagłówek → „Filter" | — | dead | `<button className="gossip-header-btn">` bez `onClick`; nigdzie w katalogu nie ma panelu/sheetu filtrów | `screens/FeedScreen.tsx:35-40` | blocks-showme | M |
 | gos-07 | Feed → awatar autora / People → karta osoby → **ekran profilu** | — | missing | Ekranu profilu **nie ma w `screens/` w ogóle**: `renderContent()` nie zna case'a `profile`, a `viewProfile` tylko ustawia `state.selectedUser`, którego **nikt nie czyta**. Wtórnie martwy jest przez to klik w awatar w feedzie i w kartę w People — runtime potwierdzone (klik w kartę osoby nie zmienia ani bajtu DOM: `innerHTML.length` identyczny) | `GossipSimulator.tsx:20,51-56,98-149` · `screens/FeedScreen.tsx:75-78` · `screens/PeopleScreen.tsx:34` | breaks-showme | M |
 | gos-08 | People → nagłówek → „Search" | — | dead | `<button>` bez `onClick`; w całym katalogu nie ma ani pola wyszukiwania, ani ekranu wyników (grep `search` w `*.tsx` = tylko ten napis) | `screens/PeopleScreen.tsx:18-24` | blocks-showme | M |
-| gos-09 | People → karta → „N following / N followers" | — | partial | Czyta `user.following?.length` i `user.followers`, a `MockUser` ma `followingCount` / `followersCount` → **każda z 55 kart pokazuje „0 following 0 followers"**. Runtime potwierdzone | `screens/PeopleScreen.tsx:49-50` · `src/data/mock/types.ts:49-50` | breaks-showme | S |
+| gos-09 | People → karta → „N following / N followers" | — | ~~partial~~ → ok | **NAPRAWIONE 2026-08-07.** Było: czytało `user.following?.length` i `user.followers`, a `MockUser` ma `followingCount` / `followersCount` → **każda z 55 kart pokazywała „0 following 0 followers"**. Runtime po fiksie: `423 following / 25430 followers`, `312 / 18920`, `289 / 22100`, … | `screens/PeopleScreen.tsx:49-50` · `src/data/mock/types.ts:49-50` | none | S |
 | gos-10 | Relays → nagłówek → „Refresh All" | — | dead | `<button>` bez `onClick`. Nie ma czego odświeżać — statusy są statyczne, nie ma pętli reconnect | `screens/RelaysScreen.tsx:55-61` | blocks-showme | S |
 | gos-11 | Relays → per-relay flaga **outbox** | FID | missing | FID nazywa **outbox/gossip relay model** sygnaturą klienta i mówi wprost o „Relays screen z per-relay read/write/**outbox**". Nasz typ `Relay` ma tylko `read`/`write`; nie ma kolumny, przełącznika ani żadnej wzmianki o outboxie | `screens/RelaysScreen.tsx:3-10,94-113` | blocks-showme | M |
 | gos-12 | Settings → Privacy → „Private mode" | — | dead | `<div className="gossip-toggle">` **bez `onClick`** (w przeciwieństwie do sekcji General). Runtime: klik nie zmienia klasy | `screens/SettingsScreen.tsx:58-60` | breaks-showme | S |
@@ -95,7 +99,7 @@ dojść myszą.
 | People | **nie** | tylko klik `.gossip-nav-item` (`Sidebar.tsx:82`) |
 | Relays | **nie** | j.w. |
 | Settings | **nie** | j.w. |
-| Thread | **nie** | tylko klik w notatkę — i tak wywala apkę (gos-01) |
+| Thread | **nie** | tylko klik w notatkę (od 2026-08-07 działa — gos-01 naprawione) |
 | Compose (modal) | **nie** | tylko klik „Compose" w sidebarze lub „New" w nagłówku feedu |
 | Profil użytkownika | **nie istnieje** | `selectedUser` ustawiane, nieczytane (gos-07) |
 

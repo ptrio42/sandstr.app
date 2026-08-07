@@ -3,13 +3,15 @@
  * Utilities for creating and manipulating mock Nostr events
  */
 
-import type { 
-  NostrEvent, 
-  MockNote, 
-  MockUser, 
+import type {
+  NostrEvent,
+  MockNote,
+  MockUser,
   MockReaction,
-  EventKind 
 } from '../../../data/mock/types';
+// Enums read as values below (kind comparisons, literal kinds, note category),
+// so they cannot come in through `import type` — that erases them at runtime.
+import { ContentCategory, EventKind } from '../../../data/mock/types';
 
 // ============================================
 // EVENT ID GENERATION
@@ -316,7 +318,7 @@ export function createMockNote(options: CreateMockNoteOptions): MockNote {
     mentions: extractMentions(tags),
     hashtags,
     links: extractUrls(options.content),
-    category: 'nostr' as const,
+    category: ContentCategory.NOSTR,
   };
 }
 

@@ -28,8 +28,10 @@
 | **Razem** | **230** | **133** | +64 wpisy w rundzie 2 (8 × 8) |
 
 **Nie zrobione:** Keychat i Gossip — czekają na nowe nagrania (bez recon nie ma czym mierzyć).
-Gossip ma dodatkowo `gos-01`: klik w notatkę wyrzuca `TypeError`, a brak `ErrorBoundary` odmontowuje
-całego hosta razem z **obowiązkowym banerem disclaimera**. To trzeba naprawić przed FAQ.
+~~Gossip ma dodatkowo `gos-01`~~ — **naprawione 2026-08-07** razem z przywróceniem typechecka: klik
+w notatkę nie rzuca już `TypeError`, wątek renderuje notę główną, a baner disclaimera zostaje na
+ekranie. `ErrorBoundary` wokół `ClientView` nadal **nie istnieje** — to osobna, otwarta rekomendacja
+(patrz [`GAPS.md`](GAPS.md)).
 
 ## Mechanizmy, które trzymają jakość
 
@@ -101,12 +103,21 @@ osobny krok jest wart więcej niż kolejny weryfikator.
 **Runda 2 to zmierzyła:** ten sam materiał dał 55 znalezisk rewizji i — już PO ich naprawieniu —
 77 luk krytyka kompletności, w tym 44 „must-add". Krok się opłaca; patrz sekcja „Runda 2".
 
-**Kontrakt pokrycia jest dziś martwy w `npm run typecheck` — i to nie jest oczywiste.** `tsc` pomija
-**wszystkie** diagnostyki semantyczne, gdy w programie jest choć jeden błąd składniowy — a
-`useSimulator.ts` ma cztery (JSX w pliku `.ts`, odziedziczone). Efekt: `Record<CanonicalTopic, …>`
-nie pilnuje niczego przy zwykłym uruchomieniu. Drugą warstwą jest `TS6310` z `references` na
-`tsconfig.node.json` (`noEmit` + `composite`), które samo w sobie ucina resztę. Kontrakt DZIAŁA — po
-zdjęciu obu warstw wypisał dokładnie osiem plików do uzupełnienia — ale trzeba to zrobić ręcznie.
+**~~Kontrakt pokrycia jest dziś martwy w `npm run typecheck`~~ — NAPRAWIONE 2026-08-07.** Historia jest
+warta zapamiętania, bo obie warstwy udawały zdrowie. `tsc` pomija **wszystkie** diagnostyki semantyczne,
+gdy w programie jest choć jeden błąd składniowy — a `useSimulator.ts` miał cztery (JSX w pliku `.ts`,
+odziedziczone). Efekt: `Record<CanonicalTopic, …>` nie pilnował niczego, a wyjście wyglądało na
+„prawie czyste": cztery znane, opisane w CLAUDE.md jako PRE-EXISTING błędy. Drugą warstwą był `TS6310`
+z `references` na `tsconfig.node.json` (`noEmit` + `composite`), który sam w sobie ucinał resztę.
+
+Zdjęcie obu (rename na `.tsx`, `references` usunięte) odsłoniło **40 realnych błędów**; wszystkie
+naprawione. Weryfikacja kontraktu: tymczasowe dorzucenie atrapy do `CANONICAL_TOPICS` wypisuje dokładnie
+osiem plików klientów. Czyli od teraz **`npm run typecheck` faktycznie egzekwuje pokrycie** — dodanie
+tematu psuje build każdego klienta, dopóki się nie zadeklaruje.
+
+**Morał ogólniejszy:** narzędzie, które raportuje *mało* błędów, nie musi znaczyć, że kod jest zdrowy —
+sprawdź najpierw, czy w ogóle doszło do analizy. Tu pojedynczy błąd składniowy uciszał ~40 diagnostyk
+przez wiele miesięcy, w tym P0 kładący hosta (`gos-01`).
 
 **Rewizja adwersaryjna TREŚCI znalazła 8 bugów KODU.** Demo przechodzi ścieżki, których nie przechodzi
 żaden test: montuje ekran komendą, kotwiczy element, mierzy prostokąt spotlightu. Dlatego wyszły rzeczy

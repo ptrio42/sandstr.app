@@ -15,3 +15,6 @@ CLAUDE.local.md
 # material, not something to publish. Purged from git history the same day —
 # do not re-add them. The screen-map.md specs STAY tracked.
 docs/refs/*/shots/
+
+# tsc incremental state (a `composite`/`--build` run drops these next to the config)
+*.tsbuildinfo

@@ -29,7 +29,9 @@ export function BottomNav({ activeTab, onTabChange, notificationCount }: BottomN
             whileTap={{ scale: 0.95 }}
           >
             <div className="relative">
-              {React.cloneElement(tab.icon as React.ReactElement, {
+              {/* React 19 types default ReactElement's props to `unknown`, so the
+                  cast has to name the prop being injected. */}
+              {React.cloneElement(tab.icon as React.ReactElement<{ strokeWidth?: number }>, {
                 strokeWidth: isActive ? 2.5 : 2,
               })}
               {tab.id === 'notifications' && notificationCount > 0 && (

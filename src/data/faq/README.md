@@ -19,6 +19,12 @@ ignores a topic **does not typecheck**. Each topic maps to:
 Adding a topic to `CANONICAL_TOPICS` intentionally breaks every client file
 until each declares it — that is the mechanism working, not a nuisance.
 
+> **The enforcement is real again as of 2026-08-07.** Between 2026-08-06 and then
+> it was not: a syntax error in `useSimulator.ts` made `tsc` drop *every* semantic
+> diagnostic, so `npm run typecheck` looked almost clean while checking nothing.
+> Verified after the fix — adding a throwaway topic names exactly the eight client
+> files. See the Gotchas section in `CLAUDE.md`.
+
 **Worked example of the mechanism: `multi-account` (added 2026-08-07).**
 Adding it broke all eight files until each declared an answer, and the answers
 came out genuinely different: Amethyst, Nostur, YakiHonne and Wisp have a real

@@ -73,7 +73,7 @@ export function SimulatorShell({
       </div>
       
       {/* Safe area indicator (development only) */}
-      {process.env.NODE_ENV === 'development' && (
+      {import.meta.env.DEV && (
         <div className="absolute bottom-0 right-0 p-1 text-[10px] text-gray-400 opacity-50 pointer-events-none">
           {config.id}
         </div>

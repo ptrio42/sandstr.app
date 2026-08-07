@@ -26,7 +26,7 @@ export const ThreadScreen: React.FC<ThreadScreenProps> = ({
   };
 
   const renderNote = (n: MockNote, isMain: boolean = false) => {
-    const author = getUserByPubkey(n.author);
+    const author = getUserByPubkey(n.pubkey);
     if (!author) return null;
 
     return (
@@ -93,10 +93,10 @@ export const ThreadScreen: React.FC<ThreadScreenProps> = ({
 
       <div className="gossip-thread-main gossip-content">
         {renderNote(note, true)}
-        {note.replies?.map((replyId) => {
-          // In a real app, we'd fetch the reply note
-          return null;
-        })}
+        {/* No reply list yet: `note.replies` is a COUNT (`MockNote.replies: number`),
+            not an id array. The loop that used to live here called `.map` on that
+            number and threw, taking the whole host tree down with it (docs/GAPS.md
+            gos-01). Rendering the replies needs a thread lookup — gos-02. */}
       </div>
     </div>
   );

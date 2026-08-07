@@ -377,13 +377,14 @@ export function NosturSimulator({
         );
     }
   } else if (tab === 'home') {
+    // `lowData` arrives through {...postProps} — it used to be passed explicitly
+    // as well, where the spread silently overwrote it with the same value.
     content = (
       <FeedScreen
         account={DEMO_USER}
         feed={feed}
         onFeed={setFeed}
         onOpenSidebar={() => setDrawer(true)}
-        lowData={lowData}
         onToggleLowData={toggleLowData}
         onOpenFeedSettings={() => setFeedSettings(true)}
         {...postProps}

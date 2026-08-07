@@ -3,8 +3,10 @@
  * Programmatic utilities for creating new mock data
  */
 
-import type { MockUser, MockNote, MockThread, MockRelay, NostrEvent, ContentCategory } from './types';
-import { EventKind } from './types';
+import type { MockUser, MockNote, MockThread, MockRelay, NostrEvent } from './types';
+// ContentCategory / EventKind are enums used as values here (defaults, Object.values),
+// so they must be a value import — `import type` erases them at runtime.
+import { ContentCategory, EventKind } from './types';
 import {
   generateHex,
   generateNpub,
