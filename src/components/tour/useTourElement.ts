@@ -38,7 +38,9 @@ export function useTourElement(
   const [frameRect, setFrameRect] = useState<DOMRect | null>(null);
   const observerRef = useRef<MutationObserver | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
-  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Browser timer handle — `NodeJS.Timeout` only resolves with @types/node, which
+  // this (browser-only) project does not depend on.
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryCountRef = useRef<number>(0);
 
   const calculateRects = useCallback(() => {

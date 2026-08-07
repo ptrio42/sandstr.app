@@ -46,8 +46,8 @@ export const PeopleScreen: React.FC<PeopleScreenProps> = ({
               </div>
               <div className="gossip-person-bio">{user.bio || 'No bio yet.'}</div>
               <div className="gossip-person-stats">
-                <span>{user.following?.length || 0} following</span>
-                <span>{user.followers || 0} followers</span>
+                <span>{user.followingCount || 0} following</span>
+                <span>{user.followersCount || 0} followers</span>
               </div>
             </div>
           ))}

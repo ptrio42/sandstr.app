@@ -1,3 +1,13 @@
+// Editor-only project for the Vite config. It is deliberately NOT a project
+// reference of tsconfig.json: a referenced project may not disable emit, and this
+// file used to pair `noEmit: true` with `composite: true`. That raised TS6310 —
+// one config error that made `tsc --noEmit` bail before it type-checked a single
+// line of `src`. `composite` is gone; the reference in tsconfig.json is gone too.
+//
+// `npm run typecheck` therefore does not cover vite.config.ts. Checking it needs
+// @types/node (`node:url`), a dependency this browser-only project does not have.
+// To close that hole: `npm i -D @types/node`, then add
+// `tsc --noEmit -p tsconfig.node.json` to the typecheck script.
 {
   "compilerOptions": {
     "target": "ES2022",
@@ -8,7 +18,7 @@
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "noEmit": true,
-    "composite": true
+    "types": ["vite/client"]
   },
   "include": ["vite.config.ts"]
 }

@@ -12,20 +12,18 @@ import {
   type ReactNode,
   type Dispatch
 } from 'react';
-import type { 
-  SimulatorState, 
-  SimulatorAction, 
+import type {
+  SimulatorState,
+  SimulatorAction,
   SimulatorContextValue,
   SimulatorConfig,
   SimulatorUser,
-  SimulatorView,
-  SimulatorModal,
   SimulatorFeedItem,
   SimulatorNotification,
-  SimulatorThread,
-  SimulatorSearchResult,
-  MockNote,
 } from '../types';
+// Enums — read as values (SimulatorView.FEED, SimulatorModal.NONE), so they
+// cannot come in through `import type`.
+import { SimulatorView, SimulatorModal } from '../types';
 import { now } from '../utils/mockEvents';
 
 // ============================================
@@ -629,5 +627,7 @@ export function useSimulatorError(): string | null {
   return useSimulatorState().error;
 }
 
-export { SimulatorContext, SimulatorProvider };
+// SimulatorProvider is already exported at its declaration; re-listing it here
+// was a redeclaration. Only the context needs an explicit export.
+export { SimulatorContext };
 export default useSimulator;

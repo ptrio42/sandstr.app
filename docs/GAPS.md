@@ -12,6 +12,8 @@
 > Audyt: 2026-08-05, 10 audytorów + 10 weryfikatorów kwestionujących każdy wpis `missing`/`dead`/`partial`.
 > **Aktualizacja 2026-08-06:** wdrożenie FAQ zamknęło 15 luk w Damusie/Amethyście/Primalu/Nosturze
 > (mostki, kotwice, payloady komend) — wiersze oznaczone w ledgerach, liczby w tabeli odświeżone.
+> **Aktualizacja 2026-08-07:** przywrócenie `npm run typecheck` zamknęło `gos-01` (P0, crash kładący
+> hosta), `gos-05` i `gos-09` — wszystkie trzy były błędami typów, które martwy typecheck przemilczał.
 
 ## Stan na 2026-08-06
 
@@ -26,8 +28,8 @@
 | [Coracle](gaps/coracle.md) | ready | 64 | 29 | 17 | 10 | 4 | 4 | 14 | 12 | ✅ |
 | [Nostur](gaps/nostur.md) | ready | 51 | 1 | 33 | 8 | 6 | 3 | 12 | 35 | ✅ |
 | [Keychat](gaps/keychat.md) | preview | 39 | 6 | 18 | 8 | 4 | 3 | 4 | 14 | ❌ |
-| [Gossip](gaps/gossip.md) | preview | 37 | 9 | 12 | 8 | 5 | 3 | 0 | 0 | ❌ brak wrappera |
-| **Razem** | | **537** | **145** | **230** | **92** | **39** | **31** | **114** | **183** | **8/10** |
+| [Gossip](gaps/gossip.md) | preview | 35 | 9 | 11 | 6 | 5 | 4 | 2 | 0 | ❌ brak wrappera |
+| **Razem** | | **535** | **145** | **229** | **90** | **39** | **32** | **116** | **183** | **8/10** |
 
 **Kotwice** = selektory `data-tour`, które da się wskazać spotlightem, łącznie z generowanymi
 szablonowo — np. Coracle ma jeden literał i jedną rodzinę `coracle-nav-${screen}` dającą 6 pozycji
@@ -50,7 +52,7 @@ zadziała, niezależnie od kotwic i komend**.
 | | Co trzeba | Effort |
 |---|---|---|
 | keychat | doszyć launcher + `faqCommandsRef` + gałąź `isFaqStepId` do istniejącego wrappera, wpisać klienta do `src/data/faq/index.ts` | **S** ×1 |
-| gossip | **nie ma wrappera w ogóle** — trzeba go najpierw zbudować (`*SimulatorWithTour` + `TourWrapper`), a wcześniej naprawić `gos-01` | **M** ×1 |
+| gossip | **nie ma wrappera w ogóle** — trzeba go najpierw zbudować (`*SimulatorWithTour` + `TourWrapper`); `gos-01` już naprawione (2026-08-07) | **M** ×1 |
 
 Wiersze: `key-42` · `gos-29`. **Oba czekają na nowe nagrania** (decyzja właściciela 2026-08-06):
 bez recon nie ma czym mierzyć ani screen-mapy, więc FAQ dla nich powstanie po odświeżeniu referencji.
@@ -76,13 +78,17 @@ zaproszenie do kliknięcia w pustkę. Stąd reguła z sekcji „Zasady dla autor
 
 ### 3. W całym `src/` nie ma ani jednego `ErrorBoundary` — wyjątek z symulatora kładzie hosta
 
-Udowodnione na `gos-01`: [`ThreadScreen.tsx:96`](../src/simulators/gossip/screens/ThreadScreen.tsx:96)
-woła `.map` na `note.replies`, które w [`types.ts:70`](../src/data/mock/types.ts:70) jest **liczbą**.
-Klik w dowolną notatkę w Gossipie wyrzuca `TypeError`, a ponieważ nie ma żadnej granicy błędu, React
-odmontowuje **całe** drzewo — razem z topbarem, switcherem i **banerem disclaimera**, który wg CLAUDE.md
-musi zostać na każdym widoku klienta. To wychodzi poza FAQ: to bug hosta, wart naprawy niezależnie od
-tej tabeli, i osobno wart `ErrorBoundary` wokół `ClientView` (moja rekomendacja — **nie** ma jej jako
-wiersza w żadnym ledgerze).
+Udowodnione na `gos-01`: `ThreadScreen.tsx:96` wołał `.map` na `note.replies`, które
+w [`types.ts:70`](../src/data/mock/types.ts:70) jest **liczbą**. Klik w dowolną notatkę w Gossipie
+wyrzucał `TypeError`, a ponieważ nie ma żadnej granicy błędu, React odmontowywał **całe** drzewo —
+razem z topbarem, switcherem i **banerem disclaimera**, który wg CLAUDE.md musi zostać na każdym
+widoku klienta.
+
+**`gos-01` naprawione 2026-08-07** (przy przywracaniu `npm run typecheck` — działający typecheck
+złapałby go od razu; był jedną z 40 diagnostyk wyciszonych przez błąd składniowy w `useSimulator.ts`).
+**Sama teza tej sekcji zostaje otwarta:** w `src/` nadal nie ma ani jednego `ErrorBoundary`, więc
+następny wyjątek w dowolnym symulatorze zrobi dokładnie to samo. `ErrorBoundary` wokół `ClientView`
+to wciąż rekomendacja bez wiersza w żadnym ledgerze.
 
 ### 4. Kotwice rozłożone skrajnie nierówno
 
@@ -94,7 +100,8 @@ wierny** i brakuje wyłącznie haczyka albo komendy. To najlepszy stosunek zysku
 ## Kolejność prac
 
 **P0 — odblokowuje wszystko inne, prawie wszystko `S`**
-1. `gos-01` — crash kładący hosta (+ `ErrorBoundary` wokół `ClientView`). **Nadal otwarte.**
+1. ~~`gos-01` — crash kładący hosta~~ — naprawione 2026-08-07 (razem z `gos-05` i `gos-09`, wszystkie
+   trzy były błędami typów). **`ErrorBoundary` wokół `ClientView` nadal otwarte.**
 2. ~~Mostek FAQ ×7~~ — zrobione dla 8/10; zostały Keychat i Gossip, oba czekają na nowe nagrania.
 3. ~~Wrapper dla Coracle~~ — zrobiony 2026-08-06. Zostaje Gossip.
 

@@ -22,7 +22,7 @@ fejkowe klucze, symulowane interakcje). Deploy = statyczne pliki.
 npm run dev        # Vite dev server -> http://localhost:5173
 npm run build      # produkcyjny build do dist/ (vite/esbuild)
 npm run preview    # podgląd builda
-npm run typecheck  # tsc --noEmit (NIE jest bramką builda — patrz Gotchas)
+npm run typecheck  # tsc --noEmit, czysty; NIE jest bramką builda — patrz Gotchas
 ```
 
 Podgląd w sesji: `.claude/launch.json` → config **sandstr** (`preview_start`, port 5173).
@@ -188,9 +188,15 @@ w `public/robots.txt`. Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` 
 
 ## Gotchas
 
-- **Build NIE jest bramką typów.** `vite build` (esbuild) tylko strzypuje typy — `npm run typecheck`
-  (tsc) osobno. Są **PRE-EXISTING** błędy w `src/simulators/shared/hooks/useSimulator.ts` (JSX w pliku
-  `.ts`) odziedziczone z oryginału; esbuild je toleruje, `npm run build` przechodzi.
+- **Build NIE jest bramką typów** — ale `npm run typecheck` od 2026-08-07 **realnie sprawdza `src/`.**
+  `vite build` (esbuild) tylko strzypuje typy, więc typecheck (tsc) trzeba puścić osobno. Wcześniej
+  i on nic nie łapał: `useSimulator.ts` miał 4 błędy składniowe (JSX w pliku `.ts`, opisane tu jako
+  „PRE-EXISTING"), a **tsc pomija WSZYSTKIE diagnostyki semantyczne, gdy w programie jest choć jeden
+  błąd składniowy** — plus `TS6310` z `references` na `tsconfig.node.json` ucinał resztę. Po naprawie
+  (plik → `.tsx`, `references` usunięte, 40 realnych błędów naprawionych) wyjście jest czyste, a
+  kontrakt pokrycia FAQ (`Record<CanonicalTopic, …>`) znowu wysypuje wszystkie 8 plików klientów przy
+  nowym temacie. **Nie ignoruj błędu składniowego jako „znanego" — on wycisza całą analizę.**
+  Świadomie poza zakresem: `vite.config.ts` (wymagałby `@types/node`; szczegóły w `tsconfig.node.json`).
 - **Mock hotlinkuje Unsplash / DiceBear** — łamie się offline i pod ostrym CSP, i obniża wierność.
   Zbundlowanie lokalnych avatarów/obrazków to **najwyższy cross-cutting task** (podnosi wszystkie sim naraz).
 - `useSimulator`/reducer store jest **w większości nieużywany** (sim trzymają lokalny `useState`) — nie
