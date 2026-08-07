@@ -9,20 +9,23 @@
 >
 > Wdrożenie: 2026-08-06, ośmiu klientów, każdy przez recon → treść → weryfikacja klik-po-kliku →
 > rewizja adwersaryjna → poprawki.
+>
+> **Rozszerzenie 2026-08-07:** temat `multi-account` + nowa KLASA pytań `Troubleshooting`
+> (7 objawów × 8 klientów). Dodatkowy krok w procesie: **completeness critic**. Patrz „Runda 2".
 
 ## Stan
 
 | Klient | Wpisy | Mini-toury | Uwagi |
 |---|---:|---:|---|
-| Damus | 20 | 12 | pierwszy, prototyp całej mechaniki |
-| Amethyst | 19 | 10 | odblokowany drawer + sekcje Settings |
-| Primal | 20 | 13 | pierwszy klient webowy (bez ramki) |
-| Nostur | 23 | 17 | miał najlepsze kotwice i zero demonstracji |
-| YakiHonne | 22 | 11 | 8 nowych komend; najwięcej luk w simie |
-| Snort | 19 | 12 | dwa realne bugi symulatora przy okazji |
-| Wisp | 19 | 13 | 5 odblokowań, o które prosił ledger |
-| Coracle | 24 | 16 | **pierwszy klient bez wrappera** — zbudowany od zera |
-| **Razem** | **166** | **104** | |
+| Damus | 28 | 18 | pierwszy, prototyp całej mechaniki |
+| Amethyst | 27 | 13 | odblokowany drawer + sekcje Settings |
+| Primal | 28 | 16 | pierwszy klient webowy (bez ramki) |
+| Nostur | 31 | 21 | miał najlepsze kotwice i zero demonstracji |
+| YakiHonne | 30 | 14 | 8 nowych komend; najwięcej luk w simie |
+| Snort | 27 | 15 | dwa realne bugi symulatora przy okazji |
+| Wisp | 27 | 16 | 5 odblokowań, o które prosił ledger |
+| Coracle | 32 | 20 | **pierwszy klient bez wrappera** — zbudowany od zera |
+| **Razem** | **230** | **133** | +64 wpisy w rundzie 2 (8 × 8) |
 
 **Nie zrobione:** Keychat i Gossip — czekają na nowe nagrania (bez recon nie ma czym mierzyć).
 Gossip ma dodatkowo `gos-01`: klik w notatkę wyrzuca `TypeError`, a brak `ErrorBoundary` odmontowuje
@@ -95,6 +98,15 @@ adwersaryjne sprawdzały, czy *napisane* odpowiedzi są prawdziwe — i były. N
 jest **kompletne**, dopóki właściciel nie zapytał o rodzaje mute. To jest systematyczna ślepota:
 weryfikator sprawdza tezę, którą dostał, a nie tezę, której brakuje. Stąd „completeness critic" jako
 osobny krok jest wart więcej niż kolejny weryfikator.
+**Runda 2 to zmierzyła:** ten sam materiał dał 55 znalezisk rewizji i — już PO ich naprawieniu —
+77 luk krytyka kompletności, w tym 44 „must-add". Krok się opłaca; patrz sekcja „Runda 2".
+
+**Kontrakt pokrycia jest dziś martwy w `npm run typecheck` — i to nie jest oczywiste.** `tsc` pomija
+**wszystkie** diagnostyki semantyczne, gdy w programie jest choć jeden błąd składniowy — a
+`useSimulator.ts` ma cztery (JSX w pliku `.ts`, odziedziczone). Efekt: `Record<CanonicalTopic, …>`
+nie pilnuje niczego przy zwykłym uruchomieniu. Drugą warstwą jest `TS6310` z `references` na
+`tsconfig.node.json` (`noEmit` + `composite`), które samo w sobie ucina resztę. Kontrakt DZIAŁA — po
+zdjęciu obu warstw wypisał dokładnie osiem plików do uzupełnienia — ale trzeba to zrobić ręcznie.
 
 **Rewizja adwersaryjna TREŚCI znalazła 8 bugów KODU.** Demo przechodzi ścieżki, których nie przechodzi
 żaden test: montuje ekran komendą, kotwiczy element, mierzy prostokąt spotlightu. Dlatego wyszły rzeczy
@@ -129,52 +141,64 @@ naraz przestaje się renderować, w tym taki, który działał godzinę wcześni
 - **Panel przeglądarki potrafi przestać kompozytować klatki** — screenshoty pokazują sam szkielet,
   podczas gdy DOM jest kompletny. Weryfikuj przez `javascript_exec` na DOM, nie po obrazku.
 
-## Następna sesja: rozszerzenie banku pytań
+## Runda 2 (2026-08-07): `multi-account` + klasa `Troubleshooting`
 
-Właściciel podsunął dwa pytania — „klient mi się ciągle wysypuje" i „jak używać kilku kont" — i one
-trafiają w **dwie różne luki**, nie jedną. Warto to rozdzielić, bo wymagają innej roboty.
+Obie luki z poprzedniej sekcji zamknięte. **+64 wpisy** (8 klientów × 8), z czego 56 to nowa,
+tekstowa klasa „dlaczego to nie działa", a 8 to temat `multi-account` — z **5 nowymi demami**
+(Damus, Primal, Nostur, Wisp, Coracle; pozostałe trzy simy nie mają czego pokazać, więc nie mają `showMe`).
 
-### Luka 1: brakuje całej KLASY pytań — troubleshooting
+**Temat `multi-account` udowodnił mechanizm kontraktu.** Odpowiedzi wyszły naprawdę różne, a nie
+wariantami jednej: Amethyst / Nostur / YakiHonne / Wisp mają realny przełącznik; **Snort ma przełącznik,
+ale nie ma ŻADNEGO przycisku „dodaj konto"** (strona `/settings/accounts` istnieje, tylko jej wpis
+w menu jest za subskrypcją, której Snort nie włącza); Damus i Primal trzymają jeden klucz naraz.
+„Ten klient tego nie ma" okazało się równie użyteczną odpowiedzią jak instrukcja.
 
-Cały dzisiejszy bank jest **nawigacyjny**: „gdzie to jest / jak to zrobić". Ani jedno pytanie nie
-brzmi „dlaczego to nie działa". A to są dokładnie te pytania, które ludzie zadają publicznie na Nostrze:
+**Nowe pole `FaqEntry.howNostrWorks`** — protokolarna połowa odpowiedzi, renderowana jako osobny blok.
+Powód jest twardy: przy „dlaczego to nie działa" połowa odpowiedzi nie dotyczy klienta (relaye, klucze,
+NIP-y), a wmieszana w kroki czyta się jak instrukcja do wyklikania. Rewizja od razu to wykorzystała:
+trzy znaleziska dotyczyły **faktów o kliencie przemyconych do bloku o protokole**.
 
-- klient się wysypuje / zawiesza przy starcie
-- moje notatki nie pojawiają się u innych (albo: nie widzę cudzych)
-- zap nie przechodzi / „payment failed"
-- nie mogę opublikować notatki (sesja read-only po zalogowaniu npubem — **to już wiemy z reconu**:
-  dotyczy Amethysta, Nostura, Damusa i Snorta)
-- obrazki się nie ładują
-- powiadomienia przestały przychodzić
-- „mój profil jest pusty / straciłem obserwowanych" (klasyk: zalogowanie innym kluczem)
+### Co dał completeness critic (nowy krok)
 
-Charakterystyka tej klasy: odpowiedzi są **tekstowe**, bo symulator nie odtwarza awarii. To jest OK —
-model danych już to obsługuje (`showMe` jest opcjonalne), a wpis bez demo bije demo, które kłamie.
-Grounding jest trudniejszy niż przy nawigacji: część odpowiedzi to wiedza o **protokole** (relaye,
-klucze), nie o UI konkretnego klienta. Sugestia: osobna kategoria `Troubleshooting` i wyraźny podział
-w treści na „co zrobić w tym kliencie" vs „jak działa Nostr".
+To była najbardziej opłacalna zmiana w procesie. Rewizja adwersaryjna dała **55 znalezisk** (wszystkie
+poprawione) — sprawdzała, czy napisane zdania są PRAWDZIWE. Critic pytał tylko „czego tu **brakuje**"
+i dał **77 luk, w tym 44 „must-add"** w tekstach, które właśnie przeszły rewizję. To jest dokładnie ta
+ślepota, którą odkrył właściciel pytając o rodzaje mute — tylko zmierzona.
 
-### Luka 2: brakuje TEMATU w banku — wiele kont
+Przykłady tego, co znalazł krytyk, a czego nie znalazł weryfikator:
+- **Damus**: „Delete Account" w Settings **nie kasuje konta** — podpisuje profil „nobody / account
+  deleted" i wylogowuje; klucz działa dalej wszędzie indziej. Wylogowanie **odłącza portfel** (NWC to
+  jeden wpis w keychainie na urządzenie, nie per klucz).
+- **Primal**: zmiana konta **w rozszerzeniu przeglądarki** nie zmienia konta w Primalu.
+- **Nostur**: „Follow" ma **trzy** stany — drugie tapnięcie to *cichy* follow, który **usuwa** kogoś
+  z publikowanej listy obserwowanych.
+- **Snort**: klucz zaszyfrowany PIN-em → **Anuluj na pytaniu o PIN robi sesję read-only** na całą wizytę.
+- **Wisp**: założenie nowego konta przełącza **całą apkę** na wyświetlanie w fiacie.
 
-`CANONICAL_TOPICS` ma `logout`, ale nie ma „dodaj drugie konto / przełączaj się między nimi". To jest
-osobne pytanie użytkownika i realnie różni się per klient — z dzisiejszego reconu już wiemy:
+### Następna sesja: dwa tematy, na które zbiegły się wszystkie osiem krytyk
 
-- **Amethyst**: szuflada → „Accounts" → arkusz z „Add New Account" i wylogowaniem per konto
-- **Nostur**: konta synchronizują się między iPhone/iPad/Mac przez iCloud
-- pozostałe: **do zweryfikowania** (nie pytaliśmy o to w reconach)
+Pole `questionNobodyAsked` (jedno na klienta, wymagane w schemacie) dało zaskakująco spójny wynik —
+**dwa** pytania powtórzyły się po trzy razy każde:
 
-Dodanie tematu do banku celowo zepsuje wszystkie osiem plików, dopóki każdy się nie zadeklaruje —
-i to jest właśnie mechanizm, który wymusi kompletność.
+1. **„Wysłałem DM i nie dotarł"** (Amethyst, Wisp, YakiHonne). DM to jedyna powierzchnia z **własną
+   listą relayów** (NIP-17, kind 10050), własnym szyfrowaniem i własnymi błędami — a cały bank mówi
+   o DM-ach tylko „gdzie jest zakładka". Konkrety już namierzone: Amethyst ma string
+   `recipient_missing_dm_relays`, YakiHonne baner „Private messages relays are not configured!" plus
+   trzy zakładki (Followings / Known / Unknown — pierwsza wiadomość obcego ląduje niewidoczna),
+   Wisp nie ma **żadnego** przycisku „nowa rozmowa" (start tylko z profilu).
+2. **„Skasowałem notatkę, a ona dalej jest"** (Damus, Nostur, Primal). Na Nostrze delete to **prośba**
+   (kind 5), nie polecenie — Nostur mówi to wprost w tytule dialogu („It's up to relays and other apps
+   to honor your request"), Primal nazywa to „Request Delete", a **Damus nie ma kasowania w ogóle**
+   i bank tego nie mówi. Idealny materiał na wpis z `howNostrWorks`.
 
-### Jak to zrobić (proponowany kształt sesji)
+Poza tym dwa mocne singletony: **Coracle** — „Send stoi na »Signing your note...« w nieskończoność"
+(przy wyłącznie delegowanym podpisywaniu to najczęstsza awaria, a apka nie ma ani timeoutu, ani
+komunikatu); **Snort** — „jak ustawić własny profil, żeby ktoś mógł mnie zapnąć" (bez pola Lightning
+Address w profilu przycisk zapa **nie renderuje się** u odbiorcy, a bank uczy tylko wysyłania).
 
-1. Rozszerz `CANONICAL_TOPICS` o `multi-account` (i ewentualnie kilka `trouble-*`). Kompilator wypisze
-   listę roboty.
-2. Jeden workflow reconowy na klienta, z pytaniami troubleshootingowymi jako osobną sekcją promptu —
-   z **wymaganym** polem na dowód ze źródła, tak jak `verifiedOnScreen` przy nawigacji.
-3. Weryfikacja i rewizja adwersaryjna jak dotąd, z jednym dodatkiem: **completeness critic** —
-   osobny przebieg pytający „czego w tym wpisie brakuje", bo weryfikator sprawdza tezę, którą dostał,
-   a nie tę, której nie ma (patrz sekcja „Jak pracowaliśmy").
+Sugerowany kształt: temat kanoniczny `delete-note` (kompilator znów wypisze robotę) + rozbudowa `dms`
+z osobnym objawem `trouble-dm-not-delivered`. Proces bez zmian — recon → treść → klik-po-kliku →
+rewizja → **critic** — bo w tej rundzie zadziałał.
 
 ## Możliwy kierunek (decyzja produktowa, nie techniczna)
 
