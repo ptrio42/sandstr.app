@@ -93,12 +93,21 @@ export function YakiHonneSimulatorWithTour() {
     
     const stepCommands: Record<number, SimulatorCommand[]> = {
       0: [], // Welcome
-      1: [], // Login - manual
+      // Login — force the signed-out screen. `[]` assumed the visitor arrives
+      // logged out, but they can sign in before starting the tour, and Prev
+      // from step 3 also lands here signed in — either way the login anchor
+      // is unmounted and the step used to render as an empty dark screen.
+      // Amethyst and Keychat already did this; the idiom just was not copied.
+      1: [{ type: 'logout' }],
       2: [{ type: 'login' }, { type: 'navigate', payload: 'feed' }], // Home feed
       3: [{ type: 'login' }, { type: 'navigate', payload: 'feed' }], // Compose — keep FAB (its own target) mounted
       4: [{ type: 'login' }, { type: 'compose' }], // Post — open composer (overlay) so the Send button (target) is present; 2 cmds avoids the queue's 3-command race
       5: [{ type: 'login' }, { type: 'viewProfile' }], // Profile
-      6: [{ type: 'login' }, { type: 'viewProfile' }], // Follow
+      // Follow — SOMEONE ELSE's profile. Without the payload this opened your
+      // own, where the button reads "Edit profile" and the Follow pill the step
+      // is about does not exist (gaps yak-93; the handler already supports it,
+      // YakiHonneSimulator.tsx:217-223).
+      6: [{ type: 'login' }, { type: 'viewProfile', payload: 'other' }],
       7: [{ type: 'login' }, { type: 'navigate', payload: 'feed' }], // Interactions
       8: [{ type: 'login' }, { type: 'navigate', payload: 'settings' }], // Settings
       9: [], // Complete

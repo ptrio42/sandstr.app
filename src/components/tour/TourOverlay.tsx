@@ -173,9 +173,12 @@ export function TourOverlay() {
     >
       {/* Dark backdrop with spotlight */}
       <div
+        // No `--click-through` class: it set `pointer-events: none` on an
+        // element that already inherits exactly that from `.tour-overlay`, so it
+        // implied a per-step choice the engine never made. See the note on
+        // TourStep.allowClickThrough in types.ts.
         className={[
           'tour-backdrop',
-          currentStepData?.allowClickThrough ? 'tour-backdrop--click-through' : '',
           softBackdrop ? 'tour-backdrop--soft' : '',
           coversViewport ? 'tour-backdrop--whole-app' : '',
         ].filter(Boolean).join(' ')}

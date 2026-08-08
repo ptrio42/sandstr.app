@@ -87,7 +87,12 @@ const wispTourSteps: TourStep[] = [
   },
   {
     id: 'wisp-settings',
-    target: '.wisp-simulator',
+    // Was `.wisp-simulator` — the whole client, so the step "highlighted"
+    // everything and taught nothing. `{ openSettings }` (index 8 in the wrapper)
+    // lands on the Interface screen, whose anchor is
+    // SettingsScreens.tsx:128. Still a full screen, but it is the surface the
+    // step is actually about.
+    target: '[data-tour="wisp-set-interface"]',
     title: 'Interface & the long tail',
     content:
       'Settings expand inline in the drawer: 15 color themes, an accent picker, proof-of-work difficulty, an on-device spam filter, relay health with outbox coverage — and a social-graph visualizer.',

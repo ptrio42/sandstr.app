@@ -16,7 +16,9 @@ const primalTourSteps: TourStep[] = [
   },
   {
     id: 'primal-login',
-    target: '.primal-login, [data-tour="primal-keys"]',
+    // Anchor first: `.primal-login` is the screen root and, being an ancestor,
+    // used to win. The key card is what the step is about.
+    target: '[data-tour="primal-keys"], .primal-login',
     title: 'Key-Based Login',
     content: 'Primal uses Nostr\'s key system. Login with your existing nsec (private key) or generate new keys. No passwords, no email - just cryptography! Extensions like Alby or nos2x are the safest option.',
     position: 'bottom',

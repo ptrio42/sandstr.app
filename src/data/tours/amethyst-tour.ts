@@ -40,7 +40,7 @@ const amethystTourSteps: TourStep[] = [
   },
   {
     id: 'amethyst-compose',
-    target: '.amethyst-fab, [data-tour="amethyst-fab"], .floating-action-button',
+    target: '.amethyst-fab, [data-tour="amethyst-fab"]',
     title: 'Compose with FAB',
     content: 'Amethyst uses Material Design\'s Floating Action Button (FAB) for creating new posts. This prominent purple button makes it easy to share your thoughts anytime.',
     position: 'left',
@@ -52,7 +52,7 @@ const amethystTourSteps: TourStep[] = [
   },
   {
     id: 'amethyst-post',
-    target: '.amethyst-post-btn, [data-tour="amethyst-post"]',
+    target: '[data-tour="amethyst-post"]',
     title: 'Publish Your Note',
     content: 'Write something interesting and hit post! Your note will be cryptographically signed and broadcast to all connected relays. Once published, it is permanent on the Nostr network.',
     position: 'bottom',
@@ -80,7 +80,7 @@ const amethystTourSteps: TourStep[] = [
   },
   {
     id: 'amethyst-follow',
-    target: '.amethyst-follow-btn, [data-tour="amethyst-follow"]',
+    target: '[data-tour="amethyst-follow"]',
     title: 'Following Users',
     content: 'Find interesting people by browsing your network. When you follow someone, their posts appear in your feed. Your follows are stored in your account and synced across all Nostr clients.',
     position: 'left',
@@ -94,7 +94,7 @@ const amethystTourSteps: TourStep[] = [
   },
   {
     id: 'amethyst-interactions',
-    target: '.amethyst-note-actions, [data-tour="amethyst-actions"]',
+    target: '[data-tour="amethyst-actions"]',
     title: 'Engagement Options',
     content: 'Each post has actions: Reply (comment), Boost (repost), Like (heart), and Zap (Bitcoin tip). Zaps use Lightning Network to send real Bitcoin to content creators!',
     position: 'top',

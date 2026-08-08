@@ -11,6 +11,21 @@ export interface TourStep {
   content: string;
   position: TooltipPosition;
   action?: string;
+  /**
+   * INERT, and deliberately so. The backdrop has never blocked clicks:
+   * `.tour-overlay` is `pointer-events: none` and `.tour-backdrop` never opts
+   * back in, so every step is click-through whether or not it sets this.
+   *
+   * Kept because that IS the behaviour this product wants — the pitch is "just
+   * try it", and a tour that freezes the reproduction contradicts it. 61 of the
+   * 79 steps set it to true; of the 18 that don't, 16 are welcome/outro cards
+   * and two (`keychat-chat-room`, `keychat-message-input`) simply forgot. So the
+   * flag encodes a universal intent, not a per-step choice.
+   *
+   * To make it real, give `.tour-backdrop` `pointer-events: auto` and let
+   * `--click-through` turn it off again — but that makes those 18 steps modal,
+   * which is a product decision, not a cleanup.
+   */
   allowClickThrough?: boolean;
   spotlightPadding?: number;
   /**

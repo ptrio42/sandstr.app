@@ -43,10 +43,11 @@
   background-color: rgba(0, 0, 0, 0.45);
 }
 
-/* Click-through mode for action-driven steps */
-.tour-backdrop--click-through {
-  pointer-events: none;
-}
+/* There is no `--click-through` modifier any more: it set `pointer-events: none`
+   on an element that already inherits it from `.tour-overlay`, so it never did
+   anything. Every step is click-through, on purpose — see TourStep
+   .allowClickThrough in types.ts for why, and what to change if that should
+   become a per-step choice. */
 
 /* Spotlight border highlight */
 .tour-spotlight {

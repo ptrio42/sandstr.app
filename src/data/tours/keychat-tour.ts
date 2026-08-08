@@ -16,7 +16,9 @@ const keychatTourSteps: TourStep[] = [
   },
   {
     id: 'keychat-login',
-    target: '[data-tour="keychat-login"]',
+    // The login screen root covered everything; "Create a new account" is the
+    // primary CTA the copy leads with.
+    target: '[data-tour="keychat-generate-keys"], [data-tour="keychat-login"]',
     title: 'Sovereign Identity',
     content: 'Keychat uses Nostr for decentralized identity. Create a new account or import your existing private key. No phone number, email, or personal data required - you control your identity.',
     position: 'bottom',

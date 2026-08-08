@@ -3,7 +3,7 @@
  * Manages tour state and provides context to all tour components
  */
 
-import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import type { TourConfig, TourState, TourContextValue, TourStep } from './types';
 import { 
   getTourProgress, 
@@ -31,6 +31,20 @@ export function TourProvider({ children, autoStart = true }: TourProviderProps) 
     waitingForAction: false,
     expectedActionType: null,
   });
+
+  /**
+   * Synchronous mirror of `state` for `registerAction`.
+   *
+   * Simulators fire several actions in one tick — `AmethystSimulator.tsx:117-118`
+   * calls `registerAction('login')` and then `registerAction('navigate_home')`
+   * back to back. Both calls run against the SAME render's closure, so the
+   * second one still saw the pre-login step and silently dropped the action:
+   * the tour sat on "Waiting…" for a step the user had already completed. The
+   * mirror is advanced synchronously the moment an action is consumed, so the
+   * next call in the same tick sees the new step.
+   */
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   /**
    * Update waiting state based on current step configuration
@@ -221,13 +235,15 @@ export function TourProvider({ children, autoStart = true }: TourProviderProps) 
    * Register an action that may trigger tour advancement
    */
   const registerAction = useCallback((actionType: string, data?: any) => {
-    if (!config || !state.isActive) return;
-    
-    const currentStep = config.steps[state.currentStep];
+    // Read through the ref, not the closure: see the note on stateRef.
+    const live = stateRef.current;
+    if (!config || !live.isActive) return;
+
+    const currentStep = config.steps[live.currentStep];
     if (!currentStep) return;
-    
+
     // Check if current step is waiting for this action
-    if (state.waitingForAction && currentStep.trigger === 'action' && currentStep.actionType === actionType) {
+    if (live.waitingForAction && currentStep.trigger === 'action' && currentStep.actionType === actionType) {
       // Call onAction callback if provided
       if (currentStep.onAction) {
         currentStep.onAction(actionType, data);
@@ -239,31 +255,35 @@ export function TourProvider({ children, autoStart = true }: TourProviderProps) 
       }
       
       // Advance to next step
-      if (state.currentStep >= config.steps.length - 1) {
+      if (live.currentStep >= config.steps.length - 1) {
+        stateRef.current = { ...live, waitingForAction: false, expectedActionType: null };
         endTour(false);
       } else {
-        const nextStepIndex = state.currentStep + 1;
+        const nextStepIndex = live.currentStep + 1;
+        const nextStep = config.steps[nextStepIndex];
+        const nextWaits = !!(nextStep && nextStep.trigger === 'action' && nextStep.actionType);
+
+        // Advance the mirror BEFORE the setState so a second registerAction in
+        // this same tick is matched against the step we just moved to.
+        stateRef.current = {
+          ...live,
+          currentStep: nextStepIndex,
+          waitingForAction: nextWaits,
+          expectedActionType: nextWaits ? nextStep!.actionType ?? null : null,
+        };
+
+        // One commit, not "false now / true on a timer". The two-step version
+        // left a window in which the mirror above disagreed with state, and a
+        // third action arriving in that window was dropped again.
         setState(prev => ({
           ...prev,
           currentStep: nextStepIndex,
-          waitingForAction: false,
-          expectedActionType: null,
+          waitingForAction: nextWaits,
+          expectedActionType: nextWaits ? nextStep!.actionType ?? null : null,
         }));
-        
-        // Check if next step also requires action
-        setTimeout(() => {
-          const nextStep = config.steps[nextStepIndex];
-          if (nextStep && nextStep.trigger === 'action' && nextStep.actionType) {
-            setState(prev => ({
-              ...prev,
-              waitingForAction: true,
-              expectedActionType: nextStep.actionType ?? null,
-            }));
-          }
-        }, 0);
       }
     }
-  }, [config, state.isActive, state.currentStep, state.waitingForAction, endTour]);
+  }, [config, endTour]);
 
   /**
    * Check if the tour is currently waiting for a specific action

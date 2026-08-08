@@ -169,6 +169,7 @@ export function useTourElement(
   // this (browser-only) project does not depend on.
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryCountRef = useRef<number>(0);
+  const rafRef = useRef<number | null>(null);
 
   const calculateRects = useCallback(() => {
     if (typeof window === 'undefined') return;
@@ -216,6 +217,22 @@ export function useTourElement(
       observedElementRef.current = element;
     }
   }, [targetSelector]);
+
+  /**
+   * Coalesce every observer/scroll/resize callback into one measurement per
+   * frame. Measuring straight inside a ResizeObserver callback made that
+   * callback change layout, which the browser reports as
+   * "ResizeObserver loop completed with undelivered notifications" — a real
+   * console error, and a sign the tour was re-measuring several times a frame
+   * while the simulators animate.
+   */
+  const scheduleRecalc = useCallback(() => {
+    if (typeof window === 'undefined' || rafRef.current !== null) return;
+    rafRef.current = window.requestAnimationFrame(() => {
+      rafRef.current = null;
+      calculateRects();
+    });
+  }, [calculateRects]);
 
   const calculateRectsWithRetry = useCallback(() => {
     if (typeof window === 'undefined') return;
@@ -322,13 +339,13 @@ export function useTourElement(
         const node = record.target;
         const el = node.nodeType === 1 ? (node as Element) : node.parentElement;
         if (el && el.closest('.tour-overlay')) continue;
-        calculateRects();
+        scheduleRecalc();
         return;
       }
     });
 
     resizeObserverRef.current = new ResizeObserver(() => {
-      calculateRects();
+      scheduleRecalc();
     });
 
     // Observe unconditionally. This used to be deferred 100ms AND gated on the
@@ -343,8 +360,8 @@ export function useTourElement(
     });
 
     // Window events
-    const handleScroll = () => calculateRects();
-    const handleResize = () => calculateRects();
+    const handleScroll = () => scheduleRecalc();
+    const handleResize = () => scheduleRecalc();
 
     window.addEventListener('scroll', handleScroll, true);
     window.addEventListener('resize', handleResize);
@@ -353,13 +370,17 @@ export function useTourElement(
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
       }
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
       observerRef.current?.disconnect();
       resizeObserverRef.current?.disconnect();
       observedElementRef.current = null;
       window.removeEventListener('scroll', handleScroll, true);
       window.removeEventListener('resize', handleResize);
     };
-  }, [targetSelector, calculateRects, calculateRectsWithRetry]);
+  }, [targetSelector, calculateRects, calculateRectsWithRetry, scheduleRecalc]);
 
   const vw = typeof window !== 'undefined' ? window.innerWidth : 1024;
   const vh = typeof window !== 'undefined' ? window.innerHeight : 768;
