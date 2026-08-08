@@ -87,6 +87,12 @@ export interface TooltipRect {
   left: number;
   width: number;
   height: number;
+  /**
+   * Height ceiling for the card, so a long step can't grow back over the control
+   * it is describing. Derived only from the target and the viewport — never from
+   * the card's own size, which would make it oscillate.
+   */
+  maxHeight: number;
 }
 
 export interface SpotlightRect {
