@@ -78,7 +78,9 @@ export function Sidebar({
           <strong>{followingCount}</strong>&nbsp;&nbsp;Following
         </p>
 
-        <div className="mt-4">
+        {/* The row list as a whole — per-row anchors exist, but the drawer step
+            is about the list, not any single 37pt row. */}
+        <div data-tour="nostur-drawer-rows" className="mt-4">
           {ROWS.map(({ id, label, Icon }) => (
             <button
               key={id}

@@ -139,7 +139,9 @@ export function InterfaceScreen({ onBack }: SettingsScreenBaseProps) {
         />
 
         <SectionHeader>Themes</SectionHeader>
-        <div className="flex items-center justify-between gap-4 py-2.5">
+        {/* "15 color themes, an accent picker" — the tour's settings step aims
+            here; with spotlightPadding the Accent Color row below is adjacent. */}
+        <div data-tour="wisp-set-themes" className="flex items-center justify-between gap-4 py-2.5">
           <span className="text-sm text-[var(--wisp-on-surface-variant)]">
             Choose a color scheme
           </span>

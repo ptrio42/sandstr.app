@@ -58,7 +58,8 @@ const nosturTourSteps: TourStep[] = [
   },
   {
     id: 'nostur-zap',
-    target: '[data-tour="nostur-zapsheet"], .nostur-simulator',
+    // The 16-coin grid, not the whole zap sheet.
+    target: '[data-tour="nostur-zap-amounts"], [data-tour="nostur-zapsheet"]',
     title: 'Send sats',
     content:
       'Sixteen orange coins from 3 sats to a million, with 21 preselected. Add a public note, or send the zap privately or anonymously.',
@@ -68,7 +69,8 @@ const nosturTourSteps: TourStep[] = [
   },
   {
     id: 'nostur-drawer',
-    target: '[data-tour="nostur-sidebar"], .nostur-simulator',
+    // The drawer's row list rather than the whole drawer.
+    target: '[data-tour="nostur-drawer-rows"], [data-tour="nostur-sidebar"]',
     title: 'The side menu',
     content:
       'Your account avatar opens it: Profile, Lists & Feeds, Bookmarks, Badges, Settings, Block list, Signer. The footer prints the exact build and links straight to the source — Nostur is GPL-3.0.',
@@ -78,7 +80,8 @@ const nosturTourSteps: TourStep[] = [
   },
   {
     id: 'nostur-settings',
-    target: '[data-tour="nostur-settings"], .nostur-simulator',
+    // The Relay Connections + Spam Filtering group, not the settings root.
+    target: '[data-tour="nostur-settings-relays"], [data-tour="nostur-settings"]',
     title: 'Settings go deep',
     content:
       'Relay Connections with Autopilot and VPN detection, a Web-of-Trust spam filter with its own "Nostr Dunbar Number", default zap amounts, and an appearance panel that lets you rearrange the action row itself.',
