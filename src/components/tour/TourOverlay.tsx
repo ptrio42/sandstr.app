@@ -37,28 +37,37 @@ export function TourOverlay() {
   const position = currentStepData?.position ?? 'bottom';
   const padding = currentStepData?.spotlightPadding ?? 8;
 
-  const { spotlightRect, coversViewport, scrollToElement } = useTourElement(
+  const { spotlightRect, coversViewport, scrollToElement, targetEpoch } = useTourElement(
     targetSelector,
     position,
     padding
   );
 
-  // Auto-scroll to element on step change. Keyed on target AVAILABILITY, not
-  // just the step: command-driven steps mount their target ~150-200ms after
-  // the step becomes active (login → open drawer → row exists), so a one-shot
-  // scroll fired into a not-yet-mounted element and below-the-fold targets
-  // (e.g. a drawer row) stayed out of view. The boolean dep re-fires the
-  // scroll exactly once when the rect first resolves, and stays inert while
-  // the rect merely updates during user scrolling.
-  const targetFound = spotlightRect !== null;
+  // Auto-scroll to element on step change. Keyed on target IDENTITY, not just
+  // the step: command-driven steps mount their target ~150-200ms after the step
+  // becomes active (login → open drawer → row exists), so a one-shot scroll
+  // fired into a not-yet-mounted element and below-the-fold targets (e.g. a
+  // drawer row) stayed out of view.
+  //
+  // `targetEpoch` rather than "is the rect non-null": when a step's own command
+  // CREATES its target, the previous step's rect is still standing, so the
+  // rect never goes null → non-null and an availability dep never re-fires.
+  // Measured case — Nostur's Low Data demo: toggling the mode mints six
+  // "Loading paused" blocks, the first one ~1200px down a 775px viewport, and
+  // the spotlight ended up a 4px sliver at the bottom edge because nothing
+  // scrolled. The epoch changes the moment a different node resolves, which is
+  // exactly when a scroll is owed.
   useEffect(() => {
-    if (state.isActive && currentStepData && targetFound) {
+    if (state.isActive && currentStepData && spotlightRect !== null) {
       const timer = setTimeout(() => {
         scrollToElement();
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [state.isActive, currentStepData, scrollToElement, targetFound]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- spotlightRect is
+    // read, not depended on: it updates on every user scroll and would re-fire
+    // the scroll continuously. targetEpoch is the intended trigger.
+  }, [state.isActive, currentStepData, scrollToElement, targetEpoch]);
 
   // Keyboard navigation
   useEffect(() => {

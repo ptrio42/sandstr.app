@@ -169,6 +169,10 @@ function RelaysView() {
         desc="This relay type stores all your posts here and others read your content. Insert between 1–3 relays, paid relays or public relays."
         relays={OUTBOX}
         showAdd
+        // Anchored per section: a caption about the outbox group has to ring the
+        // group, not the whole scrolling settings screen (which the overlay
+        // refuses to spotlight at all).
+        tour="amethyst-relays-outbox"
       />
       <RelaySection
         title="Public Inbox Relays"
@@ -179,9 +183,9 @@ function RelaysView() {
   );
 }
 
-function RelaySection({ title, desc, relays, showAdd }: { title: string; desc: string; relays: typeof OUTBOX; showAdd?: boolean }) {
+function RelaySection({ title, desc, relays, showAdd, tour }: { title: string; desc: string; relays: typeof OUTBOX; showAdd?: boolean; tour?: string }) {
   return (
-    <div className="px-4 pt-4">
+    <div data-tour={tour} className="px-4 pt-4">
       <h3 className="font-semibold" style={{ color: 'var(--md-primary)' }}>{title}</h3>
       <p className="text-sm text-[var(--md-on-surface-variant)] mt-1 mb-3">{desc}</p>
       <div className="space-y-2">
