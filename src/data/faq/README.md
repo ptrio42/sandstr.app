@@ -80,6 +80,36 @@ loading, notifications stopped, empty profile / lost follows.
 3. Never ground a claim in our simulator alone — the sim is the copy, not
    the truth.
 
+## searchAliases — the question in the asker's words
+
+The panel's ranking (`score()` in `FaqPanel.tsx`) only matches words the entry
+already contains, which quietly restricts the whole bank to people who already
+know the vocabulary. Measured 2026-08-09 against the real data: **"lost my
+phone", "reset my password", "tip someone" and "send someone money" each
+returned ZERO hits** — in a bank that answers all four. `searchAliases` is the
+fix: extra phrasings, searched and never rendered.
+
+- **An alias hit ranks as a title hit** (tier 4), because an alias *is* the
+  question, differently worded. Aliases also fold into the all-tokens tier.
+- **Never alias a phrase another entry owns as its title.** Amethyst's relay
+  entry deliberately omits "my notes are not showing up" — that is
+  `trouble-not-delivered`'s title and it should keep winning its own question.
+  This matters most between a demonstrable entry and a text-only symptom: do
+  not let a `showMe` hijack the symptom's question just because a demo looks
+  better in a screenshot.
+- **The alias is what the user types, not a claim the answer makes.** "Nothing
+  loads" is a good alias for Nostur's Low Data Mode even though the mode only
+  stops media — being wrong in the search box is the point; the answer corrects
+  it.
+- Prefer the symptom and the wrong word (`seed phrase`, `send bitcoin`,
+  `data saver`) over synonyms of terms already in the title.
+
+Coverage is incremental like `showMe` and `howNostrWorks`: four entries carry
+aliases today (`damus/backup-keys`, `amethyst/manage-relays`, `nostur/low-data`,
+`primal/zap`), verified with a ranking harness — 18 pain phrases, all landing
+their entry at #1, with all 114 entry titles across those clients still finding
+themselves. A pass over the rest of the bank is open work.
+
 ## showMe rules
 
 Follow **docs/GAPS.md → „Zasady dla autora FAQ"** (and the per-client ledger

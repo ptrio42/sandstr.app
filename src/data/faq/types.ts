@@ -31,6 +31,23 @@ export interface FaqEntry {
   category: string;
   /** User phrasing, e.g. "How do I add a relay?" */
   question: string;
+  /**
+   * Extra phrasings this entry should be findable by — searched, never
+   * rendered. The panel's ranking only matches words the entry already
+   * contains, so it answers people who know the vocabulary ("relays", "zap",
+   * "nsec") and returns nothing to the ones who don't: measured 2026-08-09,
+   * "lost my phone", "reset my password" and "tip someone" each scored zero
+   * hits in a bank that answers all three. Aliases carry the wrong-vocabulary
+   * version of the same question — the newcomer's words, not synonyms of ours.
+   *
+   * Two rules keep this from becoming a relevance dump:
+   * - Never alias a phrase another entry owns as its title. That entry should
+   *   win its own question; an alias hit ranks as high as a title hit.
+   * - The alias is what the user types, not a claim the answer makes. "Nothing
+   *   loads" is a fine alias for Low Data Mode even though the mode only stops
+   *   media — the answer is what corrects them.
+   */
+  searchAliases?: string[];
   /** Numbered, imperative steps describing the real app's UI. */
   answer: string[];
   /**
