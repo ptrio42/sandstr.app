@@ -336,6 +336,19 @@ export const amethystFaq: ClientFaq = {
       id: 'manage-relays',
       category: 'Relays',
       question: 'How do I add or remove relays?',
+      // "Nobody sees my notes" is the symptom that sends people to the relay
+      // screen, and none of those words appear in this entry. Deliberately NOT
+      // aliased: "my notes are not showing up", which is trouble-not-delivered's
+      // own title — that entry should keep winning its own question.
+      searchAliases: [
+        'nobody sees my notes',
+        'no one sees my posts',
+        'nobody can see my posts',
+        'change relays',
+        'relay list',
+        'which relays am i on',
+        'add a server',
+      ],
       answer: [
         'Tap your profile picture in the top-left to open the account drawer.',
         'Tap "Relays".',

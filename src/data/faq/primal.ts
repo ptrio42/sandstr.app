@@ -166,6 +166,16 @@ export const primalFaq: ClientFaq = {
       id: 'zap',
       category: 'Reactions & zaps',
       question: 'How do I zap (tip sats to) a note?',
+      // "Zap" is the single most opaque word on Nostr to a newcomer, who
+      // instead types what they are trying to do: give this person money.
+      searchAliases: [
+        'tip someone',
+        'send money',
+        'send bitcoin',
+        'give sats',
+        'pay someone',
+        'donate',
+      ],
       answer: [
         'Click the lightning bolt — the SECOND icon in the action row, before the heart.',
         'After zapping, the bolt turns amber — and the number beside it is the total sats zapped, not how many people zapped.',

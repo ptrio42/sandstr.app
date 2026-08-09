@@ -419,6 +419,24 @@ export const damusFaq: ClientFaq = {
       id: 'backup-keys',
       category: 'Account & keys',
       question: 'Where do I find and back up my private key (nsec)?',
+      // Nobody arrives knowing the word "nsec": the question that brings people
+      // here is a lost or replaced phone and the reflex of looking for a
+      // password reset that does not exist on Nostr. "backup" (one word) is
+      // listed because the entry's own title only ever says "back up".
+      searchAliases: [
+        'lost my phone',
+        'new phone',
+        'phone stolen',
+        'reset password',
+        'forgot password',
+        'recover my account',
+        'restore my account',
+        'account gone',
+        'locked out',
+        'seed phrase',
+        'backup',
+        'export my key',
+      ],
       answer: [
         'Tap your profile picture to open the side menu, then choose "Settings".',
         'Tap "Keys".',

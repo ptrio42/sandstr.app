@@ -117,6 +117,19 @@ export const nosturFaq: ClientFaq = {
       id: 'low-data',
       category: 'Getting started',
       question: 'What is the turtle icon in the top bar?',
+      // Nobody searches for a turtle they have not identified yet; they search
+      // for its effect. Scoped to phrasings Low Data Mode really causes —
+      // "images not loading" stays with trouble-images, whose title owns it,
+      // and which covers the causes that are not this toggle.
+      searchAliases: [
+        'nothing loads',
+        'nothing is loading',
+        'why is nothing loading',
+        'loading paused',
+        'load anyway',
+        'data saver',
+        'stopped downloading images',
+      ],
       answer: [
         'That is Low Data Mode. Tap the turtle in the top bar to toggle it.',
         'When it is on, Nostur stops downloading images and previews — each one becomes a "Loading paused (Low data mode)" block with a "Load anyway" link.',

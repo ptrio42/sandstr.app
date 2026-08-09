@@ -20,16 +20,22 @@ interface Props {
  * Same ranking idea as CommandPalette: whole-phrase question hits first, then
  * all-tokens-in-question, then all-tokens-anywhere, then a question-only
  * subsequence so "rly" still finds "relays" without matching half the list.
+ *
+ * `searchAliases` join both phrase tiers: an alias IS the question in the
+ * asker's own words, so hitting one ranks with a title hit rather than with a
+ * mention buried in an answer. Aliases are joined on " · " so the phrase tier
+ * cannot match across two of them.
  */
 function score(e: FaqEntry, q: string): number {
   if (!q) return 1;
   const needle = q.toLowerCase();
   const question = e.question.toLowerCase();
-  if (question.includes(needle)) return 4;
+  const aliases = (e.searchAliases ?? []).join(' · ').toLowerCase();
+  if (question.includes(needle) || aliases.includes(needle)) return 4;
   const tokens = needle.split(/\s+/).filter(Boolean);
   if (tokens.every((t) => question.includes(t))) return 3;
   const hay =
-    `${question} ${e.answer.join(' ')} ${e.howNostrWorks ?? ''} ${e.note ?? ''} ${e.category}`.toLowerCase();
+    `${question} ${aliases} ${e.answer.join(' ')} ${e.howNostrWorks ?? ''} ${e.note ?? ''} ${e.category}`.toLowerCase();
   if (tokens.every((t) => hay.includes(t))) return 2;
   let i = 0;
   for (const ch of question) {
