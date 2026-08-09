@@ -144,7 +144,12 @@ export function SettingsScreen() {
             <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-2">
               {group.title}
             </h3>
-            <div className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden">
+            {/* First group is "Privacy & Security" — the settings step aims at
+                that card instead of the whole scrolling column. */}
+            <div
+              data-tour={groupIndex === 0 ? 'keychat-settings-privacy' : undefined}
+              className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden"
+            >
               {group.items.map((item, itemIndex) => (
                 <div
                   key={item.label}

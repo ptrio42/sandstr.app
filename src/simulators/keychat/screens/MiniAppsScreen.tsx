@@ -64,7 +64,8 @@ export function MiniAppsScreen() {
 
       {/* Apps Grid */}
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="grid grid-cols-2 gap-4">
+        {/* The tile grid rather than the whole screen with its header. */}
+        <div data-tour="keychat-apps-grid" className="grid grid-cols-2 gap-4">
           {apps.map((app, index) => (
             <motion.button
               key={app.id}
