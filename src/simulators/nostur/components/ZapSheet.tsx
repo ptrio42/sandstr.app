@@ -51,7 +51,8 @@ export function ZapSheet({
       </div>
 
       <div className="nostur-scroll px-5 pb-5">
-        <div className="grid grid-cols-4 gap-3">
+        {/* The 16-coin grid: what the zap step is actually about. */}
+        <div data-tour="nostur-zap-amounts" className="grid grid-cols-4 gap-3">
           {ZAP_AMOUNTS.map((a) => (
             <button
               key={a}

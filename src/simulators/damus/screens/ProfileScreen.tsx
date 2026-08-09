@@ -47,7 +47,10 @@ export const ProfileScreen: React.FC<Props> = ({ user, currentUser, notes, users
             </div>
             <div className="flex items-center gap-2 mb-1">
               {isMe ? (
-                <button data-tour="damus-follow" className="damus-btn damus-btn-outline text-[15px] px-5 py-2">
+                // No `damus-follow` here (gaps dam-39): this Edit button has no
+                // handler, and while it carried the anchor the tour's "Following
+                // Users" step spotlighted it instead of the Follow pill below.
+                <button className="damus-btn damus-btn-outline text-[15px] px-5 py-2">
                   Edit
                 </button>
               ) : (
@@ -63,7 +66,7 @@ export const ProfileScreen: React.FC<Props> = ({ user, currentUser, notes, users
           </div>
 
           {/* identity */}
-          <div className="mt-2">
+          <div data-tour="damus-profile-identity" className="mt-2">
             <div className="flex items-center gap-1.5">
               <span className="font-bold text-[22px] text-[var(--damus-text)]">{u.displayName}</span>
               {u.nip05 && <Nip05Check className="w-[18px] h-[18px]" />}

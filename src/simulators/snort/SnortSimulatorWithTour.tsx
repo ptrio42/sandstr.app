@@ -85,7 +85,12 @@ export function SnortSimulatorWithTour() {
 
       const stepCommands: Record<number, SimulatorCommand[]> = {
         0: [], // Welcome
-        1: [], // Login — manual, the login screen is already the initial state
+        // Login — force the signed-out screen. `[]` assumed the visitor arrives
+        // logged out, but they can sign in before starting the tour, and Prev
+        // from step 3 also lands here signed in — either way the login anchor
+        // is unmounted and the step used to render as an empty dark screen.
+        // Amethyst and Keychat already did this; the idiom just was not copied.
+        1: [{ type: 'logout' }],
         2: [{ type: 'login' }, { type: 'navigate', payload: 'timeline' }], // Home feed
         // Compose: highlight the rail's "New Note" button. Do NOT open the
         // modal here — it would cover the very target being spotlighted.

@@ -81,7 +81,12 @@ export function NosturSimulatorWithTour() {
       // its own rather than needing a paired { type: 'login' } ahead of it.
       const stepCommands: Record<number, SimulatorCommand[]> = {
         0: [], // Welcome
-        1: [], // Sign in — the welcome sheet is the default unauthenticated view
+        // Login — force the signed-out screen. `[]` assumed the visitor arrives
+        // logged out, but they can sign in before starting the tour, and Prev
+        // from step 3 also lands here signed in — either way the login anchor
+        // is unmounted and the step used to render as an empty dark screen.
+        // Amethyst and Keychat already did this; the idiom just was not copied.
+        1: [{ type: 'logout' }],
         2: [{ type: 'openFeed', payload: 'Following' }], // Three feeds
         3: [{ type: 'openFeed', payload: 'Following' }], // The turtle
         4: [{ type: 'openFeed', payload: 'Following' }], // Action row

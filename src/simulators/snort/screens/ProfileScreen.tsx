@@ -414,7 +414,9 @@ export function ProfileScreen({
           overlapped by the avatar through this `-mb-6` and nothing else. */}
       <img src={banner} alt="" className="-mb-6 max-h-[200px] w-full object-cover" />
 
-      <div className="px-4">
+      {/* AvatarSection + ProfileDetails: exactly what the tour's profile step
+          enumerates (avatar, actions, name, NIP-05, lightning, website, bio). */}
+      <div data-tour="snort-profile-header" className="px-4">
         {/* ---- AvatarSection (§8.2) ---- */}
         <div className="flex justify-between gap-2">
           <Avatar

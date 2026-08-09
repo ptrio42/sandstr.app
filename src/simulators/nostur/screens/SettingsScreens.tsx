@@ -54,7 +54,9 @@ export function SettingsRoot({
           <SettingRow icon={<ImageIcon className="h-5 w-5" />} title="Posting & Media Uploading" chevron />
           <SettingRow icon={<Zap className="h-5 w-5" />} title="Zaps" chevron onClick={() => onOpen('zaps')} />
         </div>
-        <div className="nostur-group">
+        {/* Relay Connections + Spam Filtering: the group the settings step names.
+            NOT `nostur-relays` — that is the sub-screen and is full-height. */}
+        <div data-tour="nostur-settings-relays" className="nostur-group">
           <SettingRow icon={<Radio className="h-5 w-5" />} title="Relay Connections" chevron onClick={() => onOpen('relays')} />
           <SettingRow icon={<ShieldAlert className="h-5 w-5" />} title="Spam Filtering" chevron onClick={() => onOpen('spam')} />
         </div>

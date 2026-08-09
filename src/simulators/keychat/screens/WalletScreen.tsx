@@ -57,7 +57,9 @@ export function WalletScreen() {
 
       {/* Action Buttons */}
       <div className="px-4 -mt-4">
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-4 flex gap-4">
+        {/* Send / Receive / Scan card — the wallet step aims here, not at the
+            whole screen. */}
+        <div data-tour="keychat-wallet-actions" className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-4 flex gap-4">
           <button 
             onClick={() => setShowReceive(true)}
             className="flex-1 flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"

@@ -13,9 +13,20 @@ import { useTheme } from './useTheme';
 import { fidelityReportUrl } from './contribute';
 import { cn } from '../utils/cn';
 
+/**
+ * Two defences, both needed, for the banner CLAUDE.md calls the non-negotiable
+ * trademark mitigation:
+ *  - `relative z-[10003]` (same as DisclaimerStrip below) lifts it over the tour
+ *    backdrop at 9999, which otherwise dimmed it to unreadable for a whole tour;
+ *  - `data-tour-keep-clear` makes the tour place its card AROUND it. Z-index
+ *    alone only decided which of two overlapping texts won the pixels.
+ */
 function Disclaimer({ name, real }: { name: string; real: boolean }) {
   return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+    <div
+      data-tour-keep-clear
+      className="relative z-[10003] inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+    >
       <Info className="h-3.5 w-3.5" />
       <span>
         <strong>Simulation</strong> · mock data ·{' '}
@@ -36,7 +47,14 @@ function Disclaimer({ name, real }: { name: string; real: boolean }) {
  */
 function DisclaimerStrip({ name, real }: { name: string; real: boolean }) {
   return (
-    <div className="relative z-[10003] flex shrink-0 items-center justify-center gap-1.5 border-b border-amber-300/60 bg-amber-50 px-3 py-1 text-[11px] leading-snug text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-300">
+    <div
+      // Same pairing as Disclaimer above: z-index decides who wins the pixels,
+      // `data-tour-keep-clear` stops the two overlapping in the first place.
+      // This is the phone form, so it matters MORE here — a full-bleed client
+      // leaves the card nowhere else to go.
+      data-tour-keep-clear
+      className="relative z-[10003] flex shrink-0 items-center justify-center gap-1.5 border-b border-amber-300/60 bg-amber-50 px-3 py-1 text-[11px] leading-snug text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-300"
+    >
       <Info className="h-3 w-3 shrink-0" />
       <span className="text-center">
         <strong>SIMULATION</strong> · mock data ·{' '}

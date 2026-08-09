@@ -19,8 +19,10 @@ export const SettingsScreen: React.FC<Props> = ({ currentUser, onBack, onLogout,
   const [leftHand, setLeftHand] = useState(false);
   const [autoTranslate, setAutoTranslate] = useState(true);
 
-  const Group = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div className="mt-6">
+  // `tour` is opt-in per group: the tour's settings step needs to point at ONE
+  // group (Account) rather than the whole scrolling screen.
+  const Group = ({ title, children, tour }: { title: string; children: React.ReactNode; tour?: string }) => (
+    <div data-tour={tour} className="mt-6">
       <div className="px-4 pb-1 text-[13px] font-semibold uppercase tracking-wide text-[var(--damus-text-secondary)]">{title}</div>
       <div className="mx-4 rounded-2xl overflow-hidden bg-[var(--damus-bg-secondary)]">{children}</div>
     </div>
@@ -64,7 +66,7 @@ export const SettingsScreen: React.FC<Props> = ({ currentUser, onBack, onLogout,
           </div>
         </div>
 
-        <Group title="Account">
+        <Group title="Account" tour="damus-settings-account">
           <Row label="Keys" />
           <Row label="Relays" onClick={onOpenRelays} />
           <Row label="Wallet & Payments" />

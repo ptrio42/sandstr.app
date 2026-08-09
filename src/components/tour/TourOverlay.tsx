@@ -8,9 +8,27 @@ import React, { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useTour } from './TourProvider';
 import { TourTooltip } from './TourTooltip';
-import { TourProgress } from './TourProgress';
-import { TourControls } from './TourControls';
 import { useTourElement } from './useTourElement';
+
+/**
+ * Keys the tour claims. Escape is handled separately: it must work even while
+ * the user is typing, because it is the way out of the tour.
+ */
+const NAV_KEYS = ['ArrowRight', 'ArrowLeft', 'Enter'];
+
+/** Is the user typing into the simulator right now? */
+function isEditableTarget(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null;
+  if (!el || typeof el.closest !== 'function') return false;
+  const tag = el.tagName;
+  return (
+    tag === 'INPUT' ||
+    tag === 'TEXTAREA' ||
+    tag === 'SELECT' ||
+    el.isContentEditable ||
+    !!el.closest('[contenteditable="true"]')
+  );
+}
 
 export function TourOverlay() {
   const { state, currentStepData, endTour, goToNextStep, goToPreviousStep } = useTour();
@@ -19,7 +37,7 @@ export function TourOverlay() {
   const position = currentStepData?.position ?? 'bottom';
   const padding = currentStepData?.spotlightPadding ?? 8;
 
-  const { spotlightRect, scrollToElement } = useTourElement(
+  const { spotlightRect, coversViewport, scrollToElement } = useTourElement(
     targetSelector,
     position,
     padding
@@ -50,6 +68,12 @@ export function TourOverlay() {
     const isWaitingForAction = state.waitingForAction && currentStepData?.trigger === 'action';
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Never take keys away from a field the user is typing in. Without this,
+      // ArrowLeft/ArrowRight jumped the tour instead of moving the caret and
+      // Enter skipped a step instead of inserting a newline — on the very steps
+      // ("Write something interesting and hit post!") that ask you to type.
+      if (NAV_KEYS.includes(e.key) && isEditableTarget(e.target)) return;
+
       switch (e.key) {
         case 'ArrowRight':
         case 'Enter':
@@ -79,7 +103,7 @@ export function TourOverlay() {
   // Prevent body scroll when tour is active
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    
+
     if (state.isActive) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -103,21 +127,41 @@ export function TourOverlay() {
     return null;
   }
 
-  // Calculate clip path for spotlight effect
-  const clipPath = spotlightRect
+  // Calculate clip path for spotlight effect. Clamped to the viewport: an
+  // unclamped hole for a tall feed produced a 5000px+ polygon whose edges fell
+  // off-screen, leaving a stripe of the page undimmed.
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 0;
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 0;
+
+  const hole = spotlightRect
+    ? {
+        left: Math.max(0, spotlightRect.left - spotlightRect.padding),
+        top: Math.max(0, spotlightRect.top - spotlightRect.padding),
+        right: Math.min(vw, spotlightRect.left + spotlightRect.width + spotlightRect.padding),
+        bottom: Math.min(vh, spotlightRect.top + spotlightRect.height + spotlightRect.padding),
+      }
+    : null;
+
+  const clipPath = hole
     ? `polygon(
         0% 0%,
         0% 100%,
-        ${spotlightRect.left - spotlightRect.padding}px 100%,
-        ${spotlightRect.left - spotlightRect.padding}px ${spotlightRect.top - spotlightRect.padding}px,
-        ${spotlightRect.left + spotlightRect.width + spotlightRect.padding}px ${spotlightRect.top - spotlightRect.padding}px,
-        ${spotlightRect.left + spotlightRect.width + spotlightRect.padding}px ${spotlightRect.top + spotlightRect.height + spotlightRect.padding}px,
-        ${spotlightRect.left - spotlightRect.padding}px ${spotlightRect.top + spotlightRect.height + spotlightRect.padding}px,
-        ${spotlightRect.left - spotlightRect.padding}px 100%,
+        ${hole.left}px 100%,
+        ${hole.left}px ${hole.top}px,
+        ${hole.right}px ${hole.top}px,
+        ${hole.right}px ${hole.bottom}px,
+        ${hole.left}px ${hole.bottom}px,
+        ${hole.left}px 100%,
         100% 100%,
         100% 0%
       )`
     : undefined;
+
+  // Two cases end up without a spotlight, and they should not look like a
+  // blackout: the target is the whole client (an intro/summary step), or it has
+  // not resolved yet. Dim gently instead of dropping a 75%-black sheet with no
+  // hole in it — that read as "the page broke".
+  const softBackdrop = !spotlightRect;
 
   const overlay = (
     <div
@@ -129,40 +173,40 @@ export function TourOverlay() {
     >
       {/* Dark backdrop with spotlight */}
       <div
-        className={`tour-backdrop ${currentStepData?.allowClickThrough ? 'tour-backdrop--click-through' : ''}`}
+        // No `--click-through` class: it set `pointer-events: none` on an
+        // element that already inherits exactly that from `.tour-overlay`, so it
+        // implied a per-step choice the engine never made. See the note on
+        // TourStep.allowClickThrough in types.ts.
+        className={[
+          'tour-backdrop',
+          softBackdrop ? 'tour-backdrop--soft' : '',
+          coversViewport ? 'tour-backdrop--whole-app' : '',
+        ].filter(Boolean).join(' ')}
         style={{
           clipPath: clipPath,
         }}
       />
 
       {/* Spotlight border */}
-      {spotlightRect && (
+      {spotlightRect && hole && (
         <div
           className="tour-spotlight"
           style={{
             position: 'absolute',
-            top: spotlightRect.top - spotlightRect.padding,
-            left: spotlightRect.left - spotlightRect.padding,
-            width: spotlightRect.width + spotlightRect.padding * 2,
-            height: spotlightRect.height + spotlightRect.padding * 2,
+            top: hole.top,
+            left: hole.left,
+            width: Math.max(0, hole.right - hole.left),
+            height: Math.max(0, hole.bottom - hole.top),
           }}
         />
       )}
 
-      {/* Tooltip */}
+      {/* Tooltip — carries the step copy, the progress and the Prev/Next/Skip
+          controls. They used to be separate fixed-position elements pinned to
+          the middle and the corners of the VIEWPORT, which is exactly where the
+          phone stands: the controls bar covered ~half of every client's bottom
+          tab bar and ate taps meant for it. */}
       <TourTooltip />
-
-      {/* Progress indicator */}
-      <TourProgress />
-
-      {/* Controls */}
-      <TourControls />
-
-      {/* Keyboard hints */}
-      <div className="tour-keyboard-hints">
-        <span>← → Navigate</span>
-        <span>ESC Skip</span>
-      </div>
     </div>
   );
 

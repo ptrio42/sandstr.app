@@ -40,7 +40,9 @@ export const LoginScreen: React.FC<Props> = ({ onLogin }) => {
         )}
       </div>
 
-      <div className="w-full space-y-3">
+      {/* The tour's "Your Keys Are Your Identity" step points here rather than at
+          the whole screen: this band is the only thing on it a visitor acts on. */}
+      <div data-tour="damus-auth-actions" className="w-full space-y-3">
         {view === 'home' ? (
           <>
             <button onClick={() => setView('create')} className="damus-btn damus-btn-gradient w-full py-3.5 text-[17px]">
@@ -55,7 +57,13 @@ export const LoginScreen: React.FC<Props> = ({ onLogin }) => {
           </>
         ) : (
           <>
-            <button onClick={signIn} className="damus-btn damus-btn-gradient w-full py-3.5 text-[17px]" data-tour="damus-post">
+            {/* No `data-tour="damus-post"` here. That anchor belongs to the
+                composer's Post button (ComposeScreen.tsx:31); a duplicate on the
+                login screen meant the "Publish Your Note" step could spotlight
+                "Let's go" instead — and since the tour now resolves a selector
+                list in document order within each alternative, whichever mounts
+                first wins. One anchor, one element. */}
+            <button onClick={signIn} className="damus-btn damus-btn-gradient w-full py-3.5 text-[17px]">
               Let's go
             </button>
             <button onClick={() => setView('home')} className="damus-btn damus-btn-pill w-full py-3.5 text-[17px]">

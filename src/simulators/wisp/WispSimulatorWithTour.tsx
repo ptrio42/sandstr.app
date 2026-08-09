@@ -75,7 +75,12 @@ export function WispSimulatorWithTour() {
       // Max 2 commands per step — the queue drops the third (see tour gotchas).
       const stepCommands: Record<number, SimulatorCommand[]> = {
         0: [], // Welcome
-        1: [], // Login — splash is the default unauthenticated view
+        // Login — force the signed-out screen. `[]` assumed the visitor arrives
+        // logged out, but they can sign in before starting the tour, and Prev
+        // from step 3 also lands here signed in — either way the login anchor
+        // is unmounted and the step used to render as an empty dark screen.
+        // Amethyst and Keychat already did this; the idiom just was not copied.
+        1: [{ type: 'back' }],
         2: [{ type: 'login' }, { type: 'navigate', payload: 'home' }], // Feed
         3: [{ type: 'login' }, { type: 'navigate', payload: 'home' }], // Feed selector
         4: [{ type: 'login' }, { type: 'navigate', payload: 'home' }], // Compose FAB stays mounted

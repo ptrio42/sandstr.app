@@ -99,7 +99,12 @@ export function PrimalWebSimulatorWithTour() {
 
     const stepCommands: Record<number, SimulatorCommand[]> = {
       0: [], // Welcome
-      1: [], // Login - manual
+      // Login — force the signed-out screen. `[]` assumed the visitor arrives
+      // logged out, but they can sign in before starting the tour, and Prev
+      // from step 3 also lands here signed in — either way the login anchor
+      // is unmounted and the step used to render as an empty dark screen.
+      // Amethyst and Keychat already did this; the idiom just was not copied.
+      1: [{ type: 'logout' }],
       2: [{ type: 'login' }, { type: 'navigate', payload: 'home' }], // Home feed
       // Compose/Post: 2 commands, no interposed navigate — the queue reliably
       // carries only two, and `compose` forces the home tab itself (the third

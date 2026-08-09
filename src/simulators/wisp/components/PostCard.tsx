@@ -163,7 +163,8 @@ export function PostCard({
   }
 
   return (
-    <article className="relative">
+    // Repeats per card; the feed step resolves the first, i.e. the top note.
+    <article data-tour="wisp-post-card" className="relative">
       <div
         className="cursor-pointer px-4 py-2"
         onClick={() => onOpenThread?.(note)}

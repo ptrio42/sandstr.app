@@ -17,7 +17,9 @@ const yakihonneTourSteps: TourStep[] = [
   },
   {
     id: 'yakihonne-login',
-    target: '.yakihonne-login, [data-tour="yakihonne-keys"]',
+    // The CTA block (Log in / Create account / Continue as a guest), not the
+    // whole landing screen. Old anchor kept as a fallback.
+    target: '[data-tour="yakihonne-login-actions"], [data-tour="yakihonne-keys"]',
     title: 'Sign in',
     content: 'Log in with your Nostr keys, a remote signer, or continue as a guest. Your key is your identity — it works across every Nostr app. (Here it is fully simulated with mock keys.)',
     position: 'bottom',
@@ -26,7 +28,10 @@ const yakihonneTourSteps: TourStep[] = [
   },
   {
     id: 'yakihonne-home',
-    target: '.yakihonne-feed, [data-tour="yakihonne-feed"]',
+    // The feed ROOT is the whole screen; the copy is about the selector at the
+    // top ("Tap the feed selector up top to switch between Recent, Trending…"),
+    // so point at the control the sentence names.
+    target: '[data-tour="yakihonne-feedsel"], [data-tour="yakihonne-feed"]',
     title: 'Your feed',
     content: 'The home timeline. Tap the feed selector up top to switch between Recent, Trending, Global and more — Trending surfaces long-form articles with read-times and cover images.',
     position: 'top',
@@ -44,7 +49,7 @@ const yakihonneTourSteps: TourStep[] = [
   },
   {
     id: 'yakihonne-post',
-    target: '.yakihonne-post-btn, [data-tour="yakihonne-post"]',
+    target: '[data-tour="yakihonne-post"]',
     title: 'Publish',
     content: 'Hit send and your note is signed and broadcast to your relays. On Nostr, once published it lives on the network — no central server to delete it.',
     position: 'bottom',
@@ -53,10 +58,12 @@ const yakihonneTourSteps: TourStep[] = [
   },
   {
     id: 'yakihonne-profile',
-    // The profile SCREEN, which this step's viewProfile command opens. The old
-    // target resolved to the app-bar avatar — same name, earlier in the DOM,
-    // and by then hidden behind the profile overlay.
-    target: '[data-tour="yakihonne-profile-screen"]',
+    // Everything under the banner — avatar, Follow/Edit, name + NIP-05, bio,
+    // counts, tab row — rather than the whole profile screen. The screen anchor
+    // stays as a fallback: it is what the FAQ entries target, and an earlier fix
+    // needed it because the plain `yakihonne-profile` name also matches the
+    // app-bar avatar, which sits earlier in the DOM.
+    target: '[data-tour="yakihonne-profile-id"], [data-tour="yakihonne-profile-screen"]',
     title: 'Your profile',
     content: 'Your profile has a NOSTR banner, NIP-05 verification, and tabs for Notes, Articles, Media and more. The account drawer also opens your Yaki-chest dashboard and Relay orbits.',
     position: 'bottom',
@@ -65,7 +72,7 @@ const yakihonneTourSteps: TourStep[] = [
   },
   {
     id: 'yakihonne-follow',
-    target: '.yakihonne-follow-btn, [data-tour="yakihonne-follow"]',
+    target: '[data-tour="yakihonne-follow"]',
     title: 'Follow people',
     content: 'Follow anyone to see their notes and articles in your feed. Your follow list is stored on Nostr and syncs across every client you use.',
     position: 'bottom',
@@ -74,7 +81,7 @@ const yakihonneTourSteps: TourStep[] = [
   },
   {
     id: 'yakihonne-interactions',
-    target: '.yakihonne-zap-btn, [data-tour="yakihonne-zaps"]',
+    target: '[data-tour="yakihonne-zaps"]',
     title: 'Zaps & reactions',
     content: 'React, reply, repost, quote — and zap. Zaps send real Bitcoin over the Lightning Network straight to a creator; YakiHonne shows the total sats a note has earned.',
     position: 'top',
@@ -83,10 +90,13 @@ const yakihonneTourSteps: TourStep[] = [
   },
   {
     id: 'yakihonne-settings',
-    target: '.yakihonne-simulator',
+    // Was `.yakihonne-simulator` — the whole client. Index 8 runs
+    // `{ navigate: 'settings' }`, so aim at the Wallets ROW, the first thing the
+    // copy names. Screen anchor kept as a fallback (the FAQ targets it).
+    target: '[data-tour="yakihonne-settings-wallets"], [data-tour="yakihonne-settings"]',
     title: 'Wallet, relays & Yaki chest',
     content: 'YakiHonne bundles a Lightning wallet (Wallet of Satoshi by default), branded "Relay orbits", and a gamified "Yaki chest" that rewards you with XP for being active.',
-    position: 'center',
+    position: 'bottom',
     allowClickThrough: true,
     spotlightPadding: 8,
   },

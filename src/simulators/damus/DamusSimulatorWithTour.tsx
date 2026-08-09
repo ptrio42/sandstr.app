@@ -101,8 +101,12 @@ export function DamusSimulatorWithTour() {
     const stepCommands: Record<number, DamusSimulatorCommand[]> = {
       // Step 0: Welcome - no action needed
       0: [],
-      // Step 1: Login screen - already there
-      1: [],
+      // Login — force the signed-out screen. `[]` assumed the visitor arrives
+      // logged out, but they can sign in before starting the tour, and Prev
+      // from step 3 also lands here signed in — either way the login anchor
+      // is unmounted and the step used to render as an empty dark screen.
+      // Amethyst and Keychat already did this; the idiom just was not copied.
+      1: [{ type: 'logout' }],
       // Step 2: Home feed - login + navigate to home
       2: [{ type: 'login' }, { type: 'navigate', payload: 'home' }],
       // Step 3: Compose button - login + navigate to home (compose shown in home)
@@ -112,8 +116,12 @@ export function DamusSimulatorWithTour() {
       4: [{ type: 'login' }, { type: 'compose' }],
       // Step 5: Profile - login + view profile
       5: [{ type: 'login' }, { type: 'viewProfile' }],
-      // Step 6: Follow - login + view profile
-      6: [{ type: 'login' }, { type: 'viewProfile' }],
+      // Step 6: Follow — SOMEONE ELSE's profile (gaps dam-39). `viewProfile`
+      // opens your own, where ProfileScreen renders the handler-less "Edit"
+      // button instead of the Follow pill, so a step called "Following Users"
+      // spotlighted a dead control. `viewUser` mounts another user's profile,
+      // which is the branch that actually has the pill.
+      6: [{ type: 'login' }, { type: 'viewUser' }],
       // Step 7: Interactions - login + navigate to home
       7: [{ type: 'login' }, { type: 'navigate', payload: 'home' }],
       // Step 8: Settings - login + navigate to settings

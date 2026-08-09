@@ -73,10 +73,12 @@ export function KeychatSimulatorWithTour() {
       2: [{ type: 'login' }, { type: 'navigate', payload: 'chats' }],
       // Step 3: Chat item - login + navigate to chats
       3: [{ type: 'login' }, { type: 'navigate', payload: 'chats' }],
-      // Step 4: Chat room - login + navigate to chats + select chat
-      4: [{ type: 'login' }, { type: 'navigate', payload: 'chats' }, { type: 'selectChat', payload: '1' }],
-      // Step 5: Message input - same as step 4
-      5: [{ type: 'login' }, { type: 'navigate', payload: 'chats' }, { type: 'selectChat', payload: '1' }],
+      // Steps 4-5: chat room. TWO commands, not three: the queue's 3-command
+      // handoff is unreliable (same note as Damus step 4), and `navigate` is
+      // redundant here — `activeTab` already defaults to 'chats' and
+      // `selectedChat` outranks the tab in the render branch.
+      4: [{ type: 'login' }, { type: 'selectChat', payload: '1' }],
+      5: [{ type: 'login' }, { type: 'selectChat', payload: '1' }],
       // Step 6: Wallet - login + navigate to wallet
       6: [{ type: 'login' }, { type: 'navigate', payload: 'wallet' }],
       // Step 7: Apps - login + navigate to apps

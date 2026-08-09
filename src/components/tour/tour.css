@@ -14,10 +14,9 @@
   pointer-events: none; /* Allow clicks to pass through by default */
 }
 
-/* Re-enable pointer events for interactive tour elements */
-.tour-tooltip,
-.tour-controls,
-.tour-progress {
+/* Re-enable pointer events for interactive tour elements. The controls and the
+   progress row are children of the card now, so they inherit this. */
+.tour-tooltip {
   pointer-events: auto;
 }
 
@@ -28,15 +27,27 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(2px);
-  transition: clip-path 0.3s ease-out;
+  background-color: rgba(0, 0, 0, 0.6);
+  transition: clip-path 0.3s ease-out, background-color 0.3s ease-out;
 }
 
-/* Click-through mode for action-driven steps */
-.tour-backdrop--click-through {
-  pointer-events: none;
+/* No hole is being cut — either the target hasn't resolved yet, or the step is
+   about the whole client. A full-strength sheet in that state reads as "the page
+   broke" and hides the reproduction the product exists to show, so dim gently
+   and let the card carry the step on its own. */
+.tour-backdrop--soft {
+  background-color: rgba(0, 0, 0, 0.35);
 }
+
+.tour-backdrop--whole-app {
+  background-color: rgba(0, 0, 0, 0.45);
+}
+
+/* There is no `--click-through` modifier any more: it set `pointer-events: none`
+   on an element that already inherits it from `.tour-overlay`, so it never did
+   anything. Every step is click-through, on purpose — see TourStep
+   .allowClickThrough in types.ts for why, and what to change if that should
+   become a per-step choice. */
 
 /* Spotlight border highlight */
 .tour-spotlight {
@@ -67,22 +78,40 @@
   }
 }
 
-/* Tooltip Container */
+/* Tooltip Container — the card is the whole tour chrome: copy, progress and
+   controls. Nothing else is pinned to the viewport, so nothing else can land on
+   the device. */
 .tour-tooltip {
   position: absolute;
+  display: flex;
+  flex-direction: column;
   width: 320px;
   max-width: calc(100vw - 32px);
+  /* Capped here rather than from the placement math: a JS cap feeds back into
+     the measured height, which flips which placement wins, which changes the cap
+     — the card ends up flickering between two sizes. `__content` scrolls. */
+  max-height: calc(100dvh - 32px);
   background: white;
   border-radius: 12px;
-  box-shadow: 
+  box-shadow:
     0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04),
     0 0 0 1px rgba(0, 0, 0, 0.05);
-  z-index: 10002; /* Higher than controls (10001) to appear above them */
+  /* Stacking contract, lowest first: backdrop/overlay 9999 < card 10002 <
+     host disclaimer 10003 < host mobile sheet 10004. The disclaimer deliberately
+     outranks the card — it must never be obscured — which is why the placement
+     below treats `[data-tour-keep-clear]` as an obstacle rather than relying on
+     z-order to sort out an overlap. */
+  z-index: 10002;
   opacity: 0;
   transform: translateY(10px);
-  transition: all 0.3s ease-out;
-  overflow: visible; /* Allow arrows to extend outside */
+  /* NOT `all`: that animated `top`/`left` too, so the card visibly slid across
+     the reproduction on every step change — and the geometry is recomputed on
+     each DOM mutation, which restarted the slide mid-flight. */
+  transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+  /* The purple header is square-cornered without this; the old `visible` was
+     there for arrows that TourTooltip stopped rendering. */
+  overflow: hidden;
 }
 
 .tour-tooltip--visible {
@@ -90,43 +119,31 @@
   transform: translateY(0);
 }
 
-.tour-tooltip__arrow {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  background: white;
-  transform: translate(-50%, -50%) rotate(45deg); /* Center the arrow on its position point */
-  box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.05);
-}
-
-/* Arrow positioning - extends outside tooltip to point to target */
-.tour-tooltip__arrow--top {
-  bottom: -8px; /* Extend outside bottom edge */
-  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.tour-tooltip__arrow--bottom {
-  top: -8px; /* Extend outside top edge */
-  box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.tour-tooltip__arrow--left {
-  right: -8px; /* Extend outside right edge */
-  box-shadow: 2px -2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.tour-tooltip__arrow--right {
-  left: -8px; /* Extend outside left edge */
-  box-shadow: -2px 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.tour-tooltip__arrow--center {
+/* Short band: the step copy is what the user came for, the chrome is not. */
+.tour-tooltip--compact .tour-progress__steps {
   display: none;
+}
+
+.tour-tooltip--compact .tour-tooltip__header {
+  padding: 8px 16px;
+}
+
+.tour-tooltip--compact .tour-tooltip__content {
+  padding: 12px 16px;
+}
+
+.tour-tooltip--compact .tour-tooltip__title {
+  margin-bottom: 4px;
+}
+
+.tour-tooltip--compact .tour-controls {
+  padding: 8px 10px;
 }
 
 /* Tooltip Header */
 .tour-tooltip__header {
   display: flex;
+  flex-shrink: 0;
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
@@ -166,9 +183,13 @@
   transform: scale(0.95);
 }
 
-/* Tooltip Content */
+/* Tooltip Content — the only part that gives when the card has to be docked
+   into a short band (useTourElement returns a maxHeight in that case). */
 .tour-tooltip__content {
   padding: 16px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .tour-tooltip__title {
@@ -189,6 +210,7 @@
 /* Tooltip Action Hint */
 .tour-tooltip__action {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
@@ -213,12 +235,17 @@
   animation: tour-waiting-pulse 2s ease-in-out infinite;
 }
 
+/* Pulses OPACITY, not background. Animating `background` here put a CSS
+   animation above the cascade, so it beat `.dark .tour-tooltip__action--waiting`
+   below: dark mode kept the cream #fef3c7 TEXT but got the light keyframe
+   BACKGROUND — 1.07:1 contrast, i.e. the one sentence telling you what to do was
+   invisible on every action-gated step. */
 @keyframes tour-waiting-pulse {
   0%, 100% {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    opacity: 1;
   }
   50% {
-    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    opacity: 0.75;
   }
 }
 
@@ -233,25 +260,24 @@
 }
 
 /* Progress Component
-   Anchored bottom-LEFT, not centred: the mobile sims render a phone frame in
-   the middle of the viewport, and a centred progress row landed right on top of
-   their bottom nav bar — so "tap the Home icon" steps ate the tap as a
-   jump-to-step-1 click on a progress dot. */
+   Lives INSIDE the card. It was `position: fixed` bottom-left — which kept it
+   off the phone, but only because the phone happened to be centred; over a
+   full-bleed mobile client and over the web clients it still sat on the
+   reproduction, and its white-on-white bar vanished entirely wherever the
+   backdrop had been cut away. */
 .tour-progress {
-  position: fixed;
-  bottom: 32px;
-  left: 24px;
   display: flex;
+  flex-shrink: 0;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-  z-index: 10001;
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px 16px 0;
 }
 
 .tour-progress__bar {
-  width: 200px;
+  width: 100%;
   height: 4px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -265,18 +291,22 @@
 
 .tour-progress__steps {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .tour-progress__step {
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  border: 2px solid transparent;
-  font-size: 11px;
+  border: 1px solid transparent;
+  background: rgba(0, 0, 0, 0.06);
+  color: #6b7280;
+  font-size: 10px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -296,35 +326,29 @@
 }
 
 .tour-progress__step--upcoming {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
-  color: rgba(255, 255, 255, 0.6);
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #9ca3af;
   cursor: not-allowed;
 }
 
 .tour-progress__check {
-  width: 14px;
-  height: 14px;
+  width: 11px;
+  height: 11px;
 }
 
-/* Controls Component */
+/* Controls Component — inside the card, so it moves with it and can never sit
+   on the reproduction. As a fixed bar at `left: 50%` it covered 49% of Nostur's
+   tab bar at 375x812 and swallowed taps meant for the client. */
 .tour-controls {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
+  flex-shrink: 0;
   justify-content: space-between;
   align-items: center;
-  gap: 32px;
-  padding: 12px 24px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  box-shadow: 
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  z-index: 10001;
+  gap: 12px;
+  padding: 10px 12px;
+  border-top: 1px solid #e5e7eb;
+  background: #fafafa;
 }
 
 .tour-controls__nav {
@@ -340,14 +364,22 @@
 .tour-controls__btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 8px 16px;
+  /* 44px min target: these are the tour's only controls on a touch screen. */
+  min-height: 40px;
+  padding: 8px 14px;
   border: none;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.tour-controls__btn:focus-visible {
+  outline: 2px solid #7c3aed;
+  outline-offset: 2px;
 }
 
 .tour-controls__btn:disabled {
@@ -399,63 +431,35 @@
     }
   }
 
-  /* Keyboard Hints */
-.tour-keyboard-hints {
-  position: fixed;
-  bottom: 80px;
-  right: 24px;
-  display: flex;
-  gap: 16px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
-  z-index: 10001;
-}
+/* The floating "← → Navigate · ESC Skip" hints are gone. They were
+   `rgba(255,255,255,.6)` pinned bottom-right — 1:1 contrast wherever the
+   backdrop had been cut away (which is most of the screen on the 25 steps whose
+   target is the whole client), and on the web clients they sat on the
+   reproduction. The card footer carries the same hint, on pointer:fine only. */
 
-.tour-keyboard-hints span {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* Mobile Responsive */
-@media (max-width: 640px) {
+/* Mobile Responsive
+   NOTE what is deliberately absent: `left`/`right: … !important`. Those two
+   declarations silently voided every horizontal placement the hook computed —
+   the card could not step aside from a target or out of a phone frame, so on a
+   phone it landed on whatever the step was pointing at. The hook already clamps
+   a full-width card to the 16px margin on its own, so the override bought
+   nothing and cost the whole escape path.
+   Matches MOBILE_QUERY in src/host/useMediaQuery.ts — keep the two in step. */
+@media (max-width: 639px) {
   .tour-tooltip {
     width: calc(100vw - 32px);
     max-width: none;
-    left: 16px !important;
-    right: 16px !important;
   }
 
-  .tour-tooltip__arrow {
-    display: none;
-  }
-
+  /* Labels stay. Hiding them turned the last step's "Finish" into a 16x36px
+     blank button, because the icon was conditional on NOT being the last step. */
   .tour-controls {
-    left: 16px;
-    right: 16px;
-    transform: none;
-    padding: 12px 16px;
-    gap: 16px;
-  }
-
-  .tour-controls__btn-text {
-    display: none;
+    padding: 10px;
+    gap: 8px;
   }
 
   .tour-controls__btn {
-    padding: 8px;
-  }
-
-  .tour-keyboard-hints {
-    display: none;
-  }
-
-  .tour-progress {
-    bottom: 90px;
-  }
-
-  .tour-progress__steps {
-    display: none;
+    padding: 8px 12px;
   }
 }
 
@@ -469,10 +473,6 @@
     0 20px 25px -5px rgba(0, 0, 0, 0.3),
     0 10px 10px -5px rgba(0, 0, 0, 0.2),
     0 0 0 1px rgba(255, 255, 255, 0.1);
-}
-
-.dark .tour-tooltip__arrow {
-  background: #1f2937;
 }
 
 .dark .tour-tooltip__title {
@@ -502,7 +502,23 @@
 }
 
 .dark .tour-controls {
-  background: rgba(31, 41, 55, 0.95);
+  background: #111827;
+  border-top-color: #374151;
+}
+
+.dark .tour-progress__bar {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dark .tour-progress__step {
+  background: rgba(255, 255, 255, 0.08);
+  color: #9ca3af;
+}
+
+.dark .tour-progress__step--upcoming {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #6b7280;
 }
 
 .dark .tour-controls__btn--secondary {
@@ -548,13 +564,15 @@
   .tour-backdrop,
   .tour-spotlight,
   .tour-tooltip,
-  .tour-tooltip__arrow,
   .tour-progress__fill,
   .tour-controls__btn {
     transition: none;
   }
 
-  .tour-spotlight {
+  /* `tour-waiting-pulse` was missing here, so the one animation that runs
+     indefinitely — on every action-gated step — kept running. */
+  .tour-spotlight,
+  .tour-tooltip__action--waiting {
     animation: none;
   }
 }
@@ -648,34 +666,36 @@
   color: white;
 }
 
-/* Dark mode for tour buttons */
-@media (prefers-color-scheme: dark) {
-  .tour-btn-secondary {
-    background: rgba(139, 92, 246, 0.2);
-    color: #a78bfa;
-    border-color: rgba(139, 92, 246, 0.3);
-  }
+/* Dark mode for tour buttons.
+   Was `@media (prefers-color-scheme: dark)` while the whole rest of this file
+   keys off `.dark` on <html>. That meant these followed the OPERATING SYSTEM
+   while every other piece of tour chrome followed the in-app theme toggle, so
+   the two disagreed whenever the user flipped one and not the other. */
+.dark .tour-btn-secondary {
+  background: rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
+  border-color: rgba(139, 92, 246, 0.3);
+}
 
-  .tour-btn-secondary:hover {
-    background: rgba(139, 92, 246, 0.3);
-    border-color: rgba(139, 92, 246, 0.4);
-  }
+.dark .tour-btn-secondary:hover {
+  background: rgba(139, 92, 246, 0.3);
+  border-color: rgba(139, 92, 246, 0.4);
+}
 
-  .tour-btn-ghost {
-    color: #9ca3af;
-  }
+.dark .tour-btn-ghost {
+  color: #9ca3af;
+}
 
-  .tour-btn-ghost:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #e5e7eb;
-  }
+.dark .tour-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e5e7eb;
+}
 
-  .tour-btn-icon {
-    background: rgba(139, 92, 246, 0.2);
-    color: #a78bfa;
-  }
+.dark .tour-btn-icon {
+  background: rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
+}
 
-  .tour-btn-icon:hover {
-    background: rgba(139, 92, 246, 0.3);
-  }
+.dark .tour-btn-icon:hover {
+  background: rgba(139, 92, 246, 0.3);
 }

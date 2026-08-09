@@ -49,7 +49,10 @@ export const ProfileScreen: React.FC<Props> = ({ profile, onBack, onOpenThread, 
         <button aria-label="More" className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/45 flex items-center justify-center text-white"><EllipsisVIcon className="w-5 h-5" /></button>
       </div>
 
-      <div className="px-4">
+      {/* Everything below the banner: avatar, Follow/Edit, name + NIP-05, bio,
+          counts and the tab row. The tour's profile step aims here so the
+          spotlight is not simply the whole screen. */}
+      <div data-tour="yakihonne-profile-id" className="px-4">
         {/* avatar + action */}
         <div className="flex items-start justify-between -mt-9">
           <Avatar seed={profile.seed} className="w-20 h-20 ring-4 ring-[var(--yh-bg)] rounded-full" rounded="rounded-full" />

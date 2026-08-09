@@ -6,6 +6,58 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import type { TooltipRect, SpotlightRect } from './types';
 
 /**
+ * Split a selector LIST on its top-level commas, leaving commas that live
+ * inside `[attr="a,b"]` or `:is(a, b)` alone.
+ */
+function splitSelectorList(selector: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let quote: string | null = null;
+  let start = 0;
+
+  for (let i = 0; i < selector.length; i++) {
+    const ch = selector[i];
+    if (quote) {
+      if (ch === quote && selector[i - 1] !== '\\') quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'") quote = ch;
+    else if (ch === '(' || ch === '[') depth++;
+    else if (ch === ')' || ch === ']') depth--;
+    else if (ch === ',' && depth === 0) {
+      parts.push(selector.slice(start, i));
+      start = i + 1;
+    }
+  }
+  parts.push(selector.slice(start));
+
+  return parts.map((p) => p.trim()).filter(Boolean);
+}
+
+/**
+ * Resolve a step's target, honouring the ORDER the step author wrote.
+ *
+ * `document.querySelector('a, b')` returns whichever match comes first in the
+ * DOCUMENT, not the first selector that matches. Steps are written as
+ * `'[data-tour="wisp-login"], .wisp-simulator'` meaning "the anchor, and the
+ * whole app only as a fallback" — but the root is an ANCESTOR of the anchor, so
+ * it always came first in document order and always won. Those steps
+ * spotlighted the entire client instead of the control they were describing.
+ */
+function resolveTarget(selector: string): Element | null {
+  const parts = splitSelectorList(selector);
+  for (const part of parts) {
+    try {
+      const el = document.querySelector(part);
+      if (el) return el;
+    } catch {
+      // A malformed alternative shouldn't kill the ones after it.
+    }
+  }
+  return null;
+}
+
+/**
  * Mobile sims render inside a phone bezel with empty space either side. Knowing
  * where that bezel is lets the tooltip stay off the phone screen, so it never
  * covers the surface the step is talking about (or the field you must type in).
@@ -15,11 +67,80 @@ function readFrameRect(element: Element): DOMRect | null {
   return frame ? frame.getBoundingClientRect() : null;
 }
 
+/**
+ * Above this share of the viewport a "target" is not a control any more — it is
+ * the whole client. Steps like `target: '.damus-simulator'` (25 of the 79 tour
+ * steps) hit this. Cutting a spotlight hole that big removes the entire
+ * backdrop, so nothing is dimmed, the ring is drawn off-screen, and the card has
+ * nowhere to stand. Such steps are treated as intro/summary cards instead:
+ * uniform dim, no ring, card centred on purpose.
+ */
+const WHOLE_APP_VIEWPORT_SHARE = 0.7;
+
+/**
+ * When the "target" is the whole client its rect says nothing about what has to
+ * stay reachable — and several of those steps are action-gated ("Login with a
+ * test account to continue"), so parking a card in the middle of the app hides
+ * the very control that unblocks the tour. Fall back to the bounding box of the
+ * target's VISIBLE interactive descendants: that is what a step can plausibly
+ * ask you to tap, and the card is placed clear of it.
+ *
+ * Returns null when there is nothing interactive, or when the controls are
+ * spread so widely that no placement could clear them anyway.
+ */
+function interactiveBox(root: Element, vw: number, vh: number) {
+  const nodes = root.querySelectorAll<HTMLElement>(
+    'button, a[href], input, textarea, select, [role="button"], [role="link"], [role="tab"]'
+  );
+
+  let top = Infinity, left = Infinity, right = -Infinity, bottom = -Infinity;
+  let found = 0;
+
+  // Bounded: a feed can hold hundreds of buttons and this runs on every
+  // recompute for whole-app steps.
+  const limit = Math.min(nodes.length, 60);
+  for (let i = 0; i < limit; i++) {
+    const r = nodes[i].getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0) continue;
+    if (r.bottom <= 0 || r.top >= vh || r.right <= 0 || r.left >= vw) continue;
+    top = Math.min(top, r.top);
+    left = Math.min(left, r.left);
+    right = Math.max(right, r.right);
+    bottom = Math.max(bottom, r.bottom);
+    found++;
+  }
+
+  if (!found) return null;
+  // Still effectively the whole screen — no placement clears it, so let the
+  // caller treat the step as a plain intro card.
+  if ((right - left) * (bottom - top) >= vw * vh * 0.85) return null;
+
+  return { top, left, right, bottom };
+}
+
+interface Geometry { top: number; left: number; width: number; height: number }
+
+const geom = (r: DOMRect): Geometry => ({ top: r.top, left: r.left, width: r.width, height: r.height });
+
+/** Sub-pixel jitter from scroll/zoom must not count as a change. */
+function sameGeometry(a: Geometry | null, b: Geometry | null): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return (
+    Math.abs(a.top - b.top) < 0.5 &&
+    Math.abs(a.left - b.left) < 0.5 &&
+    Math.abs(a.width - b.width) < 0.5 &&
+    Math.abs(a.height - b.height) < 0.5
+  );
+}
+
 interface UseTourElementResult {
   targetRect: DOMRect | null;
   spotlightRect: SpotlightRect | null;
   tooltipRect: TooltipRect | null;
   targetCenter: { x: number; y: number } | null;
+  /** Target is really the whole client — render an intro card, not a spotlight. */
+  coversViewport: boolean;
   scrollToElement: () => void;
 }
 
@@ -38,35 +159,84 @@ export function useTourElement(
   const [frameRect, setFrameRect] = useState<DOMRect | null>(null);
   const observerRef = useRef<MutationObserver | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const observedElementRef = useRef<Element | null>(null);
+  // Mirrors of the last committed geometry. getBoundingClientRect() hands back a
+  // NEW object every call, so setting state unconditionally re-rendered on every
+  // observed mutation — and the overlay's own writes are observed mutations.
+  const lastRectRef = useRef<Geometry | null>(null);
+  const lastFrameRef = useRef<Geometry | null>(null);
   // Browser timer handle — `NodeJS.Timeout` only resolves with @types/node, which
   // this (browser-only) project does not depend on.
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryCountRef = useRef<number>(0);
+  const rafRef = useRef<number | null>(null);
 
   const calculateRects = useCallback(() => {
     if (typeof window === 'undefined') return;
-    
+
     // Guard against empty selectors
     if (!targetSelector || targetSelector.trim() === '') {
       setTargetRect(null);
       return;
     }
-    
-    const element = document.querySelector(targetSelector);
+
+    const element = resolveTarget(targetSelector);
     if (!element) {
-      setTargetRect(null);
-      setFrameRect(null);
+      if (lastRectRef.current !== null) {
+        lastRectRef.current = null;
+        setTargetRect(null);
+      }
+      if (lastFrameRef.current !== null) {
+        lastFrameRef.current = null;
+        setFrameRect(null);
+      }
       return;
     }
 
     const rect = element.getBoundingClientRect();
-    setTargetRect(rect);
-    setFrameRect(readFrameRect(element));
+    const next = geom(rect);
+    if (!sameGeometry(lastRectRef.current, next)) {
+      lastRectRef.current = next;
+      setTargetRect(rect);
+    }
+
+    const frame = readFrameRect(element);
+    const nextFrame = frame ? geom(frame) : null;
+    if (!sameGeometry(lastFrameRef.current, nextFrame)) {
+      lastFrameRef.current = nextFrame;
+      setFrameRect(frame);
+    }
+
+    // Keep the ResizeObserver pointed at whatever is currently resolved: a
+    // command-driven step swaps the target mid-step (login screen → feed).
+    if (resizeObserverRef.current && observedElementRef.current !== element) {
+      if (observedElementRef.current) {
+        resizeObserverRef.current.unobserve(observedElementRef.current);
+      }
+      resizeObserverRef.current.observe(element);
+      observedElementRef.current = element;
+    }
   }, [targetSelector]);
+
+  /**
+   * Coalesce every observer/scroll/resize callback into one measurement per
+   * frame. Measuring straight inside a ResizeObserver callback made that
+   * callback change layout, which the browser reports as
+   * "ResizeObserver loop completed with undelivered notifications" — a real
+   * console error, and a sign the tour was re-measuring several times a frame
+   * while the simulators animate.
+   */
+  const scheduleRecalc = useCallback(() => {
+    if (typeof window === 'undefined' || rafRef.current !== null) return;
+    rafRef.current = window.requestAnimationFrame(() => {
+      rafRef.current = null;
+      calculateRects();
+    });
+  }, [calculateRects]);
 
   const calculateRectsWithRetry = useCallback(() => {
     if (typeof window === 'undefined') return;
-    
+
     // Guard against empty selectors
     if (!targetSelector || targetSelector.trim() === '') {
       setTargetRect(null);
@@ -78,21 +248,19 @@ export function useTourElement(
       clearTimeout(retryTimeoutRef.current);
       retryTimeoutRef.current = null;
     }
-    
+
     retryCountRef.current = 0;
-    
+
     const attemptFind = () => {
-      const element = document.querySelector(targetSelector);
-      
+      const element = resolveTarget(targetSelector);
+
       if (element) {
         // Element found - calculate rects and reset retry count
-        const rect = element.getBoundingClientRect();
-        setTargetRect(rect);
-        setFrameRect(readFrameRect(element));
+        calculateRects();
         retryCountRef.current = 0;
         return true;
       }
-      
+
       // Element not found - retry with delay if we haven't exceeded max retries
       if (retryCountRef.current < 10) {
         retryCountRef.current++;
@@ -100,37 +268,51 @@ export function useTourElement(
         retryTimeoutRef.current = setTimeout(attemptFind, delay);
       } else {
         // Target genuinely absent after all retries — clear the rect so the
-        // overlay degrades to a centered tooltip instead of highlighting a
-        // stale/mismatched element (or showing a blank dark screen).
+        // overlay degrades to a centered tooltip over a SOFT dim (see
+        // TourOverlay) instead of highlighting a stale/mismatched element.
+        // The MutationObserver below stays armed, so a target that mounts even
+        // later still gets picked up.
         setTargetRect(null);
         setFrameRect(null);
       }
 
       return false;
     };
-    
+
     attemptFind();
-  }, [targetSelector]);
+  }, [targetSelector, calculateRects]);
 
   const scrollToElement = useCallback(() => {
     if (typeof window === 'undefined') return;
-    
+
     // Guard against empty selectors
     if (!targetSelector || targetSelector.trim() === '') return;
-    
-    const element = document.querySelector(targetSelector);
+
+    const element = resolveTarget(targetSelector);
     if (!element) return;
+
+    const rect = element.getBoundingClientRect();
+    // Nothing to scroll to when the target already fills (or exceeds) the
+    // viewport: `block: 'center'` on a full-height feed yanked the client's
+    // timeline ~2400px for no visual gain. Same when it is already fully
+    // visible — scrolling then only makes the spotlight chase a moving target.
+    const fullyVisible =
+      rect.top >= 0 && rect.bottom <= window.innerHeight &&
+      rect.left >= 0 && rect.right <= window.innerWidth;
+    if (fullyVisible || rect.height >= window.innerHeight) return;
 
     element.scrollIntoView({
       behavior: 'smooth',
       block: 'center',
-      inline: 'center',
+      // NOT `inline: 'center'`: horizontal centring dragged Primal's three-column
+      // layout sideways whenever a step pointed at the left nav.
+      inline: 'nearest',
     });
   }, [targetSelector]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
     // Guard against empty selectors
     if (!targetSelector || targetSelector.trim() === '') {
       setTargetRect(null);
@@ -140,38 +322,46 @@ export function useTourElement(
     // Clear the previous step's rect immediately so we never spotlight a stale
     // element while the new target is being resolved.
     setTargetRect(null);
+    observedElementRef.current = null;
+    lastRectRef.current = null;
+    lastFrameRef.current = null;
 
     // Initial calculation with retry - allows React time to render new elements
     calculateRectsWithRetry();
 
     // Set up observers for ongoing updates
-    observerRef.current = new MutationObserver(() => {
-      calculateRects();
+    observerRef.current = new MutationObserver((records) => {
+      // The overlay is portaled into <body>, so its OWN writes (the card's
+      // inline position, the progress fill width, the visible class) come back
+      // through this observer. Reacting to them is a render loop — React #185,
+      // a white screen. Only react to mutations in the page under the tour.
+      for (const record of records) {
+        const node = record.target;
+        const el = node.nodeType === 1 ? (node as Element) : node.parentElement;
+        if (el && el.closest('.tour-overlay')) continue;
+        scheduleRecalc();
+        return;
+      }
     });
 
     resizeObserverRef.current = new ResizeObserver(() => {
-      calculateRects();
+      scheduleRecalc();
     });
 
-    // Set up observers after a short delay to let the element appear
-    const observerSetupTimeout = setTimeout(() => {
-      const element = document.querySelector(targetSelector);
-      if (element && observerRef.current) {
-        observerRef.current.observe(document.body, {
-          childList: true,
-          subtree: true,
-          attributes: true,
-          attributeFilter: ['class', 'style'],
-        });
-        if (resizeObserverRef.current) {
-          resizeObserverRef.current.observe(element);
-        }
-      }
-    }, 100);
+    // Observe unconditionally. This used to be deferred 100ms AND gated on the
+    // element already existing — so for command-driven steps, whose target
+    // mounts 150-2000ms later, the observers were never attached at all and a
+    // step that outran the retry ladder stayed blank until the user moved on.
+    observerRef.current.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'style'],
+    });
 
     // Window events
-    const handleScroll = () => calculateRects();
-    const handleResize = () => calculateRects();
+    const handleScroll = () => scheduleRecalc();
+    const handleResize = () => scheduleRecalc();
 
     window.addEventListener('scroll', handleScroll, true);
     window.addEventListener('resize', handleResize);
@@ -180,133 +370,282 @@ export function useTourElement(
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
       }
-      clearTimeout(observerSetupTimeout);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
       observerRef.current?.disconnect();
       resizeObserverRef.current?.disconnect();
+      observedElementRef.current = null;
       window.removeEventListener('scroll', handleScroll, true);
       window.removeEventListener('resize', handleResize);
     };
-  }, [targetSelector, calculateRects, calculateRectsWithRetry]);
+  }, [targetSelector, calculateRects, calculateRectsWithRetry, scheduleRecalc]);
+
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 1024;
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 768;
+
+  const coversViewport = targetRect
+    ? (targetRect.width * targetRect.height) / (vw * vh) >= WHOLE_APP_VIEWPORT_SHARE
+    : false;
 
   // The overlay is position:fixed, so the spotlight lives in VIEWPORT
   // coordinates. getBoundingClientRect() is already viewport-relative — adding
   // window.scroll* double-counts the scroll, which pushed the spotlight (and the
   // backdrop's clip-path hole) off the target and left an undimmed band on top.
-  const spotlightRect: SpotlightRect | null = targetRect
-    ? {
-        top: targetRect.top,
-        left: targetRect.left,
-        width: targetRect.width,
-        height: targetRect.height,
-        padding,
-      }
-    : null;
+  const spotlightRect: SpotlightRect | null =
+    targetRect && !coversViewport
+      ? {
+          top: targetRect.top,
+          left: targetRect.left,
+          width: targetRect.width,
+          height: targetRect.height,
+          padding,
+        }
+      : null;
 
   const tooltipRect: TooltipRect | null = (() => {
-    const tooltipWidth = measuredSize?.width || 320;
-    // Fallback only covers the first paint, before the tooltip reports its size.
-    const tooltipHeight = measuredSize?.height || 220;
-    const offset = 16;
     const margin = 16;
-    // The controls bar is pinned to the bottom of the overlay; keep clear of it.
-    const controlsReserve = 96;
+    const offset = 16;
+    // Viewport-aware fallback so the very first paint (before the card reports
+    // its size) doesn't overflow a phone-width screen.
+    const tooltipWidth = measuredSize?.width || Math.min(320, vw - margin * 2);
+    const tooltipHeight = measuredSize?.height || 220;
 
-    const vw = typeof window !== 'undefined' ? window.innerWidth : 1024;
-    const vh = typeof window !== 'undefined' ? window.innerHeight : 768;
+    const fullHeight = Math.max(180, vh - margin * 2);
+    const centred = {
+      top: Math.max(margin, Math.round(vh / 2 - tooltipHeight / 2)),
+      left: Math.max(margin, Math.round(vw / 2 - tooltipWidth / 2)),
+      width: tooltipWidth,
+      height: tooltipHeight,
+      maxHeight: fullHeight,
+    };
 
-    // No resolvable target (missing selector) — center the card in the viewport
-    // instead of returning null, which used to hide the tooltip entirely and
-    // strand the user on a blank dark screen.
-    if (!targetRect) {
-      return {
-        top: Math.max(margin, Math.round(vh / 2 - tooltipHeight / 2)),
-        left: Math.max(margin, Math.round(vw / 2 - tooltipWidth / 2)),
-        width: tooltipWidth,
-        height: tooltipHeight,
+    // No resolvable target: centre the card deliberately. Returning null used to
+    // hide the tooltip entirely and strand the user on a blank dark screen.
+    if (!targetRect) return centred;
+
+    // Does the target leave room for a card beside it at all? Deliberately a
+    // GEOMETRIC test with a constant, never "did a card of the current height
+    // fit" — the latter depends on the height we are about to choose, and a
+    // decision that depends on its own outcome makes the card flicker.
+    const MIN_CARD_HEIGHT = 240;
+    const roomAboveRaw = targetRect.top - padding - margin;
+    const roomBelowRaw = vh - margin - (targetRect.bottom + padding);
+    // True for the 25 steps aimed at a whole client, and for web clients whose
+    // feed column fills the page: there is no free band, so the card has to work
+    // INSIDE the client's own rect and aim to clear its controls instead.
+    const targetDominates = Math.max(roomAboveRaw, roomBelowRaw) < MIN_CARD_HEIGHT;
+
+    /**
+     * Host chrome the card must not sit on — today the mandated SIMULATION
+     * banner, which outranks the card in z-order, so an overlap rendered as two
+     * texts printed over each other. Advisory for side placements: if no
+     * placement can clear both these and the target, clearing the target wins.
+     */
+    const keepClear =
+      typeof document !== 'undefined'
+        ? Array.from(document.querySelectorAll('[data-tour-keep-clear]'))
+            .map((el) => el.getBoundingClientRect())
+            .filter((r) => r.width > 0 && r.height > 0)
+            .map((r) => ({ top: r.top - 8, left: r.left - 8, right: r.right + 8, bottom: r.bottom + 8 }))
+        : [];
+
+    // Vertical band the card may occupy.
+    //
+    // Chrome pinned to the TOP of the viewport pushes the band down for EVERY
+    // step, not just whole-client ones: the docking fallback ignores horizontal
+    // placement, so a narrow target low on the screen would otherwise dock the
+    // card at y=16 — straight under the banner. That is exactly what happened
+    // the first time the Amethyst login anchor was narrowed.
+    // "Near the top" is a quarter of the viewport, not a few pixels: the host's
+    // banner sits BELOW its own top bar (measured at y=45 on a 812px phone), so
+    // a tight threshold matched nothing and the card docked under it anyway.
+    const chromeBottom = keepClear.reduce(
+      (acc, b) => (b.top < vh * 0.25 ? Math.max(acc, b.bottom) : acc),
+      0
+    );
+    const bandTop = Math.max(
+      margin,
+      chromeBottom,
+      targetDominates ? targetRect.top + 8 : 0
+    );
+    const bandBottom = targetDominates ? Math.min(vh - margin, targetRect.bottom - 8) : vh - margin;
+
+    const maxLeft = vw - tooltipWidth - margin;
+    const maxTop = bandBottom - tooltipHeight;
+    // Nothing fits anywhere on a viewport this small — centring is the least-bad
+    // answer and every branch below would clamp to it regardless.
+    if (maxLeft < margin && maxTop < margin) return centred;
+
+    // The padded target: the card must clear the highlight, not just the element.
+    // For whole-client targets the highlight is meaningless, so clear the
+    // controls instead — otherwise an action-gated step covers the button it is
+    // telling you to press.
+    let t = {
+      top: targetRect.top - padding,
+      left: targetRect.left - padding,
+      right: targetRect.right + padding,
+      bottom: targetRect.bottom + padding,
+    };
+
+    if (targetDominates) {
+      const el = resolveTarget(targetSelector);
+      const box = el ? interactiveBox(el, vw, vh) : null;
+      // Genuinely nothing to work around (welcome/outro screens): a centred
+      // intro card is the honest presentation.
+      if (!box) return centred;
+      t = {
+        top: box.top - padding,
+        left: box.left - padding,
+        right: box.right + padding,
+        bottom: box.bottom + padding,
       };
     }
 
-    let top = 0;
-    let left = 0;
+    // Height ceiling, computed BEFORE any placement is chosen and only from
+    // card-independent quantities (the target box and the band). That
+    // independence is the whole point: a ceiling derived from the card's own
+    // measured height changes the height, which changes which placement wins,
+    // which changes the ceiling — the card flickers between two sizes forever.
+    const roomAbove = t.top - bandTop;
+    const roomBelow = bandBottom - t.bottom;
+    const maxHeight = Math.max(
+      180,
+      Math.min(bandBottom - bandTop, Math.max(roomAbove, roomBelow) - offset)
+    );
 
-    switch (position) {
-      case 'top':
-        top = targetRect.top - tooltipHeight - offset;
-        left = targetRect.left + targetRect.width / 2 - tooltipWidth / 2;
-        break;
-      case 'bottom':
-        top = targetRect.bottom + offset;
-        left = targetRect.left + targetRect.width / 2 - tooltipWidth / 2;
-        break;
-      case 'left':
-        top = targetRect.top + targetRect.height / 2 - tooltipHeight / 2;
-        left = targetRect.left - tooltipWidth - offset;
-        break;
-      case 'right':
-        top = targetRect.top + targetRect.height / 2 - tooltipHeight / 2;
-        left = targetRect.right + offset;
-        break;
-      case 'center':
-      default:
-        top = targetRect.top + targetRect.height / 2 - tooltipHeight / 2;
-        left = targetRect.left + targetRect.width / 2 - tooltipWidth / 2;
-        break;
-    }
+    const clampLeft = (l: number) => Math.max(margin, Math.min(l, Math.max(margin, maxLeft)));
+    const clampTop = (tp: number) => Math.max(bandTop, Math.min(tp, Math.max(bandTop, maxTop)));
 
-    const maxLeft = vw - tooltipWidth - margin;
-    const maxTop = vh - tooltipHeight - controlsReserve;
+    // Align on whatever we are actually avoiding (`t`), which is the interactive
+    // box rather than the element rect on whole-client steps.
+    const alignedLeft = clampLeft((t.left + t.right) / 2 - tooltipWidth / 2);
+    const alignedTop = clampTop((t.top + t.bottom) / 2 - tooltipHeight / 2);
 
-    // Doesn't fit where the step asked for it? Move the card rather than clamp
-    // it — clamping slid it back over the very element it points at (e.g. the
-    // composer's Post button, or a whole phone screen).
-    if (top < margin || top > maxTop) {
-      const below = targetRect.bottom + offset;
-      const above = targetRect.top - tooltipHeight - offset;
+    const overlaps = (top: number, left: number, box: { top: number; left: number; right: number; bottom: number }) =>
+      left < box.right && left + tooltipWidth > box.left &&
+      top < box.bottom && top + tooltipHeight > box.top;
 
-      if (below <= maxTop) {
-        top = below;
-      } else if (above >= margin) {
-        top = above;
-      } else {
-        // Target is taller than the free space above AND below it (a phone
-        // frame fills most of the viewport) — step aside horizontally instead
-        // of covering the thing being explained.
-        const toTheRight = targetRect.right + offset;
-        const toTheLeft = targetRect.left - tooltipWidth - offset;
-        if (toTheRight <= maxLeft) {
-          left = toTheRight;
-        } else if (toTheLeft >= margin) {
-          left = toTheLeft;
+    /** Does this placement sit clear of the padded target? */
+    const clears = (top: number, left: number) => !overlaps(top, left, t);
+
+    const clearsChrome = (top: number, left: number) =>
+      keepClear.every((box) => !overlaps(top, left, box));
+
+    const candidates: Record<string, { top: number; left: number } | null> = {
+      top: t.top - offset - tooltipHeight >= bandTop
+        ? { top: t.top - offset - tooltipHeight, left: alignedLeft }
+        : null,
+      bottom: t.bottom + offset + tooltipHeight <= bandBottom
+        ? { top: t.bottom + offset, left: alignedLeft }
+        : null,
+      left: t.left - offset - tooltipWidth >= margin
+        ? { top: alignedTop, left: t.left - offset - tooltipWidth }
+        : null,
+      right: t.right + offset + tooltipWidth <= vw - margin
+        ? { top: alignedTop, left: t.right + offset }
+        : null,
+    };
+
+    // Ask for what the step wanted first, then its opposite, then the rest.
+    const opposite: Record<string, string> = {
+      top: 'bottom', bottom: 'top', left: 'right', right: 'left',
+    };
+    const preferred = opposite[position] ? position : 'bottom';
+    const order = [
+      preferred,
+      opposite[preferred],
+      ...['bottom', 'top', 'right', 'left'].filter(
+        (p) => p !== preferred && p !== opposite[preferred]
+      ),
+    ];
+
+    // Inside a phone frame, getting out of the frame beats every in-frame
+    // placement: it is the only way to leave the reproduction fully visible.
+    if (frameRect) {
+      const besideFrame = [frameRect.right + offset, frameRect.left - tooltipWidth - offset];
+      const besideTop = Math.max(margin, Math.min(alignedTop, vh - margin - Math.min(tooltipHeight, fullHeight)));
+      // Same two-pass preference as below: a side that also clears the host
+      // chrome beats one that merely fits.
+      const ordered = [
+        ...besideFrame.filter((l) => clearsChrome(besideTop, l)),
+        ...besideFrame.filter((l) => !clearsChrome(besideTop, l)),
+      ];
+      for (const left of ordered) {
+        if (left >= margin && left <= maxLeft) {
+          // Beside the device the card has the whole viewport height, so the
+          // band-derived ceiling above does not apply — using it squeezed a
+          // desktop card down to its title. Safe to differ: this branch is
+          // chosen on WIDTH alone, so a taller card cannot flip the decision.
+          return {
+            top: besideTop,
+            left: Math.round(left),
+            width: tooltipWidth,
+            height: tooltipHeight,
+            maxHeight: fullHeight,
+          };
         }
-        top = targetRect.top + targetRect.height / 2 - tooltipHeight / 2;
       }
     }
 
-    // Inside a phone frame, get out of the frame entirely when there is room
-    // beside it. 'center' steps are meant to sit over the app, so leave those.
-    if (frameRect && position !== 'center') {
-      const overlapsFrame =
-        left < frameRect.right &&
-        left + tooltipWidth > frameRect.left &&
-        top < frameRect.bottom &&
-        top + tooltipHeight > frameRect.top;
+    /**
+     * Vertical room each placement leaves the card. Card-INDEPENDENT (derived
+     * from the target box and the band only), so using it to rank placements
+     * cannot feed back into the card's height. A side placement gets the whole
+     * band because it is chosen on width.
+     */
+    const bandFor: Record<string, number> = {
+      top: t.top - bandTop,
+      bottom: bandBottom - t.bottom,
+      left: bandBottom - bandTop,
+      right: bandBottom - bandTop,
+    };
+    // Below this a card is title-plus-buttons with the copy scrolled away.
+    const LEGIBLE = 240;
 
-      if (overlapsFrame) {
-        const toTheRight = frameRect.right + offset;
-        const toTheLeft = frameRect.left - tooltipWidth - offset;
-        if (toTheRight <= maxLeft) {
-          left = toTheRight;
-        } else if (toTheLeft >= margin) {
-          left = toTheLeft;
-        }
+    // Three passes, loosening one constraint at a time: clear the host chrome
+    // AND leave room to read; then just clear the chrome; then just clear the
+    // target. Without the first pass the author's `position` won even when it
+    // squeezed the card to a sliver — Snort's timeline step sat in a 174px band
+    // above a note while the whole right-hand column stood empty.
+    for (const pass of [0, 1, 2]) {
+      for (const name of order) {
+        const c = candidates[name];
+        if (!c || !clears(c.top, c.left)) continue;
+        if (pass < 2 && !clearsChrome(c.top, c.left)) continue;
+        if (pass === 0 && bandFor[name] < LEGIBLE) continue;
+        return {
+          top: Math.round(c.top),
+          left: Math.round(c.left),
+          width: tooltipWidth,
+          height: tooltipHeight,
+          // The ceiling belongs to the placement that won, not to the roomiest
+          // one: a side placement gets the whole band, so capping it with the
+          // above/below figure shrank a desktop card for no reason.
+          maxHeight: Math.max(180, Math.min(fullHeight, bandFor[name] - offset)),
+        };
       }
     }
+
+    // Nothing clears the target — it fills the screen with controls. Dock the
+    // card to the viewport edge with more room so the target stays as visible as
+    // it can. The old code fell through to `top = target centre`, i.e. it parked
+    // the card squarely on the thing the step was pointing at: the single
+    // biggest source of "the tour covers the simulator".
+    //
+    // Deliberately NOT capping the height from here. Feeding a cap back into the
+    // placement changes the measured height, which changes which branch wins,
+    // which changes the cap — the card would flicker between two sizes forever.
+    // `.tour-tooltip` caps itself in CSS instead, and its body scrolls.
+    const dockBelow = roomBelow >= roomAbove;
 
     return {
-      top: Math.max(margin, Math.min(top, Math.max(margin, maxTop))),
-      left: Math.max(margin, Math.min(left, maxLeft)),
+      top: Math.round(dockBelow ? Math.max(bandTop, maxTop) : bandTop),
+      left: clampLeft(alignedLeft),
       width: tooltipWidth,
       height: tooltipHeight,
+      maxHeight,
     };
   })();
 
@@ -323,6 +662,7 @@ export function useTourElement(
     spotlightRect,
     tooltipRect,
     targetCenter,
+    coversViewport,
     scrollToElement,
   };
 }

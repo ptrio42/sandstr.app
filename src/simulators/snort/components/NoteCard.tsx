@@ -124,7 +124,10 @@ export function NoteCard({
   const zapTotal = note.zapAmount + (zapped ? 50 : 0);
 
   return (
-    <div className={`snort-note ${className}`}>
+    // Only the note the timeline marks as the tour target gets the anchor, so
+    // the feed step spotlights ONE card instead of the whole column — the same
+    // card the interactions step already uses.
+    <div data-tour={tourTarget ? 'snort-note' : undefined} className={`snort-note ${className}`}>
       {repostedByName && (
         <div
           className="flex items-center gap-1 px-3 py-2 text-base font-semibold"

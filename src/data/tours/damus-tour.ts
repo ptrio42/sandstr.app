@@ -16,7 +16,10 @@ const damusTourSteps: TourStep[] = [
   },
   {
     id: 'damus-login',
-    target: '.damus-login-screen, [data-tour="damus-login"]',
+    // Was the whole login SCREEN (the `.damus-login-screen` alternative does not
+    // exist anywhere, so it fell through to the screen root). Point at the CTA
+    // band instead — the only part of the screen a visitor acts on.
+    target: '[data-tour="damus-auth-actions"], [data-tour="damus-login"]',
     title: 'Your Keys Are Your Identity',
     content: 'On Nostr, your private key (nsec) is your password. Never share it! Damus can generate one for you, or you can import an existing key. No email or phone number needed.',
     position: 'bottom',
@@ -25,7 +28,9 @@ const damusTourSteps: TourStep[] = [
   },
   {
     id: 'damus-home',
-    target: '.damus-home-screen, [data-tour="damus-home"]',
+    // Was the whole feed root. The copy is about ONE note's counters, so point
+    // at the first card; `.damus-home-screen` never existed.
+    target: '[data-tour="damus-note"], [data-tour="damus-home"]',
     title: 'Your Home Feed',
     content: 'This is your timeline showing posts from people you follow. The feed updates in real-time from relays. You can see likes, replies, and reposts count on each note.',
     position: 'top',
@@ -52,7 +57,9 @@ const damusTourSteps: TourStep[] = [
   },
   {
     id: 'damus-profile',
-    target: '.damus-profile-header, [data-tour="damus-profile"]',
+    // `.damus-profile-header` was the class the author wanted and never wrote;
+    // this is that block — name, NIP-05, npub, bio, counts.
+    target: '[data-tour="damus-profile-identity"], [data-tour="damus-profile"]',
     title: 'Your Profile',
     content: 'View and edit your profile here. Add a display name, bio, profile picture, and banner. You can also see your NIP-05 identifier (like an email for Nostr) if you have one.',
     position: 'bottom',
@@ -61,7 +68,9 @@ const damusTourSteps: TourStep[] = [
   },
   {
     id: 'damus-follow',
-    target: '.damus-follow-btn, [data-tour="damus-follow"]',
+    // `.damus-follow-btn` never existed; the anchor is right, and the step now
+    // opens someone else's profile so it resolves to the Follow pill.
+    target: '[data-tour="damus-follow"]',
     title: 'Following Users',
     content: 'Find interesting people by browsing your network. When you follow someone, their posts appear in your feed. Your follows are stored in your account and synced across all Nostr clients.',
     position: 'left',
@@ -70,7 +79,7 @@ const damusTourSteps: TourStep[] = [
   },
   {
     id: 'damus-interactions',
-    target: '.damus-note-actions, [data-tour="damus-interactions"]',
+    target: '[data-tour="damus-interactions"]',
     title: 'Interact with Posts',
     content: 'Engage with posts using: Reply (respond publicly), Repost (share with your followers), Like (show appreciation), or Zap (send Bitcoin sats as a tip). Zaps are a unique Nostr feature!',
     position: 'top',
@@ -79,10 +88,12 @@ const damusTourSteps: TourStep[] = [
   },
   {
     id: 'damus-settings',
-    target: '.damus-settings-screen, [data-tour="damus-settings"]',
+    // The Account group — keys, backup, the things the copy names — rather than
+    // the whole settings screen.
+    target: '[data-tour="damus-settings-account"], [data-tour="damus-settings"]',
     title: 'Settings & Security',
     content: 'Manage your account, backup your keys, adjust notification preferences, and configure the app. Remember to backup your private key securely - if you lose it, you lose access to your account!',
-    position: 'center',
+    position: 'bottom',
     allowClickThrough: true,
     spotlightPadding: 0,
   },

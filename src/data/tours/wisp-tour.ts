@@ -28,7 +28,8 @@ const wispTourSteps: TourStep[] = [
   },
   {
     id: 'wisp-feed',
-    target: '[data-tour="wisp-feed"]',
+    // The top post card, not the whole feed root.
+    target: '[data-tour="wisp-post-card"], [data-tour="wisp-feed"]',
     title: 'Your feed',
     content:
       'Flat, dense cards on near-black. The pills up top show how many people are online and how many relays you are connected to — Wisp dials relays per author (the outbox model), so the number is big on purpose.',
@@ -77,7 +78,8 @@ const wispTourSteps: TourStep[] = [
   },
   {
     id: 'wisp-wallet',
-    target: '[data-tour="wisp-wallet"], .wisp-simulator',
+    // The Send/Receive row rather than the whole wallet screen.
+    target: '[data-tour="wisp-wallet-actions"], [data-tour="wisp-wallet"]',
     title: 'Built-in wallet',
     content:
       'A non-custodial Spark wallet via the Breez SDK, secured by your Nostr key — balance in sats, a Lightning address, and one-tap Send/Receive. Wisp never holds user funds.',
@@ -87,11 +89,15 @@ const wispTourSteps: TourStep[] = [
   },
   {
     id: 'wisp-settings',
-    target: '.wisp-simulator',
+    // Was `.wisp-simulator` — the whole client. Index 8 runs `{ openSettings }`,
+    // which lands on the Interface screen, so aim at the themes row the copy
+    // opens with. The Interface screen stays as a fallback, but it is itself
+    // full-height, hence a last resort rather than the target.
+    target: '[data-tour="wisp-set-themes"], [data-tour="wisp-set-interface"]',
     title: 'Interface & the long tail',
     content:
       'Settings expand inline in the drawer: 15 color themes, an accent picker, proof-of-work difficulty, an on-device spam filter, relay health with outbox coverage — and a social-graph visualizer.',
-    position: 'center',
+    position: 'bottom',
     allowClickThrough: true,
     spotlightPadding: 8,
   },

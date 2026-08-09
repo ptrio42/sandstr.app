@@ -98,7 +98,12 @@ export function ChatListScreen({ onChatSelect }: ChatListScreenProps) {
                 className="w-12 h-12 rounded-full bg-gray-200"
               />
               {chat.isEncrypted && (
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                // Only the first row is anchored, matching `keychat-chat-item`
+                // above, so the encryption step rings ONE badge.
+                <div
+                  data-tour={index === 0 ? 'keychat-chat-lock' : undefined}
+                  className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center"
+                >
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>

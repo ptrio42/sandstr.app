@@ -162,7 +162,7 @@ export function LoginScreen({ onLogin, users }: LoginScreenProps) {
         {/* NIP-07 CTA. A plain AsyncButton (→ white pill) wrapping a
             `rounded-full bg-warning p-3 text-white` badge holding the key
             glyph: an #ff8800 circle inside a white pill. [REC ✓] */}
-        <button type="button" className="snort-btn" onClick={enterDemo}>
+        <button data-tour="snort-login-extension" type="button" className="snort-btn" onClick={enterDemo}>
           <span
             className="rounded-full p-3 text-white flex items-center justify-center"
             style={{ backgroundColor: 'var(--snort-warning)' }}

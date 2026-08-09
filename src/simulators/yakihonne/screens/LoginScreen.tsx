@@ -41,7 +41,9 @@ export const LoginScreen: React.FC<Props> = ({ onSignIn, onSignUp, onGuest }) =>
 
     <HeroIllustration />
 
-    <div className="shrink-0">
+    {/* The tour's sign-in step points here, not at the whole landing: this
+        block is Log in / Create account / EULA / Continue as a guest. */}
+    <div data-tour="yakihonne-login-actions" className="shrink-0">
       <button type="button" onClick={onSignIn} className="yakihonne-btn-orange w-full py-3 text-[16px] rounded-[10px]">
         Log in
       </button>

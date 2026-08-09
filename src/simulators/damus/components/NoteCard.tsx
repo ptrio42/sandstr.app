@@ -59,6 +59,9 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   return (
     <article
       onClick={onOpenThread}
+      // Repeats on every card; the tour's feed step resolves the first one, which
+      // is the top-of-feed note — the same convention as `damus-interactions`.
+      data-tour="damus-note"
       className="px-4 pt-3 pb-2 border-b border-[var(--damus-separator)] cursor-pointer"
     >
       {/* Repost header */}

@@ -172,8 +172,9 @@ export function WalletScreen({ currentUser }: WalletScreenProps) {
         </div>
       </div>
 
-      {/* Send / Receive */}
-      <div className="mt-6 flex shrink-0 justify-center gap-10">
+      {/* Send / Receive — the tour's wallet step points here rather than at the
+          whole screen; the balance and the Lightning pill stay in view above. */}
+      <div data-tour="wisp-wallet-actions" className="mt-6 flex shrink-0 justify-center gap-10">
         <button
           type="button"
           className="flex flex-col items-center gap-2"
