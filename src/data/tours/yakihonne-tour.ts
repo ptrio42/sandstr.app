@@ -17,7 +17,9 @@ const yakihonneTourSteps: TourStep[] = [
   },
   {
     id: 'yakihonne-login',
-    target: '[data-tour="yakihonne-keys"]',
+    // The CTA block (Log in / Create account / Continue as a guest), not the
+    // whole landing screen. Old anchor kept as a fallback.
+    target: '[data-tour="yakihonne-login-actions"], [data-tour="yakihonne-keys"]',
     title: 'Sign in',
     content: 'Log in with your Nostr keys, a remote signer, or continue as a guest. Your key is your identity — it works across every Nostr app. (Here it is fully simulated with mock keys.)',
     position: 'bottom',
@@ -56,10 +58,12 @@ const yakihonneTourSteps: TourStep[] = [
   },
   {
     id: 'yakihonne-profile',
-    // The profile SCREEN, which this step's viewProfile command opens. The old
-    // target resolved to the app-bar avatar — same name, earlier in the DOM,
-    // and by then hidden behind the profile overlay.
-    target: '[data-tour="yakihonne-profile-screen"]',
+    // Everything under the banner — avatar, Follow/Edit, name + NIP-05, bio,
+    // counts, tab row — rather than the whole profile screen. The screen anchor
+    // stays as a fallback: it is what the FAQ entries target, and an earlier fix
+    // needed it because the plain `yakihonne-profile` name also matches the
+    // app-bar avatar, which sits earlier in the DOM.
+    target: '[data-tour="yakihonne-profile-id"], [data-tour="yakihonne-profile-screen"]',
     title: 'Your profile',
     content: 'Your profile has a NOSTR banner, NIP-05 verification, and tabs for Notes, Articles, Media and more. The account drawer also opens your Yaki-chest dashboard and Relay orbits.',
     position: 'bottom',
@@ -86,14 +90,13 @@ const yakihonneTourSteps: TourStep[] = [
   },
   {
     id: 'yakihonne-settings',
-    // Was `.yakihonne-simulator` — the whole client. Index 8 in the wrapper runs
-    // `{ navigate: 'settings' }`, which mounts SettingsScreen.tsx:59, so this is
-    // the surface the visitor is actually looking at while the step talks about
-    // the wallet, relay orbits and the Yaki chest.
-    target: '[data-tour="yakihonne-settings"]',
+    // Was `.yakihonne-simulator` — the whole client. Index 8 runs
+    // `{ navigate: 'settings' }`, so aim at the Wallets ROW, the first thing the
+    // copy names. Screen anchor kept as a fallback (the FAQ targets it).
+    target: '[data-tour="yakihonne-settings-wallets"], [data-tour="yakihonne-settings"]',
     title: 'Wallet, relays & Yaki chest',
     content: 'YakiHonne bundles a Lightning wallet (Wallet of Satoshi by default), branded "Relay orbits", and a gamified "Yaki chest" that rewards you with XP for being active.',
-    position: 'center',
+    position: 'bottom',
     allowClickThrough: true,
     spotlightPadding: 8,
   },

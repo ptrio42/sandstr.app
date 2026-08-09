@@ -32,7 +32,9 @@ const GithubIcon: IconC = ({ className = 'w-5 h-5' }) => (
 
 type NavDest = 'profile' | 'relays' | 'wallet' | 'notifications' | 'dashboard';
 
-interface Row { label: string; Icon: IconC; dest?: NavDest; trailing?: React.ReactNode; }
+// `tour` is opt-in per row: the tour's settings step needs to point at ONE row
+// (Wallets) rather than the whole list, and the rows are generated from data.
+interface Row { label: string; Icon: IconC; dest?: NavDest; trailing?: React.ReactNode; tour?: string }
 
 interface Props {
   currentUserSeed: string;
@@ -46,7 +48,7 @@ export const SettingsScreen: React.FC<Props> = ({ currentUserSeed, onBack, onNav
     { label: 'Keys', Icon: KeyIcon },
     { label: 'Relay settings 10 / 10', Icon: ServerIcon, dest: 'relays' },
     { label: 'Content moderation', Icon: ModIcon },
-    { label: 'Wallets', Icon: WalletIcon, dest: 'wallet' },
+    { label: 'Wallets', Icon: WalletIcon, dest: 'wallet', tour: 'yakihonne-settings-wallets' },
     { label: 'Customization', Icon: WandIcon },
     { label: 'Notifications', Icon: BellIcon, dest: 'notifications' },
     { label: 'Language preferences', Icon: TranslateIcon },
@@ -70,6 +72,7 @@ export const SettingsScreen: React.FC<Props> = ({ currentUserSeed, onBack, onNav
         {rows.map((r) => (
           <button
             key={r.label}
+            data-tour={r.tour}
             onClick={() => (r.dest ? onNav(r.dest) : onToast(r.label))}
             className="w-full flex items-center gap-4 px-5 py-4 border-b border-[var(--yh-divider)] text-left"
           >
