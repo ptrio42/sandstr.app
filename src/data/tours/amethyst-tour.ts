@@ -16,6 +16,15 @@ const amethystTourSteps: TourStep[] = [
   },
   {
     id: 'amethyst-login',
+    // DELIBERATELY the whole login screen, not the nsec field (which does carry
+    // `data-tour="amethyst-login-key"`). This step is `trigger: 'action'`: it
+    // only advances when you press Login. The placement math clears the TARGET,
+    // so narrowing the target to the key field let the card dock right on top of
+    // the Login button — verified at 375x812 — and the tour could not be
+    // finished. A screen-sized target routes through the interactive-box path
+    // instead, which keeps every control on the screen reachable.
+    // Rule of thumb: never narrow the target of an action-gated step past the
+    // control that satisfies the action.
     target: '[data-tour="amethyst-login"]',
     title: 'Keys: Your Digital Identity',
     content: 'On Nostr, you are identified by cryptographic keys. Amethyst generates these for you or imports existing ones. Your nsec (private key) is your password - guard it carefully! Extensions are the safest option.',

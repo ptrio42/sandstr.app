@@ -437,11 +437,39 @@ export function useTourElement(
     // INSIDE the client's own rect and aim to clear its controls instead.
     const targetDominates = Math.max(roomAboveRaw, roomBelowRaw) < MIN_CARD_HEIGHT;
 
-    // Vertical band the card may occupy. When the target dominates, that band is
-    // the client's own rect, not the viewport: above it sit the host's top bar
-    // and the mandated SIMULATION strip, and docking to `margin` slid the card
-    // straight under them.
-    const bandTop = targetDominates ? Math.max(margin, targetRect.top + 8) : margin;
+    /**
+     * Host chrome the card must not sit on — today the mandated SIMULATION
+     * banner, which outranks the card in z-order, so an overlap rendered as two
+     * texts printed over each other. Advisory for side placements: if no
+     * placement can clear both these and the target, clearing the target wins.
+     */
+    const keepClear =
+      typeof document !== 'undefined'
+        ? Array.from(document.querySelectorAll('[data-tour-keep-clear]'))
+            .map((el) => el.getBoundingClientRect())
+            .filter((r) => r.width > 0 && r.height > 0)
+            .map((r) => ({ top: r.top - 8, left: r.left - 8, right: r.right + 8, bottom: r.bottom + 8 }))
+        : [];
+
+    // Vertical band the card may occupy.
+    //
+    // Chrome pinned to the TOP of the viewport pushes the band down for EVERY
+    // step, not just whole-client ones: the docking fallback ignores horizontal
+    // placement, so a narrow target low on the screen would otherwise dock the
+    // card at y=16 — straight under the banner. That is exactly what happened
+    // the first time the Amethyst login anchor was narrowed.
+    // "Near the top" is a quarter of the viewport, not a few pixels: the host's
+    // banner sits BELOW its own top bar (measured at y=45 on a 812px phone), so
+    // a tight threshold matched nothing and the card docked under it anyway.
+    const chromeBottom = keepClear.reduce(
+      (acc, b) => (b.top < vh * 0.25 ? Math.max(acc, b.bottom) : acc),
+      0
+    );
+    const bandTop = Math.max(
+      margin,
+      chromeBottom,
+      targetDominates ? targetRect.top + 8 : 0
+    );
     const bandBottom = targetDominates ? Math.min(vh - margin, targetRect.bottom - 8) : vh - margin;
 
     const maxLeft = vw - tooltipWidth - margin;
@@ -501,20 +529,6 @@ export function useTourElement(
 
     /** Does this placement sit clear of the padded target? */
     const clears = (top: number, left: number) => !overlaps(top, left, t);
-
-    /**
-     * Host chrome the card must not sit on — today the mandated SIMULATION
-     * banner, which outranks the card in z-order, so an overlap rendered as two
-     * texts printed over each other. Advisory: if no placement can clear both
-     * these and the target, clearing the target wins.
-     */
-    const keepClear =
-      typeof document !== 'undefined'
-        ? Array.from(document.querySelectorAll('[data-tour-keep-clear]'))
-            .map((el) => el.getBoundingClientRect())
-            .filter((r) => r.width > 0 && r.height > 0)
-            .map((r) => ({ top: r.top - 8, left: r.left - 8, right: r.right + 8, bottom: r.bottom + 8 }))
-        : [];
 
     const clearsChrome = (top: number, left: number) =>
       keepClear.every((box) => !overlaps(top, left, box));

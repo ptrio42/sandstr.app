@@ -47,7 +47,14 @@ function Disclaimer({ name, real }: { name: string; real: boolean }) {
  */
 function DisclaimerStrip({ name, real }: { name: string; real: boolean }) {
   return (
-    <div className="relative z-[10003] flex shrink-0 items-center justify-center gap-1.5 border-b border-amber-300/60 bg-amber-50 px-3 py-1 text-[11px] leading-snug text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-300">
+    <div
+      // Same pairing as Disclaimer above: z-index decides who wins the pixels,
+      // `data-tour-keep-clear` stops the two overlapping in the first place.
+      // This is the phone form, so it matters MORE here — a full-bleed client
+      // leaves the card nowhere else to go.
+      data-tour-keep-clear
+      className="relative z-[10003] flex shrink-0 items-center justify-center gap-1.5 border-b border-amber-300/60 bg-amber-50 px-3 py-1 text-[11px] leading-snug text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-300"
+    >
       <Info className="h-3 w-3 shrink-0" />
       <span className="text-center">
         <strong>SIMULATION</strong> · mock data ·{' '}

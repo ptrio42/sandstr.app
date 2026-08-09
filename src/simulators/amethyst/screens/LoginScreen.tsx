@@ -109,7 +109,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           <>
             <div className="h-10 shrink-0" />
 
-            <div className={`${field} flex items-center gap-1 px-3`}>
+            {/* Anchor for FAQ mini-tours that talk about the key field itself.
+                The MAIN tour's login step deliberately does NOT use it — see the
+                note in src/data/tours/amethyst-tour.ts. */}
+            <div data-tour="amethyst-login-key" className={`${field} flex items-center gap-1 px-3`}>
               <button
                 type="button"
                 aria-label="Login with QR Code"
