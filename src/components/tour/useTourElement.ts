@@ -589,14 +589,42 @@ export function useTourElement(
       }
     }
 
-    // Two passes: first insist on clearing the host chrome too, then settle for
-    // clearing just the target.
-    for (const strict of [true, false]) {
+    /**
+     * Vertical room each placement leaves the card. Card-INDEPENDENT (derived
+     * from the target box and the band only), so using it to rank placements
+     * cannot feed back into the card's height. A side placement gets the whole
+     * band because it is chosen on width.
+     */
+    const bandFor: Record<string, number> = {
+      top: t.top - bandTop,
+      bottom: bandBottom - t.bottom,
+      left: bandBottom - bandTop,
+      right: bandBottom - bandTop,
+    };
+    // Below this a card is title-plus-buttons with the copy scrolled away.
+    const LEGIBLE = 240;
+
+    // Three passes, loosening one constraint at a time: clear the host chrome
+    // AND leave room to read; then just clear the chrome; then just clear the
+    // target. Without the first pass the author's `position` won even when it
+    // squeezed the card to a sliver — Snort's timeline step sat in a 174px band
+    // above a note while the whole right-hand column stood empty.
+    for (const pass of [0, 1, 2]) {
       for (const name of order) {
         const c = candidates[name];
         if (!c || !clears(c.top, c.left)) continue;
-        if (strict && !clearsChrome(c.top, c.left)) continue;
-        return { top: Math.round(c.top), left: Math.round(c.left), width: tooltipWidth, height: tooltipHeight, maxHeight };
+        if (pass < 2 && !clearsChrome(c.top, c.left)) continue;
+        if (pass === 0 && bandFor[name] < LEGIBLE) continue;
+        return {
+          top: Math.round(c.top),
+          left: Math.round(c.left),
+          width: tooltipWidth,
+          height: tooltipHeight,
+          // The ceiling belongs to the placement that won, not to the roomiest
+          // one: a side placement gets the whole band, so capping it with the
+          // above/below figure shrank a desktop card for no reason.
+          maxHeight: Math.max(180, Math.min(fullHeight, bandFor[name] - offset)),
+        };
       }
     }
 

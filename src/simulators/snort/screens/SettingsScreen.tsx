@@ -121,6 +121,7 @@ export function SettingsScreen({ currentUser, onOpenRelays }: SettingsScreenProp
             {group.items.map((item) => (
               <button
                 key={item.id}
+                data-tour={item.id === 'preferences' ? 'snort-settings-preferences' : undefined}
                 type="button"
                 className="snort-settings-row"
                 onClick={item.id === 'relays' ? onOpenRelays : undefined}

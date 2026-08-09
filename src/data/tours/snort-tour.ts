@@ -16,7 +16,9 @@ const snortTourSteps: TourStep[] = [
   },
   {
     id: 'snort-login',
-    target: '[data-tour="snort-login"]',
+    // The NIP-07 CTA, not the whole login screen. Screen anchor kept as a
+    // fallback for the states where the extension button is not rendered.
+    target: '[data-tour="snort-login-extension"], [data-tour="snort-login"]',
     title: 'Login Options',
     // Deliberately describes the extension/signer path only. The real client
     // also accepts a pasted nsec, but this simulation never asks for one and
@@ -29,7 +31,9 @@ const snortTourSteps: TourStep[] = [
   },
   {
     id: 'snort-home',
-    target: '.snort-feed, [data-tour="snort-feed"]',
+    // ONE note (the first, already flagged `tourTarget`) instead of the whole
+    // feed column — the copy is about a single note's layout.
+    target: '[data-tour="snort-note"], .snort-feed, [data-tour="snort-feed"]',
     title: 'Your Timeline',
     content: 'The main feed shows content from followed accounts with real-time updates. Snort uses efficient loading and caching for a smooth scrolling experience. This is where you will spend most of your time!',
     position: 'top',
@@ -56,7 +60,8 @@ const snortTourSteps: TourStep[] = [
   },
   {
     id: 'snort-profile',
-    target: '.snort-profile, [data-tour="snort-profile"]',
+    // Avatar + details block, which is exactly what the copy enumerates.
+    target: '[data-tour="snort-profile-header"], [data-tour="snort-profile"]',
     title: 'Rich Profiles',
     content: 'Profiles show comprehensive information: bio, links, NIP-05, Lightning address, badges, and all user activity. Switch between posts, replies, likes, and zaps. This is your identity on Nostr!',
     position: 'bottom',
@@ -83,7 +88,8 @@ const snortTourSteps: TourStep[] = [
   },
   {
     id: 'snort-settings',
-    target: '.snort-settings, [data-tour="snort-settings"]',
+    // The Preferences row rather than the whole settings column.
+    target: '[data-tour="snort-settings-preferences"], [data-tour="snort-settings"]',
     title: 'Customization',
     content: 'Extensive settings include: themes, language, media preferences, notification filters, privacy options, and developer features. Make Snort work exactly how you want. Remember to backup your keys!',
     position: 'left',
