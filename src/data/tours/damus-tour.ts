@@ -88,10 +88,12 @@ const damusTourSteps: TourStep[] = [
   },
   {
     id: 'damus-settings',
-    target: '[data-tour="damus-settings"]',
+    // The Account group — keys, backup, the things the copy names — rather than
+    // the whole settings screen.
+    target: '[data-tour="damus-settings-account"], [data-tour="damus-settings"]',
     title: 'Settings & Security',
     content: 'Manage your account, backup your keys, adjust notification preferences, and configure the app. Remember to backup your private key securely - if you lose it, you lose access to your account!',
-    position: 'center',
+    position: 'bottom',
     allowClickThrough: true,
     spotlightPadding: 0,
   },
