@@ -235,6 +235,13 @@ w `public/robots.txt`. Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` 
   104 mini-toury, mechanizmy jakości (kontrakt pokrycia wymuszany przez kompilator, rejestr luk jako
   bramka `showMe`, rewizja adwersaryjna) i lista tego, czego nauczyło nas 68 potwierdzonych znalezisk.
   Kontrakt autorski (jak pisać wpisy) jest w `src/data/faq/README.md`.
+- **`docs/TOURS.md`** — **twarde reguły silnika tourów** (przepisany 2026-08-08). **Czytaj przed edycją
+  `src/data/tours/` albo `src/components/tour/`.** Pięć reguł, których złamanie odtwarza naprawione już
+  defekty: kolejność alternatyw w selektorze ma znaczenie (szeroka kotwica ZAWSZE na końcu), nie zawężaj
+  celu kroku `trigger: 'action'` poniżej kontrolki spełniającej akcję, sufit wysokości karty musi być
+  niezależny od karty (inaczej oscylacja), całe chrome toura żyje w karcie (żadnych `position: fixed`),
+  chrome hosta deklaruje się przez `data-tour-keep-clear`. Plus pułapki runtime (kolejka komend niesie
+  dokładnie dwie komendy) i wzorce dodawania kotwic. Dotyczy też 133 mini-tourów FAQ — ten sam silnik.
 - **`docs/GAPS.md`** — **rejestr luk: czego brakuje w symulatorach** (audyt 2026-08-05, 586 zweryfikowanych
   wierszy). Indeks + wnioski przekrojowe, a per klient `docs/gaps/<client>.md`: ekran po ekranie, kontrolka
   po kontrolce, ze statusem `missing`/`dead`/`partial`/`unreachable`/`unanchored` i cytatem `plik:linia`.

@@ -19,11 +19,15 @@ własny kontrakt (`src/data/faq/types.ts:19-25`, wzorzec `DamusSimulatorWithTour
 
 | missing | dead | partial | unreachable | unanchored | ok |
 |---|---|---|---|---|---|
-| 6 | 18 | 8 | 4 | 3 | 4 |
+| 6 | 18 | 8 | 3 | 3 | 5 |
 
 **Top 3 do zrobienia:** key-42 · key-05 · key-28
-(zaraz za nimi: key-35 — shipowany tour **nigdy** nie dociera do pokoju rozmowy, bo trzecia komenda
-kroku jest gubiona; oraz key-25/key-02 — cała zakładka Apps to plakat.)
+(zaraz za nimi: key-25/key-02 — cała zakładka Apps to plakat.)
+
+> **Aktualizacja 2026-08-08.** key-35 zamknięty (kroki 5-6 toura docierają już do pokoju rozmowy).
+> key-34 **zostaje otwarty**: fala 2 dodała komendę wylogowania w krokach logowania sześciu klientów,
+> ale Keychata pominęła — jego unia komend nie zna `logout`, więc krok 2 wciąż wysyła `{type:'back'}`,
+> które czyści wyłącznie `selectedChat`. Fix jest ten sam co dla key-05.
 
 Kontekst: 43 wiersze, ale pierwszy hamulec jest jeden i tani — **nie ma mostka FAQ** (key-42), więc
 dziś żaden `showMe` nie zadziała, nawet dla 14 istniejących kotwic. Zaraz za nim: **z sesji nie ma
@@ -68,7 +72,7 @@ psuje wszystkie kotwice ekranu logowania (key-38).
 | key-32 | Settings → Log Out | — | dead | Brak `onClick`. Razem z key-05 oznacza to, że z sesji nie ma wyjścia żadną drogą — ani klikiem, ani komendą | `screens/SettingsScreen.tsx:194-196` | breaks-showme | S |
 | key-33 | Settings → pojedyncze grupy i wiersze | — | unanchored | `data-tour` jest tylko na roocie ekranu; `showMe` o „Backup Keys" albo „Default Mint" nie ma czego podświetlić mniejszego niż cały ekran | `screens/SettingsScreen.tsx:98` (jedyna kotwica w pliku) | blocks-showme | S |
 | key-34 | Tour → krok 2 „Sovereign Identity" (cel `keychat-login`) | — | unreachable | Krok wysyła `{type:'back'}` z komentarzem „ensure not authenticated", ale `back` czyści wyłącznie `selectedChat`. Jeśli zwiedzający zdążył się zalogować, krok celuje w węzeł, którego nie ma w DOM | `KeychatSimulatorWithTour.tsx:70-71` + `KeychatSimulator.tsx:100-102` | breaks-showme | S |
-| key-35 | Tour → kroki 5 i 6 („Encrypted Messaging" / „Send a Message") | — | unreachable | Mapa kroków kolejkuje **trzy** komendy (`login` + `navigate` + `selectChat`), a kolejka niesie dokładnie dwie: po drugiej komendzie `setTimeout` czyta `commandQueue` już skrócony do jednego elementu (`length > 1` = false), więc **trzecia nie jest wysyłana nigdy** — to nie loteria, tylko deterministyczny drop. Oba kroki celują w `keychat-chat-room` / `keychat-message-input`, których wtedy nie ma w DOM (sim stoi na liście czatów). Autor FAQ ma obejście: `login` + `selectChat` wystarczą, bo `chats` to i tak zakładka domyślna | `KeychatSimulatorWithTour.tsx:77,79` (3 komendy) vs `:28-41` (kolejka) i `KeychatSimulator.tsx:35` (default `'chats'`) | breaks-showme | S |
+| key-35 | Tour → kroki 5 i 6 („Encrypted Messaging" / „Send a Message") | — | ok | **Zamknięte 2026-08-08 (fala 2 tourów).** Poprzednio: unreachable. Mapa kroków kolejkowała **trzy** komendy (`login` + `navigate` + `selectChat`), a kolejka niesie dokładnie dwie — trzecia nie była wysyłana nigdy (deterministyczny drop, nie loteria), więc oba kroki celowały w kotwice, których nie było w DOM. Zastosowano obejście, które ten wpis sam rekomendował: listy skrócone do `login` + `selectChat`, bo `chats` to i tak zakładka domyślna, a `selectedChat` ma pierwszeństwo w gałęzi renderującej. Zweryfikowane na żywo: krok 5 podświetla plakietkę „Signal Protocol" w zamontowanym pokoju | `KeychatSimulatorWithTour.tsx:77-79` (2 komendy) · `KeychatSimulator.tsx:35` (default `'chats'`) | none | S |
 | key-36 | Dowolna powierzchnia osiągana **drugą** komendą, gdy krok się zmieni w trakcie | — | partial | Kolejka **nie kasuje uzbrojonych timerów**: `handleCommandHandled` uzbraja `setTimeout(…,100)` z *przechwyconą* kolejką, a `queueCommands` tylko nadpisuje stan. Szybkie „Next" (albo mini-tour FAQ z kilkoma krokami) → timer starego kroku odpala jego drugą komendę **po** komendzie nowego kroku i przestawia sim na poprzednią zakładkę. Damus ma na to `pendingTimersRef`/`clearPendingTimers` (`src/simulators/damus/DamusSimulatorWithTour.tsx:23-31,62,69`) — tu tego nie ma. *Skorygowane:* w obrębie **jednego** kroku dwie komendy jadą niezawodnie (baza zeruje `tourCommand` w tym samym batchu, więc ta sama komenda nie wykonuje się dwa razy) | `KeychatSimulatorWithTour.tsx:28-41,44-53` + `KeychatSimulator.tsx:60-107` | breaks-showme | S |
 | key-37 | Dolny pasek → przełączanie zakładek | — | ok | Cztery zakładki działają, każda ma własną kotwicę `keychat-nav-<tab>`, każda jest osiągalna komendą `navigate` | `components/BottomNav.tsx:55-80` + `KeychatSimulator.tsx:86-92` | none | — |
 | key-38 | Login → pole klucza + „Import Key" | — | unreachable | Same kontrolki są w porządku: pole zakotwiczone (`keychat-import-key`), przycisk gated na ≥10 znaków, wejście wyglądające na prawdziwy nsec odrzucane i czyszczone (`keySafety`). Ale **nie są osiągalne komendą** — jak cały `LoginScreen` żyją tylko do pierwszego zalogowania (key-05), a sim **nie remontuje się** między wpisami FAQ w jednej sesji: pierwszy `showMe`, który zaloguje, kasuje te kotwice do końca wizyty. Damus rozwiązuje to `{type:'logout'}` w showMe „sign-in" (`src/data/faq/damus.ts:60`) | `screens/LoginScreen.tsx:23-31,62-71,136-153`; brak `logout` w unii `KeychatSimulator.tsx:23-26` | blocks-showme | S |

@@ -9,9 +9,13 @@
 |---|---|---|---|---|---|
 | 10 | 23 | 10 | 2 | 6 | 8 |
 
-**Top 3 do zrobienia:** dam-13 · dam-39 · dam-29 (+dam-28)
-(zaraz za nimi: dam-42 „Keys" — jedyny cel FAQ `backup-keys`; dam-37 „DM conversation" — cała druga
-zakładka kończy się na liście.)
+**Top 3 do zrobienia:** dam-13 · dam-42 · dam-29 (+dam-28)
+(zaraz za nimi: dam-37 „DM conversation" — cała druga zakładka kończy się na liście.)
+
+> **Przetasowanie 2026-08-08.** dam-39 wypadł z Top 3: był tam dlatego, że główny tour podświetlał
+> ten martwy przycisk, a nie dlatego, że sam brak handlera boli. Tour już w niego nie celuje, więc
+> została zwykła martwa kontrolka bez odbiorcy. Awansuje dam-42 („Keys" — jedyny cel FAQ
+> `backup-keys`).
 
 ## Gaps
 
@@ -55,7 +59,7 @@ zakładka kończy się na liście.)
 | dam-36 | Bookmarks → Clear All | — | dead | `<button>` bez `onClick` | `screens/BookmarksScreen.tsx:23` | breaks-showme | S |
 | dam-37 | DMs → otwarcie rozmowy | §2 | missing | Tap w konwersację otwiera PROFIL autora, nie czat; nie ma widoku wiadomości, pola pisania ani przycisku nowej rozmowy | `screens/DMScreen.tsx:38` | blocks-showme | M |
 | dam-38 | Profile → "…" (overflow) | — | dead | `<button>` w bannerze bez `onClick` | `screens/ProfileScreen.tsx:37` | none | M |
-| dam-39 | Profile (własny) → Edit | — | dead | `<button>` bez `onClick`, a przy tym nosi `data-tour="damus-follow"` — krok 6 głównego toura ("Following Users", komendy `login`+`viewProfile`) podświetla właśnie ten martwy Edit zamiast pigułki Follow | `screens/ProfileScreen.tsx:50` · `DamusSimulatorWithTour.tsx:116` · `src/data/tours/damus-tour.ts:63-64` | breaks-showme | S |
+| dam-39 | Profile (własny) → Edit | — | dead | `<button>` bez `onClick`. **Część „tourowa" zamknięta 2026-08-08 (fala 2 tourów):** przycisk nie nosi już `data-tour="damus-follow"` (kotwica została tylko na pigułce Follow), a krok 6 dostał komendę `viewUser` zamiast `viewProfile`, więc otwiera CUDZY profil i podświetla realną pigułkę. Zostaje sam martwy handler — nic już w niego nie celuje, stąd impact `breaks-showme` → `none` | `screens/ProfileScreen.tsx:50` (bez kotwicy) · `DamusSimulatorWithTour.tsx:116` (`viewUser`) | none | S |
 | dam-40 | Profile → npub pill | — | dead | `<button>` bez handlera kopiowania (bliźniak dam-13) | `screens/ProfileScreen.tsx:72` | blocks-showme | S |
 | dam-41 | Profile → Notes / Notes & Replies | §4 (wzorzec pickera) | partial | Jak dam-08 — zmienia się tylko podkreślenie, feed autora identyczny | `screens/ProfileScreen.tsx:23,26` | breaks-showme | S |
 | dam-42 | Side menu → Settings → Account → Keys | §5 (row 10 → Config) | missing | Wiersz renderuje się z chevronem, ale nie ma `onClick` i nie istnieje ekran Keys — nsec nigdy nie jest pokazywany. FAQ `backup-keys` każe w niego stuknąć (jego `showMe` ratuje się podświetleniem całego ekranu) | `screens/SettingsScreen.tsx:68` | breaks-showme | M |

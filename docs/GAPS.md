@@ -15,7 +15,15 @@
 > **Aktualizacja 2026-08-07:** przywrócenie `npm run typecheck` zamknęło `gos-01` (P0, crash kładący
 > hosta), `gos-05` i `gos-09` — wszystkie trzy były błędami typów, które martwy typecheck przemilczał.
 
-## Stan na 2026-08-06
+## Stan na 2026-08-06 (korekta 2026-08-08)
+
+> **Korekta 2026-08-08 — punktowa, nie ponowny audyt.** Fala 2 prac nad tourami zamknęła `key-35`
+> (kroki 5-6 toura Keychata nie docierały do pokoju rozmowy) i częściowo `dam-39` / `yak-32`.
+> Zaktualizowany jest tylko wiersz Keychata i suma. **Kolumny `Kotwice` celowo NIE ruszałem**, mimo
+> że praca dodała ~23 kotwice w siedmiu klientach: kolumna liczy coś innego niż literalne
+> `data-tour="…"` (część kotwic to wyrażenia, np. `data-tour={i === 0 ? 'x' : undefined}`), a nie
+> znam jej pierwotnej metodologii — wstawienie liczby policzonej inaczej byłoby gorsze niż zostawienie
+> starej. Do przeliczenia przy najbliższym pełnym audycie.
 
 | Klient | Status | Luki | `missing` | `dead` | `partial` | `unreachable` | `unanchored` | `ok` | Kotwice | Mostek FAQ |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|:--:|
@@ -27,9 +35,9 @@
 | [Wisp](gaps/wisp.md) | ready | 75 | 26 | 32 | 12 | 4 | 1 | 15 | 22 | ✅ |
 | [Coracle](gaps/coracle.md) | ready | 64 | 29 | 17 | 10 | 4 | 4 | 14 | 12 | ✅ |
 | [Nostur](gaps/nostur.md) | ready | 51 | 1 | 33 | 8 | 6 | 3 | 12 | 35 | ✅ |
-| [Keychat](gaps/keychat.md) | preview | 39 | 6 | 18 | 8 | 4 | 3 | 4 | 14 | ❌ |
+| [Keychat](gaps/keychat.md) | preview | 39 | 6 | 18 | 8 | 3 | 3 | 5 | 14 | ❌ |
 | [Gossip](gaps/gossip.md) | preview | 35 | 9 | 11 | 6 | 5 | 4 | 2 | 0 | ❌ brak wrappera |
-| **Razem** | | **535** | **145** | **229** | **90** | **39** | **32** | **116** | **183** | **8/10** |
+| **Razem** | | **535** | **145** | **229** | **90** | **38** | **32** | **117** | **183** | **8/10** |
 
 **Kotwice** = selektory `data-tour`, które da się wskazać spotlightem, łącznie z generowanymi
 szablonowo — np. Coracle ma jeden literał i jedną rodzinę `coracle-nav-${screen}` dającą 6 pozycji
@@ -136,7 +144,9 @@ Keychat i Gossip nie mają screen-mapy, więc ich ledgery są niepełne z defini
    każda z nich. Payload, którego nie ma w unii, po prostu nic nie zrobi (`yak-17`, `dam-35`).
 6. Damus ma już 17 wpisów w [`../src/data/faq/damus.ts`](../src/data/faq/damus.ts) — ledger
    [`gaps/damus.md`](gaps/damus.md) wskazuje trzy z nich, które celują w martwe elementy
-   (`dam-13` copy-npub, `dam-39` follow, `dam-29` manage-relays).
+   (`dam-13` copy-npub, `dam-29` manage-relays). Trzeci, `dam-39` follow, **przestał być problemem
+   `showMe` 2026-08-08**: kotwica zeszła z martwego „Edit", a krok toura otwiera cudzy profil i celuje
+   w realną pigułkę Follow.
 
 ## Metoda i zaufanie
 
