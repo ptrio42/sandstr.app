@@ -142,6 +142,13 @@ interface UseTourElementResult {
   /** Target is really the whole client — render an intro card, not a spotlight. */
   coversViewport: boolean;
   scrollToElement: () => void;
+  /**
+   * Bumped whenever the RESOLVED element changes identity. A step whose command
+   * creates its own target (toggle a mode, mount a screen) keeps the previous
+   * step's rect until the new node appears, so "did a target show up" cannot be
+   * read off the rect being non-null — see the scroll effect in TourOverlay.
+   */
+  targetEpoch: number;
 }
 
 export function useTourElement(
@@ -170,6 +177,12 @@ export function useTourElement(
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryCountRef = useRef<number>(0);
   const rafRef = useRef<number | null>(null);
+  // Identity of whatever is currently resolved, and a counter the overlay can
+  // depend on. Rect equality is not enough: two different nodes can share a
+  // geometry, and a stale rect from the previous step looks identical to "the
+  // new target is already here".
+  const resolvedElementRef = useRef<Element | null>(null);
+  const [targetEpoch, setTargetEpoch] = useState(0);
 
   const calculateRects = useCallback(() => {
     if (typeof window === 'undefined') return;
@@ -182,6 +195,7 @@ export function useTourElement(
 
     const element = resolveTarget(targetSelector);
     if (!element) {
+      resolvedElementRef.current = null;
       if (lastRectRef.current !== null) {
         lastRectRef.current = null;
         setTargetRect(null);
@@ -191,6 +205,11 @@ export function useTourElement(
         setFrameRect(null);
       }
       return;
+    }
+
+    if (resolvedElementRef.current !== element) {
+      resolvedElementRef.current = element;
+      setTargetEpoch((n) => n + 1);
     }
 
     const rect = element.getBoundingClientRect();
@@ -664,5 +683,6 @@ export function useTourElement(
     targetCenter,
     coversViewport,
     scrollToElement,
+    targetEpoch,
   };
 }

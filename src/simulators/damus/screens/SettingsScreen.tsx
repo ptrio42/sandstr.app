@@ -31,18 +31,20 @@ export const SettingsScreen: React.FC<Props> = ({ currentUser, onBack, onLogout,
   // row renders as a <div>, because a <button> inside a <button> is invalid HTML
   // and swallows the control's own click. Plain rows stay real buttons.
   const rowClass = 'w-full flex items-center justify-between px-4 py-3.5 border-b border-[var(--damus-separator)] last:border-0 text-left';
-  const Row = ({ label, right, control, onClick, danger }: { label: string; right?: React.ReactNode; control?: React.ReactNode; onClick?: () => void; danger?: boolean }) => {
+  // `tour` is opt-in per row for the same reason it is per group: a caption that
+  // names ONE row ("the Keys row") has to be able to ring that row.
+  const Row = ({ label, right, control, onClick, danger, tour }: { label: string; right?: React.ReactNode; control?: React.ReactNode; onClick?: () => void; danger?: boolean; tour?: string }) => {
     const text = <span className={`text-[17px] ${danger ? 'text-[var(--damus-danger)]' : 'text-[var(--damus-text)]'}`}>{label}</span>;
     if (control) {
       return (
-        <div className={rowClass}>
+        <div data-tour={tour} className={rowClass}>
           {text}
           {control}
         </div>
       );
     }
     return (
-      <button onClick={onClick} className={rowClass}>
+      <button data-tour={tour} onClick={onClick} className={rowClass}>
         {text}
         {right ?? <ChevronRight className="w-4 h-4 text-[var(--damus-text-tertiary)]" />}
       </button>
@@ -67,7 +69,7 @@ export const SettingsScreen: React.FC<Props> = ({ currentUser, onBack, onLogout,
         </div>
 
         <Group title="Account" tour="damus-settings-account">
-          <Row label="Keys" />
+          <Row label="Keys" tour="damus-settings-keys" />
           <Row label="Relays" onClick={onOpenRelays} />
           <Row label="Wallet & Payments" />
         </Group>

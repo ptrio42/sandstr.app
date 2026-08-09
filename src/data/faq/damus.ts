@@ -452,11 +452,13 @@ export const damusFaq: ClientFaq = {
           commands: openDrawer,
         },
         {
-          target: '[data-tour="damus-settings"]',
+          // The row, not the screen: `damus-settings` is the full-height screen
+          // root, which the overlay refuses to spotlight (it renders the centred
+          // fallback with no ring), so this step used to end pointing at nothing.
+          target: '[data-tour="damus-settings-keys"]',
           title: 'Keys',
-          content: 'The Keys row in Settings is where you view and back up your nsec.',
-          position: 'center',
-          spotlightPadding: 0,
+          content: 'First row of the Account group — Keys is where you view and back up your nsec.',
+          position: 'bottom',
           commands: cmd({ type: 'navigate', payload: 'settings' }),
         },
       ],

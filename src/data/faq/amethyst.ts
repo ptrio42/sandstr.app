@@ -365,14 +365,17 @@ export const amethystFaq: ClientFaq = {
           commands: openDrawer,
         },
         {
-          target: '[data-tour="amethyst-settings"]',
+          // The outbox group, not the screen root: `amethyst-settings` is the
+          // full-height screen, which the overlay refuses to spotlight (centred
+          // fallback, no ring), so this step used to point at nothing. Framing
+          // one group also lets the caption stop generalising over both.
+          target: '[data-tour="amethyst-relays-outbox"]',
           title: 'Your relays',
           // Descriptive — the sim's "Add a Relay" button is display-only
           // (gaps ame-42).
           content:
-            'Public Outbox and Public Inbox groups with per-relay stats — the Add a Relay button sits below each group\'s rows.',
-          position: 'center',
-          spotlightPadding: 0,
+            'Public Outbox/Home Relays: the ones your posts are written to, each with its stored size, and "Add a Relay" under the list. Public Inbox Relays follow below.',
+          position: 'bottom',
           commands: cmd({ type: 'openSettings', payload: 'relays' }),
         },
       ],
