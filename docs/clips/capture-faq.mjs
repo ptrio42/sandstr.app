@@ -393,6 +393,8 @@ async function captureLoop(page, pool, loop, baseUrl) {
   const dir = join(WORK, loop.id);
   await rm(dir, { recursive: true, force: true });
   const t0 = Date.now();
+  // Phase marks, so the cut can speed up the typing without blurring the demo.
+  const marks = {};
 
   // 1 — the question
   await page.click(loop.faq);
@@ -409,16 +411,19 @@ async function captureLoop(page, pool, loop, baseUrl) {
   const top = await page.eval(`document.querySelector('[data-faq-entry]')?.getAttribute('data-faq-entry')`);
   if (top !== loop.entry) throw new Error(`"${loop.query}" ranked ${top} first, expected ${loop.entry}`);
   await sleep(T.afterType);
+  marks.question = Date.now() - t0;
 
   // 2 — the answer
   await page.click(`[data-faq-entry="${loop.entry}"] button`);
   await sleep(T.readAnswer);
+  marks.answer = Date.now() - t0;
 
   // 3 — the simulator shows it
   // By text, not by position: the entry's header button is also "the last button
   // of its parent", so a positional selector collapses the answer instead.
   await page.click('text:Show me in the simulator');
   await sleep(T.afterShowMe);
+  marks.demo = Date.now() - t0;
 
   for (let step = 1; step <= loop.steps; step++) {
     // A mini-tour needs ~1-1.5s to mount its screen, and until it does the
@@ -441,10 +446,12 @@ async function captureLoop(page, pool, loop, baseUrl) {
   await sleep(T.tail);
 
   const t1 = Date.now();
+  marks.end = t1 - t0;
   await sleep(250); // let the last frames of the hold land in the pool
   await pool.flush();
   const out = join(WORK, `${loop.id}.mp4`);
   const manifest = await encodeRange(pool, t0, t1, dir, out, { w: page.deviceW, h: page.deviceH });
+  await writeFile(join(dir, 'marks.json'), JSON.stringify(marks, null, 1));
 
   const secs = ((manifest.at(-1).at - manifest[0].at) / 1000).toFixed(1);
   return { id: loop.id, frames: manifest.length, secs, out };
