@@ -163,6 +163,18 @@ export const damusFaq: ClientFaq = {
       id: 'shaka',
       category: 'Reactions & zaps',
       question: 'Why is the like button a 🤙 shaka instead of a heart?',
+      // The question arrives as "where is the like button" — people look for the
+      // heart they know from everywhere else and do not recognise the gesture
+      // they are looking at, so they cannot name it in a search.
+      searchAliases: [
+        'where is the like button',
+        'no heart',
+        'why is there no like',
+        'how do i like a post',
+        'thumbs up',
+        'what is the hand',
+        'hand emoji',
+      ],
       answer: [
         'Damus has no heart — the shaka IS the like. Tap the 🤙 icon, third in the action row.',
         'When liked, the shaka fills with Damus\'s purple-to-blue gradient.',
@@ -393,6 +405,16 @@ export const damusFaq: ClientFaq = {
       id: 'copy-npub',
       category: 'Account & keys',
       question: 'How do I copy or share my public key (npub)?',
+      // Somebody with a fresh account and no followers does not search for
+      // "npub" — they search for the thing they want to happen.
+      searchAliases: [
+        'how do people find me',
+        'my username',
+        'my handle',
+        'share my account',
+        'invite friends',
+        'nobody follows me',
+      ],
       answer: [
         'Tap your profile picture to open the side menu.',
         'Under your name, tap the npub pill — it copies your npub and flips to "Copied" for a moment.',
