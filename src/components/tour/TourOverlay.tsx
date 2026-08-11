@@ -59,10 +59,14 @@ export function TourOverlay() {
   // exactly when a scroll is owed.
   useEffect(() => {
     if (state.isActive && currentStepData && spotlightRect !== null) {
-      const timer = setTimeout(() => {
-        scrollToElement();
-      }, 100);
-      return () => clearTimeout(timer);
+      // Three attempts, not one. `scrollToElement` no-ops when the target is
+      // already fully visible, so the extra passes are free — and they are the
+      // difference between working and not on a screen whose content is still
+      // laying out: Coracle's Content Settings mounts its scroll container
+      // before it has anything to scroll, so a single 100ms attempt scrolled
+      // nothing and the ring stayed a 4px sliver at the bottom edge.
+      const timers = [100, 500, 1200].map((d) => setTimeout(() => scrollToElement(), d));
+      return () => timers.forEach(clearTimeout);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- spotlightRect is
     // read, not depended on: it updates on every user scroll and would re-fire

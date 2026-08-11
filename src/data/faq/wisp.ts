@@ -143,6 +143,18 @@ export const wispFaq: ClientFaq = {
       id: 'post-note',
       category: 'Posting',
       question: 'How do I post a note — and what is the countdown after I publish?',
+      // The countdown reads as a stuck post to anyone who has not met it before.
+      // Deliberately NOT aliased: "my post is not showing up" and friends — that
+      // is trouble-not-delivered's question (relays), a genuinely different
+      // problem from a note that has not been sent yet on purpose.
+      searchAliases: [
+        'post now',
+        'undo',
+        'cancel my post',
+        'take it back',
+        'why is my post pending',
+        'it says post now',
+      ],
       answer: [
         'Tap the orange pencil at the bottom-right of the feed; it dims while you scroll but never leaves.',
         'Write under "What\'s on your mind?" and press "Publish".',

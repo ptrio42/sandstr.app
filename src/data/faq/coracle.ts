@@ -323,6 +323,16 @@ export const coracleFaq: ClientFaq = {
       id: 'mute',
       category: 'Account & keys',
       question: 'How do I mute someone — or a word, or a hashtag?',
+      // "Block" is the word people bring from other networks; Coracle only
+      // offers muting, and saying so IS the answer.
+      searchAliases: [
+        'block someone',
+        'hide someone',
+        'hide posts',
+        'stop seeing this',
+        'too much noise',
+        'annoying person',
+      ],
       answer: [
         'Everything you mute is filed in one place: sidebar → "Settings" → "Content Settings", under a bare divider reading "Mutes".',
         'PEOPLE: there are public and private muted-account lists. A public mute is visible to others, which is what makes it useful against impersonators and spammers; a private one is encrypted.',
