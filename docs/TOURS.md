@@ -68,9 +68,17 @@ zmian wizualnych, zero rozgałęzień w JSX.
   synchroniczny ref. Wcześniej druga akcja leciała na starym domknięciu i przepadała — tour stał na
   „Waiting…" dla kroku, który użytkownik już wykonał.
 - **Krok logowania potrzebuje komendy wylogowania.** `[]` zakłada, że odwiedzający przychodzi
-  wylogowany; wystarczy, że zaloguje się przed startem albo cofnie z kroku 3. Sześć klientów ma
-  `{type:'logout'}`, Wisp `{type:'back'}`. **Keychat nie ma żadnej** — jego unia komend nie zna
-  `logout` (patrz `key-34`, `key-05`).
+  wylogowany; wystarczy, że zaloguje się przed startem albo cofnie z kroku 3. Stan kolejkowany przez
+  krok 1 (ścieżki względem `src/simulators/<klient>/`): **pięciu** klientów wysyła `{type:'logout'}` —
+  Damus `DamusSimulatorWithTour.tsx:109`, Nostur `NosturSimulatorWithTour.tsx:89`, Primal
+  `PrimalWebSimulatorWithTour.tsx:107`, Snort `SnortSimulatorWithTour.tsx:93`, YakiHonne
+  `YakiHonneSimulatorWithTour.tsx:101`. Amethyst (`AmethystSimulatorWithTour.tsx:99`) i Wisp
+  (`WispSimulatorWithTour.tsx:83`) wysyłają `{type:'back'}`, bo ich unie komend nie znają `logout`
+  (`AmethystSimulator.tsx:17-20`, `wisp/types.ts:13-26`) — ale ich `back` realnie kasuje sesję
+  (`AmethystSimulator.tsx:232-235`, `WispSimulator.tsx:221-225`). **Keychat wysyła to samo
+  `{type:'back'}` (`KeychatSimulatorWithTour.tsx:71`) i jako jedyny nic tym nie osiąga**: jego `back`
+  czyści wyłącznie `selectedChat` (`KeychatSimulator.tsx:100-102`), a unia komend nie zna `logout`
+  (`KeychatSimulator.tsx:23-26`) — patrz `key-34`, `key-05`.
 - **Obserwatory montują się bezwarunkowo**, a pomiary są koalescowane przez `requestAnimationFrame`.
   Liczenie prosto w callbacku `ResizeObservera` zmienia layout z jego wnętrza — przeglądarka zgłasza
   to jako `ResizeObserver loop completed with undelivered notifications`, czyli realny błąd w konsoli.
@@ -93,7 +101,8 @@ jako nierozwiązany — nie do odróżnienia od realnego defektu. Odczekaj ≥2,
   zachowanie, którego ten produkt chce: obietnicą jest „po prostu spróbuj", a tour zamrażający
   reprodukcję jej przeczy. Szczegóły i sposób włączenia modalności: komentarz przy `TourStep` w
   [`types.ts`](../src/components/tour/types.ts).
-- **Kroki welcome/outro celują w `.<client>-simulator`.** Renderują się jako wyśrodkowane karty
+- **Kroki welcome/outro celują w `.<client>-simulator`** — u Primala w `.primal-web`
+  (`primal-tour.ts:11,97`; klasa z `primal/web/WebSimulator.tsx:165`). Renderują się jako wyśrodkowane karty
   wprowadzające z łagodnym przyciemnieniem i bez ringu. To jest zamierzone.
 - **Fioletowy chrome `#8b5cf6` nie należy do żadnego klienta ani do marki sandstr** (`#7C68F2`). To
   odziedziczony `primary` z `nostrich.love`. Świadomie zostawiony — otwarta decyzja produktowa, czy

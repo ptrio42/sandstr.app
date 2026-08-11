@@ -91,29 +91,37 @@ psuje wszystkie kotwice ekranu logowania (key-38).
 | `keychat-import-key` | `screens/LoginScreen.tsx:142` | Logowanie → pole „nsec1…" (nie przycisk „Import Key") |
 | `keychat-chat-list` | `screens/ChatListScreen.tsx:61` | Chats → cały ekran (nagłówek + lista) |
 | `keychat-chat-item` | `screens/ChatListScreen.tsx:91` | Chats → **tylko pierwszy wiersz** (`index === 0`, Alice); wiersze 2–5 są bez kotwicy |
+| `keychat-chat-lock` | `screens/ChatListScreen.tsx:104` | Chats → zielona plakietka kłódki **na pierwszym wierszu** (ten sam warunek `index === 0`) |
 | `keychat-chat-room` | `screens/ChatRoomScreen.tsx:77` | Pokój rozmowy → cały ekran |
-| `keychat-message-input` | `screens/ChatRoomScreen.tsx:171` | Pokój → pole „Message…" (nie przycisk wyślij — key-17) |
+| `keychat-chat-encryption` | `screens/ChatRoomScreen.tsx:99` | Pokój → nagłówek „🔒 Signal Protocol" |
+| `keychat-message-input` | `screens/ChatRoomScreen.tsx:172` | Pokój → pole „Message…" (nie przycisk wyślij — key-17) |
 | `keychat-wallet` | `screens/WalletScreen.tsx:10` | Wallet → cały ekran |
+| `keychat-wallet-actions` | `screens/WalletScreen.tsx:62` | Wallet → karta Send / Receive / Scan |
 | `keychat-apps` | `screens/MiniAppsScreen.tsx:51` | Mini Apps → cały ekran |
+| `keychat-apps-grid` | `screens/MiniAppsScreen.tsx:68` | Mini Apps → sama siatka kafelków (bez nagłówka) |
 | `keychat-settings` | `screens/SettingsScreen.tsx:98` | Settings → cały ekran |
+| `keychat-settings-privacy` | `screens/SettingsScreen.tsx:150` (warunek `groupIndex === 0`) | Settings → karta „Privacy & Security" |
 | `keychat-nav-chats` | `components/BottomNav.tsx:63` (szablon) | Dolny pasek → zakładka Chats |
 | `keychat-nav-wallet` | `components/BottomNav.tsx:63` (szablon) | Dolny pasek → zakładka Wallet |
 | `keychat-nav-apps` | `components/BottomNav.tsx:63` (szablon) | Dolny pasek → zakładka Apps |
 | `keychat-nav-settings` | `components/BottomNav.tsx:63` (szablon) | Dolny pasek → zakładka Settings |
 
-**14 selektorów z 11 miejsc w kodzie.** Dziesięć z nich to *rooty ekranów albo zakładki* — kotwic
-wewnątrzekranowych jest w całym symulatorze **cztery** (`keychat-generate-keys`,
-`keychat-import-key`, `keychat-chat-item`, `keychat-message-input`). Praktyczny skutek dla FAQ:
-poza „otwórz czat" i „napisz wiadomość" `showMe` potrafi podświetlić tylko cały ekran.
+**19 różnych wartości `data-tour`** (12 literałów + rodzina `keychat-nav-*` ×4 + `keychat-chat-item`,
+`keychat-chat-lock`, `keychat-settings-privacy` z warunków) z 16 miejsc w kodzie — metodologia
+liczenia w [`../GAPS.md`](../GAPS.md). Dziesięć z nich to *rooty ekranów albo zakładki*; kotwic
+wewnątrzekranowych jest **dziewięć** (`keychat-generate-keys`, `keychat-import-key`,
+`keychat-chat-item`, `keychat-chat-lock`, `keychat-chat-encryption`, `keychat-message-input`,
+`keychat-wallet-actions`, `keychat-apps-grid`, `keychat-settings-privacy`).
 Dodatkowo `.keychat-simulator` (root, `KeychatSimulator.tsx:163,175`) jest używany jako cel przez
 tour (kroki 1 i 10) — to klasa, nie `data-tour`, ale działa jako selektor.
 
 **Dwie pułapki liczbowe** (kotwica ≠ zawsze w DOM):
 `keychat-login` / `keychat-generate-keys` / `keychat-import-key` **znikają na zawsze po pierwszym
-zalogowaniu** w danej sesji (key-05, key-38) — po nim zostaje **jedenaście**. I te jedenaście nie
-współistnieje: cztery `keychat-nav-*` (`BottomNav` montowany warunkowo, `KeychatSimulator.tsx:200`),
-cztery rooty zakładek i `keychat-chat-item` znikają w pokoju rozmowy, gdzie żyją wyłącznie
-`keychat-chat-room` i `keychat-message-input`. Każdy `showMe` musi więc dobrać komendy pod swoją
+zalogowaniu** w danej sesji (key-05, key-38) — po nim zostaje **szesnaście**. I te szesnaście nie
+współistnieje: w pokoju rozmowy znikają cztery `keychat-nav-*` (`BottomNav` montowany warunkowo na
+`!selectedChat`, `KeychatSimulator.tsx:200`), rooty i wnętrza wszystkich czterech zakładek oraz
+`keychat-chat-item` / `keychat-chat-lock` — zostają wyłącznie `keychat-chat-room`,
+`keychat-chat-encryption` i `keychat-message-input`. Każdy `showMe` musi więc dobrać komendy pod swoją
 kotwicę — i to dopiero po dodaniu mostka z key-42.
 
 ## Reachability — komendy toura

@@ -106,18 +106,24 @@ działa żadna.
 
 | Selector | Plik:linia | Powierzchnia |
 |---|---|---|
-| `[data-tour="coracle-nav-feeds"]` | `CoracleSimulator.tsx:535` | Pozycja „Feeds" w sidebarze |
-| `[data-tour="coracle-nav-relays"]` | `CoracleSimulator.tsx:535` | Pozycja „Relays" w sidebarze |
-| `[data-tour="coracle-nav-notifications"]` | `CoracleSimulator.tsx:535` | Pozycja „Notifications" (z kropką nieprzeczytanych) |
-| `[data-tour="coracle-nav-messages"]` | `CoracleSimulator.tsx:535` | Pozycja „Messages" |
-| `[data-tour="coracle-nav-groups"]` | `CoracleSimulator.tsx:535` | Pozycja „Groups" (otwiera modal) |
-| `[data-tour="coracle-nav-lists"]` | `CoracleSimulator.tsx:535` | Pozycja „Lists" (otwiera modal) |
-| `[data-tour="coracle-compose"]` | `CoracleSimulator.tsx:812` | Przycisk „Post +" w top barze (bez sesji: „Log In") |
+| `[data-tour="coracle-nav-feeds"]` | `CoracleSimulator.tsx:609` | Pozycja „Feeds" w sidebarze |
+| `[data-tour="coracle-nav-relays"]` | `CoracleSimulator.tsx:609` | Pozycja „Relays" w sidebarze |
+| `[data-tour="coracle-nav-notifications"]` | `CoracleSimulator.tsx:609` | Pozycja „Notifications" (z kropką nieprzeczytanych) |
+| `[data-tour="coracle-nav-messages"]` | `CoracleSimulator.tsx:609` | Pozycja „Messages" |
+| `[data-tour="coracle-nav-groups"]` | `CoracleSimulator.tsx:609` | Pozycja „Groups" (otwiera modal) |
+| `[data-tour="coracle-nav-lists"]` | `CoracleSimulator.tsx:609` | Pozycja „Lists" (otwiera modal) |
+| `[data-tour="coracle-compose"]` | `CoracleSimulator.tsx:886` | Przycisk „Post +" w top barze (bez sesji: „Log In") |
+| `[data-tour="coracle-login"]` | `screens/LoginScreen.tsx:36` | Modal „Welcome!" — własna nazwa, bo `.co-btn-accent` trafiłby najpierw w top bar (komentarz `:33-35`) |
+| `[data-tour="coracle-actions"]` | `components/NoteCard.tsx:304` | Rząd akcji noty — **powtarza się na każdej karcie**. *(Dodane po audycie, zamyka cor-23.)* |
+| `[data-tour="coracle-feed-selector"]` | `components/FeedSelector.tsx:54` | Prawy rail „Your Feeds". *(Dodane po audycie, zamyka cor-20.)* |
+| `[data-tour="coracle-relays"]` | `screens/RelaysScreen.tsx:248` | Root przeglądarki relayów. *(Dodane po audycie, zamyka cor-49.)* |
+| `[data-tour="coracle-settings"]` | `screens/SettingsScreens.tsx:102` | Wrapper stron Settings. *(Dodane po audycie, zamyka cor-69.)* |
+| `[data-tour="coracle-follow"]` | `screens/ProfileScreen.tsx:78` | Przycisk Edit / Follow / Unfollow na profilu |
 
-**Razem: 7 selektorów z 2 miejsc w kodzie** — sześć z jednego szablonu
-(`data-tour={\`coracle-nav-${item.screen}\`}`, `:535`) plus jeden literał (`:812`).
-Grep po `data-tour="` znajduje tylko ten drugi, więc pokrycie wygląda na jeszcze mniejsze,
-niż jest. **Poza sidebarem i przyciskiem Post + nie ma ani jednej kotwicy w całym drzewie.**
+**Razem: 13 różnych wartości `data-tour`** — 7 literałów plus 6 z jednego szablonu
+(``data-tour={`coracle-nav-${item.screen}`}``, `:609`, rozwijanego po `NAV` `:99-106`);
+metodologia liczenia w [`../GAPS.md`](../GAPS.md). Grep po `data-tour="` znajduje tylko te 7,
+więc pokrycie wygląda na mniejsze, niż jest.
 
 **Stabilne selektory pomocnicze bez `data-tour`** (można ich używać w `showMe` od razu):
 `.co-action` + `[aria-label="Reply"|"Zap"|"Like"|"Repost"]` (`components/NoteCard.tsx:319,324,334,344`),
@@ -126,10 +132,10 @@ niż jest. **Poza sidebarem i przyciskiem Post + nie ma ani jednej kotwicy w ca�
 `.co-account-row` i `.co-hud` (`CoracleSimulator.tsx:734,760`), `.co-modal-close`, `.co-rail`,
 `.co-sidebar`, `.coracle-simulator` (root).
 
-**Bez kotwicy, a warte jej (najpilniejsze najpierw):** rząd akcji noty (cor-23), ekran Relays
-(cor-49), strony Settings (cor-69), rail „Your Feeds" (cor-20), nagłówek profilu (cor-55),
-taby Notifications (cor-57), wiersz kontrolek feedu (cor-21), HUD + wiersz konta (cor-08),
-modal „Welcome!" i podmenu sidebara (dziś i tak nieosiągalne — cor-03, cor-11).
+**Bez kotwicy, a warte jej (najpilniejsze najpierw):** nagłówek profilu (cor-55), taby Notifications
+(cor-57), wiersz kontrolek feedu (cor-21), HUD + wiersz konta (cor-08), podmenu sidebara (dziś i tak
+nieosiągalne — cor-03). *(Rząd akcji noty cor-23, rail „Your Feeds" cor-20, ekran Relays cor-49,
+strony Settings cor-69 i modal „Welcome!" cor-11 kotwice już dostały — patrz tabela wyżej.)*
 
 ## Reachability — komendy toura
 

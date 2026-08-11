@@ -119,20 +119,32 @@ wis-25/32/48 zamknięte 2026-08-06 przy wdrażaniu FAQ.)*
 | `wisp-selector` | `screens/FeedScreen.tsx:150` | Feed top bar → feed-selector pill |
 | `wisp-feed` | `screens/FeedScreen.tsx:219` | Feed → scrolling post list |
 | `wisp-compose` | `screens/FeedScreen.tsx:267` | Feed → orange pencil FAB |
+| `wisp-post-card` | `components/PostCard.tsx:167` | Any post card → whole card (repeats per card; the first one wins) |
 | `wisp-actions` | `components/ActionBar.tsx:37` | Any post card → action row (every card carries one) |
 | `wisp-reply` | `screens/ThreadScreen.tsx:187` | Thread → sticky "Reply…" pill |
 | `wisp-profile` | `screens/ProfileScreen.tsx:190` | Profile → header block (avatar, stats, sort pill) |
 | `wisp-follow` | `screens/ProfileScreen.tsx:222` | Profile → follow circle — **only in the `!isOwn` branch** |
 | `wisp-post` | `screens/ComposeScreen.tsx:232` | Compose → Publish / undo-countdown bar |
-| `wisp-wallet` | `screens/WalletScreen.tsx:445` | Wallet → whole screen (home or detail) |
-| `wisp-zap` | `components/ZapDialog.tsx:215` | Zap sheet → "Zap N sats" button |
+| `wisp-messages` | `screens/MessagesScreen.tsx:211` | Chat → whole screen (closes wis-32) |
+| `wisp-notifications` | `screens/NotificationsScreen.tsx:222` | Notifications → whole screen (closes wis-25) |
+| `wisp-search` | `screens/SearchScreen.tsx:71` | Search → whole screen (closes wis-48) |
+| `wisp-wallet` | `screens/WalletScreen.tsx:446` | Wallet → whole screen (home or detail) |
+| `wisp-wallet-actions` | `screens/WalletScreen.tsx:177` | Wallet → Send / Receive pair (the tour's wallet step aims here, not at the screen) |
+| `wisp-zap` | `components/ZapDialog.tsx:65` | Zap sheet → the bottom sheet itself |
 | `wisp-settings` | `components/Drawer.tsx:139` | Side menu → "Settings" row (inline-expanding) |
+| `wisp-set-interface` | `screens/SettingsScreens.tsx:128` | Settings → Interface screen |
+| `wisp-set-themes` | `screens/SettingsScreens.tsx:144` | Settings → Interface → "Choose a color scheme" row |
+| `wisp-set-relays` | `screens/SettingsScreens.tsx:298` | Settings → Relays screen |
+| `wisp-set-keys` | `screens/SettingsScreens.tsx:439` | Settings → Keys screen |
+| `wisp-set-social` | `screens/SettingsScreens.tsx:517` | Settings → Social Graph screen |
 | `wisp-tabs` | `components/BottomBar.tsx:29` | Bottom navigation bar |
 
-15 anchors. Five of them (`wisp-keys`, `wisp-reply`, `wisp-follow`, `wisp-zap`, `wisp-settings`)
-cannot be mounted by any tour command. `wisp-actions` can be, but only on the feed and the
-own-profile Notes tab — Search renders cards only after a query is typed, and Notifications expands
-notes as the action-less `quoted` card (wis-87). See below.
+**25 distinct `data-tour` values**, all of them literals — Wisp is the only client with no
+templated or conditional anchor, so a plain `grep 'data-tour="'` gets the count right here.
+Counting method: [`../GAPS.md`](../GAPS.md).
+`wisp-actions` is mountable by command, but only on the feed and the own-profile Notes tab —
+Search renders cards only after a query is typed, and Notifications expands notes as the
+action-less `quoted` card (wis-87). See below.
 
 ## Reachability — komendy toura
 

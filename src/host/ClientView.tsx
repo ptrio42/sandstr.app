@@ -186,9 +186,13 @@ function AboutSheet({ entry, real, onClose }: { entry: ClientEntry; real: boolea
           </span>
         </div>
         <p className="mb-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{entry.description}</p>
+        {/* `statusNote` is legal at ANY status, so the "Early preview" label has to be
+            gated on the status itself — hardcoding it here once promised a ready,
+            reference-verified reproduction was unverified. Same split the gallery card
+            makes: the label is StatusChip (preview only) and the note renders verbatim. */}
         {entry.statusNote && (
           <p className="mb-3 text-xs italic leading-relaxed text-gray-400 dark:text-gray-500">
-            Early preview — {entry.statusNote}
+            {entry.status === 'preview' ? `Early preview — ${entry.statusNote}` : entry.statusNote}
           </p>
         )}
         {real && (
