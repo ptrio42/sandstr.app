@@ -1,255 +1,116 @@
 # Sandstr — CLAUDE.md
 
+## Czym to jest
+
 Samodzielny, w 100% kliencki produkt: **„try Nostr clients in your browser — no keys, no install"**.
-(Bez liczby w taglinie — publiczna narracja to „8 wiernych reprodukcji + 2 early previews",
-sterowana osią `status` w `src/registry.tsx`, nie „N klientów". Od 2026-08-05 **wszystko, co widoczne,
-jest reprodukcją realnego klienta** — Nostr Kitten wyszedł z listy, Olas wyleciał z repo.)
-**Rdzeń wartości = REAL-CLIENTS-FIRST:** wierne, wysokiej wierności, przeglądarkowe reprodukcje **realnych,
-brandowanych klientów Nostr** (Damus, Amethyst, Primal, Snort, YakiHonne, Wisp, Coracle, Nostur, Keychat,
-Gossip) —
-bez kluczy, bez instalacji. **Wierność wobec prawdziwych appek JEST produktem** — użytkownik ma naprawdę
-przetestować klienta, nie „jakiś losowy twór".
-Wyodrębniony (extraction spike, 2026-07-14) z feature'u symulatorów klientów, który żył w przewodniku
-`nostrich.love` i jako **jedyny** złapał sygnał na Nostr, podczas gdy sam przewodnik nie zyskał trakcji.
+**Rdzeń wartości = REAL-CLIENTS-FIRST:** wierne przeglądarkowe reprodukcje **realnych, brandowanych
+klientów Nostr** (lista: `src/registry.tsx`). **Wierność wobec prawdziwej appki JEST produktem** —
+użytkownik ma naprawdę przetestować klienta, nie „jakiś losowy twór". Wszystko, co widoczne, jest
+reprodukcją realnego klienta.
+**W taglinie NIE MA liczby klientów** — publiczna narracja („8 wiernych reprodukcji + 2 early previews")
+jest derywowana z osi `status` w `src/registry.tsx`; nie wpisuj takich liczb na sztywno.
 
 Stack: **Vite 6 + React 19 + TypeScript SPA**, React Router 7, Tailwind 3, framer-motion, lucide-react.
-**Zero backendu, sieci, auth, realnej krypto** — wszystko statyczne i liczone w przeglądarce (mock data,
-fejkowe klucze, symulowane interakcje). Deploy = statyczne pliki.
+**Zero backendu, sieci, auth, realnej krypto** — mock data, fejkowe klucze, symulowane interakcje liczone
+w przeglądarce. Deploy = statyczne pliki.
 
 ## Komendy
 
 ```bash
 npm run dev        # Vite dev server -> http://localhost:5173
-npm run build      # produkcyjny build do dist/ (vite/esbuild)
+npm run build      # klient + bundle SSR + scripts/prerender.mjs + scripts/verify-headers.mjs
 npm run preview    # podgląd builda
-npm run typecheck  # tsc --noEmit, czysty; NIE jest bramką builda — patrz Gotchas
+npm run typecheck  # tsc --noEmit; NIE jest bramką builda — patrz Gotchas
 ```
 
-Podgląd w sesji: `.claude/launch.json` → config **sandstr** (`preview_start`, port 5173).
+Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 5173) ·
+**sandstr-preview** (4173) · **sandstr-workers** (`wrangler dev`, 8787).
 
-## Architektura / mapa kodu
+## Mapa kodu
 
-- **`src/simulators/` — SERCE.** 10 klientów na wspólnym fundamencie (9 na liście + nielistowany Kitten).
-  - `shared/` — `useSimulator` (Context+reducer, w większości **NIEUŻYWANY** — sim trzymają lokalny
-    `useState`), `SimulatorShell`, `MobilePhoneFrame` (ramka iPhone, `platform` ios/android),
-    `MockKeyDisplay`, `NoteCard`, `useParentTheme` (obserwuje klasę `dark` na `<html>`),
-    `mockKeys`/`mockEvents`, **`configs.ts`** (metadata 9 brandowanych klientów), `types`.
-  - `<client>/` — każdy klient: `<Client>Simulator.tsx` (baza UI/stan) +
-    `<Client>SimulatorWithTour.tsx` (wrapper: `TourWrapper` + mapowanie kroków toura na komendy stanu) +
-    `screens/` + `components/` + `<client>.theme.css`.
-- **`src/data/mock/`** — mock users/notes/threads/relays; źródło treści dla WSZYSTKICH symulatorów.
-- **`src/data/tours/`** — konfiguracje guided-tourów per klient.
-- **`src/components/tour/`** — silnik tourów (Provider/Overlay/Tooltip + `tourStorage` localStorage).
-  Zależy od `src/lib/progressService.ts`.
-- **`src/utils/cn.ts`** — `clsx` + `tailwind-merge`.
-- **`src/host/`** — NOWA warstwa hosta (nie z oryginału): `Layout` (topbar + theme toggle), `Gallery`
-  (landing), `ClientView` (montuje klienta + ramkę + **baner disclaimera**).
-- **`src/registry.tsx`** — mapa `id → { Component (lazy), platforma, ramka, tour, status, kind }`.
-  Oś gotowości: `status: ready|preview|planned` + `kind: reproduction|original` (+ `statusNote` dla
-  preview) steruje sekcjami galerii, chipami i wierszem poleceń w bramce mobile; `lead` jest DERYWOWANE
-  (`ready && reproduction`), nie ustawiaj ręcznie. **TU dodajesz/mapujesz
-  klienta.** Odwzorowuje 1:1 dawne strony `.astro` z oryginału.
-  **Dwie listy:** `clients` (eksportowana) = to, co produkt POKAZUJE — galeria, paleta ⌘K, rail
-  switchera czytają tylko ją; `unlisted` (prywatna, dziś sam Nostr Kitten) = wciąż routowalne pod
-  `/c/<id>`, ale niewidoczne. `getClient()` przeszukuje obie — to ono trzyma easter-egg przy życiu.
-
-**Montowanie klienta:** mobilne (ios/android) w `MobilePhoneFrame`; web/desktop bez ramki.
-`*SimulatorWithTour` = **default export**; bazowe Coracle/Gossip/NostrKitten = **named export**.
+- **`src/registry.tsx` — punkt wejścia.** `id → { Component (lazy), platforma, ramka, tour, status, kind }`;
+  tu podpinasz klienta. **Dwie listy:** `clients` (eksport) = to, co produkt POKAZUJE (galeria, ⌘K, rail);
+  `unlisted` (dziś sam Nostr Kitten) = routowalne pod `/c/<id>`, ale niewidoczne. `getClient()` czyta obie
+  — to trzyma easter-egg przy życiu.
+- **`src/simulators/` — SERCE.** 11 katalogów klientów (10 brandowanych + `nostr-kitten`) + `shared/`
+  (`SimulatorShell`, `MobilePhoneFrame`, `NoteCard`, `useParentTheme`, `configs.ts` = metadata klientów).
+- **`src/data/`** — `mock/` (users/notes/threads/relays; treść dla WSZYSTKICH symulatorów), `tours/`, `faq/`.
+- **`src/components/`** — `tour/` (silnik: Provider/Overlay/Tooltip + `tourStorage`), `faq/`
+  (mostek `FaqMiniTourLauncher`).
+- **`src/host/`** — `Layout`, `Gallery`, `ClientView` (klient + ramka + **baner disclaimera**),
+  `CommandPalette`, `ClientSwitcher`, `FaqPanel`.
+- Montowanie: mobilne (ios/android) w `MobilePhoneFrame`, web/desktop bez ramki. `*SimulatorWithTour`
+  = **default export**; Gossip i Nostr Kitten montowane przez **named export** (patrz `registry.tsx`).
 
 ## Twarde zasady
 
 - **NIE przywracaj 4 legacy symulatorów** z oryginału (`interactive/damus`, `AmethystSimulatorDemo`,
   `NostrSimulator`, `QuickstartSimulator`) — świadomie nieprzeniesione, martwe/zastąpione.
-- Każdy symulator = własny katalog. Edytując jednego, **nie dotykaj innych ani `shared/`** bez potrzeby.
-- **Zachowuj interfejs komend toura** (`tourCommand` / `onCommandHandled` / `className` + `switch`
-  komend) — inaczej guided tour się psuje.
-- **Bez nowych zależności npm** (dostępne: react, react-dom, framer-motion, lucide-react, clsx,
-  tailwind-merge). Bez realnej krypto/sieci — to symulacja.
-- **Baner „SIMULATION · unofficial · mock data · not affiliated" MUSI zostać** na każdym widoku klienta
-  (`ClientView`) — to #1 lekka mitygacja ryzyka znaku towarowego. Nie usuwaj.
-
-## Branding / ryzyko prawne (kontekst decyzji — WAŻNE)
-
-**Real-clients-first.** Reprodukcja realnych, brandowanych klientów (Damus/Primal/Amethyst…) niesie ryzyko
-znaku towarowego i trade-dress, którego darmowy przewodnik edukacyjny nie miał — mitygujemy je, **nie**
-ucieczką od cudzej marki. Ścieżki:
-(a) **GŁÓWNA: zgoda-opt-in od każdego zespołu.** Właściciel odzywa się do twórców — są osiągalni na Nostr,
-    a wierne demo im schlebia (to dokładnie mitygacja z audytu „zdobądź pisemną zgodę", wybrana jako
-    podstawowa zamiast „prowadź własnym IP"). **Nie monetyzujemy marki konkretnego zespołu bez jego zgody.**
-(b) trwały disclaimer „SIMULATION · unofficial · mock data · not affiliated" na każdym widoku — nadal #1
-    lekka mitygacja.
-**Nostr Kitten NIE jest fundamentem ani „front door"** — nie istnieje jako realny klient Nostr; najwyżej
-opcjonalny easter-egg / maskotka. Nie traktuj go jako lidera strategicznego, kotwicy marki ani centrum
-deryzykowania. **NIELISTOWANY od 2026-08-05** (decyzja właściciela): półka mówi „reprodukcje realnych
-klientów", a parodia GeoCities stojąca obok Damusa psuła to zdanie przy każdej pierwszej wizycie. Kod
-i wpis w rejestrze ZOSTAJĄ (`unlisted` w `registry.tsx`), `/c/nostr-kitten` dalej działa — nie kasuj go.
-**Powód, dla którego zostaje: przyszły, prawdziwy klient dla zabawy.** Właściciel chce kiedyś zbudować
-działającego klienta Nostr w tym duchu — na Nostrze taki żart potrafi zaskoczyć mocniej niż kolejny
-poważny feed. Rozważany kierunek: **fork Wispa ostylowany na Nostr Kitten** (Wisp = mały, czytelny,
-MIT, Android, już mamy jego screen-mapę i tokeny). To jest osobny produkt, a NIE symulator w tym repo —
-sandstr pozostaje półką reprodukcji. **Web klienty odtwarzamy we wspólnym stacku React („Poziom A")**, nie uruchamiając realnego
-kodu klienta. **„Sandstr" to finalna nazwa projektu** (decyzja właściciela 2026-07-28; wcześniej robocza).
-**Domena produkcyjna: `sandstr.app`** (decyzja 2026-08-03). `sandstr.com` jest zajęta przez niezwiązany
-fintech („SAND", najem krótkoterminowy, Wix, od 2025-08) — inna branża, brak kolizji, ale i brak szans na
-drop; nie planuj `.com`. Absolutne `og:url`/`og:image` i `canonical` w `index.html` są **przypięte do
-galerii** (`https://sandstr.app/`), nie do bieżącej trasy — to ta sama decyzja co `Disallow: /c/`
-w `public/robots.txt`. Licencja: MIT, copyright „ptrio42" — patrz `LICENSE` + `TRADEMARKS.md`.
-
-## Liderzy vs reszta
-
-- **Wzorzec wierności:** **Amethyst** i **Damus** — głębokie, zweryfikowane referencyjnie flagowce/szablony
-  (Amethyst 9 powierzchni; Damus 11) — inline-SVG robohash avatary, lokalne media postów jako `data:`-URI,
-  offline/CSP-safe, tokeny z repo klienta + weryfikacja side-by-side z realnym recordingiem. Do nich równamy.
-- **READY (status w `registry.tsx`): Amethyst, Damus, YakiHonne, Primal (web)** (2026-07-28) **+ Snort
-  + Wisp** (2026-07-30) **+ Coracle + Nostur** (2026-08-05) — zweryfikowane referencyjnie (screen-map +
-  fidelity pass). (Nostr Kitten `kind: 'original'` istnieje nadal, ale jest NIELISTOWANY — patrz sekcja
-  Branding.)
-- **Wisp (ZROBIONE 2026-07-30):** recon (`barrydeen/wisp@11ac08f`, v1.2.1, MIT © Barry Deen; homepage
-  `wisp.mobile`) + recording → `docs/refs/wisp/screen-map.md` (autorytatywny) i `src/simulators/wisp/`
-  (13 powierzchni: login/feed/thread/profile/notifications/chat/wallet/search/compose/zap/drawer/
-  Interface/Relays/Keys/Social Graph). Default = theme „custom" DARK, accent `#FF9800`, bg `#0A0A0B`,
-  error = iOS-red `#FF3B30`; akcje **reply→react(emoji zastępuje serce, nigdy nie barwi)→repost→
-  zap(₿ CurrencyBitcoin domyślnie, suma satów)→add-to-list**; sygnatury: **undo-countdown „Post now (N)"**
-  na każdym poście, feed-selector DROPDOWN (For You default), pigułki online/relay-count w top barze,
-  „∞ Followers", statusy NIP-38, ICQ-flower na bell. Celowo odtworzone bugi/leaki: M3 `secondaryContainer`
-  `#4A4458` na chipach read/write/auth i segmentach Gallery|Stack. Recording miał Fiat Mode ON — sim
-  szipuje repo-default (sats+₿); patrz §18 screen-mapy.
-- **Snort (ZROBIONE 2026-07-30):** recon + pełny rebuild → `docs/refs/snort/screen-map.md`
-  (autorytatywny, 19 sekcji z recordingu 2026-07-14 + `v0l/snort@3cc8317`) i przepisany
-  `src/simulators/snort/` (12 powierzchni). Accent violet `--highlight` `#ac88ff`/`#7139f1`
-  **współistnieje** z CTA `--primary #ff3f15`; reakcja = SERCE `#ef4444`; akcje
-  **reply→repost→heart→zap→avatary zapperów** (kolor zmieniają TYLKO serce i zap — `text-nostr-purple`/
-  `-blue` nie istnieją w prawdziwym kliencie); selektor feedu = **dropdown**, nigdzie nie ma tabów
-  z podkreśleniem; kafelek Relays w Settings **celowo bez tła** (prawdziwy bug: `bg-dark` + Tailwind v4).
-  Naprawione po drodze: B8 (highlighter + `dangerouslySetInnerHTML` usunięte — Snort nie ma kolorowania
-  składni), B9b (scroller), B10 (dolny pasek ≤768px), zero requestów zewnętrznych.
-- **Coracle (ZROBIONE 2026-08-05):** recon (`coracle-social/coracle@efea13f`, MIT © Jon Staab/hodlbod;
-  app na `app.coracle.social`) + recording → `docs/refs/coracle/screen-map.md` (autorytatywny, 19 sekcji)
-  i przepisany `src/simulators/coracle/` (15 powierzchni). Svelte 4 + Tailwind 3; **default = DARK**
-  (`state.ts:36-40`, brak `prefers-color-scheme`), accent **burnt-orange `#FC560E` IDENTYCZNY w obu
-  motywach**, zero gradientów marki. Klucz: **ciepły ramp `tinted-*`** (`#3E3A38` sidebar/karty) nad
-  **zimnym `neutral-*`** (`#262626` strona, `#171717` top bar), a karty **ALTERNUJĄ** oba wg zagnieżdżenia
-  (`AltColor.svelte`). Lewy sidebar = 6 pozycji **TYLKO TEKST, bez ikon**; aktywna **rośnie**
-  (`text-2xl`→`text-3xl`) + akcentowe podkreślenie. Akcje noty: **reply→zap→like→repost** (zap DRUGI),
-  ikony **OBRYSOWE** (własny partial 17×16) poza wypełnionym repostem; licznik zapa = **suma satów**.
-  Sygnatura = prawy panel **„Your Feeds"** (7 chipów presetów + Relay Feeds/Your Lists/Custom Feeds).
-  Prawie wszystko to **modale** ze scrimem odsuniętym o sidebar (`ml-72`) i okrągłym akcentowym X.
-  **Login NIE MA pola na klucz** — same delegacje (extension/bunker), więc reprodukcja też go nie ma
-  (`keySafety.ts` celowo nieużyty). Groups = tylko notka „Groups are going away!". [REC vs REPO]:
-  polskie ekrany w nagraniu to **nstart** (`start.njump.me`), osobny projekt — nie odtwarzamy.
-- **Nostur (ZROBIONE 2026-08-05):** recon (`nostur-com/nostur-ios-public@11bcebb`, **GPL-3.0**, autor
-  Fabian Lachman; homepage `nostur.com`, App Store id `1672780508`, także macOS `.dmg`) + recording
-  → `docs/refs/nostur/screen-map.md` (autorytatywny, 19 sekcji) i `src/simulators/nostur/`
-  (13 powierzchni: welcome/feed×3/thread/profile/notifications/messages+DM/search/bookmarks/compose/
-  zap/drawer/settings×6). SwiftUI, iOS. **10 nazwanych motywów; default to dosłownie `"default"`**
-  (`Theme.swift:39`), a light/dark to preferencja SYSTEMU (`preferredColorScheme` = `nil` dla
-  wszystkich poza `dark_garnet`) → robimy oba, registry otwiera dark.
-  Accent = `display-p3(51,162,166)` z `Themes.xcassets/defaultAccentColor.colorset` — naiwny hex
-  `#33A2A6`, kolorymetryczny sRGB `#00A5A8`, a urządzenie maluje **`#00BDA9`** i to bierzemy (recording
-  wygrywa). **Feed siedzi na `listBackground` = czysta czerń `#000`**, nie na `background` `#1C1C1E`.
-  `lineColor` jest **akcentowy @35%** (hairline'y są turkusowe), ale separator postów to zwykły
-  `Divider()`. Akcje: **reply→repost→SERCE→zap(suma satów + słowo „sats")→bookmark**, rozstrzelone
-  `space-between`, cały rząd akcentowy, aktywny stan barwi DOKŁADNIE jedną ikonę (red/green/yellow/orange).
-  Default `footerButtons: "💬🔄+⚡️🔖"` (`SettingsStore.swift:228`), gdzie `+` = `EmojiButton` = SERCE.
-  **Zabójca wierności: `TabButton` ma label ZAWSZE `theme.accent`** — zaznaczenie to WYŁĄCZNIE 1px
-  podkreślenie (typowe „szary→biały" czyta się natychmiast jako inna appka).
-  Sygnatury: **żółw** Low Data Mode w toolbarze (przygaszony do 30% gdy OFF) + toast
-  „Low Data mode: enabled/disabled" i bloki „Loading paused (Low data mode) / Load anyway";
-  akcentowy chip **chevron.compact.down** (show-more); media **edge-to-edge bez zaokrągleń**
-  (`fullWidthImages` = true); brak awatara = **płaska, seedowana barwa** (bez inicjałów);
-  „∞ Followers"; 16 pomarańczowych monet w „Send sats" (21 preselected); stopka drawera
-  „Nostur 1.30.2 (Build: 527)" + „Source code". [REC vs REPO]: recording to **pre-iOS-26 `MainTabs15`**
-  (5. zakładka = koperta Messages + osobny FAB); repo ma też `MainTabs26`, gdzie Messages znika z paska
-  i wchodzi do drawera, a 5. zakładką jest „New Post" — bierzemy recording. Podobnie: 3 zakładki feedu
-  (Following/Discover/Explore), bo pozostałe 10 jest za bramką `viewFollowingPublicKeys.count > 10`.
-- **Druga fala / PREVIEW** (słabsza wierność / bugi): Keychat, Gossip.
-  (Primal-MOBILE stub, nieroutowany.) Galeria etykietuje je „Early preview" +
-  `statusNote`; nie przedstawiaj ich jako skończonych.
-- **USUNIĘTY 2026-08-05: Olas.** Upstream `pablof7z/olas` bez pushu od 2025-07 (a `olas-nmp` to
-  nielicencjonowany, niedokończony rewrite) — nie ma czego wiernie odtwarzać, a nasza wersja i tak była
-  generycznym klonem Instagrama (Stories/Follow Requests nie istnieją w Nostrze). Wyleciały:
-  `src/simulators/olas/`, `olas-tour.ts`, `public/icons/olas.svg`, wpisy w `registry.tsx`/`configs.ts`/
-  `SimulatorClient` oraz sekcja w `docs/FIDELITY.md`. **Nie przywracaj bez ponownego recon** — jeśli
-  upstream ożyje, robimy go od nowa procesem reference-first.
-- **Primal web (ZROBIONE 2026-07-14):** rebuild z recordingu + recon → `docs/refs/primal/screen-map.md`
-  (autorytatywny: exact tokeny `palette.scss` Midnight/Ice, NavMenu, NoteFooter, Explore/Notifications/DMs).
-  3-kolumnowy (lewy nav / feed / prawy sidebar); Ice(light, w recordingu) + Midnight(dark, OLED, realny
-  default); accent **BLUE `#2394EF`** (NIE oranż — configs naprawiony); akcje **reply→zap→like→repost→
-  bookmark** (zap 2., like=magenta `#f800c1`/`#CA079F`, repost green, bookmark `#0C7DD8`); inline compose
-  z „NOTE PREVIEW"; swirl-logo (verbatim path + grad `#00E0FF→#0090F8→#2554ED`); nav badge PO labelu
-  (recording > repo). Prawy sidebar zmienny per-ekran (Home: Search/Live/Trending; Explore: Stats/HotTopics/
-  TrendingUsers; Settings: Relays). Znany drobny: Primal-mobile wciąż stary stub.
-- **Damus (ZROBIONE 2026-07-14):** pełny rebuild z recordingu + recon repo → `docs/refs/damus/screen-map.md`
-  (autorytatywny spec: hexy DamusColors.swift, MainTabView, EventActionBar, SideMenu, Search/Notif/Relays).
-  OLED-dark; DamusPurple `#CC43C5` + **PinkGradient `#D34CD9→#F869B6`** (marka: CTA/Post/banner) +
-  **LINEAR_GRADIENT `#CC43C5→#4B4DFF`** (mechanika: FAB/underline/like) — dwa akcenty współistnieją.
-  4 taby (Home/DMs/Search/Notifications) + osobny gradientowy compose-FAB; akcje **reply→repost→shaka(🤙,
-  domyślny „like", NIE serce)→zap→share**; follow = monochromatyczny; drawer z magenta „Purple" (struś).
+- **NIE przywracaj Olasa** (usunięty 2026-08-05, upstream martwy) bez ponownego recon reference-first.
+- **Każdy symulator = własny katalog.** Edytując jednego, nie dotykaj innych ani `shared/` bez potrzeby —
+  `shared/` zmienia wszystkie naraz.
+- **Interfejs komend toura jest nietykalny** (`tourCommand` / `onCommandHandled` / `className` + `switch`
+  komend) — inaczej psują się toury i mini-toury FAQ.
+- **Bez nowych zależności npm** (są: react, react-dom, react-router-dom, framer-motion, lucide-react,
+  clsx, tailwind-merge). Bez realnej krypto i sieci — to symulacja.
+- **Baner disclaimera MUSI zostać** na każdym widoku klienta (`Disclaimer` / `DisclaimerStrip`
+  w `src/host/ClientView.tsx`, tekst „Simulation · mock data · unofficial, not affiliated with
+  &lt;nazwa&gt;") — #1 lekka mitygacja ryzyka znaku towarowego. Nie usuwaj i nie skracaj.
 
 ## Gotchas
 
-- **Build NIE jest bramką typów** — ale `npm run typecheck` od 2026-08-07 **realnie sprawdza `src/`.**
-  `vite build` (esbuild) tylko strzypuje typy, więc typecheck (tsc) trzeba puścić osobno. Wcześniej
-  i on nic nie łapał: `useSimulator.ts` miał 4 błędy składniowe (JSX w pliku `.ts`, opisane tu jako
-  „PRE-EXISTING"), a **tsc pomija WSZYSTKIE diagnostyki semantyczne, gdy w programie jest choć jeden
-  błąd składniowy** — plus `TS6310` z `references` na `tsconfig.node.json` ucinał resztę. Po naprawie
-  (plik → `.tsx`, `references` usunięte, 40 realnych błędów naprawionych) wyjście jest czyste, a
-  kontrakt pokrycia FAQ (`Record<CanonicalTopic, …>`) znowu wysypuje wszystkie 8 plików klientów przy
-  nowym temacie. **Nie ignoruj błędu składniowego jako „znanego" — on wycisza całą analizę.**
-  Świadomie poza zakresem: `vite.config.ts` (wymagałby `@types/node`; szczegóły w `tsconfig.node.json`).
-- **Mock hotlinkuje Unsplash / DiceBear** — łamie się offline i pod ostrym CSP, i obniża wierność.
-  Zbundlowanie lokalnych avatarów/obrazków to **najwyższy cross-cutting task** (podnosi wszystkie sim naraz).
-- `useSimulator`/reducer store jest **w większości nieużywany** (sim trzymają lokalny `useState`) — nie
-  myl scaffoldingu z load-bearing.
-- Feed w symulatorach **capuje wyświetlanie do ~25 notatek** (filtry działają na treści/kolejności, nie liczbie).
-- **Dark mode:** `useParentTheme` obserwuje klasę `dark` na `<html>`; host ma własny theme toggle
-  (`main.tsx` ustawia, `Layout` przełącza). Bez niego sim utknąłby w jednym motywie.
+- **`npm run build` NIE jest bramką typów** (esbuild strzypuje) — `npm run typecheck` (tsc) puszczaj
+  osobno. **Jeden błąd składniowy wycisza WSZYSTKIE diagnostyki semantyczne tsc** — nigdy nie odkładaj go
+  jako „znanego"; tak chowało się 40 realnych błędów. `vite.config.ts` świadomie poza zakresem.
+- **Hotlinki DiceBear: zostało 12 URL-i, wyłącznie w preview** (9 Keychat, 3 Gossip) — łamią się offline
+  i pod ostrym CSP. Klienci `ready` mają lokalne inline-SVG avatary; nie dokładaj nowych hotlinków.
+- `useSimulator` (Context+reducer) jest **w większości nieużywany** — symulatory trzymają lokalny
+  `useState`. Nie myl scaffoldingu z load-bearing.
+- Feed **capuje wyświetlanie do ~25 notatek** (filtry działają na treści/kolejności, nie na liczbie).
+- **Dark mode = klasa `dark` na `<html>`**: `main.tsx` ustawia, `Layout` przełącza, `useParentTheme`
+  obserwuje. Bez tego symulator utknie w jednym motywie.
 - **StrictMode jest wyłączony** (`main.tsx`) — świadomie, by uniknąć podwójnego montowania w stanach
-  tour/efektów.
-- Znany drobny nit: **FAB nachodzi na wiersz akcji w YakiHonne `ArticleReader`** (FAB pokazuje się zawsze
-  na zakładce Articles).
+  toura/efektów.
 
 ## Definition of done
 
 1. `npm run build` przechodzi — **pokaż output**.
-2. **Runtime:** odpal dev, wejdź w dotknięty symulator, sprawdź konsolę (**0 błędów**) i realne zachowanie
-   klik-po-kliku (nie zakładaj sukcesu bez dowodu).
+2. **Runtime:** odpal dev, wejdź w dotknięty symulator, sprawdź konsolę (**0 błędów**) i zachowanie
+   klik-po-kliku — nie zakładaj sukcesu bez dowodu.
 3. Zmiany symulatora **izolowane do jego katalogu**; interfejs komend toura nienaruszony.
 
-## Pointers
+## Skille (`.claude/skills/`) — kiedy który
 
-- **`docs/AUDIT.md`** — pełny audyt w-repo: wierność/kompletność/polish **każdego z 10 symulatorów**,
-  architektura + plan wydzielenia, pozycjonowanie/branding/ryzyka prawne, synteza + roadmapa.
-  **UWAGA: snapshot historyczny.** Jego rekomendacja „owned-IP-first / front door = Nostr Kitten" jest
-  **nieaktualna** — kierunek zmieniono na real-clients-first (patrz sekcja „Branding / ryzyko prawne" wyżej
-  + `docs/FIDELITY.md`). Reszta (mapa wierności, architektura) nadal wartościowa jako kontekst.
-- **`docs/FIDELITY.md`** — **główny kit wiernego odtwarzania (proces reference-first).** Dla każdego z 9
-  realnych klientów zweryfikowane tokeny marki + **plik-źródło tokenów w repo klienta** (wszystkie są
-  open source), struktura nawigacji, detale-zabójcy wierności, kanały opt-in. Proces: **realne screeny +
-  źródło klienta czytane razem → tokeny → weryfikacja side-by-side.** Biblioteka referencji żyje w
-  **`docs/refs/<client>/`** (`screen-map.md` + `shots/`). Zawiera **korekty błędnych rekomendacji kolorów
-  z `AUDIT.md`** (YakiHonne jest oranż, nie fiolet; Keychat fiolet, nie blue; Primal domyślnie blue).
-  Wzorzec wykonany na Amethyście: głęboki, zweryfikowany referencyjnie (9 powierzchni, realny fiolet
-  `#7F67BE` + OLED czerń + kolejność akcji reply/boost/react/zap, inline-SVG avatary, lokalne `data:` media).
-- **`docs/FAQ.md`** — **stan i wnioski z wdrożenia FAQ** (2026-08-06): 166 pytań w 8 klientach,
-  104 mini-toury, mechanizmy jakości (kontrakt pokrycia wymuszany przez kompilator, rejestr luk jako
-  bramka `showMe`, rewizja adwersaryjna) i lista tego, czego nauczyło nas 68 potwierdzonych znalezisk.
-  Kontrakt autorski (jak pisać wpisy) jest w `src/data/faq/README.md`.
-- **`docs/TOURS.md`** — **twarde reguły silnika tourów** (przepisany 2026-08-08). **Czytaj przed edycją
-  `src/data/tours/` albo `src/components/tour/`.** Pięć reguł, których złamanie odtwarza naprawione już
-  defekty: kolejność alternatyw w selektorze ma znaczenie (szeroka kotwica ZAWSZE na końcu), nie zawężaj
-  celu kroku `trigger: 'action'` poniżej kontrolki spełniającej akcję, sufit wysokości karty musi być
-  niezależny od karty (inaczej oscylacja), całe chrome toura żyje w karcie (żadnych `position: fixed`),
-  chrome hosta deklaruje się przez `data-tour-keep-clear`. Plus pułapki runtime (kolejka komend niesie
-  dokładnie dwie komendy) i wzorce dodawania kotwic. Dotyczy też 133 mini-tourów FAQ — ten sam silnik.
-- **`docs/GAPS.md`** — **rejestr luk: czego brakuje w symulatorach** (audyt 2026-08-05, 586 zweryfikowanych
-  wierszy). Indeks + wnioski przekrojowe, a per klient `docs/gaps/<client>.md`: ekran po ekranie, kontrolka
-  po kontrolce, ze statusem `missing`/`dead`/`partial`/`unreachable`/`unanchored` i cytatem `plik:linia`.
-  Schemat: `docs/gaps/README.md`. **Czytaj przed pisaniem FAQ** (`src/data/faq/<client>.ts`) — mówi, czy
-  dana ścieżka w ogóle istnieje, ma kotwicę `data-tour` i jest osiągalna komendą toura, czyli czy wolno
-  dodać `showMe`. Relacja do `FIDELITY.md`: tam **jak realny klient wygląda**, tu **ile z tego mamy**.
-- `README.md` — przegląd + jak dokładnie wyodrębniono feature z oryginału.
-- Origin: audyt powstał w sesji w `../nostr-beginner-guide` (pamięć `sandstr-simulators-spinoff`); ten
-  katalog to inny projekt, więc tamta pamięć **nie** ładuje się tu automatycznie — dlatego audyt jest
-  w `docs/AUDIT.md`.
-- Osobiste / lokalne notatki: `CLAUDE.local.md` (gitignore), nie tutaj.
+| Kiedy | Skill |
+|---|---|
+| Wierność, tokeny, recon, screen-map; `src/simulators/<klient>/`, `docs/refs/` | `wierna-reprodukcja-klienta` |
+| Podpięcie klienta, status, galeria, ⌘K, rail; `registry.tsx`, `shared/configs.ts`, `Gallery.tsx` | `rejestr-i-galeria` |
+| Kroki toura, kotwice `data-tour`, spotlight; `src/data/tours/`, `src/components/tour/`, `showMe` | `tour-i-kotwice` |
+| Piszesz albo rewidujesz FAQ; `src/data/faq/`, `docs/FAQ.md` | `faq-klienta` |
+| „czego tu brakuje", martwy przycisk, audyt luk; `docs/gaps/`, `docs/GAPS.md` | `audyt-luk-symulatora` |
+| Marka, domena, disclaimer, znak towarowy, licencje, og/robots, „czy możemy to pokazać" | `branding-i-ryzyko-prawne` |
+| Klip demo, teaser, screencast, shoty; `docs/clips/` | `nagrywanie-klipow` |
+| Domknięcie sesji: retro, log decyzji, notatka przekazania, promocja wniosku do pamięci | `zamykanie-sesji` |
+
+## Dokumenty
+
+- `docs/refs/<klient>/screen-map.md` — **AUTORYTATYWNY** opis realnego klienta (+ `shots/`); czytaj przed
+  zmianą jego symulatora. Keychat i Gossip screen-mapy NIE mają.
+- `docs/FIDELITY.md` — tokeny marki per klient + ich pliki-źródła w repo klienta + kanały opt-in.
+- `docs/GAPS.md` + `docs/gaps/<klient>.md` (schemat: `docs/gaps/README.md`) — ile z realnego klienta mamy
+  (533 wiersze); czytaj ZANIM dodasz `showMe` w FAQ.
+- `docs/TOURS.md` — reguły silnika tourów; czytaj przed edycją `src/data/tours/` i `src/components/tour/`.
+- `docs/FAQ.md` — stan wdrożenia FAQ (230 wpisów, 133 mini-toury, 8 klientów); kontrakt autorski
+  w `src/data/faq/README.md`.
+- `docs/clips/README.md` + `docs/clips/faq-teaser.md` — scenariusze klipów demo.
+- `docs/AUDIT.md` — snapshot historyczny; „owned-IP-first / front door = Nostr Kitten" jest NIEAKTUALNE.
+  Tak samo przeterminowane `SHIP-AND-GRANT.md` i `GRANT-WOW.md` — sprawdź ich zarzuty, zanim je powtórzysz.
+- `README.md` (przegląd + wydzielenie), `PRIVACY.md`, `TRADEMARKS.md`, `THIRD-PARTY.md`.
+
+## Licencja / origin
+
+MIT, „Copyright (c) 2026 ptrio42" (`LICENSE`) — pokrywa kod w repo, nie cudze marki. Nazwa finalna
+**Sandstr**, domena produkcyjna **`sandstr.app`**; reszta decyzji brandingowych → skill
+`branding-i-ryzyko-prawne`.
+Origin: extraction spike (2026-07-14) z symulatorów żyjących w przewodniku `nostrich.love` — mechanika
+w `README.md`, audyt z tamtej sesji w `docs/AUDIT.md`. Notatki osobiste: `CLAUDE.local.md` (gitignored).
