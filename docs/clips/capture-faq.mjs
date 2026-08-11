@@ -34,58 +34,101 @@ const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 // ---------------------------------------------------------------- the loops --
 // Every query below is verified to rank its entry #1 in the shipped ranking,
 // and every entry has a showMe. See docs/clips/faq-teaser.md.
+const PHONE = { w: 430, h: 775, dsf: 2 };
+// Frameless clients are `gated` below 640px and render no FAQ affordance at all,
+// so a web client has to be shot at desktop size and framed differently.
+// 1000px tall, not 720: Coracle's mute rows sit ~930px down Content Settings,
+// and the tour's scroll-into-view does not reach them inside that screen's own
+// scroll container (open engine bug, filed with the anchor sweep). A desktop
+// window this tall is ordinary, and it puts the target on screen honestly
+// rather than filming a ring the viewer would never see.
+const DESK = { w: 1280, h: 1000, dsf: 2 };
+
 const LOOPS = [
   {
-    id: 'damus',
+    id: 'damus-shaka',
     path: '/c/damus',
-    viewport: { w: 430, h: 775, dsf: 2 },
+    viewport: PHONE,
     faq: '[aria-label="Damus FAQ"]',
-    query: 'lost my phone',
-    entry: 'backup-keys',
-    steps: 2,
+    query: 'no heart',
+    entry: 'shaka',
+    steps: 1,
   },
   {
     id: 'amethyst',
     path: '/c/amethyst',
-    viewport: { w: 430, h: 775, dsf: 2 },
+    viewport: PHONE,
     faq: '[aria-label="Amethyst FAQ"]',
     query: 'nobody sees my notes',
     entry: 'manage-relays',
     steps: 2,
   },
   {
-    id: 'primal',
-    path: '/c/primal',
-    // Frameless clients are `gated` below 640px and render no FAQ affordance at
-    // all, so this one is a desktop shot and gets composed as a landscape card.
-    viewport: { w: 1280, h: 720, dsf: 2 },
+    id: 'wisp',
+    path: '/c/wisp',
+    viewport: PHONE,
+    faq: '[aria-label="Wisp FAQ"]',
+    query: 'cancel my post',
+    entry: 'post-note',
+    steps: 2,
+  },
+  {
+    id: 'coracle',
+    path: '/c/coracle',
+    viewport: DESK,
     faq: 'text:How do I',
-    query: 'tip someone',
-    entry: 'zap',
+    query: 'block someone',
+    entry: 'mute',
     steps: 1,
   },
   {
     id: 'nostur',
     path: '/c/nostur',
-    viewport: { w: 430, h: 775, dsf: 2 },
+    viewport: PHONE,
     faq: '[aria-label="Nostur FAQ"]',
     query: 'nothing loads',
     entry: 'low-data',
     steps: 3,
   },
+  {
+    id: 'damus-npub',
+    path: '/c/damus',
+    viewport: PHONE,
+    faq: '[aria-label="Damus FAQ"]',
+    query: 'share my profile',
+    entry: 'copy-npub',
+    steps: 1,
+  },
+];
+
+// Client switches used as interstitials between loops. Captured at the phone
+// viewport, where the switcher is a bottom sheet of client tiles — the one shot
+// that says "one tab, many apps" without a word of caption.
+const SWITCHES = [
+  // Tiles carry their client name as TEXT, not as an aria-label — the rail's
+  // buttons are the ones with labels, and the rail is not rendered at this width.
+  { id: 'sw-damus-nostur', from: '/c/damus', to: 'text:Nostur', wait: '[aria-label="Nostur FAQ"]' },
+  { id: 'sw-nostur-wisp', from: '/c/nostur', to: 'text:Wisp', wait: '[aria-label="Wisp FAQ"]' },
+  { id: 'sw-amethyst-damus', from: '/c/amethyst', to: 'text:Damus', wait: '[aria-label="Damus FAQ"]' },
 ];
 
 // -------------------------------------------------------------------- beats --
 const T = {
   afterLoad: 900,
   afterFaqOpen: 500,
-  perChar: 55,
+  // 110ms/char, not 55: the cut plays the typing at 1.0x, and 55ms/char reads as
+  // a machine even before any speed-up. The panel-opening half of the beat is
+  // sped up instead — see the `typing` mark.
+  perChar: 110,
   afterType: 800,
   readAnswer: 2400,
   afterShowMe: 300,
   holdStep: 1700,
   holdLastStep: 2500,
   tail: 700,
+  // switch interstitial
+  swSettle: 700,
+  swHold: 1300,
 };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -267,6 +310,37 @@ class Page {
       await sleep(perChar);
     }
   }
+
+  async pressKey(key, code = key, vk = key === 'ArrowRight' ? 39 : 0) {
+    for (const type of ['rawKeyDown', 'keyUp']) {
+      await this.send('Input.dispatchKeyEvent', {
+        type, key, code, windowsVirtualKeyCode: vk, nativeVirtualKeyCode: vk,
+      });
+    }
+  }
+
+  /**
+   * Hide the tour's own tooltip for the camera and keep the spotlight.
+   *
+   * The card carries "1 / 2", Prev / Next / Skip and a progress bar — product
+   * chrome that, on a phone-sized card, takes 30-45% of the frame and shouts
+   * louder than the client underneath. On video it reads as a demo of our
+   * onboarding widget rather than the app. The words it carries move to the
+   * caption band in the cut; the ring is what the shot is actually for.
+   *
+   * opacity rather than display:none on purpose — the overlay measures and
+   * positions the tooltip, and removing it from layout moves the spotlight.
+   */
+  async hideTourChrome() {
+    await this.eval(`(() => {
+      if (document.getElementById('__cap_hide_tour')) return true;
+      const s = document.createElement('style');
+      s.id = '__cap_hide_tour';
+      s.textContent = '.tour-tooltip{opacity:0 !important;pointer-events:none !important;}';
+      document.head.appendChild(s);
+      return true;
+    })()`);
+  }
 }
 
 // ------------------------------------------------------------- the recorder --
@@ -315,8 +389,13 @@ async function startPool(cdp, page, poolDir) {
   });
   // maxWidth/maxHeight in DEVICE pixels: without them Chrome emits frames at the
   // CSS viewport size and a dsf-2 capture arrives at half resolution.
+  // Cap the frame at 1600px on the long side. A desktop capture is 2560x2000 =
+  // 5MP per frame, and at that size the stream starves: one Coracle run produced
+  // 24 frames and stopped emitting entirely before the demo even started, so the
+  // beat the loop exists for was missing from the recording. Chrome only ever
+  // scales DOWN to this cap, and 1600 still outresolves the card it lands in.
   await page.send('Page.startScreencast', {
-    format: 'jpeg', quality: 92, everyNthFrame: 1, maxWidth: 2560, maxHeight: 2560,
+    format: 'jpeg', quality: 92, everyNthFrame: 1, maxWidth: 1600, maxHeight: 1600,
   });
   return {
     frames,
@@ -335,16 +414,24 @@ async function startPool(cdp, page, poolDir) {
  * nothing sits dead). Frames are filtered to the loop's own pixel size: the
  * viewport changes between loops and a size change mid-list breaks concat.
  */
-async function encodeRange(pool, t0, t1, dir, out, size) {
+async function encodeRange(pool, t0, t1, dir, out) {
   await mkdir(dir, { recursive: true });
-  const shot = pool.frames.filter((f) => f.at >= t0 && f.at <= t1 && f.w === size.w && f.h === size.h);
+  // Keep the window's DOMINANT frame size rather than a size computed up front:
+  // Chrome scales frames down to the screencast cap, and the first frame after a
+  // viewport change still carries the old geometry. A size change mid-list is
+  // what the concat demuxer refuses, so one size has to win — the common one.
+  const inWindow = pool.frames.filter((f) => f.at >= t0 && f.at <= t1);
+  const counts = new Map();
+  for (const f of inWindow) {
+    const k = `${f.w}x${f.h}`;
+    counts.set(k, (counts.get(k) ?? 0) + 1);
+  }
+  const [best] = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  const shot = best ? inWindow.filter((f) => `${f.w}x${f.h}` === best[0]) : [];
   if (shot.length === 0) {
-    const inWindow = pool.frames.filter((f) => f.at >= t0 && f.at <= t1);
-    const sizes = {};
-    for (const f of pool.frames) sizes[`${f.w}x${f.h}`] = (sizes[`${f.w}x${f.h}`] ?? 0) + 1;
     throw new Error(
-      `no frames for ${out}: wanted ${size.w}x${size.h}, window ${t1 - t0}ms held ` +
-      `${inWindow.length} frames, pool ${pool.frames.length} (${JSON.stringify(sizes)})`,
+      `no frames for ${out}: window ${t1 - t0}ms held ${inWindow.length} frames, ` +
+      `pool ${pool.frames.length}`,
     );
   }
   const lines = [];
@@ -387,6 +474,7 @@ async function captureLoop(page, pool, loop, baseUrl) {
   // machine a cold client chunk genuinely took longer than 15s to settle once.
   await page.until(`document.readyState === 'complete'`, { timeout: 30000, label: 'document ready' });
   await page.waitVisible(loop.faq, { timeout: 20000 });
+  await page.hideTourChrome();
   await page.installCursor();
   await sleep(T.afterLoad);
 
@@ -403,6 +491,7 @@ async function captureLoop(page, pool, loop, baseUrl) {
   const input = await page.waitVisible('[role="dialog"] input');
   await page.moveCursor(input.x, input.y);
   await page.clickAt(input.x, input.y);
+  marks.typing = Date.now() - t0;
   await page.typeText(loop.query, T.perChar);
   await page.until(`!!document.querySelector('[data-faq-entry="${loop.entry}"]')`, {
     label: `search hit for "${loop.query}"`,
@@ -428,15 +517,24 @@ async function captureLoop(page, pool, loop, baseUrl) {
   for (let step = 1; step <= loop.steps; step++) {
     // A mini-tour needs ~1-1.5s to mount its screen, and until it does the
     // tooltip renders centred with NO spotlight — filming that ships the exact
-    // failure mode the FAQ review spent itself hunting.
-    await page.until(
-      `(() => { const s = document.querySelector('.tour-spotlight'); if (!s) return false; const r = s.getBoundingClientRect(); return r.width > 8 && r.height > 8; })()`,
+    // failure mode the FAQ review spent itself hunting. (The tooltip is hidden
+    // for the camera, so this wait is also the only proof the step landed.)
+    const rect = await page.until(
+      `(() => { const s = document.querySelector('.tour-spotlight'); if (!s) return null; const r = s.getBoundingClientRect();
+        return (r.width > 8 && r.height > 8) ? JSON.stringify({x: r.x + r.width/2, y: r.y + r.height/2}) : null; })()`,
       { timeout: 12000, label: `spotlight for step ${step}` },
     );
+    // Park the pointer on what the ring contains. Without the tooltip there is
+    // nothing else in frame saying "look here", and a cursor left wherever the
+    // last click happened reads as an accident.
+    const c = JSON.parse(rect);
+    await page.moveCursor(c.x, c.y, { settle: 420 });
     await sleep(step === loop.steps ? T.holdLastStep : T.holdStep);
     if (step < loop.steps) {
       const before = await page.eval(`JSON.stringify(document.querySelector('.tour-spotlight')?.getBoundingClientRect())`);
-      await page.click('[aria-label="Next step"]');
+      // Keyboard, not the Next button: that button is inside the tooltip we just
+      // hid, and clicking an invisible control by coordinates is a coin flip.
+      await page.pressKey('ArrowRight');
       await page.until(
         `JSON.stringify(document.querySelector('.tour-spotlight')?.getBoundingClientRect()) !== ${JSON.stringify(before)}`,
         { timeout: 12000, label: `spotlight to move for step ${step + 1}` },
@@ -450,11 +548,44 @@ async function captureLoop(page, pool, loop, baseUrl) {
   await sleep(250); // let the last frames of the hold land in the pool
   await pool.flush();
   const out = join(WORK, `${loop.id}.mp4`);
-  const manifest = await encodeRange(pool, t0, t1, dir, out, { w: page.deviceW, h: page.deviceH });
+  const manifest = await encodeRange(pool, t0, t1, dir, out);
   await writeFile(join(dir, 'marks.json'), JSON.stringify(marks, null, 1));
 
   const secs = ((manifest.at(-1).at - manifest[0].at) / 1000).toFixed(1);
   return { id: loop.id, frames: manifest.length, secs, out };
+}
+
+// ------------------------------------------------------------- one switch ----
+async function captureSwitch(page, pool, sw, baseUrl) {
+  page.deviceW = PHONE.w * PHONE.dsf;
+  page.deviceH = PHONE.h * PHONE.dsf;
+  await page.send('Emulation.setDeviceMetricsOverride', {
+    width: PHONE.w, height: PHONE.h, deviceScaleFactor: PHONE.dsf, mobile: false,
+  });
+  await page.send('Page.navigate', { url: baseUrl + sw.from });
+  await page.until(`document.readyState === 'complete'`, { timeout: 30000, label: 'document ready' });
+  await page.waitVisible('[aria-label="Switch client"]', { timeout: 20000 });
+  await page.installCursor();
+  await sleep(T.afterLoad);
+
+  const dir = join(WORK, sw.id);
+  await rm(dir, { recursive: true, force: true });
+  const t0 = Date.now();
+
+  await page.click('[aria-label="Switch client"]');
+  await page.waitVisible(sw.to, { timeout: 8000 });
+  await sleep(T.swSettle);
+  await page.click(sw.to);
+  await page.waitVisible(sw.wait, { timeout: 20000 });
+  await sleep(T.swHold);
+
+  const t1 = Date.now();
+  await sleep(250);
+  await pool.flush();
+  const out = join(WORK, `${sw.id}.mp4`);
+  const manifest = await encodeRange(pool, t0, t1, dir, out);
+  const secs = ((manifest.at(-1).at - manifest[0].at) / 1000).toFixed(1);
+  return { id: sw.id, frames: manifest.length, secs, out };
 }
 
 // ------------------------------------------------------------ one browser ----
@@ -529,7 +660,8 @@ async function withBrowser(debugPort, loop, fn) {
 async function main() {
   const wanted = process.argv.slice(2);
   const loops = wanted.length ? LOOPS.filter((l) => wanted.includes(l.id)) : LOOPS;
-  if (!loops.length) throw new Error(`no such loop: ${wanted.join(', ')}`);
+  const switches = wanted.length ? SWITCHES.filter((s) => wanted.includes(s.id)) : SWITCHES;
+  if (!loops.length && !switches.length) throw new Error(`no such loop: ${wanted.join(', ')}`);
 
   await mkdir(WORK, { recursive: true });
   const { server, port } = await serveDist();
@@ -542,6 +674,14 @@ async function main() {
       process.stdout.write(`  · ${loop.id}: "${loop.query}" `);
       const r = await withBrowser(port + 1 + i, loop, (cdp, page, pool) =>
         captureLoop(page, pool, loop, baseUrl),
+      );
+      results.push(r);
+      console.log(`→ ${r.frames} frames, ${r.secs}s`);
+    }
+    for (const [i, sw] of switches.entries()) {
+      process.stdout.write(`  · ${sw.id} `);
+      const r = await withBrowser(port + 40 + i, sw, (cdp, page, pool) =>
+        captureSwitch(page, pool, sw, baseUrl),
       );
       results.push(r);
       console.log(`→ ${r.frames} frames, ${r.secs}s`);
