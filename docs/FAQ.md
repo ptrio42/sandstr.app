@@ -27,6 +27,18 @@
 | Coracle | 32 | 20 | **pierwszy klient bez wrappera** — zbudowany od zera |
 | **Razem** | **230** | **133** | +64 wpisy w rundzie 2 (8 × 8) |
 
+**Liczby w tabeli to snapshot drzewa roboczego z 2026-08-11** — nie aktualizują się same, więc przed
+cytowaniem ich gdziekolwiek indziej przelicz:
+
+```bash
+for f in src/data/faq/{amethyst,coracle,damus,nostur,primal,snort,wisp,yakihonne}.ts; do
+  echo "$(grep -cE "^      id: '" $f) $(grep -cE "^      showMe: \[" $f) $f"
+done | awk '{e+=$1;s+=$2; print} END{print "RAZEM", e, s}'
+```
+
+(pierwsza kolumna = wpisy, druga = mini-toury; wcięcie 6 spacji odróżnia pole wpisu od kluczy
+`coverage` i od pól kroków `showMe`).
+
 **Nie zrobione:** Keychat i Gossip — czekają na nowe nagrania (bez recon nie ma czym mierzyć).
 ~~Gossip ma dodatkowo `gos-01`~~ — **naprawione 2026-08-07** razem z przywróceniem typechecka: klik
 w notatkę nie rzuca już `TypeError`, wątek renderuje notę główną, a baner disclaimera zostaje na
@@ -36,7 +48,7 @@ ekranie. `ErrorBoundary` wokół `ClientView` nadal **nie istnieje** — to osob
 ## Mechanizmy, które trzymają jakość
 
 **1. Kontrakt pokrycia wymuszany przez kompilator.** `CANONICAL_TOPICS` w
-[`types.ts`](../src/data/faq/types.ts) to bank 16 tematów, na które **każdy** plik klienta musi
+[`types.ts`](../src/data/faq/types.ts) to bank 17 tematów, na które **każdy** plik klienta musi
 odpowiedzieć: id wpisu, `'n/a'` (klient nie ma takiej funkcji) albo `'todo'` (jawny dług). Plik, który
 pominie temat, nie przechodzi typechecka. Dodanie nowego tematu celowo psuje wszystkie pliki, dopóki
 każdy się nie zadeklaruje — to jest cel, nie uciążliwość.

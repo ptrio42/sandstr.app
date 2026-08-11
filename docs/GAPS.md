@@ -15,34 +15,43 @@
 > **Aktualizacja 2026-08-07:** przywrócenie `npm run typecheck` zamknęło `gos-01` (P0, crash kładący
 > hosta), `gos-05` i `gos-09` — wszystkie trzy były błędami typów, które martwy typecheck przemilczał.
 
-## Stan na 2026-08-06 (korekta 2026-08-08)
+## Stan na 2026-08-06 (korekty 2026-08-08 i 2026-08-11)
 
 > **Korekta 2026-08-08 — punktowa, nie ponowny audyt.** Fala 2 prac nad tourami zamknęła `key-35`
 > (kroki 5-6 toura Keychata nie docierały do pokoju rozmowy) i częściowo `dam-39` / `yak-32`.
-> Zaktualizowany jest tylko wiersz Keychata i suma. **Kolumny `Kotwice` celowo NIE ruszałem**, mimo
-> że praca dodała ~23 kotwice w siedmiu klientach: kolumna liczy coś innego niż literalne
-> `data-tour="…"` (część kotwic to wyrażenia, np. `data-tour={i === 0 ? 'x' : undefined}`), a nie
-> znam jej pierwotnej metodologii — wstawienie liczby policzonej inaczej byłoby gorsze niż zostawienie
-> starej. Do przeliczenia przy najbliższym pełnym audycie.
+>
+> **Przeliczenie 2026-08-11 — same liczby, żaden wiersz nie zmienił treści.** Tabela przeczyła sobie
+> w trzech miejscach: `Razem` (535) nie sumowało się z kolumn (534), wiersz Keychata (39) nie sumował
+> się do własnych statusów (38), a proza niżej mówiła „586 luk" i „231 dead". Wszystkie kolumny
+> policzono od zera z wierszy dziesięciu ledgerów (Rollup YakiHonne'a miał `unreachable` 5 zamiast
+> realnych 4 — poprawiony). Kolumnę `Kotwice`, zostawioną 2026-08-08 bez metodologii, też przeliczono
+> — metodologia jest teraz zapisana pod tabelą.
 
 | Klient | Status | Luki | `missing` | `dead` | `partial` | `unreachable` | `unanchored` | `ok` | Kotwice | Mostek FAQ |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|:--:|
-| [Damus](gaps/damus.md) | ready | 51 | 10 | 23 | 10 | 2 | 6 | 8 | 23 | ✅ |
-| [Amethyst](gaps/amethyst.md) | ready | 45 | 9 | 26 | 7 | 2 | 1 | 12 | 24 | ✅ |
-| [Primal](gaps/primal.md) | ready | 50 | 17 | 17 | 12 | 1 | 3 | 14 | 17 | ✅ |
-| [YakiHonne](gaps/yakihonne.md) | ready | 77 | 27 | 30 | 13 | 5 | 2 | 20 | 20 | ✅ |
-| [Snort](gaps/snort.md) | ready | 48 | 11 | 22 | 4 | 6 | 5 | 15 | 16 | ✅ |
-| [Wisp](gaps/wisp.md) | ready | 75 | 26 | 32 | 12 | 4 | 1 | 15 | 22 | ✅ |
-| [Coracle](gaps/coracle.md) | ready | 64 | 29 | 17 | 10 | 4 | 4 | 14 | 12 | ✅ |
-| [Nostur](gaps/nostur.md) | ready | 51 | 1 | 33 | 8 | 6 | 3 | 12 | 35 | ✅ |
-| [Keychat](gaps/keychat.md) | preview | 39 | 6 | 18 | 8 | 3 | 3 | 5 | 14 | ❌ |
+| [Damus](gaps/damus.md) | ready | 51 | 10 | 23 | 10 | 2 | 6 | 8 | 28 | ✅ |
+| [Amethyst](gaps/amethyst.md) | ready | 45 | 9 | 26 | 7 | 2 | 1 | 12 | 26 | ✅ |
+| [Primal](gaps/primal.md) | ready | 50 | 17 | 17 | 12 | 1 | 3 | 14 | 18 | ✅ |
+| [YakiHonne](gaps/yakihonne.md) | ready | 76 | 27 | 30 | 13 | 4 | 2 | 20 | 27 | ✅ |
+| [Snort](gaps/snort.md) | ready | 48 | 11 | 22 | 4 | 6 | 5 | 15 | 23 | ✅ |
+| [Wisp](gaps/wisp.md) | ready | 75 | 26 | 32 | 12 | 4 | 1 | 15 | 25 | ✅ |
+| [Coracle](gaps/coracle.md) | ready | 64 | 29 | 17 | 10 | 4 | 4 | 14 | 13 | ✅ |
+| [Nostur](gaps/nostur.md) | ready | 51 | 1 | 33 | 8 | 6 | 3 | 12 | 41 | ✅ |
+| [Keychat](gaps/keychat.md) | preview | 38 | 6 | 18 | 8 | 3 | 3 | 5 | 19 | ❌ |
 | [Gossip](gaps/gossip.md) | preview | 35 | 9 | 11 | 6 | 5 | 4 | 2 | 0 | ❌ brak wrappera |
-| **Razem** | | **535** | **145** | **229** | **90** | **38** | **32** | **117** | **183** | **8/10** |
+| **Razem** | | **533** | **145** | **229** | **90** | **37** | **32** | **117** | **220** | **8/10** |
 
-**Kotwice** = selektory `data-tour`, które da się wskazać spotlightem, łącznie z generowanymi
-szablonowo — np. Coracle ma jeden literał i jedną rodzinę `coracle-nav-${screen}` dającą 6 pozycji
-(`CoracleSimulator.tsx:535,812`), a Nostur 22 literały + rodziny `nostur-tab-*` i `nostur-drawer-*`.
-Sam grep po `data-tour="` policzy mniej — patrz sekcja *Anchors* w każdym ledgerze.
+**Metodologia kolumny `Kotwice`:** liczba **różnych wartości `data-tour`, jakie mogą trafić do DOM**
+danego klienta — każdy literał `data-tour="…"` plus każda wartość, jaką potrafi wyprodukować
+wyrażenie (szablon ``data-tour={`x-${id}`}`` rozwinięty po swojej tablicy źródłowej; warunek
+`data-tour={cond ? 'x' : undefined}` liczony jako jedna) — bez powtórzeń.
+
+Dlatego sam `grep 'data-tour="'` daje mniej: Coracle ma 7 literałów, ale rodzina
+`coracle-nav-${item.screen}` (`CoracleSimulator.tsx:609`) dokłada 6 pozycji z `NAV` (`:99-106`) → 13;
+Nostur ma 29 literałów + `nostur-tab-*` ×5 (`components/BottomBar.tsx:49` po `TABS` `:16-22`) +
+`nostur-drawer-*` ×7 (`components/Sidebar.tsx:90` po `ROWS` `:26-33`) → 41. Kotwica policzona tu
+**nie** znaczy „da się ją podświetlić zawsze": część jest duplikatami albo montuje się warunkowo —
+patrz sekcja *Anchors* w każdym ledgerze.
 
 Liczby `preview` (Keychat, Gossip) są **niższe, bo nie ma dla nich screen-mapy** — audytor mógł zgłosić
 tylko to, co da się oprzeć o `FIDELITY.md` albo o wprost martwy kod. Reszta poszła do „do recon" w ich
@@ -74,7 +83,7 @@ komenda `logout` (żeby dało się pokazać onboarding), payload sekcji w `openS
 
 ### 2. Nawigacja żyje, liście są martwe
 
-**231 z 586 luk to `dead`** — kontrolka renderuje się wiernie i nie robi nic. Wzorzec powtarza się
+**229 z 533 luk to `dead`** — kontrolka renderuje się wiernie i nie robi nic. Wzorzec powtarza się
 u wszystkich dziesięciu: górny poziom (zakładki, ekrany, drawery) jest zbudowany i osiągalny komendą,
 a wszystko o jedno kliknięcie niżej to ślepy zaułek. Najgęstsze skupisko to **Settings**: Primal 11
 martwych wierszy, Snort 12 z 13, Nostur 12, Keychat 6, a w Wispie cały podzbiór siedzi za drawerem,
@@ -100,9 +109,9 @@ to wciąż rekomendacja bez wiersza w żadnym ledgerze.
 
 ### 4. Kotwice rozłożone skrajnie nierówno
 
-Od **34** (Nostur) i 23 (Damus) do **7** (Coracle, 15 powierzchni na 4269 LOC) i **0** (Gossip).
+Od **41** (Nostur) i 28 (Damus) do **13** (Coracle, 15 powierzchni) i **0** (Gossip).
 Kotwica to jeden atrybut — najtańsza rzecz w całym backlogu — a jej brak jest twardym blokerem dla
-`showMe`. Osobno: `unanchored` (49) i `unreachable` (62) to **111 luk, w których symulator jest już
+`showMe`. Osobno: `unanchored` (32) i `unreachable` (37) to **69 luk, w których symulator jest już
 wierny** i brakuje wyłącznie haczyka albo komendy. To najlepszy stosunek zysku do wysiłku w tym pliku.
 
 ## Kolejność prac
@@ -113,17 +122,22 @@ wierny** i brakuje wyłącznie haczyka albo komendy. To najlepszy stosunek zysku
 2. ~~Mostek FAQ ×7~~ — zrobione dla 8/10; zostały Keychat i Gossip, oba czekają na nowe nagrania.
 3. ~~Wrapper dla Coracle~~ — zrobiony 2026-08-06. Zostaje Gossip.
 
-**P1 — tanie odblokowania `showMe` (`unanchored` + `unreachable`, 111 luk)**
-Kotwice tam, gdzie powierzchnia jest wierna i działa, oraz brakujące payloady komend. Najgęstsze:
-`pri-02` (8 z 9 wierszy nawigacji bez kotwicy), `yak-17` (3 z 5 zakładek bez payloadu),
-`yak-77` / `wis-71` / `nos-38` (drawer nieosiągalny, a za nim całe Settings), `wis-75`
-(`openSettings` zaszyte na `'interface'`), `cor-23` (wiersz akcji noty — najczęściej wskazywana
-powierzchnia w jakimkolwiek FAQ), `ame-30`, `key-05` i `yak-01` (brak `logout`, więc onboarding
-jest nie do odzyskania po pierwszym logowaniu).
+**P1 — tanie odblokowania `showMe` (`unanchored` + `unreachable`, 69 luk)**
+Kotwice tam, gdzie powierzchnia jest wierna i działa, oraz brakujące payloady komend. Najgęstsze
+skupiska po przeliczeniu 2026-08-11: **Snort 11** (`sno-38` wyniki wyszukiwania, `sno-39` compose
+w trybie reply, `sno-45`/`sno-46`/`sno-52`/`sno-53` bez kotwic), **Nostur 9** i **Gossip 9**
+(`gos-30` — zero kotwic w całym kliencie), **Coracle 8** (`cor-55` nagłówek profilu, `cor-57` taby
+Notifications, `cor-21` wiersz kontrolek feedu), **Damus 8** (`dam-34` wątek i `dam-35` Bookmarks bez
+komendy, `dam-45`…`dam-50` bez kotwic), **Keychat 6** (`key-05` — brak `logout`, więc onboarding jest
+nie do odzyskania po pierwszym logowaniu).
+
+*Poprzednia lista przykładów w tym akapicie (`pri-02`, `yak-17`, `yak-77`, `wis-71`, `nos-38`,
+`wis-75`, `cor-23`, `ame-30`, `yak-01`) była nieaktualna — wszystkie dziewięć wierszy ma dziś
+status `ok`.*
 
 **P2 — martwe liście, po kolei wg tego, o co FAQ realnie pyta**
 Settings (Primal, Snort, Nostur, Keychat), menu „…" w Snorcie (`sno-12` — jedyna droga do share,
-bookmark, mute i copy-ID), wątki (`sno-37` renderuje „This note could not be loaded", `gos-02`).
+bookmark, mute i copy-ID), wątki (`gos-02`; `sno-37` zamknięte 2026-08-06).
 
 **P3 — recon dla `preview`**
 Keychat i Gossip nie mają screen-mapy, więc ich ledgery są niepełne z definicji. Sekcja
@@ -135,7 +149,7 @@ Keychat i Gossip nie mają screen-mapy, więc ich ledgery są niepełne z defini
    `docs/refs/<client>/screen-map.md`, nie nasz symulator. Luka nie jest powodem, żeby nie odpowiedzieć.
 2. **`showMe` dodawaj tylko wtedy, gdy w ledgerze nie ma `missing` / `dead` / `unreachable`** na tej
    ścieżce. Sprawdź też sekcję *Anchors* — potrzebujesz istniejącego selektora, a nie wymyślonego.
-3. **Kończ mini-tour na podświetlonym ekranie albo wierszu, nigdy na „a teraz to kliknij"** — przy 231
+3. **Kończ mini-tour na podświetlonym ekranie albo wierszu, nigdy na „a teraz to kliknij"** — przy 229
    martwych kontrolkach ostatni krok najczęściej prowadzi w pustkę.
 4. **Maksymalnie 2 komendy na krok** — kolejka toura niezawodnie obsługuje tyle
    (`FaqShowMeStep.commands`). Powierzchnia wymagająca trzech przeskoków jest praktycznie nieosiągalna;
@@ -165,8 +179,9 @@ po audycie — te cztery przeoczyły go, mimo że grep pokazuje `FaqMiniTourLaun
   Tu jest wyłącznie brakująca **funkcja i ścieżka**.
 - **Świadomie odtworzone bugi upstreamu nie są lukami** (Snort: kafelek Relays bez tła, Deck jako martwy
   kod; Wisp: wycieki M3 `#4A4458`; Coracle: login bez pola na klucz). Audytorzy dostali je jako wykluczenia.
-- **Dwa ledgery** — [Keychat](gaps/keychat.md) i [YakiHonne](gaps/yakihonne.md) — mają opisy wierszy po
-  polsku, pozostałe po angielsku. Kosmetyka; ID, statusy i cytaty są w tym samym formacie wszędzie.
+- **Jeden ledger** — [Wisp](gaps/wisp.md) — ma opisy wierszy po **angielsku** (81 z 90 wierszy;
+  9 domkniętych 2026-08-06 dostało polski prefiks „Zamknięte…"). Pozostałych dziewięć, w tym Keychat
+  i YakiHonne, jest po polsku. Kosmetyka; ID, statusy i cytaty są w tym samym formacie wszędzie.
 
 **Aktualizacja:** ledger jest snapshotem. Zamykając lukę, skreśl wiersz w `gaps/<client>.md`, popraw
 Rollup i tabelę wyżej. Nie renumeruj ID — dokładaj na końcu.

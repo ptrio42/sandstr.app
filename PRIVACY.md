@@ -4,12 +4,14 @@ sandstr is a static, fully client-side site. There is no backend, no database,
 no analytics, no cookies, and no account system. Nothing you type or click is
 transmitted anywhere — there is no server of ours to transmit it to.
 
-**One honest caveat:** the simulators marked *Early preview* still load some
-placeholder avatars/images from third-party image services (DiceBear,
-Unsplash), which — like any image request — exposes your IP address to those
-services. The reference-verified simulators (Damus, Amethyst, Primal,
-YakiHonne) make **zero** external requests. Removing the remaining hotlinks is
-tracked work; until it lands, this file won't pretend otherwise.
+**One honest caveat:** the two simulators marked *Early preview* — Keychat and
+Gossip — still load placeholder avatars from a third-party image service
+(DiceBear; 12 hotlinked URLs, 9 in Keychat and 3 in Gossip), which — like any
+image request — exposes your IP address to that service. Every other simulator
+makes **zero** external requests, including all eight reference-verified ones
+(Damus, Amethyst, YakiHonne, Snort, Primal, Wisp, Nostur, Coracle). Removing
+the last hotlinks is tracked work; until it lands, this file won't pretend
+otherwise.
 
 ## What stays in your browser
 
@@ -20,7 +22,7 @@ device only:
 | --- | --- |
 | `sandstr-theme` | your light/dark choice, if you've made one |
 | `sandstr-preferences` | whether guided tours are enabled |
-| `nostr-tour-<client>` | which guided tours you've completed or skipped |
+| `nostr-tour-<client>` | which guided tours you've completed or skipped — plus the FAQ's "Show me" replays, which share one slot per client under `nostr-tour-<client>-faq` |
 
 That's the complete list. There is no device ID, no fingerprinting, and no
 usage tracking of any kind — not "opt-in", just absent.

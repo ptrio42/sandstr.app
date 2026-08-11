@@ -34,11 +34,13 @@
   # against a future regression. Same reasoning for form-action (no <form> in
   # the tree) and frame-src (no <iframe>).
   #
-  # img-src carries the two hotlink origins: ~72 DiceBear/Unsplash URLs still
-  # live in the mock data, the top cross-cutting task in CLAUDE.md. When they
-  # are gone, delete both origins and the policy collapses into a true
-  # `default-src 'self'` — which is the moment the "runs behind a hostile or
-  # absent network" claim becomes checkable rather than aspirational.
+  # img-src carries one hotlink origin, down from two: 12 DiceBear URLs still
+  # live in the two Early preview simulators (Keychat 9, Gossip 3), the top
+  # cross-cutting task in CLAUDE.md. Unsplash is at zero across src/ — the mock
+  # data now ships local `data:` SVGs — so its origin came out of the line
+  # below. When the last twelve go, DiceBear follows and the policy collapses
+  # into a true `default-src 'self'` — which is the moment the "runs behind a
+  # hostile or absent network" claim becomes checkable rather than aspirational.
   #
   # style-src needs 'unsafe-inline' for style ATTRIBUTES: the prerendered
   # gallery ships 11 of them and framer-motion writes more at runtime.
@@ -49,7 +51,7 @@
   # the prerendered gallery on /c/* before first paint). scripts/verify-headers.mjs
   # recomputes it from the built HTML and fails the build if the two drift, so
   # this string can never go stale in silence.
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-qD9nls13n7ZCQmhw8X/YYLZkvwG4A+HM9Xx5NICl96U='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://api.dicebear.com https://images.unsplash.com; font-src 'self'; connect-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-qD9nls13n7ZCQmhw8X/YYLZkvwG4A+HM9Xx5NICl96U='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://api.dicebear.com; font-src 'self'; connect-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
 
 /assets/*
   # Vite content-hashes every filename under here, so the bytes at a given URL

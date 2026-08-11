@@ -44,4 +44,15 @@ export const fidelityReportUrl = (entry: ClientEntry) =>
 
 export const addReferenceUrl = () => issueUrl('2-add-reference.yml');
 
+/**
+ * Blob URL for a file that ships in the repo but not in the build — today the
+ * legal set (LICENSE, PRIVACY.md, TRADEMARKS.md, THIRD-PARTY.md), which the
+ * footer has to reach somehow. Deliberately NOT copies under `public/`: a copy
+ * drifts from the canonical text, and `wrangler.jsonc` sets
+ * `not_found_handling: "single-page-application"`, so a missing /PRIVACY.md
+ * would quietly render the gallery instead of 404ing. `main` is the repo's
+ * default branch — a wrong segment here 404s.
+ */
+export const repoFileUrl = (path: string) => `${REPO}/blob/main/${path}`;
+
 export const requestClientUrl = () => issueUrl('3-request-client.yml');

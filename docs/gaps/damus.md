@@ -86,8 +86,9 @@
 | Selector | Plik:linia | Powierzchnia |
 |---|---|---|
 | `damus-login` | `screens/LoginScreen.tsx:18` | Root ekranu powitalnego (SetupView) |
-| `damus-post` | `screens/LoginScreen.tsx:58` | Przycisk "Let's go" w widoku Create Account — **kolizja nazwy** z CTA Post w komposerze (rozłączne stany, ale mylące) |
+| `damus-auth-actions` | `screens/LoginScreen.tsx:45` | Pasek CTA landingu (Create Account / Sign In / linia EULA). **Zastąpił dawną kotwicę `damus-post` na „Let's go"** — duplikat nazwy CTA komposera usunięto (komentarz `screens/LoginScreen.tsx:60-65`) |
 | `damus-home` | `screens/HomeScreen.tsx:31` | Root feedu Home |
+| `damus-note` | `components/NoteCard.tsx:64` | Cała karta noty — **powtarza się na każdej karcie** |
 | `damus-dms` | `screens/DMScreen.tsx:24` | Root listy DM |
 | `damus-search` | `screens/SearchScreen.tsx:27` | Root Universe |
 | `damus-notifications` | `screens/NotificationsScreen.tsx:28` | Root Notifications |
@@ -95,14 +96,19 @@
 | `damus-npub` | `screens/SideMenu.tsx:51` | Pigułka npub w drawerze (martwa — dam-13) |
 | `damus-menu-profile` … `-wallet` `-purple` `-muted` `-relays` `-bookmarks` `-merch` `-settings` `-logout` | `screens/SideMenu.tsx:62` (template literal) | 9 wierszy drawera; brak `-labs` i `-live`, bo wierszy nie ma (dam-09) |
 | `damus-relays` | `screens/RelaysScreen.tsx:22` | Root ekranu Relays |
-| `damus-settings` | `screens/SettingsScreen.tsx:51` | Root ekranu Settings (brak kotwic per-wiersz — patrz dam-42) |
+| `damus-settings` | `screens/SettingsScreen.tsx:55` | Root ekranu Settings |
+| `damus-settings-account` | `screens/SettingsScreen.tsx:71` (prop `tour` → `:25`) | Settings → grupa „Account" |
+| `damus-settings-keys` | `screens/SettingsScreen.tsx:72` (prop `tour` → `:47`) | Settings → wiersz „Keys" (sam wiersz nadal martwy — dam-42) |
 | `damus-profile` | `screens/ProfileScreen.tsx:30` | Root ekranu profilu |
-| `damus-follow` | `screens/ProfileScreen.tsx:50` / `:55` | Gałąź własnego profilu = przycisk **Edit** (martwy, dam-39); gałąź cudzego = pigułka Follow |
+| `damus-profile-identity` | `screens/ProfileScreen.tsx:69` | Blok tożsamości na profilu (nazwa + pigułka npub) |
+| `damus-follow` | `screens/ProfileScreen.tsx:58` | **Tylko** gałąź cudzego profilu = pigułka Follow. Gałąź własna (przycisk Edit, `:53`) kotwicy już NIE ma — zdjęta 2026-08-08, patrz dam-39 i komentarz `:50-52` |
 | `damus-compose` | `components/TabBar.tsx:25` | FAB compose |
 | `damus-post` | `screens/ComposeScreen.tsx:31` | CTA "Post" w komposerze |
-| `damus-interactions` | `components/NoteCard.tsx:118` | Rząd akcji noty — **powtarza się na każdej karcie**, spotlight łapie pierwszą |
+| `damus-interactions` | `components/NoteCard.tsx:121` | Rząd akcji noty — **powtarza się na każdej karcie**, spotlight łapie pierwszą |
 
-**23 różne selektory `data-tour` z 17 miejsc w kodzie.** Poza nimi FAQ opiera się na selektorach nie-`data-tour`:
+**28 różnych wartości `data-tour`** (17 literałów + rodzina `damus-menu-*` ×9 + 2 z propów `Group`/`Row`
+w Settings) z 21 miejsc w kodzie — metodologia liczenia w [`../GAPS.md`](../GAPS.md).
+Poza nimi FAQ opiera się na selektorach nie-`data-tour`:
 `.damus-action.is-reply|is-repost|is-like|is-zap`, `.damus-tab[aria-label="dms|search|notifications"]`,
 `.damus-search`, `.damus-segment`, `[aria-label="Open menu"]` (dam-46…dam-50).
 

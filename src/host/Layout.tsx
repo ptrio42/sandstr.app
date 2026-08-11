@@ -3,7 +3,7 @@ import { Moon, Sun } from 'lucide-react';
 import ClientSwitcher from './ClientSwitcher';
 import SandstrLogo from './brand/SandstrLogo';
 import { useTheme } from './useTheme';
-import { addReferenceUrl, requestClientUrl } from './contribute';
+import { addReferenceUrl, repoFileUrl, requestClientUrl } from './contribute';
 import { cn } from '../utils/cn';
 
 export default function Layout() {
@@ -102,6 +102,30 @@ export default function Layout() {
               send reference material
             </a>{' '}
             for one, which is how the next reproduction actually gets built.
+          </p>
+          {/* The legal set ships in the repo, not in the build, so without this
+              row a visitor on the live URL has no route to it at all. Links go
+              to GitHub blobs rather than copies under public/ — see
+              repoFileUrl() in src/host/contribute.ts for why. */}
+          <p className="mt-3 text-gray-400 dark:text-gray-500">
+            {[
+              ['LICENSE', 'License'],
+              ['PRIVACY.md', 'Privacy'],
+              ['TRADEMARKS.md', 'Trademarks'],
+              ['THIRD-PARTY.md', 'Third-party attribution'],
+            ].map(([file, label], i) => (
+              <span key={file}>
+                {i > 0 && <span className="mx-2">·</span>}
+                <a
+                  href={repoFileUrl(file)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  {label}
+                </a>
+              </span>
+            ))}
           </p>
         </footer>
       )}

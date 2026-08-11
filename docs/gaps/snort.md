@@ -96,24 +96,34 @@ kropka `has-unread` (§10), martwy link "Supported Extensions" (§15), brak zak�
 
 ## Anchors — `data-tour` obecne w symulatorze
 
-10 różnych selektorów (11 wystąpień — `snort-profile` renderuje się w dwóch gałęziach tego samego ekranu).
+**23 różne wartości `data-tour`** (15 literałów + rodzina `snort-nav-*` ×5 + `snort-note`,
+`snort-interactions`, `snort-settings-preferences` z wyrażeń warunkowych) z 21 miejsc w kodzie —
+metodologia liczenia w [`../GAPS.md`](../GAPS.md).
 
 | Selector | Plik:linia | Powierzchnia |
 |---|---|---|
 | `[data-tour="snort-login"]` | `screens/LoginScreen.tsx:130` | karta Sign In (460px `layer-1`) |
+| `[data-tour="snort-login-extension"]` | `screens/LoginScreen.tsx:165` | przycisk logowania rozszerzeniem (NIP-07) |
 | `[data-tour="snort-feed"]` | `screens/TimelineScreen.tsx:161` | lista notek na home feedzie (`.snort-feed`) |
-| `[data-tour="snort-interactions"]` | `components/NoteCard.tsx:242` | pasek akcji **pierwszej** notki (`tourTarget`) |
-| `[data-tour="snort-compose"]` | `SnortSimulator.tsx:684` | przycisk "＋ New Note" w lewym railu |
+| `[data-tour="snort-note"]` | `components/NoteCard.tsx:130` | cała **pierwsza** karta notki (`tourTarget`) |
+| `[data-tour="snort-interactions"]` | `components/NoteCard.tsx:245` | pasek akcji **pierwszej** notki (`tourTarget`) |
+| `[data-tour="snort-nav-<screen>"]` | `SnortSimulator.tsx:709` (szablon) | Rodzina: 5 pozycji raila — `timeline` `discover` `notifications` `messages` `settings` (`NAV` `:85-91`). **Dodane po audycie, zamyka sno-44** |
+| `[data-tour="snort-compose"]` | `SnortSimulator.tsx:724` (rail) **i** `:625` (dolny pasek ≤768px) | przycisk "＋ New Note"; obie gałęzie noszą tę samą nazwę, ale montuje się dokładnie jedna (komentarz `:621-624`) |
 | `[data-tour="snort-post"]` | `screens/ComposeScreen.tsx:238` | przycisk "Send"/"Reply" w modalu compose |
 | `[data-tour="snort-profile"]` | `screens/ProfileScreen.tsx:412` (+ `:199` pusty stan) | cały ekran profilu |
-| `[data-tour="snort-follow"]` | `screens/ProfileScreen.tsx:471` | przycisk Follow/Unfollow (tylko cudzy profil) |
+| `[data-tour="snort-profile-header"]` | `screens/ProfileScreen.tsx:419` | nagłówek profilu (AvatarSection + ProfileDetails: awatar, akcje, nazwa, NIP-05, bio) |
+| `[data-tour="snort-follow"]` | `screens/ProfileScreen.tsx:473` | przycisk Follow/Unfollow (tylko cudzy profil) |
 | `[data-tour="snort-settings"]` | `screens/SettingsScreen.tsx:113` | indeks ustawień (`.snort-settings`) |
+| `[data-tour="snort-settings-preferences"]` | `screens/SettingsScreen.tsx:124` (warunek `item.id === 'preferences'`) | Settings → wiersz „Preferences" |
 | `[data-tour="snort-relays"]` | `screens/RelaysScreen.tsx:195` | cały ekran relayów |
 | `[data-tour="snort-discover"]` | `screens/DiscoverScreen.tsx:170` | cały ekran Discover |
+| `[data-tour="snort-notifications"]` | `screens/NotificationsScreen.tsx:194` | cały ekran Notifications (zamyka sno-47) |
+| `[data-tour="snort-messages"]` | `screens/MessagesScreen.tsx:212` | cały ekran Messages (zamyka sno-48) |
+| `[data-tour="snort-search"]` | `screens/SearchScreen.tsx:114` | cały ekran Search (zamyka sno-49) |
+| `[data-tour="snort-thread"]` | `screens/ThreadScreen.tsx:110` | cały ekran wątku (zamyka sno-50) |
 
-Bez kotwicy: rail nav (sno-44), feed picker (sno-45), SearchBox (sno-46), Notifications (sno-47),
-Messages (sno-48), Search (sno-49), Thread (sno-50), Add Relays (sno-51), pigułki profilu (sno-52),
-kontrolki stopki compose (sno-53).
+Bez kotwicy nadal: feed picker (sno-45), SearchBox (sno-46), Add Relays (sno-51), pigułki profilu
+(sno-52), kontrolki stopki compose (sno-53).
 
 ## Reachability — komendy toura
 

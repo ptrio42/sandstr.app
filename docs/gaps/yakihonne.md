@@ -7,7 +7,7 @@
 
 | missing | dead | partial | unreachable | unanchored | ok |
 |---|---|---|---|---|---|
-| 27 | 30 | 13 | 5 | 2 | 20 |
+| 27 | 30 | 13 | 4 | 2 | 20 |
 
 **Top 3 do zrobienia:** yak-19 (menu „⋯" noty — jedyna droga do Bookmark/Share/Mute) · yak-30 (pasek narzędzi
 komponera) · yak-32 (przycisk Follow bez handlera).
@@ -120,18 +120,34 @@ zamknięte 2026-08-06 przy wdrażaniu FAQ; wiersze niżej oznaczone.)*
 | Selector | Plik:linia | Powierzchnia |
 |---|---|---|
 | `yakihonne-keys` | `screens/LoginScreen.tsx:32` | Root landingu onboardingu (cały ekran, nie pole klucza) — po zalogowaniu nie do odzyskania (yak-01) |
-| `yakihonne-feed` | `screens/HomeScreen.tsx:29` | Root ekranu Home (app bar + feed) — **pierwszy w DOM, to on wygrywa** |
-| `yakihonne-feed` | `components/TabBar.tsx:42` | Przycisk zakładki Home — **duplikat selektora**, nieosiągalny dla `querySelector` (yak-91) |
+| `yakihonne-login-actions` | `screens/LoginScreen.tsx:46` | Pasek trzech CTA landingu (Log in / Create account / Continue as a guest) |
+| `yakihonne-feed` | `screens/HomeScreen.tsx:29` | Root ekranu Home (app bar + feed) |
+| `yakihonne-tab-<id>` | `components/TabBar.tsx:45` (szablon) | Rodzina: 5 zakładek dolnego paska — `home` `media` `wallet` `dms` `notifications` (tablica `tabs` `:18-23`). **Zastąpiła duplikat `yakihonne-feed` na przycisku Home (yak-91)** |
 | `yakihonne-feedsel` | `components/FeedSelector.tsx:35` | Trigger selektora feedu w app barze (nie sam arkusz — yak-13) |
-| `yakihonne-profile` | `screens/HomeScreen.tsx:33` | Awatar/hamburger w app barze Home — **pierwszy w DOM** |
-| `yakihonne-profile` | `screens/ProfileScreen.tsx:41` | Root overlaya Profile — **duplikat, nigdy nie trafiony** (yak-40) |
-| `yakihonne-follow` | `screens/ProfileScreen.tsx:54` | Przycisk Follow / Edit profile — **martwy** (yak-32) |
+| `yakihonne-profile` | `screens/HomeScreen.tsx:33` | Awatar/hamburger w app barze Home |
+| `yakihonne-profile-screen` | `screens/ProfileScreen.tsx:43` | Root overlaya Profile. **Zastąpił duplikat `yakihonne-profile` (yak-40)** |
+| `yakihonne-profile-id` | `screens/ProfileScreen.tsx:55` | Blok tożsamości na profilu (nazwa + npub) |
+| `yakihonne-follow` | `screens/ProfileScreen.tsx:59` | Przycisk Follow / Edit profile — **martwy** (yak-32) |
+| `yakihonne-drawer` | `components/Drawer.tsx:42` | Panel szuflady |
 | `yakihonne-compose` | `components/TabBar.tsx:29` | Pomarańczowy FAB (montowany tylko gdy `fabVisible`) |
 | `yakihonne-post` | `screens/ComposeSheet.tsx:45` | Przycisk Send w arkuszu Compose |
 | `yakihonne-interactions` | `components/NoteCard.tsx:122` | Cały rząd akcji noty — **powtarza się na każdej karcie** (6 w feedzie), `querySelector` bierze pierwszą |
 | `yakihonne-zaps` | `components/NoteCard.tsx:138` | Przycisk zapa — również powtarzalny per karta |
+| `yakihonne-article` | `screens/ArticleReader.tsx:19` | Root czytnika long-formu |
+| `yakihonne-media` | `screens/MediaScreen.tsx:16` | Root ekranu Media |
+| `yakihonne-dms` | `screens/MessagesScreen.tsx:12` | Root ekranu DMs |
+| `yakihonne-notifications` | `screens/NotificationsScreen.tsx:47` | Root ekranu Notifications |
+| `yakihonne-search` | `screens/SearchScreen.tsx:32` | Root overlaya Search |
+| `yakihonne-relays` | `screens/RelaysScreen.tsx:19` | Root ekranu Relay orbits |
+| `yakihonne-wallet` | `screens/WalletScreen.tsx:33` | Root ekranu Wallet |
+| `yakihonne-settings` | `screens/SettingsScreen.tsx:61` | Root ekranu Settings |
+| `yakihonne-settings-wallets` | `screens/SettingsScreen.tsx:75` (prop `r.tour`, definicja `:51`) | Settings → wiersz „Wallets" — jedyny wiersz z własną kotwicą |
 
-**9 unikalnych selektorów / 11 wystąpień.** Zero kotwic ma: Settings, Wallet, Relay orbits, Search, Home dashboard, Notification settings, Drawer, Thread, Article reader, Media, DMs, Notifications, oba ekrany auth poza landingiem.
+**27 różnych wartości `data-tour`** (21 literałów + rodzina `yakihonne-tab-*` ×5 + `yakihonne-settings-wallets`
+z propa) z 23 miejsc w kodzie — metodologia liczenia w [`../GAPS.md`](../GAPS.md).
+**Zero kotwic mają nadal:** Home dashboard (`screens/DashboardScreen.tsx`), Notification settings
+(`screens/NotificationSettingsScreen.tsx`), Thread (`screens/ThreadScreen.tsx`) i oba ekrany auth poza
+landingiem (`screens/SignInScreen.tsx`, `screens/SignUpScreen.tsx`).
 
 ## Reachability — komendy toura
 

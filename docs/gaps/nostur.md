@@ -90,8 +90,9 @@ z czego 12 to same wiersze Settings) i **brak mostka FAQ** (nos-01).
 
 ## Anchors — `data-tour` obecne w symulatorze
 
-22 literalne nazwy + 2 rodziny generowane (`nostur-tab-<id>` ×5, `nostur-drawer-<id>` ×7)
-= **34 selektory** faktycznie obecne w DOM. Najlepsze pokrycie w repo — ale patrz kolumna „uwaga".
+29 literalnych nazw + 2 rodziny generowane (`nostur-tab-<id>` ×5, `nostur-drawer-<id>` ×7)
+= **41 różnych wartości `data-tour`** faktycznie obecnych w DOM (metodologia liczenia
+w [`../GAPS.md`](../GAPS.md)). Najlepsze pokrycie w repo — ale patrz kolumna „uwaga".
 
 | Selector | Plik:linia | Powierzchnia / uwaga |
 |---|---|---|
@@ -103,7 +104,8 @@ z czego 12 to same wiersze Settings) i **brak mostka FAQ** (nos-01).
 | `[data-tour="nostur-post"]` | `components/PostCard.tsx:88` | **Każda** karta posta — selektor trafia wiele elementów; w `showMe` używaj z ograniczeniem albo celuj w rodzica |
 | `[data-tour="nostur-actionbar"]` | `components/ActionBar.tsx:58` | Rząd akcji pod postem (też wielokrotny) |
 | `[data-tour="nostur-zap"]` | `components/ActionBar.tsx:103` | Przycisk zapa w rzędzie akcji |
-| `[data-tour="nostur-fab"]` | `NosturSimulator.tsx:393` | FAB „New post" (tylko Home i wypchnięty profil — nos-14) |
+| `[data-tour="nostur-lowdata-block"]` | `components/PostCard.tsx:164` | Blok „Loading paused (Low data mode)" — celowo na bloku, nie na „pierwszym poście": media są losowane per nota (komentarz `:161-163`) |
+| `[data-tour="nostur-fab"]` | `NosturSimulator.tsx:434` | FAB „New post" (tylko Home i wypchnięty profil — nos-14) |
 | `[data-tour="nostur-thread"]` | `screens/ThreadScreen.tsx:79` | Post detail (scroller) — osiągalny `openThread` |
 | `[data-tour="nostur-profile"]` | `screens/ProfileScreen.tsx:85` | Profil (scroller). Komendą montuje się **tylko własny** (nos-21) |
 | `[data-tour="nostur-notifications"]` | `screens/NotificationsScreen.tsx:56` | Lista powiadomień (nie taby — te są bez kotwicy) |
@@ -113,11 +115,17 @@ z czego 12 to same wiersze Settings) i **brak mostka FAQ** (nos-01).
 | `[data-tour="nostur-compose"]` | `screens/ComposeScreen.tsx:31` | Arkusz „New Post" — osiągalny `compose` |
 | `[data-tour="nostur-send"]` | `screens/ComposeScreen.tsx:42` | Compose → `paperplane` (wysyłka; nota nie ląduje w feedzie — nos-52) |
 | `[data-tour="nostur-zapsheet"]` | `components/ZapSheet.tsx:38` | Arkusz „Send sats" — osiągalny `zap` |
+| `[data-tour="nostur-zap-amounts"]` | `components/ZapSheet.tsx:55` | Siatka 16 monet w arkuszu „Send sats" |
 | `[data-tour="nostur-sidebar"]` | `components/Sidebar.tsx:50` | Szuflada — osiągalna `openDrawer` |
-| `[data-tour="nostur-drawer-<id>"]` | `components/Sidebar.tsx:84` | 7 wierszy: `profile` `feeds` `bookmarks` `badges` `settings` `blocklist` `signer`. **Bez `logout`** (nos-25) |
+| `[data-tour="nostur-switcher"]` | `components/Sidebar.tsx:62` | Szuflada → para avatar + „…" (przełącznik kont), zakotwiczona jako jedna powierzchnia |
+| `[data-tour="nostur-drawer-rows"]` | `components/Sidebar.tsx:83` | Szuflada → cała lista wierszy (dla kroków o liście, nie o pojedynczym wierszu) |
+| `[data-tour="nostur-drawer-<id>"]` | `components/Sidebar.tsx:90` (szablon) | 7 wierszy z `ROWS` (`:26-33`): `profile` `feeds` `bookmarks` `badges` `settings` `blocklist` `signer` |
+| `[data-tour="nostur-drawer-logout"]` | `components/Sidebar.tsx:98` | Wiersz „Log out" — poza tablicą `ROWS`, własny literał. **Zamyka nos-25** (dawniej: rodzina była „bez `logout`") |
 | `[data-tour="nostur-settings"]` | `screens/SettingsScreens.tsx:49` | Settings root — osiągalny `openSettings` |
-| `[data-tour="nostur-relays"]` | `screens/SettingsScreens.tsx:209` | Relay Connections — **SIEROTA**: żadna komenda nie montuje tego ekranu (nos-38) |
-| `[data-tour="nostur-feeds"]` | `screens/SettingsScreens.tsx:338` | Lists & Feeds („Feeds") — **SIEROTA**: jw. (nos-38) |
+| `[data-tour="nostur-settings-relays"]` | `screens/SettingsScreens.tsx:59` | Settings → grupa „Relay Connections + Spam Filtering" (NIE podekran — komentarz `:57-58`) |
+| `[data-tour="nostur-relays"]` | `screens/SettingsScreens.tsx:211` | Relay Connections — **SIEROTA**: żadna komenda nie montuje tego ekranu (nos-38) |
+| `[data-tour="nostur-zapsettings"]` | `screens/SettingsScreens.tsx:135` | Settings → Zaps — **SIEROTA**: jw. (nos-38) |
+| `[data-tour="nostur-feeds"]` | `screens/SettingsScreens.tsx:340` | Lists & Feeds („Feeds") — **SIEROTA**: jw. (nos-38) |
 | `[data-tour="nostur-tab-<id>"]` | `components/BottomBar.tsx:49` | 5 zakładek dolnego paska: `home` `bookmarks` `search` `notifications` `messages` |
 
 **Stabilne selektory zastępcze** (bez `data-tour`, ale wystarczające dla `showMe` — tak jak

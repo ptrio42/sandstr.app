@@ -81,6 +81,7 @@ i kotwice ame-25/ame-27 zamknięte 2026-08-06 przy wdrażaniu FAQ; wiersze niże
 | Selector | Plik:linia | Powierzchnia |
 |---|---|---|
 | `[data-tour="amethyst-login"]` | `screens/LoginScreen.tsx:104` | Cały ekran logged-off — obejmuje **oba** tryby (Login i Sign Up), więc nie rozróżnia ich |
+| `[data-tour="amethyst-login-key"]` | `screens/LoginScreen.tsx:115` | Pole „nsec / npub" na ekranie logowania |
 | `[data-tour="amethyst-feed"]` | `screens/HomeScreen.tsx:117` | Cały Home (app bar + sub-taby + feed) — kontener, nie sam feed |
 | `[data-tour="amethyst-profile-avatar"]` | `components/AppTopBar.tsx:25` | Avatar w app barze = otwieracz szuflady; obecny na Home/Messages/Notifications/Discover/Shorts |
 | `[data-tour="amethyst-nav"]` | `components/BottomNav.tsx:31` | Dolny pasek nawigacji (całość; itemy tylko przez `aria-label`) |
@@ -90,14 +91,17 @@ i kotwice ame-25/ame-27 zamknięte 2026-08-06 przy wdrażaniu FAQ; wiersze niże
 | `[data-tour="amethyst-profile"]` | `screens/ProfileScreen.tsx:52` | Ekran profilu (kontener) |
 | `[data-tour="amethyst-follow"]` | `screens/ProfileScreen.tsx:85` | Pill Follow/Unfollow |
 | `[data-tour="amethyst-settings"]` | `screens/SettingsScreen.tsx:24` | Overlay Settings — **wspólny dla wszystkich trzech sekcji** (preferences/security/relays) |
-| `[data-tour="amethyst-drawer"]` | `components/Drawer.tsx` (panel) | Account drawer — cały panel *(dodane 2026-08-06)* |
-| `[data-tour="amethyst-drawer-<slug>"]` | `components/Drawer.tsx` (wiersze) | Rodzina: każdy z 11 wierszy menu szuflady, slug z labela (`…-relays`, `…-backup-keys`, `…-media-servers`, …) *(dodane 2026-08-06)* |
-| `[data-tour="amethyst-messages"]` | `screens/MessagesScreen.tsx` (root) | Ekran Messages *(dodane 2026-08-06, zamyka ame-25)* |
-| `[data-tour="amethyst-notifications"]` | `screens/NotificationsScreen.tsx` (root) | Ekran Notifications *(dodane 2026-08-06, zamyka ame-27)* |
+| `[data-tour="amethyst-relays-outbox"]` | `screens/SettingsScreen.tsx:175` (prop `tour` → `:188`) | Settings → Relays → grupa „Public Outbox/Home Relays". Bliźniacza sekcja Inbox (`:177`) propa nie dostaje, więc kotwicy nie ma |
+| `[data-tour="amethyst-drawer"]` | `components/Drawer.tsx:48` | Account drawer — cały panel *(dodane 2026-08-06)* |
+| `[data-tour="amethyst-drawer-<slug>"]` | `components/Drawer.tsx:78` (szablon) | Rodzina: każdy z 11 wierszy menu szuflady (`MENU` `:20-31`), slug z labela (`…-relays`, `…-backup-keys`, `…-media-servers`, …) *(dodane 2026-08-06)* |
+| `[data-tour="amethyst-messages"]` | `screens/MessagesScreen.tsx:61` | Ekran Messages *(dodane 2026-08-06, zamyka ame-25)* |
+| `[data-tour="amethyst-notifications"]` | `screens/NotificationsScreen.tsx:24` | Ekran Notifications *(dodane 2026-08-06, zamyka ame-27)* |
 
-**Razem: 10 kotwic.** Stabilne selektory pomocnicze bez `data-tour` (można ich używać w `showMe`, nie trzeba dokładać atrybutu): `.action-btn-reply` / `.action-btn-repost` / `.action-btn-like` / `.action-btn-zap` (`amethyst.theme.css:585-612`), `.md-bottom-nav-item` + `[aria-label="Messages"|"Notifications"|"Shorts"|"Discover"|"Home"]` (`components/BottomNav.tsx:36-37`), `.amethyst-simulator` (root).
+**Razem: 26 różnych wartości `data-tour`** (14 literałów + rodzina `amethyst-drawer-*` ×11 +
+`amethyst-relays-outbox` z propa) z 16 miejsc w kodzie — metodologia liczenia w [`../GAPS.md`](../GAPS.md).
+Stabilne selektory pomocnicze bez `data-tour` (można ich używać w `showMe`, nie trzeba dokładać atrybutu): `.action-btn-reply` / `.action-btn-repost` / `.action-btn-like` / `.action-btn-zap` (`amethyst.theme.css:585-612`), `.md-bottom-nav-item` + `[aria-label="Messages"|"Notifications"|"Shorts"|"Discover"|"Home"]` (`components/BottomNav.tsx:36-37`), `.amethyst-simulator` (root).
 
-**Bez kotwicy, a warte jej:** account drawer i jego wiersze (`components/Drawer.tsx:48,73`), ekran Notifications + wykres (`screens/NotificationsScreen.tsx:24,44`), Messages + taby (`screens/MessagesScreen.tsx:61,68`), ThreadScreen (`screens/ThreadScreen.tsx:25`), selektor feedu (`components/FeedSelector.tsx:16`), sub-taby Home (`screens/HomeScreen.tsx:122`), licznik relayów (`components/AppTopBar.tsx:35`), pojedyncze sekcje Settings.
+**Bez kotwicy, a warte jej:** ThreadScreen (`screens/ThreadScreen.tsx:25`), selektor feedu (`components/FeedSelector.tsx:16`), sub-taby Home (`screens/HomeScreen.tsx:122`), licznik relayów (`components/AppTopBar.tsx:35`), wykres na Notifications (`screens/NotificationsScreen.tsx:44`), taby Messages (`screens/MessagesScreen.tsx:68`), pozostałe sekcje Settings. *(Drawer, jego wiersze oraz rooty Notifications i Messages kotwice już dostały 2026-08-06 — patrz tabela wyżej.)*
 
 ## Reachability — komendy toura
 

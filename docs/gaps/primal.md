@@ -88,14 +88,18 @@
 | `[data-tour="primal-keys"]` | `web/screens/LoginScreen.tsx:33` | Blok pola klucza na ekranie logowania (osiągalny tylko przed pierwszym `login`) |
 | `[data-tour="primal-feed"]` | `web/screens/HomeScreen.tsx:112` | Lista not na Home |
 | `[data-tour="primal-compose"]` | `web/components/ComposeBox.tsx:32` | Rozwinięty edytor noty (tylko gdy `composeOpen`) |
-| `[data-tour="primal-post"]` | `web/components/LeftSidebar.tsx:61` | Przycisk „New Note" w lewym pasku |
-| `[data-tour="primal-profile"]` | `web/components/LeftSidebar.tsx:73` | Chip użytkownika na dole lewego paska (kolizja klasowa z `.primal-profile` = root ekranu profilu) |
-| `[data-tour="primal-settings"]` | `web/components/LeftSidebar.tsx:47` | Wiersz „Settings" w nawigacji — **pierwszy w DOM** |
-| `[data-tour="primal-settings"]` | `web/screens/SettingsScreen.tsx:8` | Root ekranu Settings — **ten sam selektor, drugi w DOM** (patrz pri-03) |
-| `[data-tour="primal-follow"]` | `web/screens/ExploreScreen.tsx:65` | Przycisk Follow w Explore → People (nie w domyślnej zakładce — pri-27) |
-| `[data-tour="primal-zaps"]` | `web/components/NoteCard.tsx:96` | Akcja zap na PIERWSZEJ nocie feedu (`zapTourHook={i === 0}`) |
+| `[data-tour="primal-post"]` | `web/components/LeftSidebar.tsx:63` | Przycisk „New Note" w lewym pasku |
+| `[data-tour="primal-profile"]` | `web/components/LeftSidebar.tsx:75` | Chip użytkownika na dole lewego paska (kolizja klasowa z `.primal-profile` = root ekranu profilu) |
+| `[data-tour="primal-nav-<id>"]` | `web/components/LeftSidebar.tsx:49` (szablon) | Rodzina: 8 wierszy nawigacji — `home` `reads` `explore` `messages` `bookmarks` `notifications` `downloads` `premium` (`NAV` `:10-21`). **Dodane po audycie, zamyka pri-02** |
+| `[data-tour="primal-settings"]` | `web/components/LeftSidebar.tsx:49` (gałąź `id === 'settings'`) | Wiersz „Settings" w nawigacji — dziewiąta pozycja `NAV` dostaje alias zamiast `primal-nav-settings`, bo celuje w nią główny tour |
+| `[data-tour="primal-settings-screen"]` | `web/screens/SettingsScreen.tsx:9` | Root ekranu Settings. **Kolizja z wierszem nawigacji rozwiązana 2026-08-06 przemianowaniem** (patrz pri-03) — dawny duplikat `primal-settings` już tu nie istnieje |
+| `[data-tour="primal-logout"]` | `web/screens/SettingsScreen.tsx:25` | Settings → „Log out" (zamyka pri-04) |
+| `[data-tour="primal-follow"]` | `web/screens/ExploreScreen.tsx:74` | Przycisk Follow w Explore → People (nie w domyślnej zakładce — pri-27) |
+| `[data-tour="primal-zaps"]` | `web/components/NoteCard.tsx:96` | Akcja zap na PIERWSZEJ nocie feedu (`zapTourHook={i === 0}`, `web/screens/HomeScreen.tsx:114`) |
 
-8 unikalnych selektorów w 9 miejscach.
+**18 różnych wartości `data-tour`** (8 literałów + rodzina `primal-nav-*` ×8 + `primal-settings`
++ `primal-zaps` z wyrażeń warunkowych) z 10 miejsc w kodzie — metodologia liczenia
+w [`../GAPS.md`](../GAPS.md).
 
 Stabilne selektory klasowe użyteczne jako zamienniki kotwic (potwierdzone w `web/primal-web.theme.css`):
 `.primal-action.reply` / `.zap` / `.like` / `.repost` / `.bookmark` (515-533), `.primal-feedselector` (267),

@@ -82,8 +82,7 @@ function once(fn: Loader): () => Promise<unknown> {
 // theme the real app never defaults to. Applied only until the visitor touches
 // the host theme toggle; entries without `theme` follow the OS preference.
 // `status` — 'ready' requires reference verification (docs/refs/<id>/screen-map.md
-// + a fidelity pass). Snort stays 'preview' until it has one: it currently uses
-// none of the real client's tokens and has no committed reference material.
+// + a fidelity pass); an entry without one stays 'preview'.
 // `homepage`/`repo`/`upstreamLicense`/`installNote` were verified against each
 // project's OWN site and repository on 2026-07-29 — not from memory and not from
 // aggregators. A dead or wrong outbound link would embarrass us in front of
@@ -281,7 +280,7 @@ const nostrKitten: ClientEntry = {
   lead: false,
   // Ours, so the handoff points at this repo rather than someone else's project.
   homepage: null,
-  repo: 'https://github.com/ptrio42/sandstr',
+  repo: 'https://github.com/ptrio42/sandstr.app',
   upstreamLicense: 'MIT',
   installNote: 'Not a real client — it only exists here',
   className: 'h-full',
