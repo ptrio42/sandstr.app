@@ -102,6 +102,12 @@ LOOPS=(
 "coracle|How do I block someone?|Coracle mutes, not blocks.|3.0"
 "nostur|Nothing is loading.|A turtle paused the media.|4.6"
 "damus-npub|How do people find me?|Your npub is your address.|3.0"
+# Reply ammunition for the threads that are live right now — zaps and keys
+# are 17% and 14% of #asknostr, and neither is in either cut.
+"damus-keys|Lost my phone.|Your key is your account.|4.0"
+"damus-zap|How do I tip someone?|It is called a zap.|3.0"
+"amethyst-keys|Lost my phone.|Backup Keys, in the drawer.|3.0"
+"amethyst-zap|How do I tip someone?|Zap, fourth under the note.|3.0"
 )
 
 for row in "${LOOPS[@]}"; do

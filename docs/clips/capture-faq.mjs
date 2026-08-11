@@ -99,6 +99,45 @@ const LOOPS = [
     entry: 'copy-npub',
     steps: 1,
   },
+  {
+    // The four below answer the questions people are asking in live threads
+    // right now (zaps 17% and keys 14% of #asknostr, measured 2026-08-11),
+    // and they exist as clips because a reply needs an asset, not a teaser.
+    id: 'damus-keys',
+    path: '/c/damus',
+    viewport: PHONE,
+    faq: '[aria-label="Damus FAQ"]',
+    query: 'lost my phone',
+    entry: 'backup-keys',
+    steps: 2,
+  },
+  {
+    id: 'damus-zap',
+    path: '/c/damus',
+    viewport: PHONE,
+    faq: '[aria-label="Damus FAQ"]',
+    query: 'tip someone',
+    entry: 'zap',
+    steps: 1,
+  },
+  {
+    id: 'amethyst-keys',
+    path: '/c/amethyst',
+    viewport: PHONE,
+    faq: '[aria-label="Amethyst FAQ"]',
+    query: 'lost my phone',
+    entry: 'backup-keys',
+    steps: 1,
+  },
+  {
+    id: 'amethyst-zap',
+    path: '/c/amethyst',
+    viewport: PHONE,
+    faq: '[aria-label="Amethyst FAQ"]',
+    query: 'tip someone',
+    entry: 'zap',
+    steps: 1,
+  },
 ];
 
 // Client switches used as interstitials between loops. Captured at the phone
@@ -464,6 +503,8 @@ function run(cmd, args) {
 async function captureLoop(page, pool, loop, baseUrl) {
   page.deviceW = loop.viewport.w * loop.viewport.dsf;
   page.deviceH = loop.viewport.h * loop.viewport.dsf;
+  page.viewportW = loop.viewport.w;
+  page.viewportH = loop.viewport.h;
   await page.send('Emulation.setDeviceMetricsOverride', {
     width: loop.viewport.w, height: loop.viewport.h,
     deviceScaleFactor: loop.viewport.dsf, mobile: false,
@@ -521,14 +562,16 @@ async function captureLoop(page, pool, loop, baseUrl) {
     // for the camera, so this wait is also the only proof the step landed.)
     const rect = await page.until(
       `(() => { const s = document.querySelector('.tour-spotlight'); if (!s) return null; const r = s.getBoundingClientRect();
-        return (r.width > 8 && r.height > 8) ? JSON.stringify({x: r.x + r.width/2, y: r.y + r.height/2}) : null; })()`,
+        return (r.width > 8 && r.height > 8) ? JSON.stringify({x: r.x, y: r.y, w: r.width, h: r.height}) : null; })()`,
       { timeout: 12000, label: `spotlight for step ${step}` },
     );
-    // Park the pointer on what the ring contains. Without the tooltip there is
-    // nothing else in frame saying "look here", and a cursor left wherever the
-    // last click happened reads as an accident.
-    const c = JSON.parse(rect);
-    await page.moveCursor(c.x, c.y, { settle: 420 });
+    // Park the pointer just OUTSIDE the ring's bottom-right, not on its centre.
+    // Without the tooltip nothing else in frame says "look here", but a 22px dot
+    // dead-centre on a 40px zap icon hides the very thing the caption names.
+    const r = JSON.parse(rect);
+    const cx = Math.min(r.x + r.w + 16, page.viewportW - 14);
+    const cy = Math.min(r.y + r.h + 16, page.viewportH - 14);
+    await page.moveCursor(cx, cy, { settle: 420 });
     await sleep(step === loop.steps ? T.holdLastStep : T.holdStep);
     if (step < loop.steps) {
       const before = await page.eval(`JSON.stringify(document.querySelector('.tour-spotlight')?.getBoundingClientRect())`);
