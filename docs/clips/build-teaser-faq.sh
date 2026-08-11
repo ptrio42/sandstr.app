@@ -98,7 +98,7 @@ T_SWITCH=2.0                 # the client-switch interstitial
 LOOPS=(
 "damus-shaka|Where is the heart?|It is a shaka.|3.0"
 "amethyst|Nobody sees my notes.|You post to relays.|3.8"
-"wisp|Can I take a post back?|Five seconds to undo.|4.0"
+"wisp|Can I take a post back?|Ten seconds to undo.|4.0"
 "coracle|How do I block someone?|Coracle mutes, not blocks.|3.0"
 "nostur|Nothing is loading.|A turtle paused the media.|4.6"
 "damus-npub|How do people find me?|Your npub is your address.|3.0"
