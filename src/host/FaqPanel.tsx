@@ -14,6 +14,13 @@ interface Props {
   onClose: () => void;
   /** "Show me" was clicked; the host closes the panel and hands off to the sim. */
   onShowMe: (entryId: string) => void;
+  /**
+   * Which answer is open right now (null when collapsed). The host mirrors it
+   * into the URL so any answer can be linked to — deliberately NOT fed back in
+   * as `initialEntryId`, which would re-run this panel's open effect on every
+   * expand and reset the search box under the reader's hands.
+   */
+  onEntryOpen?: (entryId: string | null) => void;
 }
 
 /**
@@ -45,7 +52,7 @@ function score(e: FaqEntry, q: string): number {
   return 0;
 }
 
-export default function FaqPanel({ clientName, faq, open, initialEntryId, onClose, onShowMe }: Props) {
+export default function FaqPanel({ clientName, faq, open, initialEntryId, onClose, onShowMe, onEntryOpen }: Props) {
   const reduce = useReducedMotion();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<string | null>(null);
@@ -247,7 +254,11 @@ export default function FaqPanel({ clientName, faq, open, initialEntryId, onClos
                   <button
                     type="button"
                     aria-expanded={isOpen}
-                    onClick={() => setExpanded(isOpen ? null : e.id)}
+                    onClick={() => {
+                      const next = isOpen ? null : e.id;
+                      setExpanded(next);
+                      onEntryOpen?.(next);
+                    }}
                     className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800/50"
                   >
                     <span className="min-w-0 flex-1">{e.question}</span>

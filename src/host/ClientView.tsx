@@ -1,5 +1,5 @@
-import { Suspense, useEffect, useState, type ReactNode } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ChevronDown, ChevronLeft, ExternalLink, Flag, HelpCircle, Info, Monitor, Moon, Play, Sun } from 'lucide-react';
 import MobilePhoneFrame from '../simulators/shared/components/MobilePhoneFrame';
@@ -337,6 +337,11 @@ export default function ClientView() {
   const [faqOpen, setFaqOpen] = useState(false);
   const [faqFocusId, setFaqFocusId] = useState<string | null>(null);
   const [faqResumeId, setFaqResumeId] = useState<string | null>(null);
+  // Whichever answer is expanded right now. Separate from `faqFocusId` (which
+  // the panel treats as "land here when you open") precisely so mirroring it
+  // into the URL cannot re-run the panel's open effect.
+  const [faqCurrentId, setFaqCurrentId] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // The switcher can change client while the sheet is open — it describes a
   // specific reproduction, so it must not survive into the next one.
@@ -345,7 +350,40 @@ export default function ClientView() {
     setFaqOpen(false);
     setFaqFocusId(null);
     setFaqResumeId(null);
+    setFaqCurrentId(null);
   }, [id]);
+
+  // Deep link: /c/<client>?faq=<entry-id> lands straight on one answer, so a
+  // reply in a thread can point at the answer instead of at the client with
+  // "open it, hit the question mark, search". Runs on ARRIVAL only (deps: id):
+  // the mirror effect below writes this same param, and reacting to our own
+  // writes would re-open the panel on every expand.
+  //
+  // NOTE: declared after the reset effect on purpose — effects run in order, so
+  // this one gets the last word on a fresh client.
+  const deepLinkRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!id) return;
+    const wanted = new URLSearchParams(window.location.search).get('faq');
+    if (!wanted || deepLinkRef.current === `${id}:${wanted}`) return;
+    deepLinkRef.current = `${id}:${wanted}`;
+    const known = getFaq(id)?.entries.some((e) => e.id === wanted);
+    setFaqOpen(true);
+    // An unknown id (renamed entry, typo in a shared link) still opens the
+    // panel — landing on the bank beats a dead link and a blank screen.
+    setFaqFocusId(known ? wanted : null);
+    setFaqCurrentId(known ? wanted : null);
+  }, [id]);
+
+  // Mirror the open answer into the address bar, so every answer is copyable as
+  // a link without any "share" affordance. `replace` keeps the back button
+  // meaning "the page before this client", not a trail of accordion clicks.
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    if (faqOpen && faqCurrentId) next.set('faq', faqCurrentId);
+    else next.delete('faq');
+    if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
+  }, [faqOpen, faqCurrentId, searchParams, setSearchParams]);
 
   // After "Show me" hands off to a mini-tour, reopen the FAQ where it left off
   // once the tour overlay goes away (same .tour-overlay signal the switcher
@@ -649,8 +687,10 @@ export default function ClientView() {
           onClose={() => {
             setFaqOpen(false);
             setFaqFocusId(null);
+            setFaqCurrentId(null);
           }}
           onShowMe={handleShowMe}
+          onEntryOpen={setFaqCurrentId}
         />
       )}
     </main>
