@@ -195,6 +195,19 @@ export const amethystFaq: ClientFaq = {
       id: 'zap',
       category: 'Reactions & zaps',
       question: 'How do I zap (tip sats to) a note?',
+      // "Zap" is opaque to anyone new; they type what they are trying to do.
+      // NOT aliased: "my zap failed" and friends — that is trouble-zap-failed's
+      // own question, and a broken zap is a different problem from not knowing
+      // where the button is.
+      searchAliases: [
+        'tip someone',
+        'send sats',
+        'send money',
+        'send bitcoin',
+        'give sats',
+        'pay someone',
+        'donate',
+      ],
       answer: [
         'Tap the lightning bolt — fourth action under the note.',
         'The counter next to it totals the sats zapped (e.g. 7.0k) — zaps are always orange in Amethyst.',
@@ -388,6 +401,22 @@ export const amethystFaq: ClientFaq = {
       id: 'backup-keys',
       category: 'Account & keys',
       question: 'Where do I back up my private key (nsec)?',
+      // Nobody arrives knowing the word "nsec": the question that brings people
+      // here is a lost or replaced phone, and the reflex of looking for a
+      // password reset that does not exist on Nostr.
+      searchAliases: [
+        'lost my phone',
+        'new phone',
+        'phone stolen',
+        'is my nsec safe',
+        'reset password',
+        'forgot password',
+        'recover my account',
+        'account gone',
+        'seed phrase',
+        'backup',
+        'export my key',
+      ],
       answer: [
         'Tap your profile picture in the top-left to open the account drawer.',
         'Tap "Backup Keys".',

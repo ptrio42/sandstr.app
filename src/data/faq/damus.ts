@@ -210,6 +210,19 @@ export const damusFaq: ClientFaq = {
       id: 'zap',
       category: 'Reactions & zaps',
       question: 'How do I zap (tip sats to) a note?',
+      // "Zap" is opaque to anyone new; they type what they are trying to do.
+      // NOT aliased: "my zap failed" and friends — that is trouble-zap-failed's
+      // own question, and a broken zap is a different problem from not knowing
+      // where the button is.
+      searchAliases: [
+        'tip someone',
+        'send sats',
+        'send money',
+        'send bitcoin',
+        'give sats',
+        'pay someone',
+        'donate',
+      ],
       answer: [
         'Tap the lightning-bolt icon — fourth in the action row.',
         'The zap button only appears when the author can receive Lightning payments.',
