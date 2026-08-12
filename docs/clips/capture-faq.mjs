@@ -151,6 +151,14 @@ const SWITCHES = [
   { id: 'sw-amethyst-damus', from: '/c/amethyst', to: 'text:Damus', wait: '[aria-label="Damus FAQ"]' },
 ];
 
+// Guided-tour teasers: land on ?tour=1 and let the tour drive. The tooltip is
+// NOT hidden here — in a "take the tour" post the card IS the thing being
+// advertised, the opposite of the FAQ clips where it was our chrome sitting on
+// top of somebody's app.
+const TOURS = [
+  { id: 'tour-wisp', path: '/c/wisp?tour=1', steps: 5 },
+];
+
 // -------------------------------------------------------------------- beats --
 const T = {
   afterLoad: 900,
@@ -168,6 +176,9 @@ const T = {
   // switch interstitial
   swSettle: 700,
   swHold: 1300,
+  // tour teaser
+  tourFirst: 2600,   // the welcome card carries the most text
+  tourStep: 2200,
 };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -631,6 +642,49 @@ async function captureSwitch(page, pool, sw, baseUrl) {
   return { id: sw.id, frames: manifest.length, secs, out };
 }
 
+// --------------------------------------------------------------- one tour ----
+async function captureTour(page, pool, tour, baseUrl) {
+  page.deviceW = PHONE.w * PHONE.dsf;
+  page.deviceH = PHONE.h * PHONE.dsf;
+  page.viewportW = PHONE.w;
+  page.viewportH = PHONE.h;
+  await page.send('Emulation.setDeviceMetricsOverride', {
+    width: PHONE.w, height: PHONE.h, deviceScaleFactor: PHONE.dsf, mobile: false,
+  });
+  await page.send('Page.navigate', { url: baseUrl + tour.path });
+  await page.until(`document.readyState === 'complete'`, { timeout: 30000, label: 'document ready' });
+  // The deep link starts the tour by itself — that IS what this clip is proving.
+  await page.until(`!!document.querySelector('.tour-tooltip')`, { timeout: 20000, label: 'tour to start' });
+  await page.installCursor();
+
+  const dir = join(WORK, tour.id);
+  await rm(dir, { recursive: true, force: true });
+  const t0 = Date.now();
+  const marks = { steps: [] };
+
+  for (let step = 1; step <= tour.steps; step++) {
+    marks.steps.push(Date.now() - t0);
+    await sleep(step === 1 ? T.tourFirst : T.tourStep);
+    if (step < tour.steps) {
+      const before = await page.eval(`document.querySelector('.tour-tooltip__title')?.textContent ?? ''`);
+      await page.click('[aria-label="Next step"]');
+      await page.until(
+        `(document.querySelector('.tour-tooltip__title')?.textContent ?? '') !== ${JSON.stringify(before)}`,
+        { timeout: 10000, label: `tour step ${step + 1}` },
+      );
+    }
+  }
+  const t1 = Date.now();
+  marks.end = t1 - t0;
+  await sleep(250);
+  await pool.flush();
+  const out = join(WORK, `${tour.id}.mp4`);
+  const manifest = await encodeRange(pool, t0, t1, dir, out, { w: page.deviceW, h: page.deviceH });
+  await writeFile(join(dir, 'marks.json'), JSON.stringify(marks, null, 1));
+  const secs = ((manifest.at(-1).at - manifest[0].at) / 1000).toFixed(1);
+  return { id: tour.id, frames: manifest.length, secs, out };
+}
+
 // ------------------------------------------------------------ one browser ----
 /**
  * A FRESH Chrome per loop, and the screencast never stops inside one.
@@ -704,7 +758,8 @@ async function main() {
   const wanted = process.argv.slice(2);
   const loops = wanted.length ? LOOPS.filter((l) => wanted.includes(l.id)) : LOOPS;
   const switches = wanted.length ? SWITCHES.filter((s) => wanted.includes(s.id)) : SWITCHES;
-  if (!loops.length && !switches.length) throw new Error(`no such loop: ${wanted.join(', ')}`);
+  const tours = wanted.length ? TOURS.filter((t) => wanted.includes(t.id)) : TOURS;
+  if (!loops.length && !switches.length && !tours.length) throw new Error(`no such loop: ${wanted.join(', ')}`);
 
   await mkdir(WORK, { recursive: true });
   const { server, port } = await serveDist();
@@ -717,6 +772,14 @@ async function main() {
       process.stdout.write(`  · ${loop.id}: "${loop.query}" `);
       const r = await withBrowser(port + 1 + i, loop, (cdp, page, pool) =>
         captureLoop(page, pool, loop, baseUrl),
+      );
+      results.push(r);
+      console.log(`→ ${r.frames} frames, ${r.secs}s`);
+    }
+    for (const [i, tour] of tours.entries()) {
+      process.stdout.write(`  · ${tour.id} `);
+      const r = await withBrowser(port + 70 + i, tour, (cdp, page, pool) =>
+        captureTour(page, pool, tour, baseUrl),
       );
       results.push(r);
       console.log(`→ ${r.frames} frames, ${r.secs}s`);

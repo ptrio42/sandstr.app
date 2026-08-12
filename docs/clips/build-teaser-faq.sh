@@ -196,6 +196,19 @@ for sw in sw-damus-nostur sw-nostur-wisp sw-amethyst-damus; do
   segment "$sw" "$in" "$WORK/${sw}_x.mp4" "$sp" 0 "$total" "" "white" x
 done
 
+# ---- tour teaser ---------------------------------------------------------------
+# Four steps, no caption at all: the post above the video carries the words, and
+# the tour card in frame already says "1 / 10". Speed is modest — the card is
+# there to be READ, which is the whole claim being made.
+if [ -s "$SRC/tour-wisp.mp4" ]; then
+  echo "  · tour-wisp"
+  ttotal=$(dur "$SRC/tour-wisp.mp4")
+  tcut=$(node -e "const m=require('$SRC/tour-wisp/marks.json');process.stdout.write(((m.steps[4] ?? m.end)/1000).toFixed(3))")
+  tsp=$(awk -v e="$tcut" 'BEGIN{printf "%.3f", e/10.5}')
+  segment "tour-wisp" "$SRC/tour-wisp.mp4" "$WORK/tour_wisp.mp4" "$tsp" 0 "$tcut" "" "white" x
+  printf "file 'tour_wisp.mp4'\nfile 'tag.mp4'\n" >"$WORK/tour_wisp.txt"
+fi
+
 # ---- intro / tag / end card --------------------------------------------------
 card() { # out duration line1 line2 line3 -> brand card with the lockup
   local out=$1 d=$2 l1=$3 l2=$4 l3=$5
@@ -273,4 +286,6 @@ segment "$hid" "$SRC/${hid}.mp4" "$WORK/hero_d.mp4" "$sD"    "$hd"  "$ht"  "" wh
 printf "file 'hero_a.mp4'\nfile 'hero_t.mp4'\nfile 'hero_b.mp4'\nfile 'hero_d.mp4'\n" >"$WORK/hero.txt"
 encode "$WORK/hero.txt" "$OUT/sandstr-faq-hero.mp4"
 
-ls -lh "$OUT" | grep faq
+if [ -s "$WORK/tour_wisp.txt" ]; then encode "$WORK/tour_wisp.txt" "$OUT/sandstr-tour-wisp.mp4"; fi
+
+ls -lh "$OUT" | grep -E "faq|tour"
