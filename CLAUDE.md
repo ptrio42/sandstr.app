@@ -56,6 +56,13 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
 - **Baner disclaimera MUSI zostać** na każdym widoku klienta (`Disclaimer` / `DisclaimerStrip`
   w `src/host/ClientView.tsx`, tekst „Simulation · mock data · unofficial, not affiliated with
   &lt;nazwa&gt;") — #1 lekka mitygacja ryzyka znaku towarowego. Nie usuwaj i nie skracaj.
+- **Kolejność warstw hosta jest jedna i stoi w `:root` w `src/index.css`** (`--z-host-rail` <
+  `--z-tour-backdrop` < `--z-tour-card` < `--z-disclaimer` < `--z-host-modal`). Żadnej gołej liczby
+  `z-[…]` w `src/host/` ani w `src/components/tour/` — czytaj zmienną. Baner ma być **nad tourem**
+  (backdrop 0.6 czerni robił z niego nieczytelną plamę na cały tour) i **pod dialogami**, które
+  użytkownik sam otworzył (FAQ, ⌘K, About, mobilny switcher) — jego wyniesienie ponad wszystko
+  wstawiało chip w środek otwartego panelu FAQ. Symulatory grają we własnej piaskownicy (max ~2000,
+  `gossip.theme.css`) i nigdy nie sięgają pasm hosta.
 
 ## Gotchas
 

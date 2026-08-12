@@ -255,7 +255,7 @@ export default function ClientSwitcher() {
       ) : (
         /* ---------- desktop: a rail in the empty left gutter ---------- */
         <div
-          className={cn('fixed left-3 top-1/2 z-[3000] -translate-y-1/2', dimClass)}
+          className={cn('fixed left-3 top-1/2 z-[var(--z-host-rail)] -translate-y-1/2', dimClass)}
           style={dimStyle}
         >
           <motion.nav
@@ -342,7 +342,7 @@ export default function ClientSwitcher() {
       {createPortal(
         sheetOpen ? (
             <motion.div
-              className="fixed inset-0 z-[8000] sm:hidden"
+              className="fixed inset-0 z-[var(--z-host-modal)] sm:hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >

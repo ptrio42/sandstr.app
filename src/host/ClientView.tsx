@@ -16,16 +16,22 @@ import { cn } from '../utils/cn';
 /**
  * Two defences, both needed, for the banner CLAUDE.md calls the non-negotiable
  * trademark mitigation:
- *  - `relative z-[10003]` (same as DisclaimerStrip below) lifts it over the tour
- *    backdrop at 9999, which otherwise dimmed it to unreadable for a whole tour;
+ *  - `relative z-[var(--z-disclaimer)]` (same as DisclaimerStrip below) lifts it
+ *    over the tour backdrop, which otherwise dimmed it to unreadable for a whole
+ *    tour;
  *  - `data-tour-keep-clear` makes the tour place its card AROUND it. Z-index
  *    alone only decided which of two overlapping texts won the pixels.
+ *
+ * It clears the TOUR and nothing else. A host dialog the visitor opened on
+ * purpose (FAQ, ⌘K, About, the mobile switcher) still covers it — see the
+ * `--z-*` block in src/index.css. Lifting it over those too is what put this
+ * chip on top of an open FAQ panel, mid-list.
  */
 function Disclaimer({ name, real }: { name: string; real: boolean }) {
   return (
     <div
       data-tour-keep-clear
-      className="relative z-[10003] inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+      className="relative z-[var(--z-disclaimer)] inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
     >
       <Info className="h-3.5 w-3.5" />
       <span>
@@ -37,9 +43,10 @@ function Disclaimer({ name, real }: { name: string; real: boolean }) {
 }
 
 /**
- * The phone-width form of the mandated banner. It sits above the tour's
- * 9999/10001/10002 band so the one legal mitigation CLAUDE.md calls
- * non-negotiable stays legible even while a tour backdrop is up.
+ * The phone-width form of the mandated banner. It sits above the tour band so
+ * the one legal mitigation CLAUDE.md calls non-negotiable stays legible even
+ * while a tour backdrop is up — and below the host modal band, so the FAQ sheet
+ * this strip used to punch through can cover it like any other dialog.
  * NO `truncate` here, ever: at 320px (the most common narrow-Android width)
  * it cut the text to "…not affiliated wit…" — on phones this strip is the
  * only thing distinguishing the page from the real client, so it wraps to a
@@ -53,7 +60,7 @@ function DisclaimerStrip({ name, real }: { name: string; real: boolean }) {
       // This is the phone form, so it matters MORE here — a full-bleed client
       // leaves the card nowhere else to go.
       data-tour-keep-clear
-      className="relative z-[10003] flex shrink-0 items-center justify-center gap-1.5 border-b border-amber-300/60 bg-amber-50 px-3 py-1 text-[11px] leading-snug text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-300"
+      className="relative z-[var(--z-disclaimer)] flex shrink-0 items-center justify-center gap-1.5 border-b border-amber-300/60 bg-amber-50 px-3 py-1 text-[11px] leading-snug text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-300"
     >
       <Info className="h-3 w-3 shrink-0" />
       <span className="text-center">
@@ -170,12 +177,17 @@ function ContextPanel({
  * Phone-width "About this reproduction": the description, the honest status
  * note, and the handoff. On a phone the sim is full-bleed and both the
  * ContextPanel and the meta row are hidden, so without this the visitor has no
- * way to learn who made the real client or where to get it. z-index sits above
- * the tour band (9999/10001/10002) like the disclaimer strip.
+ * way to learn who made the real client or where to get it. A host modal like
+ * any other, so it rides the shared `--z-host-modal` band — above the tour and
+ * above the disclaimer strip it slides over.
  */
 function AboutSheet({ entry, real, onClose }: { entry: ClientEntry; real: boolean; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-[10004] flex items-end sm:hidden" role="dialog" aria-modal="true">
+    <div
+      className="fixed inset-0 z-[var(--z-host-modal)] flex items-end sm:hidden"
+      role="dialog"
+      aria-modal="true"
+    >
       <button type="button" aria-label="Close" onClick={onClose} className="absolute inset-0 bg-black/50" />
       <div className="relative w-full rounded-t-2xl bg-white p-5 pb-8 shadow-2xl dark:bg-gray-900">
         <div className="mb-3 flex items-center gap-2">

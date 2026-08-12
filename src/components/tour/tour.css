@@ -10,7 +10,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 9999;
+  z-index: var(--z-tour-backdrop);
   pointer-events: none; /* Allow clicks to pass through by default */
 }
 
@@ -97,12 +97,14 @@
     0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04),
     0 0 0 1px rgba(0, 0, 0, 0.05);
-  /* Stacking contract, lowest first: backdrop/overlay 9999 < card 10002 <
-     host disclaimer 10003 < host mobile sheet 10004. The disclaimer deliberately
-     outranks the card — it must never be obscured — which is why the placement
-     below treats `[data-tour-keep-clear]` as an obstacle rather than relying on
-     z-order to sort out an overlap. */
-  z-index: 10002;
+  /* Stacking contract, lowest first: backdrop/overlay < this card < the host
+     disclaimer < the host modals. The numbers live in one place — the
+     `--z-*` block in src/index.css — so the tour cannot drift out of the host's
+     order again. The disclaimer deliberately outranks this card (it must never
+     be obscured), which is why the placement below treats
+     `[data-tour-keep-clear]` as an obstacle rather than relying on z-order to
+     sort out an overlap. */
+  z-index: var(--z-tour-card);
   opacity: 0;
   transform: translateY(10px);
   /* NOT `all`: that animated `top`/`left` too, so the card visibly slid across

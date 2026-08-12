@@ -106,7 +106,7 @@ export default function CommandPalette({ open, currentId, onClose, onSelect }: P
   return createPortal(
     open ? (
         <motion.div
-          className="fixed inset-0 z-[8000] flex items-start justify-center px-4 pt-[12vh]"
+          className="fixed inset-0 z-[var(--z-host-modal)] flex items-start justify-center px-4 pt-[12vh]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.15 }}

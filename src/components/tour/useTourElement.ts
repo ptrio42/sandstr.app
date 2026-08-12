@@ -552,6 +552,33 @@ export function useTourElement(
     const clearsChrome = (top: number, left: number) =>
       keepClear.every((box) => !overlaps(top, left, box));
 
+    /**
+     * The same card in the same column, slid vertically until it clears the
+     * keep-clear chrome. Null when no height in that column can.
+     *
+     * The beside-the-frame branch below used to vary `left` and nothing else, so
+     * on a desktop where NEITHER gutter is free of the banner at the aligned
+     * height it fell through to "first side that fits" and parked the card under
+     * it — and the banner outranks the card in z-order, so the overlap rendered
+     * as the mandated SIMULATION text stamped across the step copy. The gutter
+     * is 290px of empty column; the card just has to move up or down inside it.
+     */
+    const slideClearOfChrome = (left: number, preferredTop: number): number | null => {
+      const lo = margin;
+      const hi = Math.max(margin, vh - margin - Math.min(tooltipHeight, fullHeight));
+      const clamp = (v: number) => Math.max(lo, Math.min(v, hi));
+      const blocking = keepClear.filter((b) => left < b.right && left + tooltipWidth > b.left);
+      if (blocking.length === 0) return clamp(preferredTop);
+      // Just above / just below each blocker, tried nearest-to-preferred first so
+      // the card moves as little as the chrome forces it to.
+      const tops = blocking.flatMap((b) => [b.top - tooltipHeight - offset, b.bottom + offset]);
+      return (
+        [...new Set(tops.map(clamp))]
+          .sort((a, b) => Math.abs(a - preferredTop) - Math.abs(b - preferredTop))
+          .find((tp) => clearsChrome(tp, left)) ?? null
+      );
+    };
+
     const candidates: Record<string, { top: number; left: number } | null> = {
       top: t.top - offset - tooltipHeight >= bandTop
         ? { top: t.top - offset - tooltipHeight, left: alignedLeft }
@@ -583,29 +610,33 @@ export function useTourElement(
     // Inside a phone frame, getting out of the frame beats every in-frame
     // placement: it is the only way to leave the reproduction fully visible.
     if (frameRect) {
-      const besideFrame = [frameRect.right + offset, frameRect.left - tooltipWidth - offset];
+      const besideFrame = [frameRect.right + offset, frameRect.left - tooltipWidth - offset]
+        .filter((l) => l >= margin && l <= maxLeft);
       const besideTop = Math.max(margin, Math.min(alignedTop, vh - margin - Math.min(tooltipHeight, fullHeight)));
-      // Same two-pass preference as below: a side that also clears the host
-      // chrome beats one that merely fits.
-      const ordered = [
-        ...besideFrame.filter((l) => clearsChrome(besideTop, l)),
-        ...besideFrame.filter((l) => !clearsChrome(besideTop, l)),
-      ];
-      for (const left of ordered) {
-        if (left >= margin && left <= maxLeft) {
-          // Beside the device the card has the whole viewport height, so the
-          // band-derived ceiling above does not apply — using it squeezed a
-          // desktop card down to its title. Safe to differ: this branch is
-          // chosen on WIDTH alone, so a taller card cannot flip the decision.
-          return {
-            top: besideTop,
-            left: Math.round(left),
-            width: tooltipWidth,
-            height: tooltipHeight,
-            maxHeight: fullHeight,
-          };
-        }
+      const beside = (top: number, left: number) => ({
+        top: Math.round(top),
+        left: Math.round(left),
+        width: tooltipWidth,
+        height: tooltipHeight,
+        // Beside the device the card has the whole viewport height, so the
+        // band-derived ceiling above does not apply — using it squeezed a
+        // desktop card down to its title. Safe to differ: this branch is
+        // chosen on WIDTH alone, so a taller card cannot flip the decision.
+        maxHeight: fullHeight,
+      });
+      // Three passes, loosening one constraint at a time — the same shape as the
+      // generic placement below. A gutter already clear of the host chrome wins
+      // outright; failing that one that clears it after a vertical slide; and
+      // only then any gutter at all, because being out of the frame still beats
+      // covering the reproduction the step is pointing at.
+      for (const left of besideFrame) {
+        if (clearsChrome(besideTop, left)) return beside(besideTop, left);
       }
+      for (const left of besideFrame) {
+        const top = slideClearOfChrome(left, besideTop);
+        if (top !== null) return beside(top, left);
+      }
+      if (besideFrame.length > 0) return beside(besideTop, besideFrame[0]);
     }
 
     /**

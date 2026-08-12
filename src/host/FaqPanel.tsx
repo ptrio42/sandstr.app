@@ -149,7 +149,7 @@ export default function FaqPanel({ clientName, faq, open, initialEntryId, onClos
   return createPortal(
     open ? (
       <motion.div
-        className="fixed inset-0 z-[8000] flex items-end justify-end"
+        className="fixed inset-0 z-[var(--z-host-modal)] flex items-end justify-end"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.15 }}

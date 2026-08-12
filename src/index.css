@@ -14,6 +14,41 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* --- Host stacking order -------------------------------------------------
+   THE one place any host layer's z-index is decided. Both CSS (tour.css) and
+   Tailwind (`z-[var(--z-host-modal)]`) read these, so the order is stated once
+   instead of being re-derived from four files that each invented their own
+   "top".
+
+   Lowest first, and every step is deliberate:
+
+     rail      the ClientSwitcher's fixed left rail — page chrome, so anything
+               modal or instructional covers it.
+     tour-*    the guided tour: a dimming backdrop plus the step card. It is
+               ambient — the visitor did not put it over anything, so it sits
+               below the disclaimer.
+     disclaimer the mandated "Simulation · mock data · unofficial…" banner
+               (`Disclaimer` / `DisclaimerStrip` in host/ClientView.tsx). ABOVE
+               the tour on purpose: a 60%-black backdrop dimmed the one legal
+               trademark mitigation to unreadable for a whole tour.
+     host-modal FAQ panel, ⌘K palette, mobile switcher sheet, About sheet —
+               dialogs the visitor deliberately opened, so they own the screen.
+               ABOVE the disclaimer, which is the fix for the chip painting over
+               the open FAQ panel and staying undimmed behind ⌘K. Nothing is
+               lost: these dialogs are the visitor's own action and dismiss on
+               Escape or a backdrop click, whereas a tour runs for minutes.
+
+   Anything inside src/simulators/ is off this scale entirely — a simulator's
+   own z-indexes (max ~2000, in gossip.theme.css) describe stacking *within* one
+   reproduction and must never reach the host bands above. */
+:root {
+  --z-host-rail: 3000;
+  --z-tour-backdrop: 9000;
+  --z-tour-card: 9200;
+  --z-disclaimer: 9400;
+  --z-host-modal: 9600;
+}
+
 /* /c/:id is a fixed-height app shell: exactly one viewport, never scrolls, and
    the simulator is sized from the row that's left over rather than from a `vh`
    fraction. Written as a class (not `h-[100dvh]`) for two reasons: tailwind-merge
