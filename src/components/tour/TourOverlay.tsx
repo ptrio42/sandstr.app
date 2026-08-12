@@ -16,6 +16,22 @@ import { useTourElement } from './useTourElement';
  */
 const NAV_KEYS = ['ArrowRight', 'ArrowLeft', 'Enter'];
 
+/**
+ * Any host dialog the visitor opened on purpose — the FAQ panel, the ⌘K
+ * palette, the About sheet, the mobile client switcher. Each stamps
+ * `data-sandstr-modal` on its dialog element; they portal into <body>, so a
+ * DOM probe is the only thing that works from inside the tour engine (which
+ * deliberately knows nothing about the host).
+ *
+ * Such a dialog sits ABOVE the tour in the stacking order (`--z-host-modal` vs
+ * `--z-tour-*` in src/index.css), so it is the surface being driven and the
+ * tour must not read the keyboard at all while one is up. Escape is the case
+ * that bit: both listeners are on `window`, so dismissing the FAQ also ended
+ * the tour underneath it. Enter is the same bug one key over — it would expand
+ * an FAQ answer AND advance the step.
+ */
+const HOST_MODAL_SELECTOR = '[data-sandstr-modal]';
+
 /** Is the user typing into the simulator right now? */
 function isEditableTarget(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null;
@@ -81,6 +97,9 @@ export function TourOverlay() {
     const isWaitingForAction = state.waitingForAction && currentStepData?.trigger === 'action';
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // A host dialog is on top: it owns the keyboard, all of it. See
+      // HOST_MODAL_SELECTOR above.
+      if (document.querySelector(HOST_MODAL_SELECTOR)) return;
       // Never take keys away from a field the user is typing in. Without this,
       // ArrowLeft/ArrowRight jumped the tour instead of moving the caret and
       // Enter skipped a step instead of inserting a newline — on the very steps

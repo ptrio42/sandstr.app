@@ -168,21 +168,34 @@ export default function ClientSwitcher() {
 
   // Global shortcuts: ⌘/Ctrl-K opens the palette, [ / ] cycle prev/next.
   useEffect(() => {
-    if (!id || tourActive) return;
+    if (!id) return;
     const onKey = (e: KeyboardEvent) => {
-      // A host modal owned by another component (the FAQ panel portals into
-      // <body> with data-sandstr-modal) gets the keyboard to itself — same
-      // contract as paletteOpen/sheetOpen below, probed via DOM because the
-      // panel lives in ClientView. Keeps ] from switching clients (and ⌘K
-      // from stacking the palette) under an open dialog.
-      if (document.querySelector('[data-sandstr-modal]')) return;
+      // Escape is dismissal, and it belongs to the TOPMOST surface — so it is
+      // settled before every guard below, including `tourActive`. Two bugs lived
+      // in the old order: the whole listener was dead during a tour, so Escape
+      // under an open sheet ended the TOUR and left the sheet standing; and the
+      // sheet closed even when the palette (which it launches, and which sits
+      // above it) was the thing on top, so one keypress dismissed both.
+      if (e.key === 'Escape') {
+        if (paletteOpen || !sheetOpen) return; // the palette dismisses itself
+        setSheetOpen(false);
+        return;
+      }
+      if (tourActive) return;
+      // A host modal owned by another component (the FAQ panel and the About
+      // sheet portal in with data-sandstr-modal) gets the keyboard to itself —
+      // same contract as paletteOpen/sheetOpen below, probed via DOM because
+      // those dialogs live in ClientView. Keeps ] from switching clients (and
+      // ⌘K from stacking the palette) under an open dialog.
+      //
+      // Our own palette and sheet carry the attribute too, and their state is
+      // right here — so exempt them and let the probe answer only for dialogs
+      // somebody else owns. Without that, ⌘K would stop being a toggle the
+      // instant it opened the thing it toggles.
+      if (!paletteOpen && !sheetOpen && document.querySelector('[data-sandstr-modal]')) return;
       if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
         e.preventDefault();
         setPaletteOpen((o) => !o);
-        return;
-      }
-      if (e.key === 'Escape' && sheetOpen) {
-        setSheetOpen(false);
         return;
       }
       if (paletteOpen || sheetOpen) return;
@@ -351,6 +364,11 @@ export default function ClientSwitcher() {
                 role="dialog"
                 aria-modal="true"
                 aria-label="Switch client simulator"
+                // See HOST_MODAL_SELECTOR in components/tour/TourOverlay.tsx.
+                // The Escape branch above deliberately runs BEFORE this file's
+                // own foreign-modal guard, because this sheet carries the
+                // attribute too and would otherwise refuse to close itself.
+                data-sandstr-modal=""
                 initial={reduce ? { opacity: 0 } : { y: '100%' }}
                 animate={reduce ? { opacity: 1 } : { y: 0 }}
                 transition={{ type: 'spring', stiffness: 380, damping: 36 }}

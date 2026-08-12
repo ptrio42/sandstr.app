@@ -182,11 +182,26 @@ function ContextPanel({
  * above the disclaimer strip it slides over.
  */
 function AboutSheet({ entry, real, onClose }: { entry: ClientEntry; real: boolean; onClose: () => void }) {
+  // Escape dismisses it, like every other host dialog. Without this the sheet
+  // was the one aria-modal on the page with no keyboard way out — and worse, the
+  // keypress fell through to the tour, which ended a step underneath it.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   return (
     <div
       className="fixed inset-0 z-[var(--z-host-modal)] flex items-end sm:hidden"
       role="dialog"
       aria-modal="true"
+      // See HOST_MODAL_SELECTOR in components/tour/TourOverlay.tsx: this is how
+      // the tour and the switcher's shortcuts learn to keep their hands off the
+      // keyboard while a dialog the visitor opened is up.
+      data-sandstr-modal=""
     >
       <button type="button" aria-label="Close" onClick={onClose} className="absolute inset-0 bg-black/50" />
       <div className="relative w-full rounded-t-2xl bg-white p-5 pb-8 shadow-2xl dark:bg-gray-900">

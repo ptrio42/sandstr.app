@@ -78,6 +78,12 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
   obserwuje. Bez tego symulator utknie w jednym motywie.
 - **StrictMode jest wyłączony** (`main.tsx`) — świadomie, by uniknąć podwójnego montowania w stanach
   toura/efektów.
+- **Escape należy do warstwy NA WIERZCHU, i to samo `data-sandstr-modal` o tym rozstrzyga.** Każdy
+  dialog hosta (FAQ, ⌘K, About, mobilny switcher) stempluje ten atrybut; tour (`TourOverlay`,
+  `HOST_MODAL_SELECTOR`) oddaje wtedy **całą** klawiaturę, nie tylko Escape — oba nasłuchy siedzą na
+  `window`, więc zamknięcie FAQ kończyło też tour, a Enter na wpisie FAQ rozwijał odpowiedź *i*
+  przewijał krok. `ClientSwitcher` rozstrzyga Escape **przed** swoim strażnikiem (jego własny arkusz
+  też nosi ten atrybut) i **przed** `tourActive`. Nowy dialog: dodaj atrybut i własny Escape.
 - **`position: fixed` w symulatorze = ekran telefonu, nie okno przeglądarki.** Ekran w
   `MobilePhoneFrame` ma `[transform:translateZ(0)]` właśnie po to (bezramkowa scena w `ClientView`
   ma to samo). `relative` + `overflow-hidden` NIE wystarczy — overflow nie przycina `fixed`, dopóki

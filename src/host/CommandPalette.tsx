@@ -120,6 +120,9 @@ export default function CommandPalette({ open, currentId, onClose, onSelect }: P
             role="dialog"
             aria-modal="true"
             aria-label="Switch client simulator"
+            // See HOST_MODAL_SELECTOR in components/tour/TourOverlay.tsx — it is
+            // what stops the tour eating this dialog's Escape (and its Enter).
+            data-sandstr-modal=""
             className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-900"
             initial={reduce ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.98 }}
             animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
