@@ -53,7 +53,24 @@ export function MobilePhoneFrame({
             device, so the simulated OS chrome (island, 9:41 status bar, home
             indicator) would be drawn directly beneath the real ones. The host
             passes the matching max-sm: geometry overrides via className. */}
-        <div className="relative h-full w-full overflow-hidden rounded-[40px] bg-white dark:bg-gray-900 max-sm:rounded-none">
+        {/* `[transform:translateZ(0)]` is the SCREEN, in the CSS sense: it makes
+            this box the containing block for every `position: fixed` descendant,
+            so a reproduction's sheets and scrims size to the device instead of to
+            the browser window. Identical to the hack ClientView already applies to
+            the frameless stage — framed clients simply never got one, because
+            `relative` and `overflow-hidden` do neither job (overflow does not clip
+            a fixed descendant unless the same element is its containing block, and
+            the host's cross-fade wrapper is opacity-only on purpose).
+            Two live escapes, both phone UI: Keychat's Receive modal blacked out
+            the whole page and centred its QR sheet outside the device
+            (`sm:items-center` keys off the VIEWPORT, not the 390px screen), and
+            Amethyst's feed dropdown laid an invisible full-window dismiss scrim
+            over the host, so the first click on "How do I…?" only closed the
+            dropdown. Primal mobile's compose sheet and modal overlay are the same
+            shape and are covered pre-emptively — that simulator is exported but
+            not in the registry today. Do not remove this to "clean up" a
+            transform: each simulator would then re-solve it in its own directory. */}
+        <div className="relative h-full w-full overflow-hidden rounded-[40px] bg-white [transform:translateZ(0)] dark:bg-gray-900 max-sm:rounded-none">
           {/* Dynamic Island (iOS) or centered punch-hole (Android) */}
           {platform === 'ios' ? (
             <div className="absolute left-1/2 top-[11px] z-50 h-[26px] w-[86px] -translate-x-1/2 rounded-full bg-black max-sm:hidden" />

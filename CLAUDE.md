@@ -78,6 +78,11 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
   obserwuje. Bez tego symulator utknie w jednym motywie.
 - **StrictMode jest wyłączony** (`main.tsx`) — świadomie, by uniknąć podwójnego montowania w stanach
   toura/efektów.
+- **`position: fixed` w symulatorze = ekran telefonu, nie okno przeglądarki.** Ekran w
+  `MobilePhoneFrame` ma `[transform:translateZ(0)]` właśnie po to (bezramkowa scena w `ClientView`
+  ma to samo). `relative` + `overflow-hidden` NIE wystarczy — overflow nie przycina `fixed`, dopóki
+  ten sam element nie jest jego blokiem zawierającym. Bez tego modal Keychata zaciemniał całą stronę,
+  a niewidoczny scrim dropdownu Amethysta zjadał pierwszy klik w panel hosta.
 
 ## Definition of done
 
