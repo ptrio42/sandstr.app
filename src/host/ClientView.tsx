@@ -364,7 +364,11 @@ export default function ClientView() {
   const deepLinkRef = useRef<string | null>(null);
   useEffect(() => {
     if (!id) return;
-    const wanted = new URLSearchParams(window.location.search).get('faq');
+    const params = new URLSearchParams(window.location.search);
+    // ?tour=1 wins: a link that promises a walkthrough should not also drop a
+    // panel over the first step.
+    if (params.get('tour') === '1') return;
+    const wanted = params.get('faq');
     if (!wanted || deepLinkRef.current === `${id}:${wanted}`) return;
     deepLinkRef.current = `${id}:${wanted}`;
     const known = getFaq(id)?.entries.some((e) => e.id === wanted);
@@ -373,6 +377,45 @@ export default function ClientView() {
     // panel — landing on the bank beats a dead link and a blank screen.
     setFaqFocusId(known ? wanted : null);
     setFaqCurrentId(known ? wanted : null);
+  }, [id]);
+
+  // Deep link: /c/<client>?tour=1 starts the guided tour on arrival, so a post
+  // that says "take the tour" lands on the tour instead of on a login screen
+  // with a play button somebody still has to find.
+  //
+  // The tour lives inside the lazily-loaded *SimulatorWithTour wrapper, which is
+  // what listens for `start-<id>-tour`. Firing the event before that chunk
+  // mounts hits nobody, so wait for the sim's own DOM (any [data-tour] anchor)
+  // and give the wrapper a beat to subscribe. One retry covers the case where
+  // the anchor renders a frame before the listener attaches.
+  const tourLinkRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!id || new URLSearchParams(window.location.search).get('tour') !== '1') return;
+    if (tourLinkRef.current === id) return;
+    tourLinkRef.current = id;
+    let cancelled = false;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const fire = () => window.dispatchEvent(new Event(`start-${id}-tour`));
+    const t0 = Date.now();
+    const wait = () => {
+      if (cancelled) return;
+      if (document.querySelector('[data-tour]')) {
+        timers.push(setTimeout(() => {
+          if (cancelled) return;
+          fire();
+          timers.push(setTimeout(() => {
+            if (!cancelled && !document.querySelector('.tour-overlay')) fire();
+          }, 1500));
+        }, 250));
+        return;
+      }
+      if (Date.now() - t0 < 15000) timers.push(setTimeout(wait, 120));
+    };
+    wait();
+    return () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+    };
   }, [id]);
 
   // Mirror the open answer into the address bar, so every answer is copyable as
