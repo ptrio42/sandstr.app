@@ -175,14 +175,18 @@ export function FeedScreen({
           )}
         </div>
 
-        {/* Right: online + relay-count pills (compact so both fit the 340px frame) */}
-        <div className="flex shrink-0 items-center gap-0.5 rounded-2xl bg-[var(--wisp-surface-variant)] px-1.5 py-1.5">
-          <Users size={14} style={{ color: 'var(--wisp-repost)' }} />
-          <span className="text-xs">3</span>
-        </div>
-        <div className="flex shrink-0 items-center gap-0.5 rounded-2xl bg-[var(--wisp-surface-variant)] px-1.5 py-1.5">
-          <Network size={14} style={{ color: 'var(--wisp-repost)' }} />
-          <span className="text-xs">73</span>
+        {/* Right: online + relay-count pills (compact so both fit the 340px frame).
+            Wrapped in one anchor so a tour step about "the pills up top" can ring
+            both of them instead of a post card three hundred pixels lower. */}
+        <div className="flex shrink-0 items-center gap-2" data-tour="wisp-pills">
+          <div className="flex shrink-0 items-center gap-0.5 rounded-2xl bg-[var(--wisp-surface-variant)] px-1.5 py-1.5">
+            <Users size={14} style={{ color: 'var(--wisp-repost)' }} />
+            <span className="text-xs">3</span>
+          </div>
+          <div className="flex shrink-0 items-center gap-0.5 rounded-2xl bg-[var(--wisp-surface-variant)] px-1.5 py-1.5">
+            <Network size={14} style={{ color: 'var(--wisp-repost)' }} />
+            <span className="text-xs">73</span>
+          </div>
         </div>
       </div>
 
