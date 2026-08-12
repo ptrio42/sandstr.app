@@ -663,6 +663,14 @@ async function captureTour(page, pool, tour, baseUrl) {
   const marks = { steps: [] };
 
   for (let step = 1; step <= tour.steps; step++) {
+    // Some steps mount their screen first (the feed needs a beat after sign-in),
+    // so hold only once the ring has settled. Intro steps legitimately have no
+    // ring — those fall through on the timeout instead of failing the run.
+    await page.until(
+      `(() => { const s = document.querySelector('.tour-spotlight'); if (!s) return false;
+        const r = s.getBoundingClientRect(); return r.width > 8 && r.height > 8; })()`,
+      { timeout: 2500, label: `ring for tour step ${step}` },
+    ).catch(() => {});
     marks.steps.push(Date.now() - t0);
     await sleep(step === 1 ? T.tourFirst : T.tourStep);
     if (step < tour.steps) {
