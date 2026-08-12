@@ -28,14 +28,29 @@ const wispTourSteps: TourStep[] = [
   },
   {
     id: 'wisp-feed',
-    // The top post card, not the whole feed root.
-    target: '[data-tour="wisp-post-card"], [data-tour="wisp-feed"]',
+    // The top post card, and ONLY that: `[a], [b]` resolves in DOCUMENT order,
+    // not list order, and `wisp-feed` is the scroll container the cards live in
+    // — so listing it as a fallback handed every run the parent, which fills the
+    // viewport, which means no spotlight at all.
+    target: '[data-tour="wisp-post-card"]',
     title: 'Your feed',
-    content:
-      'Flat, dense cards on near-black. The pills up top show how many people are online and how many relays you are connected to — Wisp dials relays per author (the outbox model), so the number is big on purpose.',
+    content: 'Flat, dense cards on near-black, media inline and the actions in a single row.',
     position: 'top',
     allowClickThrough: true,
     spotlightPadding: 8,
+  },
+  {
+    // Split out of the feed step: two thirds of that copy was about these two
+    // pills, which sit in the top bar while the ring was around a post card
+    // three hundred pixels below it.
+    id: 'wisp-pills',
+    target: '[data-tour="wisp-pills"]',
+    title: 'Online, and where from',
+    content:
+      'These two pills count the people online and the relays you are connected to. Wisp dials relays per author (the outbox model), so that second number is big on purpose.',
+    position: 'bottom',
+    allowClickThrough: true,
+    spotlightPadding: 10,
   },
   {
     id: 'wisp-selector',

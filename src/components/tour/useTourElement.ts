@@ -622,6 +622,13 @@ export function useTourElement(
     };
     // Below this a card is title-plus-buttons with the copy scrolled away.
     const LEGIBLE = 240;
+    // And below THIS it is not a card at all. Measured on Wisp's feed step at
+    // 430x775: a 180px band left the scrolling body 25px tall against 140px of
+    // copy, so the step's text was not clipped — it was simply gone, with no
+    // scrollbar to say so, and the action band sat across the title. A squeezed
+    // placement is worse than the dock: docking costs some of the target, and
+    // the target is still on screen, whereas the words are not.
+    const UNUSABLE = 200;
 
     // Three passes, loosening one constraint at a time: clear the host chrome
     // AND leave room to read; then just clear the chrome; then just clear the
@@ -634,6 +641,7 @@ export function useTourElement(
         if (!c || !clears(c.top, c.left)) continue;
         if (pass < 2 && !clearsChrome(c.top, c.left)) continue;
         if (pass === 0 && bandFor[name] < LEGIBLE) continue;
+        if (bandFor[name] < UNUSABLE) continue;
         return {
           top: Math.round(c.top),
           left: Math.round(c.left),
@@ -642,7 +650,7 @@ export function useTourElement(
           // The ceiling belongs to the placement that won, not to the roomiest
           // one: a side placement gets the whole band, so capping it with the
           // above/below figure shrank a desktop card for no reason.
-          maxHeight: Math.max(180, Math.min(fullHeight, bandFor[name] - offset)),
+          maxHeight: Math.max(UNUSABLE, Math.min(fullHeight, bandFor[name] - offset)),
         };
       }
     }
