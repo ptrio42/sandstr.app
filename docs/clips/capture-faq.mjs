@@ -180,7 +180,9 @@ const T = {
   // sped up instead — see the `typing` mark.
   perChar: 110,
   afterType: 800,
-  readAnswer: 2400,
+  // 4s, nie 2.4: to jest moment, w którym widz CZYTA odpowiedź, a klip ma
+  // wyglądać jak człowiek, nie jak makro. Montaż i tak tę fazę skraca.
+  readAnswer: 4000,
   afterShowMe: 300,
   holdStep: 1700,
   holdLastStep: 2500,
@@ -664,8 +666,19 @@ async function captureLoop(page, pool, loop, baseUrl) {
     marks.typing2 = Date.now() - t0;
     for (const word of loop.typeInSim.words) {
       await page.typeText(word, T.perChar);
-      await sleep(400);
+      await sleep(500);
       await page.pressKey('Enter');
+      // ONE check, not a poll. Polling the DOM every 100ms over the same CDP
+      // socket starves the screencast: the words landed in the app but the
+      // frames stopped arriving mid-typing, so the clip shipped showing only
+      // the first of the two. Sleep long enough for the row to render, then ask
+      // once — and fail loudly if it is not there.
+      await sleep(1500);
+      const landed = await page.eval(
+        `[...document.querySelectorAll('[data-tour="amethyst-hidden-list"] div')]
+           .some(d => d.textContent.trim() === ${JSON.stringify(word)})`,
+      );
+      if (!landed) throw new Error(`typed "${word}" but it never reached the hidden-words list`);
       await sleep(900);
     }
   }

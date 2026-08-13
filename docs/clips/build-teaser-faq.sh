@@ -93,7 +93,7 @@ MASK_CD="$WORK/mask_${CD_W}x${CD_H}r28.png";    mask "$CD_W"  "$CD_H"  28 "$MASK
 # defect a viewer cannot un-see. The build refuses to run if a line is too long.
 CAP_MAX=28
 T_OPEN=0.7                   # panel opening, sped up
-T_WAIT=1.5                   # answer read + the click that starts the demo
+T_WAIT=2.8                   # answer read + the click that starts the demo
 T_SWITCH=2.0                 # the client-switch interstitial
 LOOPS=(
 "damus-shaka|Where is the heart?|It is a shaka.|3.0"
@@ -110,7 +110,7 @@ LOOPS=(
 "amethyst-zap|How do I tip someone?|Zap, fourth under the note.|3.0"
 # The keyword-mute clip: the demo lands on the field and the harness types
 # into it, so the D phase carries the typing and needs the room.
-"amethyst-mute|Tired of the current thing?|Add it to Hidden Words.|9.0"
+"amethyst-mute|Tired of the current thing?|Add it to Hidden Words.|6.2"
 )
 
 for row in "${LOOPS[@]}"; do
