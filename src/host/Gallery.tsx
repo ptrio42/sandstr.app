@@ -140,6 +140,18 @@ export default function Gallery() {
             <ServerOff className="h-4 w-4" /> No server
           </span>
         </div>
+
+        {/* The shelf answers "what is there"; this answers the question people
+            actually arrive with. Kept as a quiet secondary link — picking a
+            client is the step BEFORE trying one, but the tiles are still the
+            product. */}
+        <Link
+          to="/compare"
+          className="mt-8 inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-primary-300 hover:text-primary-600 dark:border-gray-800 dark:text-gray-300 dark:hover:text-primary-400"
+        >
+          Not sure which one? Compare them
+          <ArrowRight className="h-4 w-4" />
+        </Link>
       </section>
 
       <Section

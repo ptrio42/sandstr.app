@@ -125,6 +125,9 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
   ZANIM przebudujesz symulator do nowej wersji realnego klienta — freeze idzie PRZED przebudową.
 - `docs/FAQ.md` — stan wdrożenia FAQ (230 wpisów, 133 mini-toury, 8 klientów); kontrakt autorski
   w `src/data/faq/README.md`.
+- `docs/COMPARE.md` — `/compare`: macierz możliwości (9 osi × 8 klientów) + ten sam post w ośmiu
+  klientach. Czytaj ZANIM dotkniesz `src/data/capabilities.ts` — werdykt bez cytatu i bez wersji
+  jest twierdzeniem o cudzym produkcie, a `unknown` jest pełnoprawną wartością, nie brakiem.
 - `docs/OUTREACH.md` — jak promować to na Nostrze: zmierzone formy, które działają na
   koncie właściciela, realne tematy pytań z `#asknostr`, playbook odpowiadania i lista
   rzeczy, których nie wolno twierdzić. Czytaj ZANIM zaczniesz robić materiał promocyjny.
