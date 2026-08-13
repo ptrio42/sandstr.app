@@ -1,199 +1,47 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-  ArrowLeft, ChevronRight, Plus, Search,
-  Waypoints, RefreshCw, UserPlus, CloudUpload, Zap, Heart, ThumbsUp, Mail, LayoutGrid,
-  MonitorPlay, Music, Sparkles, Medal, CreditCard, Shield, Languages, Grid3x3, Lock, Phone,
-  Droplet, Settings as SettingsIcon, Home, Bell, Pencil, CircleUserRound, Calendar, Search as SearchIcon,
-  ShieldCheck, Activity, KeyRound, SquareX, History, Trash2,
-} from 'lucide-react';
+import { ArrowLeft, ChevronRight, Plus } from 'lucide-react';
 import { Avatar } from '../components/Avatar';
-import '../amethyst.theme.css';
+import '../amethyst-v1-12.theme.css';
 
 interface SettingsScreenProps {
   onBack?: () => void;
   initialSection?: string | null;
 }
 
-/**
- * Settings @ v1.13.1 — rebuilt from the reference recording plus
- * res/values/strings.xml. The release replaced v1.12.6's three separate
- * drawer destinations (Application Preferences / Security Filters / Relays)
- * with ONE searchable root screen: a "Search settings" pill in the top bar and
- * two grouped cards — `account_settings` = "Account Settings" and
- * `app_settings` = "App Settings" — followed by a colour-coded
- * `danger_zone` = "Danger Zone" card.
- *
- * Every row carries a rounded-square icon tile (the visual signature of this
- * screen); Danger Zone rows swap the purple tile for a dark-red one and tint
- * their label with the error colour.
- *
- * `initialSection` keeps its old vocabulary so the guided tour and FAQ mini-tours
- * do not have to change their payloads: 'relays' | 'security' | 'security-hidden'
- * | 'preferences' open the matching detail screen directly, anything else (the
- * drawer's own Settings row) opens the root list.
- */
-
-type Row = { label: string; Icon: React.ComponentType<{ className?: string }>; section?: string; tour?: string };
-
-const ACCOUNT_ROWS: Row[] = [
-  { label: 'Relays', Icon: Waypoints, section: 'relays', tour: 'amethyst-settings-relays' },
-  { label: 'Relay Sync', Icon: RefreshCw },
-  { label: 'Import Follows', Icon: UserPlus },
-  { label: 'Media Servers', Icon: CloudUpload, tour: 'amethyst-settings-media-servers' },
-  { label: 'Nest servers', Icon: CloudUpload },
-  { label: 'Zaps', Icon: Zap },
-  { label: 'Reactions', Icon: Heart },
-  { label: 'Reaction Row', Icon: ThumbsUp },
-  { label: 'Messages', Icon: Mail },
-  { label: 'Bottom Navigation Bar', Icon: LayoutGrid },
-  { label: 'Video Player Buttons', Icon: MonitorPlay },
-  { label: 'Audio Visualizer', Icon: Music },
-  { label: 'Favorite Feed Algorithms', Icon: Sparkles },
-  { label: 'Profile badges', Icon: Medal },
-  { label: 'Payment Targets', Icon: CreditCard },
-  { label: 'BOLT12 Offers', Icon: CreditCard },
-  { label: 'Security Filters', Icon: Shield, section: 'security', tour: 'amethyst-settings-security-filters' },
-  { label: 'Translations', Icon: Languages },
-  { label: 'Connected Apps', Icon: Grid3x3 },
-  { label: 'Relay Authentication', Icon: Lock },
-  { label: 'Call Settings', Icon: Phone },
-];
-
-const APP_ROWS: Row[] = [
-  { label: 'Privacy Options', Icon: Droplet },
-  { label: 'UI Preferences', Icon: SettingsIcon, section: 'preferences', tour: 'amethyst-settings-ui-preferences' },
-  { label: 'Home', Icon: Home },
-  { label: 'Notifications', Icon: Bell },
-  { label: 'Compose Settings', Icon: Pencil },
-  { label: 'Profile UI', Icon: CircleUserRound },
-  { label: 'Calendar reminders', Icon: Calendar },
-  { label: 'Bitcoin Explorer (OTS)', Icon: SearchIcon },
-  { label: 'Namecoin Settings', Icon: ShieldCheck },
-  { label: 'App resource usage', Icon: Activity },
-];
-
-const DANGER_ROWS: Row[] = [
-  { label: 'Backup Keys', Icon: KeyRound, tour: 'amethyst-settings-backup-keys' },
-  { label: 'Request to Vanish', Icon: SquareX },
-  { label: 'Vanish History', Icon: History },
-  { label: 'Reset Marmot State', Icon: Trash2 },
-];
-
-const DETAIL_TITLES: Record<string, string> = {
-  preferences: 'UI Preferences',
+const TITLES: Record<string, string> = {
+  preferences: 'Application Preferences',
   security: 'Security Filters',
   relays: 'Relays',
 };
 
-export function SettingsScreen({ onBack, initialSection = null }: SettingsScreenProps) {
-  const raw = initialSection || 'root';
-  const openDirect = raw === 'privacy' || raw === 'security-hidden' ? 'security' : raw;
-  const [section, setSection] = useState<string>(
-    DETAIL_TITLES[openDirect] ? openDirect : 'root',
-  );
+// Three real Amethyst drawer destinations (verified vs the screen recording):
+// Application Preferences · Security Filters · Relays.
+export function SettingsScreen({ onBack, initialSection = 'preferences' }: SettingsScreenProps) {
+  // `security-hidden` is the same screen with the Hidden Words tab preselected.
+  // Encoded in the section string rather than as a new command, so the tour
+  // command union and its `openSettings` payload stay exactly as they were.
+  const raw = initialSection || 'preferences';
+  const section = raw === 'privacy' || raw === 'security-hidden' ? 'security' : raw;
   const securityTab = raw === 'security-hidden' ? 'hidden' : 'blocked';
-
-  // Backing out of a detail returns to the root list, the way a pushed screen
-  // does upstream; backing out of the root closes Settings entirely.
-  const back = () => (section === 'root' ? onBack?.() : setSection('root'));
 
   return (
     <div className="flex flex-col h-full bg-[var(--md-background)]" data-tour="amethyst-settings">
       <div className="md-app-bar md-app-bar-enhanced">
-        <button onClick={back} aria-label="Back" className="md-app-bar-icon-btn">
+        <button onClick={onBack} aria-label="Back" className="md-app-bar-icon-btn">
           <ArrowLeft className="w-6 h-6 text-[var(--md-on-surface)]" />
         </button>
-        {section === 'root' ? (
-          // The search field REPLACES the title in v1.13.1 — there is no
-          // "Settings" heading on this screen at all.
-          <div
-            className="flex-1 flex items-center gap-3 rounded-full px-4 py-2.5 mr-2"
-            style={{ background: 'var(--md-surface-container-high)' }}
-          >
-            <Search className="w-5 h-5 shrink-0 text-[var(--md-on-surface-variant)]" />
-            <span className="text-[15px] whitespace-nowrap text-[var(--md-on-surface-variant)]">Search settings</span>
-          </div>
-        ) : (
-          <h1 className="flex-1 font-semibold text-[var(--md-on-surface)] px-1">{DETAIL_TITLES[section]}</h1>
-        )}
+        <h1 className="flex-1 font-semibold text-[var(--md-on-surface)] px-1">{TITLES[section] || 'Settings'}</h1>
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {section === 'root' ? (
-          <SettingsRoot onOpen={setSection} />
-        ) : section === 'relays' ? (
-          <RelaysView />
-        ) : section === 'security' ? (
-          <SecurityView initialTab={securityTab} />
-        ) : (
-          <PreferencesView />
-        )}
+        {section === 'relays' ? <RelaysView /> : section === 'security' ? <SecurityView initialTab={securityTab} /> : <PreferencesView />}
       </div>
     </div>
   );
 }
 
-/* ---------- Settings root ---------- */
-
-function SettingsRoot({ onOpen }: { onOpen: (s: string) => void }) {
-  return (
-    <div className="px-3 pb-8 pt-2">
-      <SettingsCard title="Account Settings" rows={ACCOUNT_ROWS} onOpen={onOpen} />
-      <SettingsCard title="App Settings" rows={APP_ROWS} onOpen={onOpen} />
-      <SettingsCard title="Danger Zone" rows={DANGER_ROWS} onOpen={onOpen} danger />
-    </div>
-  );
-}
-
-function SettingsCard({
-  title, rows, onOpen, danger,
-}: { title: string; rows: Row[]; onOpen: (s: string) => void; danger?: boolean }) {
-  return (
-    <div className="mt-4">
-      <p
-        className="px-3 pb-2 text-sm font-medium"
-        style={{ color: danger ? 'var(--md-error)' : 'var(--md-primary)' }}
-      >
-        {title}
-      </p>
-      <div className="rounded-3xl overflow-hidden" style={{ background: 'var(--md-surface-container-low)' }}>
-        {rows.map((r, i) => (
-          <button
-            key={r.label}
-            type="button"
-            onClick={() => r.section && onOpen(r.section)}
-            data-tour={r.tour}
-            className="relative w-full flex items-center gap-4 px-3 py-3 text-left"
-          >
-            <span
-              className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center"
-              style={{
-                background: danger ? 'var(--md-error-container)' : 'var(--md-primary-container)',
-                color: danger ? 'var(--md-on-error-container)' : 'var(--md-on-primary-container)',
-              }}
-            >
-              <r.Icon className="w-5 h-5" />
-            </span>
-            <span
-              className="flex-1 min-w-0 text-[17px]"
-              style={{ color: danger ? 'var(--md-error)' : 'var(--md-on-surface)' }}
-            >
-              {r.label}
-            </span>
-            <ChevronRight className="w-5 h-5 shrink-0 text-[var(--md-on-surface-variant)]" />
-            {/* Hairline starts after the icon column, as upstream draws it */}
-            {i < rows.length - 1 && (
-              <span className="absolute left-[68px] right-0 bottom-0 h-px bg-[var(--md-outline-variant)]" />
-            )}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ---------- UI Preferences (v1.12.6's "Application Preferences") ---------- */
+/* ---------- Application Preferences ---------- */
 
 const PREFS = [
   { title: 'Language', desc: "For the App's interface", value: 'English' },
@@ -248,9 +96,9 @@ function SecurityView({ initialTab = 'blocked' }: { initialTab?: 'blocked' | 'sp
   const [warnReports, setWarnReports] = useState(true);
   const [filterSpam, setFilterSpam] = useState(true);
   const [tab, setTab] = useState<'blocked' | 'spammers' | 'hidden'>(initialTab);
-  // Hidden Words is the one tab the reference recordings never opened, so its
-  // contents come from upstream `HiddenWordsScreen.kt` — see the [REC vs REPO]
-  // note in docs/refs/amethyst/screen-map.md.
+  // Hidden Words is the one tab the reference recording never opened, so its
+  // contents come from upstream `HiddenWordsScreen.kt` @ v1.12.6 — see the
+  // [REC vs REPO] note in docs/refs/amethyst/screen-map.md.
   const [hiddenWords, setHiddenWords] = useState<string[]>([]);
   const [draft, setDraft] = useState('');
   const addWord = () => {
@@ -265,15 +113,15 @@ function SecurityView({ initialTab = 'blocked' }: { initialTab?: 'blocked' | 'sp
     // way upstream's `bottomBar` does, instead of floating under the last row.
     <div className="flex flex-col min-h-full">
       <div className="px-4 pt-3 space-y-4">
-        <PrefRow title="Warn on reports" desc="Shows a warning message when posts have 5 or more reports from your follows">
+        <Row title="Warn on reports" desc="Shows a warning message when posts have 5 or more reports from your follows">
           <Toggle on={warnReports} onToggle={() => setWarnReports((v) => !v)} />
-        </PrefRow>
-        <PrefRow title="Filter spam" desc="Hides posts from strangers that were exactly the same for 5 or more times">
+        </Row>
+        <Row title="Filter spam" desc="Hides posts from strangers that were exactly the same for 5 or more times">
           <Toggle on={filterSpam} onToggle={() => setFilterSpam((v) => !v)} />
-        </PrefRow>
-        <PrefRow title="Show sensitive content" desc="Shows a warning message when the author of the post marked it as sensitive">
+        </Row>
+        <Row title="Show sensitive content" desc="Shows a warning message when the author of the post marked it as sensitive">
           <span className="px-4 py-1.5 rounded-lg bg-[var(--md-surface-variant)] text-sm text-[var(--md-on-surface)]">Warn</span>
-        </PrefRow>
+        </Row>
       </div>
 
       {/* sub-tabs */}
@@ -358,7 +206,7 @@ function SecurityView({ initialTab = 'blocked' }: { initialTab?: 'blocked' | 'sp
   );
 }
 
-function PrefRow({ title, desc, children }: { title: string; desc: string; children: React.ReactNode }) {
+function Row({ title, desc, children }: { title: string; desc: string; children: React.ReactNode }) {
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="flex-1 min-w-0">

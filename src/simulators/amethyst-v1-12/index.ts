@@ -18,9 +18,7 @@ export { Drawer } from './components/Drawer';
 // Screens
 export { LoginScreen } from './screens/LoginScreen';
 export { HomeScreen } from './screens/HomeScreen';
-export { BrowserScreen } from './screens/BrowserScreen';
-export { DiscoverScreen } from './screens/DiscoverScreen';
-export { WalletScreen } from './screens/WalletScreen';
+export { SearchScreen } from './screens/SearchScreen';
 export { NotificationsScreen } from './screens/NotificationsScreen';
 export { MessagesScreen } from './screens/MessagesScreen';
 export { ProfileScreen } from './screens/ProfileScreen';
@@ -29,4 +27,4 @@ export { ComposeScreen } from './screens/ComposeScreen';
 export { VideoScreen } from './screens/VideoScreen';
 
 // Theme
-import './amethyst.theme.css';
+import './amethyst-v1-12.theme.css';

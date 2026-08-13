@@ -5,7 +5,7 @@ import { AppTopBar } from '../components/AppTopBar';
 import { FeedSelector } from '../components/FeedSelector';
 import { getRecentNotes, getUserByPubkey, generateAvatarGradient } from '../../../data/mock';
 import type { MockNote } from '../../../data/mock';
-import '../amethyst.theme.css';
+import '../amethyst-v1-12.theme.css';
 
 interface HomeScreenProps {
   onOpenCompose: () => void;
@@ -176,16 +176,22 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onLikePo
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* No live-activities strip here on purpose. Upstream renders
-            `DisplayLiveBubbles` as a horizontal LazyRow of round bubbles and only
-            `if (feed.list.isNotEmpty())` — its own comment calls an empty live
-            feed "the common case" (home/HomeScreen.kt). Across 285 sampled
-            frames of the v1.13.1-fdroid reference recording the row never
-            appears, so the feed opens straight into notes. What we shipped until
-            now — a permanent full-width bar with a title, subtitle, LIVE badge
-            and rocket/zap counts — matched neither the bubble shape nor the
-            gating; it came from the same old promo screenshot that gave us the
-            wrong app-bar right slot. */}
+        {/* LIVE now — real Amethyst shows a live-activities strip as the first feed item (NIP-53), NOT a stories carousel */}
+        <button
+          className="w-full flex items-center gap-3 px-4 py-3 text-left"
+          style={{ borderBottom: '1px solid var(--amethyst-feed-divider)' }}
+        >
+          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-fuchsia-600 to-purple-700 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-[var(--md-on-surface)] truncate">Exploring random ideas …</p>
+            <p className="text-sm text-[var(--md-on-surface-variant)] truncate">Just exploring some random ideas, nothing specific</p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="live-badge text-xs font-bold px-2 py-0.5 rounded text-white">LIVE</span>
+            <span className="text-sm text-[var(--md-on-surface-variant)]">🚀 17</span>
+            <span className="text-sm font-medium" style={{ color: 'var(--bitcoin-orange)' }}>⚡ 122.5k</span>
+          </div>
+        </button>
         <AnimatePresence mode="popLayout">
           {posts.map((post, index) => (
             <motion.div

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Globe } from 'lucide-react';
 import { AppTopBar } from '../components/AppTopBar';
-import '../amethyst.theme.css';
+import '../amethyst-v1-12.theme.css';
 
 interface SearchScreenProps {
   onOpenDrawer?: () => void;
@@ -16,7 +16,7 @@ export function SearchScreen({ onOpenDrawer }: SearchScreenProps) {
     <div className="flex flex-col h-full bg-[var(--md-background)]">
       <AppTopBar
         onOpenDrawer={onOpenDrawer}
-        center={<img src="/icons/amethyst.png" alt="Amethyst" className="w-8 h-8 object-contain" />}
+        center={<img src="/icons/amethyst-v1-12.png" alt="Amethyst" className="w-8 h-8 object-contain" />}
       />
 
       <div className="flex-1 flex flex-col items-center justify-center gap-4 px-10 text-center">

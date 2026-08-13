@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Search } from 'lucide-react';
+import { Waypoints } from 'lucide-react';
 import { Avatar } from './Avatar';
-import '../amethyst.theme.css';
+import '../amethyst-v1-12.theme.css';
 
 interface AppTopBarProps {
   onOpenDrawer?: () => void;
@@ -10,13 +10,9 @@ interface AppTopBarProps {
   center: React.ReactNode;
 }
 
-// Amethyst's persistent top app bar. Verified against the v1.13.1-fdroid
-// recording AND upstream `UserDrawerSearchTopBar.kt`, which agree: account
-// avatar on the left (opens the drawer), a context-dependent center, and a
-// SEARCH magnifier on the right, tinted with the muted `placeholderText` grey.
-// The "16/16 + relay graph" we shipped through v1.12.6 came from an old promo
-// screenshot that already disagreed with that release's own source — the frozen
-// amethyst-v1-12 archive keeps it; the live version does not.
+// Amethyst's persistent top app bar (verified across home/messages/notifications
+// screenshots @ v1.12.6): account avatar on the left (opens the drawer), a
+// context-dependent center, and a relay counter + relay-graph icon on the right.
 export function AppTopBar({ onOpenDrawer, center }: AppTopBarProps) {
   return (
     <div className="md-app-bar md-app-bar-enhanced">
@@ -35,16 +31,11 @@ export function AppTopBar({ onOpenDrawer, center }: AppTopBarProps) {
       {/* CENTER: varies per screen */}
       <div className="flex-1 flex items-center justify-center relative">{center}</div>
 
-      {/* RIGHT: search (upstream navigates to Route.Search) */}
-      <button
-        type="button"
-        aria-label="Search"
-        data-tour="amethyst-topbar-search"
-        className="md-app-bar-icon-btn"
-      >
-        {/* tint = placeholderText (onSurface @42%), per UserDrawerSearchTopBar.kt */}
-        <Search className="w-[22px] h-[22px] text-[var(--amethyst-placeholder)]" />
-      </button>
+      {/* RIGHT: relay counter + relay-graph icon */}
+      <div className="flex items-center gap-1.5 pr-1">
+        <span className="text-sm font-medium text-[var(--md-on-surface-variant)]">16/16</span>
+        <Waypoints className="w-5 h-5 text-[var(--md-primary)]" />
+      </div>
     </div>
   );
 }

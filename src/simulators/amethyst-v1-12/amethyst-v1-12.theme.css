@@ -1,19 +1,11 @@
 /**
  * Material Design 3 Theme for Amethyst Simulator
  * Material You color system with dynamic color support
- *
- * VERSIONING GUARD: this sheet also contains selectors NOT scoped under the
- * `.amethyst-simulator` root class (`.md-card`, `.md-button`, …). Those rules
- * are shared with the frozen archive amethyst-v1-12 (both chunks live in one
- * SPA session — last loaded wins). When changing the SHAPE of an existing
- * unscoped selector, introduce the change scoped under `.amethyst-simulator`
- * instead of editing the shared rule. Tokens (CSS variables) are safe — they
- * live on the renamed root class. See docs/VERSIONS.md.
  */
 
 /* Material Design 3 Color Tokens - Light Theme */
-/* Scoped to .amethyst-simulator so these light tokens don't leak onto the host document. */
-.amethyst-simulator {
+/* Scoped to .amethyst-v1-12-simulator so these light tokens don't leak onto the host document. */
+.amethyst-v1-12-simulator {
   /* Primary Palette — real Amethyst signature purple (Color.kt Primary50 #7F67BE), NOT generic Material #6750A4 */
   --md-primary: #7F67BE;
   --md-on-primary: #FFFFFF;
@@ -135,66 +127,44 @@
   --md-easing-accelerate: cubic-bezier(0.4, 0, 1, 1);
 }
 
-/* Dark Theme - Scoped to amethyst-simulator with data-theme="dark".
-   Rebuilt against v1.13.1 `Theme.kt` → darkColors(AccentColorType.PURPLE), the
-   shipping default. v1.13.1 made the accent user-selectable (6 options) and, in
-   the same pass, replaced Material's violet-tinted baseline neutrals with a
-   hue-free grey ramp — quoting the source: "Left unset, these fall back to
-   Material's violet-tinted baseline greys, which read as a faint purple wash
-   independent of the accent." That de-purpling is the biggest token change of
-   the release and every neutral below carries it.
-   Container roles derive from the accent: accentContainer = lerp(primary,
-   Black, 0.58) and onAccentContainer = lerp(primary, White, 0.85), both in
-   Oklab (Compose's Color lerp). #36244C is the computed value and matches the
-   nav pill sampled off the recording (#34224B) to within rounding. */
-.amethyst-simulator[data-theme="dark"] {
-  /* Real Amethyst dark-theme brand purple (Purple200 #BB86FC), NOT generic Material You #D0BCFF */
+/* Dark Theme - Scoped to amethyst-v1-12-simulator with data-theme="dark" */
+.amethyst-v1-12-simulator[data-theme="dark"] {
+  /* Real Amethyst dark-theme brand purple (#BB86FC), NOT generic Material You #D0BCFF */
   --md-primary: #BB86FC;
-  /* onAccent() picks black or white by WCAG contrast; on this pastel it is black
-     (7.9:1 vs 2.6:1) — the FAB glyph in the recording is dark, not deep purple. */
-  --md-on-primary: #000000;
-  --md-primary-container: #36244C;
-  --md-on-primary-container: #F4EDFF;
-
-  /* The purple theme keeps Amethyst's original teal secondary (Teal200). */
-  --md-secondary: #03DAC5;
-  --md-on-secondary: #000000;
-  --md-secondary-container: #36244C;
-  --md-on-secondary-container: #F4EDFF;
-
-  --md-tertiary: #03DAC5;
-  --md-on-tertiary: #000000;
-  --md-tertiary-container: #36244C;
-  --md-on-tertiary-container: #F4EDFF;
-
+  --md-on-primary: #381E72;
+  --md-primary-container: #4F378B;
+  --md-on-primary-container: #EADDFF;
+  
+  --md-secondary: #CCC2DC;
+  --md-on-secondary: #332D41;
+  --md-secondary-container: #4A4458;
+  --md-on-secondary-container: #E8DEF8;
+  
+  --md-tertiary: #EFB8C8;
+  --md-on-tertiary: #492532;
+  --md-tertiary-container: #633B48;
+  --md-on-tertiary-container: #FFD8E4;
+  
   --md-error: #F2B8B5;
   --md-on-error: #601410;
   --md-error-container: #8C1D18;
   --md-on-error-container: #F9DEDC;
-
+  
   /* Amethyst dark = pure black (Theme.kt: background/surface = Color.Black) */
   --md-surface: #000000;
-  --md-on-surface: #E6E6E6;
-  --md-surface-variant: #1E1E1E;
-  --md-on-surface-variant: #CACACA;
+  --md-on-surface: #E6E1E5;
+  --md-surface-variant: #49454F;
+  --md-on-surface-variant: #CAC4D0;
 
   --md-background: #000000;
-  --md-on-background: #E6E6E6;
-
-  /* Neutral surface ramp introduced in v1.13.1 */
-  --md-surface-bright: #383838;
-  --md-surface-container-lowest: #141414;
-  --md-surface-container-low: #1A1A1A;
-  --md-surface-container: #252525;
-  --md-surface-container-high: #2E2E2E;
-  --md-surface-container-highest: #383838;
-
-  --md-outline: #909090;
-  --md-outline-variant: #454545;
-
-  --md-inverse-surface: #E6E6E6;
+  --md-on-background: #E6E1E5;
+  
+  --md-outline: #938F99;
+  --md-outline-variant: #49454F;
+  
+  --md-inverse-surface: #E6E1E5;
   --md-inverse-on-surface: #313033;
-  --md-inverse-primary: #6200EE;
+  --md-inverse-primary: #7F67BE;
 
   /* Elevation = purple tint (#BB86FC) layered over pure black */
   --md-surface-1: linear-gradient(0deg, rgba(187, 134, 252, 0.05), rgba(187, 134, 252, 0.05)), #000000;
@@ -593,10 +563,10 @@
 }
 
 /* Action Button Styles with Hover States.
-   Scoped under .amethyst-simulator: an unscoped `.action-btn` collided with
+   Scoped under .amethyst-v1-12-simulator: an unscoped `.action-btn` collided with
    Nostr Kitten's `.action-btn` (both sheets load once the ClientSwitcher
    preloads neighbours, and the last-loaded sheet used to win). */
-.amethyst-simulator .action-btn {
+.amethyst-v1-12-simulator .action-btn {
   min-width: 44px;
   min-height: 44px;
   padding: var(--md-space-2);
@@ -608,38 +578,38 @@
   gap: var(--md-space-1);
 }
 
-.amethyst-simulator .action-btn:hover {
+.amethyst-v1-12-simulator .action-btn:hover {
   background-color: var(--md-surface-variant);
 }
 
-.amethyst-simulator .action-btn-reply:hover {
+.amethyst-v1-12-simulator .action-btn-reply:hover {
   background-color: var(--md-primary-container);
 }
 
-.amethyst-simulator .action-btn-repost:hover,
-.amethyst-simulator .action-btn-repost.active:hover {
+.amethyst-v1-12-simulator .action-btn-repost:hover,
+.amethyst-v1-12-simulator .action-btn-repost.active:hover {
   background-color: rgb(220 252 231); /* green-100 */
 }
 
-.amethyst-simulator .action-btn-repost:not(.active):hover {
+.amethyst-v1-12-simulator .action-btn-repost:not(.active):hover {
   background-color: rgb(240 253 244); /* green-50 */
 }
 
-.amethyst-simulator .action-btn-zap:hover,
-.amethyst-simulator .action-btn-zap.active:hover {
+.amethyst-v1-12-simulator .action-btn-zap:hover,
+.amethyst-v1-12-simulator .action-btn-zap.active:hover {
   background-color: rgba(247, 147, 26, 0.15); /* Bitcoin orange with opacity */
 }
 
-.amethyst-simulator .action-btn-zap:not(.active):hover {
+.amethyst-v1-12-simulator .action-btn-zap:not(.active):hover {
   background-color: rgba(247, 147, 26, 0.08); /* Bitcoin orange lighter */
 }
 
-.amethyst-simulator .action-btn-like:hover,
-.amethyst-simulator .action-btn-like.active:hover {
+.amethyst-v1-12-simulator .action-btn-like:hover,
+.amethyst-v1-12-simulator .action-btn-like.active:hover {
   background-color: rgb(254 226 226); /* red-100 */
 }
 
-.amethyst-simulator .action-btn-like:not(.active):hover {
+.amethyst-v1-12-simulator .action-btn-like:not(.active):hover {
   background-color: rgb(254 242 242); /* red-50 */
 }
 
@@ -853,7 +823,7 @@
 }
 
 /* Amethyst Simulator Container */
-.amethyst-simulator {
+.amethyst-v1-12-simulator {
   font-family: var(--md-font-family);
   background-color: var(--md-background);
   color: var(--md-on-surface);
@@ -865,7 +835,7 @@
   flex-direction: column;
 }
 
-.amethyst-simulator-content {
+.amethyst-v1-12-simulator-content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
@@ -873,15 +843,15 @@
 }
 
 /* Scrollbar Styling */
-.amethyst-simulator-content::-webkit-scrollbar {
+.amethyst-v1-12-simulator-content::-webkit-scrollbar {
   width: 4px;
 }
 
-.amethyst-simulator-content::-webkit-scrollbar-track {
+.amethyst-v1-12-simulator-content::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.amethyst-simulator-content::-webkit-scrollbar-thumb {
+.amethyst-v1-12-simulator-content::-webkit-scrollbar-thumb {
   background: var(--md-outline-variant);
   border-radius: var(--md-radius-full);
 }
@@ -918,7 +888,7 @@
 
 /* Responsive Adjustments */
 @media (max-width: 480px) {
-  .amethyst-simulator {
+  .amethyst-v1-12-simulator {
     border-radius: 0;
   }
 }
@@ -1106,52 +1076,4 @@
 .community-badge:hover {
   background-color: var(--md-primary);
   color: var(--md-on-primary);
-}
-
-/* ============================================================
-   v1.13.1 deltas — SCOPED under the live root class on purpose.
-   The `.md-*` selectors above are shared verbatim with the frozen
-   amethyst-v1-12 archive (see the header note), so anything that
-   changes the SHAPE of an existing rule is re-declared here
-   instead of edited in place.
-   ============================================================ */
-
-/* Bottom nav. Upstream: NavigationBar(containerColor = background,
-   tonalElevation = 0) over a 0.25dp HorizontalDivider — a flat black bar with a
-   hairline top rule, unchanged between the two releases. What IS new is the
-   stock M3 selected-item indicator: a secondaryContainer pill behind the active
-   icon (v1.12.6 carried selection by tint alone). Icon tint stays explicit
-   upstream: `primary` selected, `onSurface65` otherwise (AppBottomBar.kt:152) —
-   65% of onSurface over black resolves to #969696. */
-.amethyst-simulator .md-bottom-nav {
-  background-color: var(--md-background);
-  border-top: 1px solid var(--md-outline-variant);
-  box-shadow: none;
-  padding: var(--md-space-2) var(--md-space-2) calc(var(--md-space-2) + env(safe-area-inset-bottom, 8px));
-}
-
-.amethyst-simulator .md-bottom-nav-item {
-  color: color-mix(in srgb, var(--md-on-surface) 65%, transparent);
-}
-
-.amethyst-simulator .md-bottom-nav-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 32px;
-  border-radius: var(--md-radius-full);
-  transition: background-color var(--md-duration-short) var(--md-easing-standard);
-}
-
-.amethyst-simulator .md-bottom-nav-item.active .md-bottom-nav-indicator {
-  background-color: var(--md-secondary-container);
-}
-
-/* Upstream derives these from onSurface, so one definition covers both themes:
-   placeholderText = onSurface @42%, grayText = onSurface @52%. They carry the
-   note header's markers, timestamps and action-row icons. */
-.amethyst-simulator {
-  --amethyst-placeholder: color-mix(in srgb, var(--md-on-surface) 42%, transparent);
-  --amethyst-gray-text: color-mix(in srgb, var(--md-on-surface) 52%, transparent);
 }

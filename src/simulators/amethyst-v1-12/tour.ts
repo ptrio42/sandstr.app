@@ -8,7 +8,7 @@ import type { TourConfig, TourStep } from '../../components/tour';
 const amethystTourSteps: TourStep[] = [
   {
     id: 'amethyst-welcome',
-    target: '.amethyst-simulator',
+    target: '.amethyst-v1-12-simulator',
     title: 'Welcome to Amethyst',
     content: 'Amethyst is a Material Design 3 Android Nostr client. It is feature-rich with support for both dark and light themes. Let us explore its interface together!',
     position: 'center',
@@ -105,7 +105,7 @@ const amethystTourSteps: TourStep[] = [
     id: 'amethyst-interactions',
     target: '[data-tour="amethyst-actions"]',
     title: 'Engagement Options',
-    content: 'Each post has the same footer: Reply (comment), Boost (repost), Like (heart), Zap (Bitcoin tip) and Share. Zaps use Lightning Network to send real Bitcoin to content creators! The chevron on the left expands who reacted, and counts only appear once there are any.',
+    content: 'Each post has actions: Reply (comment), Boost (repost), Like (heart), and Zap (Bitcoin tip). Zaps use Lightning Network to send real Bitcoin to content creators!',
     position: 'top',
     trigger: 'action',
     actionType: 'like',
@@ -130,7 +130,7 @@ const amethystTourSteps: TourStep[] = [
   },
   {
     id: 'amethyst-complete',
-    target: '.amethyst-simulator',
+    target: '.amethyst-v1-12-simulator',
     title: 'Ready for Nostr!',
     content: 'You understand Amethyst basics! Its Material Design makes it intuitive for Android users. Your account works across all Nostr clients - try another one!',
     position: 'center',
@@ -139,10 +139,10 @@ const amethystTourSteps: TourStep[] = [
 ];
 
 export const amethystTourConfig: TourConfig = {
-  id: 'amethyst-tour',
+  id: 'amethyst-v1-12-tour',
   name: 'Amethyst Simulator Tour',
   steps: amethystTourSteps,
-  storageKey: 'nostr-tour-amethyst',
+  storageKey: 'nostr-tour-amethyst-v1-12',
 };
 
 export default amethystTourConfig;
