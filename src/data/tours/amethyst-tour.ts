@@ -105,7 +105,7 @@ const amethystTourSteps: TourStep[] = [
     id: 'amethyst-interactions',
     target: '[data-tour="amethyst-actions"]',
     title: 'Engagement Options',
-    content: 'Each post has actions: Reply (comment), Boost (repost), Like (heart), and Zap (Bitcoin tip). Zaps use Lightning Network to send real Bitcoin to content creators!',
+    content: 'Each post has the same footer: Reply (comment), Boost (repost), Like (heart), Zap (Bitcoin tip) and Share. Zaps use Lightning Network to send real Bitcoin to content creators! The chevron on the left expands who reacted, and counts only appear once there are any.',
     position: 'top',
     trigger: 'action',
     actionType: 'like',

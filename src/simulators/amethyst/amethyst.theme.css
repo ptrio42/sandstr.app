@@ -135,44 +135,66 @@
   --md-easing-accelerate: cubic-bezier(0.4, 0, 1, 1);
 }
 
-/* Dark Theme - Scoped to amethyst-simulator with data-theme="dark" */
+/* Dark Theme - Scoped to amethyst-simulator with data-theme="dark".
+   Rebuilt against v1.13.1 `Theme.kt` → darkColors(AccentColorType.PURPLE), the
+   shipping default. v1.13.1 made the accent user-selectable (6 options) and, in
+   the same pass, replaced Material's violet-tinted baseline neutrals with a
+   hue-free grey ramp — quoting the source: "Left unset, these fall back to
+   Material's violet-tinted baseline greys, which read as a faint purple wash
+   independent of the accent." That de-purpling is the biggest token change of
+   the release and every neutral below carries it.
+   Container roles derive from the accent: accentContainer = lerp(primary,
+   Black, 0.58) and onAccentContainer = lerp(primary, White, 0.85), both in
+   Oklab (Compose's Color lerp). #36244C is the computed value and matches the
+   nav pill sampled off the recording (#34224B) to within rounding. */
 .amethyst-simulator[data-theme="dark"] {
-  /* Real Amethyst dark-theme brand purple (#BB86FC), NOT generic Material You #D0BCFF */
+  /* Real Amethyst dark-theme brand purple (Purple200 #BB86FC), NOT generic Material You #D0BCFF */
   --md-primary: #BB86FC;
-  --md-on-primary: #381E72;
-  --md-primary-container: #4F378B;
-  --md-on-primary-container: #EADDFF;
-  
-  --md-secondary: #CCC2DC;
-  --md-on-secondary: #332D41;
-  --md-secondary-container: #4A4458;
-  --md-on-secondary-container: #E8DEF8;
-  
-  --md-tertiary: #EFB8C8;
-  --md-on-tertiary: #492532;
-  --md-tertiary-container: #633B48;
-  --md-on-tertiary-container: #FFD8E4;
-  
+  /* onAccent() picks black or white by WCAG contrast; on this pastel it is black
+     (7.9:1 vs 2.6:1) — the FAB glyph in the recording is dark, not deep purple. */
+  --md-on-primary: #000000;
+  --md-primary-container: #36244C;
+  --md-on-primary-container: #F4EDFF;
+
+  /* The purple theme keeps Amethyst's original teal secondary (Teal200). */
+  --md-secondary: #03DAC5;
+  --md-on-secondary: #000000;
+  --md-secondary-container: #36244C;
+  --md-on-secondary-container: #F4EDFF;
+
+  --md-tertiary: #03DAC5;
+  --md-on-tertiary: #000000;
+  --md-tertiary-container: #36244C;
+  --md-on-tertiary-container: #F4EDFF;
+
   --md-error: #F2B8B5;
   --md-on-error: #601410;
   --md-error-container: #8C1D18;
   --md-on-error-container: #F9DEDC;
-  
+
   /* Amethyst dark = pure black (Theme.kt: background/surface = Color.Black) */
   --md-surface: #000000;
-  --md-on-surface: #E6E1E5;
-  --md-surface-variant: #49454F;
-  --md-on-surface-variant: #CAC4D0;
+  --md-on-surface: #E6E6E6;
+  --md-surface-variant: #1E1E1E;
+  --md-on-surface-variant: #CACACA;
 
   --md-background: #000000;
-  --md-on-background: #E6E1E5;
-  
-  --md-outline: #938F99;
-  --md-outline-variant: #49454F;
-  
-  --md-inverse-surface: #E6E1E5;
+  --md-on-background: #E6E6E6;
+
+  /* Neutral surface ramp introduced in v1.13.1 */
+  --md-surface-bright: #383838;
+  --md-surface-container-lowest: #141414;
+  --md-surface-container-low: #1A1A1A;
+  --md-surface-container: #252525;
+  --md-surface-container-high: #2E2E2E;
+  --md-surface-container-highest: #383838;
+
+  --md-outline: #909090;
+  --md-outline-variant: #454545;
+
+  --md-inverse-surface: #E6E6E6;
   --md-inverse-on-surface: #313033;
-  --md-inverse-primary: #7F67BE;
+  --md-inverse-primary: #6200EE;
 
   /* Elevation = purple tint (#BB86FC) layered over pure black */
   --md-surface-1: linear-gradient(0deg, rgba(187, 134, 252, 0.05), rgba(187, 134, 252, 0.05)), #000000;
@@ -1084,4 +1106,44 @@
 .community-badge:hover {
   background-color: var(--md-primary);
   color: var(--md-on-primary);
+}
+
+/* ============================================================
+   v1.13.1 deltas — SCOPED under the live root class on purpose.
+   The `.md-*` selectors above are shared verbatim with the frozen
+   amethyst-v1-12 archive (see the header note), so anything that
+   changes the SHAPE of an existing rule is re-declared here
+   instead of edited in place.
+   ============================================================ */
+
+/* Bottom nav. Upstream: NavigationBar(containerColor = background,
+   tonalElevation = 0) over a 0.25dp HorizontalDivider — a flat black bar with a
+   hairline top rule, unchanged between the two releases. What IS new is the
+   stock M3 selected-item indicator: a secondaryContainer pill behind the active
+   icon (v1.12.6 carried selection by tint alone). Icon tint stays explicit
+   upstream: `primary` selected, `onSurface65` otherwise (AppBottomBar.kt:152) —
+   65% of onSurface over black resolves to #969696. */
+.amethyst-simulator .md-bottom-nav {
+  background-color: var(--md-background);
+  border-top: 1px solid var(--md-outline-variant);
+  box-shadow: none;
+  padding: var(--md-space-2) var(--md-space-2) calc(var(--md-space-2) + env(safe-area-inset-bottom, 8px));
+}
+
+.amethyst-simulator .md-bottom-nav-item {
+  color: color-mix(in srgb, var(--md-on-surface) 65%, transparent);
+}
+
+.amethyst-simulator .md-bottom-nav-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 32px;
+  border-radius: var(--md-radius-full);
+  transition: background-color var(--md-duration-short) var(--md-easing-standard);
+}
+
+.amethyst-simulator .md-bottom-nav-item.active .md-bottom-nav-indicator {
+  background-color: var(--md-secondary-container);
 }

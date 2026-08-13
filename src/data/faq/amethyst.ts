@@ -27,6 +27,11 @@ type Step = FaqShowMeStep;
 
 const goHome = cmd({ type: 'login' }, { type: 'navigate', payload: 'home' });
 const openDrawer = cmd({ type: 'login' }, { type: 'openDrawer' });
+// v1.13.1 moved Security Filters, Media Servers and Backup Keys out of the
+// drawer and into the searchable Settings root, so their mini-tours open
+// Settings instead of the drawer. `openSettings` with no payload lands on the
+// root list (see AmethystSimulator's command switch).
+const openSettingsRoot = cmd({ type: 'login' }, { type: 'openSettings' });
 
 const actionRowStep = (target: string, title: string, content: string): Step => ({
   target,
@@ -95,7 +100,7 @@ export const amethystFaq: ClientFaq = {
         'The account drawer opens: your banner, status line, following and follower counts, and the main menu.',
         'Tap "Profile" — the first menu row.',
       ],
-      note: 'The drawer is Amethyst\'s control center — Relays, Bookmarks, Drafts, Media Servers, Security Filters, Backup Keys and all preferences live there, not in the bottom bar.',
+      note: 'The drawer is Amethyst\'s control center and its map of the whole app: a "You" section (Profile, Bookmarks, Drafts, Wallet, Remote Signer…), "Navigate" for the destinations that are not in the bottom bar, 28 feed types under "Feeds", and "System" with Relays and Settings at the bottom.',
       showMe: [
         {
           target: '[data-tour="amethyst-profile-avatar"]',
@@ -108,7 +113,7 @@ export const amethystFaq: ClientFaq = {
           target: '[data-tour="amethyst-drawer"]',
           title: 'The account drawer',
           content:
-            'Profile sits at the top; below it live Relays, Media Servers, Security Filters, Backup Keys and every preference screen.',
+            'Profile sits at the top of the "You" section; scroll down for Navigate, 28 feed types, and System with Relays and Settings.',
           position: 'right',
           commands: cmd({ type: 'openDrawer' }),
         },
@@ -150,7 +155,7 @@ export const amethystFaq: ClientFaq = {
       category: 'Posting',
       question: 'How do I reply to a note?',
       answer: [
-        'Tap the speech bubble — first of the five actions under every note (reply, boost, heart, zap, stats).',
+        'Tap the speech bubble — first of the five actions under every note (reply, boost, heart, zap, share).',
         'Or open the note and write in the "reply here.." box at the bottom of the thread.',
         'Tap "Post".',
       ],
@@ -158,7 +163,7 @@ export const amethystFaq: ClientFaq = {
         actionRowStep(
           '[data-tour="amethyst-actions"]',
           'The action row',
-          'Every note carries this five-slot footer: Reply, Boost, Like, Zap, and a stats indicator.',
+          'Every note carries the same footer: a chevron that expands who reacted, then Reply, Boost, Like, Zap and Share. Counts appear only when there are any.',
         ),
         {
           target: '.action-btn-reply',
@@ -243,11 +248,21 @@ export const amethystFaq: ClientFaq = {
       category: 'Finding things',
       question: "How do I search — there's no Search tab?",
       answer: [
-        'Amethyst has no Search tab: the five bottom icons are Home, Messages, Shorts, Discover and Notifications.',
-        'Look in the top app bar instead — recent builds put the magnifier (Search) in the right-hand slot.',
-        'The globe tab is Discover — content discovery, not search.',
+        'Amethyst has no Search tab: the five bottom icons are Home, Messages, Wallet, Browser and Notifications.',
+        'Search is the magnifier in the top-right of the app bar, on every main screen.',
+        'The globe tab is the Browser — a built-in web browser with a directory of Nostr web apps, not a search screen.',
       ],
-      note: 'The right app-bar slot varies by version: our reference build shows the relay indicator there, while newer source ships the magnifier.',
+      note: 'Shorts and Discover used to hold two of the bottom slots; v1.13.1 replaced them with Wallet and Browser, and both moved into the account drawer under "Navigate".',
+      showMe: [
+        {
+          target: '[data-tour="amethyst-topbar-search"]',
+          title: 'Search lives in the app bar',
+          // Descriptive — the sim's magnifier is display-only.
+          content: 'The magnifier in the top-right is the only search entry point; the bottom bar has no Search tab at all.',
+          position: 'bottom',
+          commands: goHome,
+        },
+      ],
     },
     {
       // §Messages
@@ -332,15 +347,15 @@ export const amethystFaq: ClientFaq = {
       // §Home — treść (rząd LIVE); §Live activity
       id: 'live-bar',
       category: 'Finding things',
-      question: 'What is the "LIVE" bar at the top of my Home feed?',
+      question: 'Sometimes a row of round bubbles appears above my Home feed — what is that?',
       answer: [
-        'That bar is a live-stream bubble: someone you follow is streaming right now — it shows the stream title with a LIVE badge and viewer/zap counts.',
-        'Tap it to open the stream view with its live chat bubbles.',
-        'Type in "reply here.." and tap Post to join the chat.',
+        'Those are live bubbles: a horizontal strip of currently-live things — a NIP-53 live stream someone you follow started, an ephemeral chat room, or a "live near you" location bubble.',
+        'Tap one to open it: a stream view with its live chat, or the chat room itself.',
+        'The strip only exists while something is live — most of the time your feed starts straight at the first note.',
       ],
-      note: 'It is a single bubble that scrolls with the feed, not a stories carousel — Amethyst has no stories.',
-      // Text-only: the sim's LIVE bubble is inert and the stream view does not
-      // exist (gaps ame-08/ame-09).
+      note: 'It is a scrolling row of bubbles, not a stories carousel — Amethyst has no stories, and nothing is pinned there permanently.',
+      // Text-only: the strip is conditional upstream and the reference recording
+      // never shows one, so the simulator does not render it (gaps ame-08/ame-09).
     },
 
     // -------------------------------------------------------------- Relays --
@@ -368,7 +383,7 @@ export const amethystFaq: ClientFaq = {
         'The screen groups your Public Outbox and Public Inbox relays, each row with its own stats.',
         'Tap "Add a Relay" to add one.',
       ],
-      note: 'The grey counter in the top bar (e.g. "16/16") is your relay indicator — it lives on every main screen. Newer versions split the relay editor by purpose (outbox model): DM Inbox, Search, Local, Blocked and more, each with its own "Add a Relay" field.',
+      note: 'Your connected/total relay counter is the coloured number on the drawer\'s "Relays" row (e.g. "355/1810") — there is no relay indicator in the app bar. The relay editor is split by purpose (outbox model): Outbox, Inbox, Local, Trusted, Favorite and Blocked, each with its own "Add a Relay" field.',
       showMe: [
         {
           target: '[data-tour="amethyst-drawer-relays"]',
@@ -419,18 +434,19 @@ export const amethystFaq: ClientFaq = {
       ],
       answer: [
         'Tap your profile picture in the top-left to open the account drawer.',
-        'Tap "Backup Keys".',
+        'Scroll to the bottom and tap "Settings".',
+        'Scroll to the red "Danger Zone" section and tap "Backup Keys".',
         'Copy your private key from there — a password manager is a good place. It can also show the key as a QR code.',
       ],
-      note: 'Your nsec IS your account — if you lose it no one can recover it. Newer versions moved this into Settings → "Danger Zone" → Backup Keys: copying prompts for your fingerprint and can also produce a password-encrypted ncryptsec copy.',
+      note: 'Your nsec IS your account — if you lose it no one can recover it. Copying prompts for your fingerprint and can also produce a password-encrypted ncryptsec copy. This row used to sit directly in the account drawer; v1.13.1 moved it into Settings → Danger Zone.',
       showMe: [
         {
-          target: '[data-tour="amethyst-drawer-backup-keys"]',
+          target: '[data-tour="amethyst-settings-backup-keys"]',
           title: 'Backup Keys',
           // Descriptive — the sim's row is display-only (gaps ame-35).
-          content: 'Your nsec lives here, in the account drawer — the single most important row in the app.',
-          position: 'right',
-          commands: openDrawer,
+          content: 'Your nsec lives here, at the bottom of Settings in the red Danger Zone — the single most important row in the app.',
+          position: 'top',
+          commands: openSettingsRoot,
         },
       ],
     },
@@ -452,19 +468,19 @@ export const amethystFaq: ClientFaq = {
       ],
       answer: [
         'To block a person: long-press their note, tap "Block", then confirm with the red "Block" button in the "Block & Hide User" dialog — or open their profile, tap the ⋮ menu and pick "Block & Hide User".',
-        'To mute a word or phrase: tap your profile picture to open the account drawer, tap "Security Filters", open "Hidden Words" and type it into "Hide new word or sentence".',
+        'To mute a word or phrase: open the account drawer, tap "Settings", tap "Security Filters", open "Hidden Words" and type it into "Hide new word or sentence".',
         'To mute a thread: long-press any note in it and tap "Mute thread" — the same menu then offers "Unmute thread", and Security Filters lists them under "Muted threads".',
         'To mute a hashtag: tap the #tag to open its feed, then tap ⋮ beside Follow in the top bar and pick "Mute hashtag" — that menu is also the only way to unmute it.',
-        'To manage the lists: account drawer → "Security Filters" → the "Blocked Users", "Spammers" and "Hidden Words" tabs, each row with an "Unblock" button.',
+        'To manage the lists: account drawer → Settings → "Security Filters" → the "Blocked Users", "Spammers" and "Hidden Words" tabs, each row with an "Unblock" button.',
       ],
       note: 'Amethyst says "Block" only about people; words, threads and hashtags are "muted" — and nothing can be muted for a limited time, every entry stays until you remove it. Blocking hides that account inside your app and adds it to your mute list encrypted, so their notes stay visible to everyone else; "Spammers" fills itself from the "Filter spam" toggle above the tabs and resets when the app restarts. Newer versions replace the tabs with a list of screens — Blocked Users, Spammers, Hidden Words and "Muted threads" — reached from Settings, and add "Mute hashtag", the one kind that never gets a list. Relays are blocked separately, in the "Blocked Relays" section of the relay editor.',
       showMe: [
         {
-          target: '[data-tour="amethyst-drawer-security-filters"]',
+          target: '[data-tour="amethyst-settings-security-filters"]',
           title: 'Security Filters',
-          content: 'Everything you have blocked, muted or hidden is managed from this drawer row.',
-          position: 'right',
-          commands: openDrawer,
+          content: 'Everything you have blocked, muted or hidden is managed from this row, under Settings → Account Settings.',
+          position: 'bottom',
+          commands: openSettingsRoot,
         },
         {
           // The field, not the screen root: `amethyst-settings` is the whole
@@ -506,18 +522,18 @@ export const amethystFaq: ClientFaq = {
       question: 'How do I change where my photos and videos get uploaded (media servers)?',
       answer: [
         'For a single upload: attach the image or video in the composer — the upload dialog has a "File Server" dropdown to pick where this file goes.',
-        'For your permanent list: tap your profile picture to open the account drawer, then tap "Media Servers".',
+        'For your permanent list: open the account drawer, tap "Settings", then "Media Servers" under Account Settings.',
         'There you reorder upload priority (row #1 is "Primary"), pick from recommended servers, or paste your own server address.',
       ],
-      note: 'Newer versions are Blossom-first: the add field says "Add a Blossom Server" and uploads try each server from the top down (with optional mirroring to all).',
+      note: 'Amethyst is Blossom-first here: the add field says "Add a Blossom Server" and uploads try each server from the top down (with optional mirroring to all). This row moved out of the account drawer into Settings in v1.13.1.',
       showMe: [
         {
-          target: '[data-tour="amethyst-drawer-media-servers"]',
+          target: '[data-tour="amethyst-settings-media-servers"]',
           title: 'Media Servers',
           // Descriptive — the sim's row is display-only (gaps ame-33).
           content: 'Your upload servers are picked here — media from the composer goes to the selected server.',
-          position: 'right',
-          commands: openDrawer,
+          position: 'bottom',
+          commands: openSettingsRoot,
         },
       ],
     },

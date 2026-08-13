@@ -1,18 +1,45 @@
 # Amethyst — gap ledger
 
 > Ground truth: `docs/refs/amethyst/screen-map.md` · Sim: `src/simulators/amethyst/`
-> Audited: 2026-08-05 · Registry status: ready · Sim LOC: 2653 (TSX/TS, bez `amethyst.theme.css`)
+> Audited: 2026-08-05, **częściowo zrewidowany 2026-08-13 przy przebudowie do v1.13.1**
+> Registry status: ready · reproduces: v1.13.1
+> Zamrożony rejestr dla v1.12.6: `docs/gaps/amethyst-v1-12.md` (NIE wliczać do arytmetyki `GAPS.md`).
 
-## Rollup
+## ⚠️ Stan po przebudowie v1.12.6 → v1.13.1 (2026-08-13)
+
+Tabela niżej pochodzi z audytu 2026-08-05 i **nie została jeszcze przeliczona** dla nowej
+powierzchni — pełny re-audyt wg `docs/gaps/README.md` jest osobnym zadaniem. Co się zmieniło:
+
+**Zamknięte przebudową (były lukami wierności, nie martwymi kontrolkami):**
+- app bar prawy slot: licznik „16/16" + graf relayów → **lupa** (nigdy nie było licznika w app barze);
+- 5. slot rzędu akcji: „Stats" → **Share**, plus wiodący chevron i liczniki tylko przy > 0;
+- stały pasek LIVE na górze feedu **usunięty** (upstream renderuje bąble warunkowo);
+- selektor feedu: płaski popup → **zgrupowany dialog** „Select an option to filter the feed".
+
+**Nowe powierzchnie (wcześniej nieistniejące):**
+- **Wallet** (`screens/WalletScreen.tsx`) — karta on-chain + pusty stan NWC, odtworzone z nagrania;
+- **Browser** (`screens/BrowserScreen.tsx`) — pole adresu + katalog „Discover web apps";
+- **Settings root** — przeszukiwalna lista sekcji z Danger Zone.
+
+**Nowe/przeniesione luki do zaadresowania w re-audycie:**
+- szuflada urosła z 11 wierszy do ~50 (You/Navigate/Feeds/Create/System). **To celowe** — w v1.13.1
+  szuflada JEST mapą możliwości appki, więc skrócenie jej byłoby zafałszowaniem klienta. Ale
+  większość wierszy sekcji **Feeds** (28 pozycji) nie ma ekranów docelowych → nowa klasa luk `dead`;
+- **Security Filters**, **Media Servers** i **Backup Keys** wypadły ze szuflady do Settings; kotwice
+  `amethyst-drawer-{security-filters,media-servers,backup-keys}` **przestały istnieć**, zastąpione
+  przez `amethyst-settings-*` (FAQ przepięte tym samym commitem);
+- pola „Search settings" w Settings i „Search or enter address" w Browserze są statyczne;
+- gwiazdki ulubionych w katalogu web-appek nie przełączają stanu;
+- `Reset Marmot State` / `Request to Vanish` / `Vanish History` renderują się bez dialogów.
+
+**Top 3 do zrobienia (bez zmian co do treści):** ame-35 „Backup Keys" (dziś w Danger Zone, nadal
+tylko wskazanie lokalizacji) · ame-42 „Add a Relay" · ame-57 profil autora z feedu.
+
+## Rollup (stan z 2026-08-05, przed przebudową)
 
 | missing | dead | partial | unreachable | unanchored | ok |
 |---|---|---|---|---|---|
 | 9 | 26 | 7 | 2 | 1 | 12 |
-
-**Top 3 do zrobienia:** ame-35 „Backup Keys" · ame-42 „Add a Relay" (dwa najczęstsze pytania FAQ, oba
-martwe — dziś tylko wskazujemy lokalizację) · ame-57 profil autora z feedu.
-*(Poprzednie top-3 — ame-01 mostek FAQ, ame-30 `openDrawer`, ame-43 payload sekcji — plus ame-56
-i kotwice ame-25/ame-27 zamknięte 2026-08-06 przy wdrażaniu FAQ; wiersze niżej oznaczone.)*
 
 ## Gaps
 

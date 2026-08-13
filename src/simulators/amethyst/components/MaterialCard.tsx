@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Heart, MessageCircle, Repeat, Zap, BarChart3, MoreVertical } from 'lucide-react';
+import { Heart, MessageCircle, Repeat, Zap, Share2, ChevronDown, ChevronUp, MoreVertical } from 'lucide-react';
 import { Avatar } from './Avatar';
 import '../amethyst.theme.css';
 
@@ -42,6 +42,42 @@ interface MaterialCardProps {
   onOpenThread?: () => void;
 }
 
+/**
+ * Rows for the expanded reaction breakdown. Derived deterministically from the
+ * note's own counts so the panel matches the collapsed row: reaction glyphs in
+ * the order the recording shows them (zap first with its sat amount, then
+ * boosts, then the emoji reactions), each with as many reactor avatars as the
+ * count supports, capped at five the way a phone-width row is.
+ */
+function reactionBreakdown(post: PostData) {
+  const seeds = (n: number, salt: string) =>
+    Array.from({ length: Math.max(0, Math.min(n, 5)) }, (_, i) => `${post.id}-${salt}-${i}`);
+
+  const rows: { key: string; glyph: string; tint: string; reactors: string[]; amount?: string }[] = [];
+  if (post.stats.zaps > 0) {
+    rows.push({
+      key: 'zap',
+      glyph: '⚡',
+      tint: 'var(--bitcoin-orange)',
+      reactors: seeds(Math.ceil(post.stats.zaps / 400), 'zap'),
+      amount: String(post.stats.zaps),
+    });
+  }
+  if (post.stats.reposts > 0) {
+    rows.push({ key: 'boost', glyph: '🔁', tint: '#4CAF50', reactors: seeds(post.stats.reposts, 'boost') });
+  }
+  if (post.stats.likes > 0) {
+    rows.push({ key: 'heart', glyph: '❤️', tint: 'inherit', reactors: seeds(post.stats.likes, 'heart') });
+    if (post.stats.likes > 3) {
+      rows.push({ key: 'thumb', glyph: '👍', tint: 'inherit', reactors: seeds(post.stats.likes - 3, 'thumb') });
+    }
+    if (post.stats.likes > 8) {
+      rows.push({ key: 'fire', glyph: '🔥', tint: 'inherit', reactors: seeds(post.stats.likes - 8, 'fire') });
+    }
+  }
+  return rows;
+}
+
 export function MaterialCard({
   post,
   onLike,
@@ -53,6 +89,10 @@ export function MaterialCard({
   const [isLiked, setIsLiked] = React.useState(false);
   const [isReposted, setIsReposted] = React.useState(false);
   const [isZapped, setIsZapped] = React.useState(false);
+  // Upstream's leading slot in the reaction row (`showReactionDetail` →
+  // ReactionRowExpandButton): a chevron that expands the per-reaction-type
+  // breakdown — one row per reaction glyph, with the avatars of whoever reacted.
+  const [showReactionDetail, setShowReactionDetail] = React.useState(false);
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -74,6 +114,10 @@ export function MaterialCard({
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
     return num.toString();
   };
+
+  /** A zero count renders nothing at all in the real app — the icon stands alone. */
+  const ActionCount = ({ value }: { value: number }) =>
+    value > 0 ? <span className="text-sm font-medium">{formatNumber(value)}</span> : null;
 
   const renderContent = (content: string) => {
     // Highlight hashtags
@@ -206,9 +250,28 @@ export function MaterialCard({
         </div>
       )}
 
-      {/* Action Buttons */}
+      {/* Action Buttons.
+          v1.13.1 `DefaultReactionRowItems` (AccountSyncedSettingsInternal.kt),
+          verbatim: Reply · Boost · Like · Zap · Pay(disabled) · Share(no
+          counter) — preceded by the expand chevron. Pay ships disabled, so the
+          rendered row is five icons plus the chevron, exactly as in the
+          recording. Counters are omitted when a count is zero.
+          NOTE: v1.12.6 had the SAME default list — the bar-chart "stats" slot we
+          shipped until now was a misread of the old promo screenshot, not a
+          version difference. The frozen archive keeps the misread. */}
       {/* No rule above the action row in the real app — the only divider sits between notes */}
-      <div className="px-4 py-2 flex items-center justify-between" data-tour="amethyst-actions" onClick={(e) => e.stopPropagation()}>
+      <div className="px-4 py-2 flex items-center justify-between gap-1" data-tour="amethyst-actions" onClick={(e) => e.stopPropagation()}>
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+          onClick={() => setShowReactionDetail((v) => !v)}
+          aria-label={showReactionDetail ? 'Hide reaction details' : 'Show reaction details'}
+          aria-expanded={showReactionDetail}
+          className="action-btn action-btn-expand md-ripple flex items-center text-[var(--md-on-surface-variant)]"
+        >
+          {showReactionDetail ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+        </motion.button>
+
         <motion.button
           whileTap={{ scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
@@ -216,7 +279,7 @@ export function MaterialCard({
           className={`action-btn action-btn-reply md-ripple flex items-center gap-1.5 text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)] transition-colors`}
         >
           <MessageCircle className="w-5 h-5" />
-          <span className="text-sm font-medium min-w-[20px] text-center">{formatNumber(post.stats.replies)}</span>
+          <ActionCount value={post.stats.replies} />
         </motion.button>
 
         <motion.button
@@ -228,9 +291,7 @@ export function MaterialCard({
           }`}
         >
           <Repeat className="w-5 h-5" />
-          <span className="text-sm font-medium min-w-[20px] text-center">
-            {formatNumber(post.stats.reposts + (isReposted ? 1 : 0))}
-          </span>
+          <ActionCount value={post.stats.reposts + (isReposted ? 1 : 0)} />
         </motion.button>
 
         {/* Reaction (Amethyst's default reaction is a heart; can be any emoji) */}
@@ -243,12 +304,10 @@ export function MaterialCard({
           }`}
         >
           <Heart className="w-5 h-5" fill={isLiked ? 'currentColor' : 'none'} />
-          <span className="text-sm font-medium min-w-[20px] text-center">
-            {formatNumber(post.stats.likes + (isLiked ? 1 : 0))}
-          </span>
+          <ActionCount value={post.stats.likes + (isLiked ? 1 : 0)} />
         </motion.button>
 
-        {/* Zap is the rightmost, emphasized action in Amethyst's footer */}
+        {/* Zap — the last counted action; Share follows it icon-only */}
         <motion.button
           whileTap={{ scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
@@ -259,19 +318,49 @@ export function MaterialCard({
           style={{ color: isZapped ? 'var(--bitcoin-orange)' : undefined }}
         >
           <Zap className="w-5 h-5" fill={isZapped ? 'currentColor' : 'none'} />
-          <span className="text-sm font-medium min-w-[20px] text-center">
-            {formatNumber(post.stats.zaps + (isZapped ? 21 : 0))}
-          </span>
+          <ActionCount value={post.stats.zaps + (isZapped ? 21 : 0)} />
         </motion.button>
 
-        {/* Stats / views indicator (real footer ends with a bar-chart + count, not a share button) */}
-        <div className="action-btn flex items-center gap-1.5 text-[var(--md-on-surface-variant)]">
-          <BarChart3 className="w-5 h-5" />
-          <span className="text-sm font-medium min-w-[20px] text-center">
-            {formatNumber(post.stats.likes * 9 + post.stats.reposts * 4 + 137)}
-          </span>
-        </div>
+        {/* Share: `showCounter = false` upstream, so it is icon-only and — being
+            the rightmost item without a counter — sits flush right instead of
+            taking an equal-width slice (GenericInnerReactionRow's isLastIconOnly). */}
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+          aria-label="Share"
+          className="action-btn action-btn-share md-ripple flex items-center text-[var(--md-on-surface-variant)]"
+        >
+          <Share2 className="w-5 h-5" />
+        </motion.button>
       </div>
+
+      {/* Per-reaction-type breakdown, revealed by the leading chevron. One row
+          per reaction glyph with the reactors' avatars; the zap row carries the
+          sat amount. Amethyst-signature surface — no other client in the shelf
+          has it. */}
+      {showReactionDetail && (
+        <div className="px-4 pb-3 space-y-2" onClick={(e) => e.stopPropagation()}>
+          {reactionBreakdown(post).map((row) => (
+            <div key={row.key} className="flex items-center gap-3">
+              <span className="w-6 shrink-0 text-center text-sm" style={{ color: row.tint }}>
+                {row.glyph}
+              </span>
+              <div className="flex items-center -space-x-2">
+                {row.reactors.map((seed) => (
+                  <div key={seed} className="relative">
+                    <Avatar seed={seed} className="w-7 h-7 ring-2 ring-[var(--md-background)]" />
+                  </div>
+                ))}
+              </div>
+              {row.amount && (
+                <span className="text-xs font-medium" style={{ color: 'var(--bitcoin-orange)' }}>
+                  {row.amount}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </motion.article>
   );
 }

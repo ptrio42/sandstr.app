@@ -24,16 +24,27 @@ interface ProfileScreenProps {
 const profile = {
   name: 'sandy',
   npub: 'npub178u…vq05qrg4',
+  nprofile: 'nprofile1qqs9p…9uvrafdc',
+  lastSeen: 'Last seen 31 minutes ago',
   nip05: 'sandy.example',
   website: 'sandy.example',
   lightning: 'sandy@wallet.example',
   bio: 'All-round buidler.',
 };
 
+// Profile tab row @ v1.13.1, upstream order (strings notes/replies/mutual/
+// gallery/profile_tab_apps/…). "Yours" really is the label of the `mutual`
+// string — it is not a placeholder we invented. Only the first four have
+// content here; the rest render their empty state.
+const TABS = [
+  'Notes', 'Replies', 'Yours', 'Gallery', 'Apps & Sites',
+  'Follows', 'Followers', 'Zaps', 'Bookmarks', 'Followed Tags', 'Reports', 'Relays',
+] as const;
+
 const badgeHues = [275, 45, 30, 200, 320, 160, 260];
 
 export function ProfileScreen({ onBack, onFollowToggle }: ProfileScreenProps) {
-  const [activeTab, setActiveTab] = useState<'notes' | 'replies' | 'yours' | 'gallery'>('notes');
+  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>('Notes');
   const [isFollowing, setIsFollowing] = useState(true);
 
   const userPosts = mockNotes.slice(0, 6).map((note) => {
@@ -73,9 +84,13 @@ export function ProfileScreen({ onBack, onFollowToggle }: ProfileScreenProps) {
               </span>
             </div>
 
+            {/* [REC vs REPO] upstream's row is Message · Payment · BOLT12 ·
+                [Edit if me] · Follow/Unfollow · List, but Payment, BOLT12 and
+                Edit are each conditional; on the stranger's profile the
+                reference recording opens, exactly three buttons render. We show
+                a stranger's profile, so we show those three. */}
             <div className="flex items-center gap-2 mb-1">
               <ActionIconButton label="Message"><Mail className="w-5 h-5" /></ActionIconButton>
-              <ActionIconButton label="Edit"><SquarePen className="w-5 h-5" /></ActionIconButton>
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
@@ -97,11 +112,18 @@ export function ProfileScreen({ onBack, onFollowToggle }: ProfileScreenProps) {
               <h2 className="text-2xl font-bold text-[var(--md-on-surface)]">{profile.name}</h2>
               <Play className="w-4 h-4 text-[var(--md-on-surface-variant)]" />
             </div>
+            {/* npub carries only a copy button; the QR sits on the nprofile
+                row below it, not on the npub (ProfileHeader info block order). */}
             <div className="flex items-center gap-2 mt-0.5 text-[var(--md-on-surface-variant)]">
               <span className="text-sm">{profile.npub}</span>
               <Copy className="w-4 h-4" />
+            </div>
+            <div className="flex items-center gap-2 mt-0.5 text-[var(--md-on-surface-variant)]">
+              <span className="text-sm">{profile.nprofile}</span>
+              <Copy className="w-4 h-4" />
               <QrCode className="w-4 h-4" />
             </div>
+            <p className="text-sm text-[var(--md-on-surface-variant)] mt-0.5">{profile.lastSeen}</p>
           </div>
 
           {/* Badges */}
@@ -121,10 +143,28 @@ export function ProfileScreen({ onBack, onFollowToggle }: ProfileScreenProps) {
               <LinkIcon className="w-4 h-4 text-[var(--md-on-surface-variant)] shrink-0" />
               <span style={{ color: 'var(--md-primary)' }}>{profile.website}</span>
             </div>
-            <div className="flex items-center gap-2">
+          </div>
+
+          {/* Payment-rail chips. v1.13.1 renders each rail as its own outlined
+              chip in the rail's brand colour rather than as a plain lightning
+              line — the recording shows "⚡ Lightning <addr>" and "₿ On-chain"
+              side by side, both bitcoin-orange. */}
+          <div className="flex items-center gap-2 mt-3 flex-wrap">
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm"
+              style={{ border: '1px solid var(--bitcoin-orange)' }}
+            >
               <Zap className="w-4 h-4 shrink-0" style={{ color: 'var(--bitcoin-orange)' }} />
-              <span className="truncate" style={{ color: 'var(--md-primary)' }}>{profile.lightning}</span>
-            </div>
+              <span className="font-medium" style={{ color: 'var(--bitcoin-orange)' }}>Lightning</span>
+              <span className="text-[var(--md-on-surface-variant)] truncate max-w-[130px]">{profile.lightning}</span>
+            </span>
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm"
+              style={{ border: '1px solid var(--bitcoin-orange)' }}
+            >
+              <span className="font-bold" style={{ color: 'var(--bitcoin-orange)' }}>₿</span>
+              <span className="font-medium" style={{ color: 'var(--bitcoin-orange)' }}>On-chain</span>
+            </span>
           </div>
 
           {/* Bio */}
@@ -133,8 +173,8 @@ export function ProfileScreen({ onBack, onFollowToggle }: ProfileScreenProps) {
 
         {/* Tabs */}
         <div className="md-tabs sticky top-0 z-10 bg-[var(--md-background)] mt-2 overflow-x-auto">
-          {(['notes', 'replies', 'yours', 'gallery'] as const).map((t) => (
-            <button key={t} onClick={() => setActiveTab(t)} className={`md-tab capitalize whitespace-nowrap ${activeTab === t ? 'active' : ''}`}>
+          {TABS.map((t) => (
+            <button key={t} onClick={() => setActiveTab(t)} className={`md-tab whitespace-nowrap ${activeTab === t ? 'active' : ''}`}>
               {t}
               {activeTab === t && (
                 <motion.div layoutId="profile-tab-indicator" className="md-tab-indicator" transition={{ type: 'spring', stiffness: 500, damping: 30 }} />
@@ -145,12 +185,12 @@ export function ProfileScreen({ onBack, onFollowToggle }: ProfileScreenProps) {
 
         {/* Tab content */}
         <div className="p-2">
-          {activeTab === 'notes' ? (
+          {activeTab === 'Notes' ? (
             <div className="space-y-2">
               {userPosts.map((post) => <MaterialCard key={post.id} post={post} />)}
             </div>
           ) : (
-            <div className="text-center py-12 text-[var(--md-on-surface-variant)] capitalize">No {activeTab} yet</div>
+            <div className="text-center py-12 text-[var(--md-on-surface-variant)]">No {activeTab.toLowerCase()} yet</div>
           )}
         </div>
       </div>

@@ -80,6 +80,18 @@
 
 **Do zrobienia (druga fala, słabsza wierność / stare stuby):** Keychat, Gossip. Tokeny + killery każdego są niżej w tym pliku; korekty kolorów w `[[client-fidelity-ground-truth]]`. (Primal-MOBILE nadal stary stub — zrobiony tylko web.)
 
+**PRZEBUDOWANE 2026-08-13 — Amethyst do v1.13.1-fdroid.** Nagranie użytkownika (570 s, 285 klatek)
++ `vitorpamplona/amethyst` @ tag v1.13.1. Największa zmiana tokenów: v1.13.1 **odfiolecił neutralną
+rampę** (`surfaceVariant` `#1D1A22` → `#1E1E1E`, `onSurface` → `#E6E6E6`, `outline` → `#909090`)
+i wprowadził wybieralny akcent (domyślny Purple bez zmian, `#BB86FC`), a `onPrimary` w dark jest
+teraz **czarny** (wybór przez kontrast) — dlatego glif FAB-a zmienił kolor z białego na czarny.
+Kontenery liczone formułą `lerp(primary, Black, 0.58)` w **Oklab** → `#36244C`; zgodność
+potwierdzona próbką piksela pigułki nawigacji z nagrania (`#34224B`).
+**Trzy błędy ery v1.12.6 skorygowane** (szczegóły w ramce na górze screen-mapy): licznika relayów
+nigdy nie było w app barze, 5. slot akcji to Share a nie „stats", a pasek LIVE jest warunkowym
+rzędem bąbli, nie stałym paskiem. Archiwum `amethyst-v1-12` zachowuje starą (błędną) postać —
+to snapshot tego, co szipowaliśmy, nie errata.
+
 **ZAMROŻONE 2026-08-13 — Amethyst v1.12.6 → archiwum `amethyst-v1-12`.** Pierwszy realny freeze
 wg `docs/VERSIONS.md`, wykonany przed przebudową żywego symulatora do v1.13.1-fdroid. Snapshot:
 `src/simulators/amethyst-v1-12/` (wpis w liście `archived` w `src/registry.tsx`, trasa

@@ -5,7 +5,9 @@ import { FloatingActionButton } from './components/FloatingActionButton';
 import { Drawer } from './components/Drawer';
 import { LoginScreen } from './screens/LoginScreen';
 import { HomeScreen } from './screens/HomeScreen';
-import { SearchScreen } from './screens/SearchScreen';
+import { BrowserScreen } from './screens/BrowserScreen';
+import { WalletScreen } from './screens/WalletScreen';
+import { DiscoverScreen } from './screens/DiscoverScreen';
 import { NotificationsScreen } from './screens/NotificationsScreen';
 import { MessagesScreen } from './screens/MessagesScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
@@ -20,8 +22,20 @@ import type { MockUser } from '../../data/mock';
 import { generateAvatarGradient } from '../../data/mock';
 import { TourContext } from '../../components/tour';
 
-// Types
-export type TabId = 'home' | 'search' | 'video' | 'notifications' | 'messages' | 'profile';
+// Types.
+// `search` is a legacy id kept on purpose: it is the tour/FAQ payload for the
+// globe destination, which in v1.13.1 stopped being Discover and became the
+// Browser. Renaming it would break every stored `navigate:'search'` command for
+// no visible gain; the screen it mounts is what changed.
+export type TabId =
+  | 'home'
+  | 'search'
+  | 'video'
+  | 'wallet'
+  | 'discover'
+  | 'notifications'
+  | 'messages'
+  | 'profile';
 
 export interface SimulatorCommand {
   type: 'login' | 'navigate' | 'compose' | 'post' | 'viewProfile' | 'back' | 'openSettings' | 'openDrawer';
@@ -34,14 +48,14 @@ export interface AmethystSimulatorProps {
   onCommandHandled?: () => void;
 }
 
-// Valid bottom-nav / main tabs
-const TABS: TabId[] = ['home', 'search', 'video', 'notifications', 'messages', 'profile'];
+// Valid bottom-nav / drawer-reachable main tabs
+const TABS: TabId[] = ['home', 'search', 'video', 'wallet', 'discover', 'notifications', 'messages', 'profile'];
 
 export function AmethystSimulator({ className = '', tourCommand, onCommandHandled }: AmethystSimulatorProps) {
   const [activeTab, setActiveTab] = useState<TabId>('home');
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [settingsSection, setSettingsSection] = useState<string | null>('preferences');
+  const [settingsSection, setSettingsSection] = useState<string | null>('root');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [threadPost, setThreadPost] = useState<PostData | null>(null);
   const parentTheme = useParentTheme();
@@ -88,11 +102,10 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       if (id === 'home') registerAction('navigate_home');
       if (id === 'profile') registerAction('view_profile');
     } else if (id === 'relays') {
+      // "Relays" is still its own drawer row under System in v1.13.1 (with the
+      // live connected/total counter); Security Filters is not — it moved into
+      // Settings › Account Settings this release.
       setSettingsSection('relays');
-      setIsSettingsOpen(true);
-      registerAction('navigate_settings');
-    } else if (id === 'security') {
-      setSettingsSection('security');
       setIsSettingsOpen(true);
       registerAction('navigate_settings');
     } else if (id === 'bookmarks') {
@@ -158,7 +171,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         
       case 'navigate':
         const tab = tourCommand.payload as TabId;
-        if (['home', 'search', 'video', 'notifications', 'messages', 'profile'].includes(tab)) {
+        if (TABS.includes(tab)) {
           setActiveTab(tab);
           setIsComposeOpen(false); // don't let an open composer linger over later steps
           // Navigation also dismisses the one-way overlays (settings/drawer/
@@ -217,6 +230,11 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
             section === 'preferences'
           ) {
             setSettingsSection(section);
+          } else {
+            // No payload = the v1.13.1 root list, which is what the drawer's
+            // Settings row opens. Reset explicitly: without this the screen
+            // reopened on whatever detail a previous command had selected.
+            setSettingsSection('root');
           }
           setIsSettingsOpen(true);
           setIsComposeOpen(false);
@@ -260,8 +278,15 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
             onLikePost={() => registerAction('like')}
           />
         );
+      // The globe destination: Browser in v1.13.1 (was Discover in v1.12.6).
       case 'search':
-        return <SearchScreen key="search" onOpenDrawer={() => setIsDrawerOpen(true)} />;
+        return <BrowserScreen key="browser" />;
+      case 'wallet':
+        return <WalletScreen key="wallet" />;
+      // Both dropped out of the bottom bar this release; still reachable from
+      // the drawer's "Navigate" section, so they keep their screens.
+      case 'discover':
+        return <DiscoverScreen key="discover" onOpenDrawer={() => setIsDrawerOpen(true)} />;
       case 'video':
         return <VideoScreen key="video" onOpenDrawer={() => setIsDrawerOpen(true)} />;
       case 'notifications':
@@ -305,7 +330,9 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         activeTab={activeTab}
         onTabChange={handleDrawerNavigate}
         onOpenSettings={() => {
-          setSettingsSection('preferences');
+          // The drawer's System › Settings row lands on the searchable root
+          // list, not on a detail screen.
+          setSettingsSection('root');
           setIsSettingsOpen(true);
           setIsDrawerOpen(false);
           // Same destination as the drawer's relays/security entries, so it has

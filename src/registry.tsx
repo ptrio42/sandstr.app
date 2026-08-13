@@ -160,8 +160,10 @@ const MOUNTS: Record<
     repo: 'https://github.com/vitorpamplona/amethyst',
     upstreamLicense: 'MIT',
     installNote: 'Google Play, Zapstore, Obtainium, or a release APK',
-    // docs/refs/amethyst/screen-map.md:3 — vitorpamplona/amethyst @ tag v1.12.6
-    reproduces: 'v1.12.6',
+    // docs/refs/amethyst/screen-map.md — owner's v1.13.1-fdroid recording (the
+    // drawer footer reads "v1.13.1-FDROID") + vitorpamplona/amethyst @ tag
+    // v1.13.1. The v1.12.6 reproduction is frozen as amethyst-v1-12 below.
+    reproduces: 'v1.13.1',
     load: () => import('./simulators/amethyst/AmethystSimulatorWithTour'),
   },
   keychat: {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { MoreVertical, Plus, Play, Zap, BadgeCheck } from 'lucide-react';
+import { MoreVertical, MoreHorizontal, Plus, Play, Zap, BadgeCheck } from 'lucide-react';
 import { AppTopBar } from '../components/AppTopBar';
 import { Avatar } from '../components/Avatar';
 import '../amethyst.theme.css';
@@ -86,7 +86,21 @@ export function MessagesScreen({ onOpenDrawer }: MessagesScreenProps) {
       {/* Conversation list */}
       <div className="flex-1 overflow-y-auto">
         {(tab === 'known' ? conversations : requests).map((c, i) => (
-          <ConversationRow key={c.id} c={c} i={i} />
+          <React.Fragment key={c.id}>
+            <ConversationRow c={c} i={i} />
+            {/* New in v1.13.1: the NIP-04 backfill card sits inline in the Known
+                list, between conversations, reporting how far back the legacy
+                (unencrypted-metadata) history has been loaded. */}
+            {tab === 'known' && i === 0 && (
+              <div className="mx-4 my-2 rounded-2xl px-4 py-3 flex items-center gap-3" style={{ background: 'var(--md-surface-container-low)' }}>
+                <MoreHorizontal className="w-5 h-5 shrink-0 text-[var(--md-on-surface-variant)]" />
+                <div className="min-w-0">
+                  <p className="font-semibold text-[var(--md-on-surface)]">Older legacy messages</p>
+                  <p className="text-sm text-[var(--md-on-surface-variant)] truncate">NIP-04 · 7 relays · loaded since Aug 2026</p>
+                </div>
+              </div>
+            )}
+          </React.Fragment>
         ))}
       </div>
 
