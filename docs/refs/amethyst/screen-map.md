@@ -124,6 +124,27 @@ logo **150dp** (`CustomHashTagIcons.Amethyst`, `ContentScale.Inside`) → **Spac
 Wideo (`shots/*.mp4`, gitignored) + contact sheets → potwierdziło 5 zbudowanych ekranów i ujawniło resztę.
 - **Thread / note-detail** — ZROBIONE: tap notatki (`MaterialCard.onOpenThread`) → `ThreadScreen` (parent + wcięte odpowiedzi z linią-łącznikiem + composer „reply here.." + back). Overlay `z-[60]` (musi być nad app-barem, który jest `md-app-bar-enhanced` sticky z-50 — inaczej home app bar przebija i jego avatar jest klikalny → otwierał drawer).
 - **Settings suite** — ZROBIONE (3 widoki w `SettingsScreen` wg `section`): **Application Preferences** (Language/Theme/Image Preview/Video Playback/URL Preview/Profile Picture/Immersive Scrolling/UI Mode/Gallery Style/Push Notification), **Security Filters** (toggle Warn-on-reports/Filter-spam + „Warn" + taby Blocked/Spammers/Hidden + Unblock), **Relays** (Public Outbox/Inbox + nostr.wine 196MB itd. + Add a Relay). Drawer: Settings→preferences, Security→security, Relays→relays. Settings = full-screen `absolute inset-0 z-[55]` **plain div** (framer opacity spring zacinał się na ~0.95 → przebijał feed).
+- **Security Filters → Hidden Words** — ZROBIONE 2026-08-13, **ze źródła, nie z nagrania**.
+  `[REC vs REPO]` **rozjazd strukturalny**: nagranie (2026-07-14) pokazuje na tym ekranie trzy
+  ZAKŁADKI (`Blocked Users | Spammers | Hidden Words`) — widać je na kilkunastu klatkach, z aktywnym
+  „Blocked Users" i listą npubów z przyciskiem „Unblock". Kod `v1.12.6`
+  (`ui/screen/loggedIn/settings/SecurityFiltersScreen.kt`) ma tam natomiast **listę wierszy**
+  prowadzących do osobnych ekranów (Blocked Users / Spamming Users / Hidden Words / Muted threads),
+  a `HiddenWordsScreen.kt` jest własnym ekranem z własnym top barem. Zgodnie z regułą pierwszeństwa
+  **bierzemy nagranie** (layout) — zakładki zostają.
+  **Nagranie NIGDY nie otwiera zakładki Hidden Words**, więc jej zawartość jest odtworzona
+  z `HiddenWordsScreen.kt` @ v1.12.6, verbatim ze stringów:
+  - pusty stan `security_hidden_words_empty` = „No hidden words. Add a word below to hide posts
+    containing it." (wcześniej mieliśmy skrócone „No hidden words");
+  - pole `AddMuteWordTextField`: `OutlinedTextField`, label **i** placeholder to ten sam string
+    `hide_new_word_label` = „Hide new word or sentence", `singleLine`, `ImeAction.Send`, trailing
+    `AddButton(isActive = hasChanged)` — czyli przycisk przygaszony, dopóki pole jest puste;
+  - pole siedzi w `bottomBar` na `Surface(tonalElevation = 3.dp)`, dociśnięte do dołu ekranu
+    (u nas `sticky bottom-0` + kolumna `min-h-full`, bo inaczej wisiało pod ostatnim wierszem);
+  - wiersz słowa (`MutedWordRow`): tekst **pogrubiony, wyśrodkowany**, `HorizontalDivider` pod każdym,
+    długie przytrzymanie zaznacza (zaznaczenie = tło `primary` @ 12%).
+  Czego świadomie NIE odtwarzamy: trybu zaznaczania wielu słów, akcji „show" per wiersz i top bara
+  z licznikiem zaznaczeń — nagranie ich nie pokazuje, a demo ich nie potrzebuje.
 - **Messages New Requests** — ZROBIONE: npub-owe nieznane kontakty z datami (Known = nazwane wg messages.png).
 - **Account drawer** ([`drawer.png`](shots/drawer.png)) — ZROBIONE: banner + avatar + „pitiunited" + „Update your status" (Building nostr stuff… 🧑‍💻 + kosz) + „2374 Following · -- Followers" + menu (Profile/My Lists/Bookmarks/Drafts/Relays 528/1806/Media Servers/Security Filters/Privacy Options/Backup Keys/App Preferences/User Preferences). `absolute` (nie `fixed` — było wychodziło poza telefon), bez slajdu (animacje w podglądzie nie grają — patrz niżej).
 - ⏳ Odłożone niuanse z wideo: kontekstowe sub-taby feedu (Global → Follow Packs/Reads/Feed Algorithms/Live Streams); full-bleed media-note z pionowymi akcjami; ekrany Media Servers / Privacy Options / Backup Keys / My Lists / Drafts (w drawerze są, ale bez własnych widoków).

@@ -18,7 +18,12 @@ const TITLES: Record<string, string> = {
 // Three real Amethyst drawer destinations (verified vs the screen recording):
 // Application Preferences · Security Filters · Relays.
 export function SettingsScreen({ onBack, initialSection = 'preferences' }: SettingsScreenProps) {
-  const section = (initialSection === 'privacy' ? 'security' : initialSection) || 'preferences';
+  // `security-hidden` is the same screen with the Hidden Words tab preselected.
+  // Encoded in the section string rather than as a new command, so the tour
+  // command union and its `openSettings` payload stay exactly as they were.
+  const raw = initialSection || 'preferences';
+  const section = raw === 'privacy' || raw === 'security-hidden' ? 'security' : raw;
+  const securityTab = raw === 'security-hidden' ? 'hidden' : 'blocked';
 
   return (
     <div className="flex flex-col h-full bg-[var(--md-background)]" data-tour="amethyst-settings">
@@ -30,7 +35,7 @@ export function SettingsScreen({ onBack, initialSection = 'preferences' }: Setti
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {section === 'relays' ? <RelaysView /> : section === 'security' ? <SecurityView /> : <PreferencesView />}
+        {section === 'relays' ? <RelaysView /> : section === 'security' ? <SecurityView initialTab={securityTab} /> : <PreferencesView />}
       </div>
     </div>
   );
@@ -87,13 +92,26 @@ const BLOCKED = [
   { name: 'npub1ylt…4qnwlakz' },
 ];
 
-function SecurityView() {
+function SecurityView({ initialTab = 'blocked' }: { initialTab?: 'blocked' | 'spammers' | 'hidden' }) {
   const [warnReports, setWarnReports] = useState(true);
   const [filterSpam, setFilterSpam] = useState(true);
-  const [tab, setTab] = useState<'blocked' | 'spammers' | 'hidden'>('blocked');
+  const [tab, setTab] = useState<'blocked' | 'spammers' | 'hidden'>(initialTab);
+  // Hidden Words is the one tab the reference recording never opened, so its
+  // contents come from upstream `HiddenWordsScreen.kt` @ v1.12.6 — see the
+  // [REC vs REPO] note in docs/refs/amethyst/screen-map.md.
+  const [hiddenWords, setHiddenWords] = useState<string[]>([]);
+  const [draft, setDraft] = useState('');
+  const addWord = () => {
+    const word = draft.trim();
+    if (!word) return;
+    setHiddenWords((ws) => (ws.includes(word) ? ws : [word, ...ws]));
+    setDraft('');
+  };
 
   return (
-    <div>
+    // Full height, so the add-word field can sit at the BOTTOM of the screen the
+    // way upstream's `bottomBar` does, instead of floating under the last row.
+    <div className="flex flex-col min-h-full">
       <div className="px-4 pt-3 space-y-4">
         <Row title="Warn on reports" desc="Shows a warning message when posts have 5 or more reports from your follows">
           <Toggle on={warnReports} onToggle={() => setWarnReports((v) => !v)} />
@@ -126,9 +144,62 @@ function SecurityView() {
             </div>
           ))}
         </div>
+      ) : tab === 'spammers' ? (
+        <div className="text-center py-12 text-[var(--md-on-surface-variant)]">No blocked spammers</div>
       ) : (
-        <div className="text-center py-12 text-[var(--md-on-surface-variant)]">
-          {tab === 'spammers' ? 'No blocked spammers' : 'No hidden words'}
+        <div className="flex flex-1 flex-col">
+          {hiddenWords.length === 0 ? (
+            // strings.xml security_hidden_words_empty, verbatim.
+            <div className="flex-1 px-8 text-center py-12 text-[var(--md-on-surface-variant)]">
+              No hidden words. Add a word below to hide posts containing it.
+            </div>
+          ) : (
+            <div className="flex-1" data-tour="amethyst-hidden-list">
+              {hiddenWords.map((w) => (
+                // MutedWordRow: the word in bold, centred, divider under each.
+                <div key={w}>
+                  <div className="px-4 py-3.5 text-center font-bold text-[var(--md-on-surface)]">{w}</div>
+                  <div className="h-px bg-[var(--md-outline)] opacity-40" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* AddMuteWordTextField — docked at the bottom of the screen upstream,
+              on a tonally elevated surface. Label and placeholder are the same
+              string there, so the field reads the same empty or focused. */}
+          <div
+            data-tour="amethyst-hidden-words"
+            className="sticky bottom-0 mt-2 bg-[var(--md-surface-variant)] px-3 py-3"
+          >
+            <div className="flex items-center gap-2">
+              <input
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') addWord();
+                }}
+                placeholder="Hide new word or sentence"
+                aria-label="Hide new word or sentence"
+                className="md-input flex-1"
+              />
+              <button
+                type="button"
+                onClick={addWord}
+                aria-label="Add"
+                // Upstream's AddButton takes `isActive = hasChanged`: dim until
+                // the field has something in it.
+                className="shrink-0 rounded-full p-2 transition-opacity"
+                style={{
+                  background: 'var(--md-primary)',
+                  color: 'var(--md-on-primary)',
+                  opacity: draft.trim() ? 1 : 0.38,
+                }}
+              >
+                <Plus className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -439,6 +439,17 @@ export const amethystFaq: ClientFaq = {
       id: 'mute',
       category: 'Account & keys',
       question: 'How do I mute a person, a word, a thread or a hashtag?',
+      // People arrive with the vocabulary of other networks ("block", "filter"),
+      // and during a pile-on they search for relief, not for a feature name.
+      searchAliases: [
+        'block someone',
+        'hide a word',
+        'mute a word',
+        'keyword filter',
+        'too much noise',
+        'stop seeing this',
+        'hide posts about',
+      ],
       answer: [
         'To block a person: long-press their note, tap "Block", then confirm with the red "Block" button in the "Block & Hide User" dialog — or open their profile, tap the ⋮ menu and pick "Block & Hide User".',
         'To mute a word or phrase: tap your profile picture to open the account drawer, tap "Security Filters", open "Hidden Words" and type it into "Hide new word or sentence".',
@@ -456,12 +467,16 @@ export const amethystFaq: ClientFaq = {
           commands: openDrawer,
         },
         {
-          target: '[data-tour="amethyst-settings"]',
-          title: 'Your filters',
-          content: 'Blocked, Spammers and Hidden tabs — with the spam filter toggles above them.',
-          position: 'center',
-          spotlightPadding: 0,
-          commands: cmd({ type: 'openSettings', payload: 'security' }),
+          // The field, not the screen root: `amethyst-settings` is the whole
+          // scrolling screen and the overlay refuses to spotlight a target that
+          // size. `security-hidden` is the same section with the Hidden Words
+          // tab preselected.
+          target: '[data-tour="amethyst-hidden-words"]',
+          title: 'Hide new word or sentence',
+          content:
+            'Under the Hidden Words tab, docked at the bottom: type a word here and posts containing it stop showing up.',
+          position: 'top',
+          commands: cmd({ type: 'openSettings', payload: 'security-hidden' }),
         },
       ],
     },

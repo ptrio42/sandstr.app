@@ -207,7 +207,15 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
           // Optional payload picks the section (gaps ame-43) — without it the
           // Relays/Security sections were reachable only by a drawer tap.
           const section = tourCommand.payload;
-          if (section === 'relays' || section === 'security' || section === 'preferences') {
+          // `security-hidden` is Security Filters with the Hidden Words tab
+          // preselected — the mute demo needs to land on the word field, and
+          // the tab is local state inside the screen.
+          if (
+            section === 'relays' ||
+            section === 'security' ||
+            section === 'security-hidden' ||
+            section === 'preferences'
+          ) {
             setSettingsSection(section);
           }
           setIsSettingsOpen(true);
