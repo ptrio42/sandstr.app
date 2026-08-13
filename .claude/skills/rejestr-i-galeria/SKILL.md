@@ -26,13 +26,18 @@ Galeria, paleta ⌘K, rail switchera i `/c/:id` czytają tylko jego.
 - Chip „Early preview" jest neutralnie szary i tylko dla preview — bursztyn należy do banera
   disclaimera, nie do kart.
 
-## Dwie listy
+## Trzy listy
 
 - `clients` (eksportowana) = wszystko, co produkt POKAZUJE. Czytają ją: `Gallery`, `CommandPalette`,
   `ClientSwitcher`, `DesktopClientGate`. Sortowana `rank` — `ready` przed resztą.
 - `unlisted` (prywatna, dziś sam `nostrKitten`) = wciąż routowalne pod `/c/<id>`, niewidoczne nigdzie.
-- `getClient()` przeszukuje OBIE — to ono trzyma easter-egg przy życiu. Nie „upraszczaj" tego do
-  jednej listy i nie kasuj wpisu Kittena: ukrycie było decyzją produktową, nie sprzątaniem.
+- `archived` (prywatna, dziś pusta) = zamrożone starsze wersje klientów: routowalne, niewidoczne w
+  galerii/⌘K/railu, dostępne z menu wersji w `ClientView` (`versionsOf()` łączy rodzinę po `archivedOf`).
+  **Podbicie klienta do nowej wersji upstream = NAJPIERW freeze starej wg `docs/VERSIONS.md`** — kopia
+  verbatim bez re-id toura i przemianowania theme-CSS psuje się cicho; nie improwizuj, idź po checkliście.
+- `getClient()` przeszukuje WSZYSTKIE TRZY — to ono trzyma easter-egg i stare linki przy życiu. Nie
+  „upraszczaj" tego do jednej listy i nie kasuj wpisu Kittena: ukrycie było decyzją produktową, nie
+  sprzątaniem.
 - Ukrycie klienta = przeniesienie wpisu do `unlisted`, nie usunięcie pliku.
 
 ## Montowanie

@@ -113,6 +113,11 @@ export default function ClientSwitcher() {
   const match = useMatch('/c/:id');
   const id = match?.params.id;
   const active = getClient(id);
+  // An archived snapshot highlights its LIVING sibling: the rail lists only
+  // `clients`, so matching on the raw route id would highlight no chip and
+  // [ / ] would cycle from findIndex -1 (dead keys) — the nostr-kitten
+  // accident, inherited by every archived route without this.
+  const railId = active?.archivedOf ?? id;
   const navigate = useNavigate();
   const reduce = !!useReducedMotion();
   const tourActive = useTourActive();
@@ -132,13 +137,13 @@ export default function ClientSwitcher() {
 
   const step = useCallback(
     (dir: 1 | -1) => {
-      if (!id) return;
-      const idx = clients.findIndex((c) => c.id === id);
+      if (!railId) return;
+      const idx = clients.findIndex((c) => c.id === railId);
       if (idx < 0) return;
       const next = (idx + dir + clients.length) % clients.length;
       go(clients[next].id);
     },
-    [id, go],
+    [railId, go],
   );
 
   // The bottom sheet is a mobile-only surface; close it if we grow to desktop.
@@ -148,14 +153,14 @@ export default function ClientSwitcher() {
 
   // Warm the current client's immediate neighbours so casual next/prev is instant.
   useEffect(() => {
-    if (!id) return;
-    const idx = clients.findIndex((c) => c.id === id);
+    if (!railId) return;
+    const idx = clients.findIndex((c) => c.id === railId);
     if (idx < 0) return;
     return idleWarm(() => {
       clients[idx - 1]?.preload();
       clients[idx + 1]?.preload();
     });
-  }, [id]);
+  }, [railId]);
 
   // On phones the sim is full-bleed, so the switcher has no floating pill to
   // tap — ClientView's compact bar fires this instead. Mirrors the existing
@@ -253,9 +258,12 @@ export default function ClientSwitcher() {
 
   return (
     <>
-      {/* Announce switches to assistive tech. */}
+      {/* Announce switches to assistive tech. Archived snapshots carry the same
+          brand name as their living sibling, so the version label is the only
+          thing keeping the two announcements distinct. */}
       <div className="sr-only" aria-live="polite">
-        Now viewing {active.name} simulator
+        Now viewing {active.name}
+        {active.archivedOf && active.reproduces ? ` ${active.reproduces} (older version)` : ''} simulator
       </div>
 
       {isMobile ? (
@@ -317,11 +325,11 @@ export default function ClientSwitcher() {
             {divider}
 
             {leads.map((c) => (
-              <DockChip key={c.id} client={c} active={c.id === id} reduce={reduce} orientation={orientation} onSelect={() => go(c.id)} />
+              <DockChip key={c.id} client={c} active={c.id === railId} reduce={reduce} orientation={orientation} onSelect={() => go(c.id)} />
             ))}
             {leads.length > 0 && rest.length > 0 && divider}
             {rest.map((c) => (
-              <DockChip key={c.id} client={c} active={c.id === id} reduce={reduce} orientation={orientation} onSelect={() => go(c.id)} />
+              <DockChip key={c.id} client={c} active={c.id === railId} reduce={reduce} orientation={orientation} onSelect={() => go(c.id)} />
             ))}
 
             {divider}
@@ -388,7 +396,7 @@ export default function ClientSwitcher() {
                 </div>
                 <div className="grid grid-cols-4 gap-2">
                   {clients.map((c) => {
-                    const isActive = c.id === id;
+                    const isActive = c.id === railId;
                     return (
                       <button
                         key={c.id}
@@ -418,7 +426,7 @@ export default function ClientSwitcher() {
 
       <CommandPalette
         open={paletteOpen}
-        currentId={id}
+        currentId={railId}
         onClose={() => setPaletteOpen(false)}
         onSelect={(cid) => go(cid)}
       />

@@ -52,7 +52,31 @@ export interface ClientEntry {
   upstreamLicense: string;
   /** how a human actually installs it, one clause */
   installNote: string;
-  /** DERIVED: a reference-verified reproduction (status ready + kind reproduction). */
+  /**
+   * Which upstream build this reproduction was verified against — a human
+   * label, not a git ref: 'v1.12.6', 'v1.2.1', or 'as of Jul 2026' when the
+   * screen-map pins only a commit/date. Shown in the About surfaces and as
+   * the version menu's label. Source of truth: docs/refs/<id>/screen-map.md.
+   * Absent = never reference-verified (previews).
+   */
+  reproduces?: string;
+  /**
+   * Set ONLY on frozen snapshots in the `archived` list below: the id of the
+   * living entry this is an older version of. Its presence IS the "archived"
+   * flag — ClientView renders the older-version strip, the switcher rail
+   * highlights the living sibling, and versionsOf() joins the family on it
+   * (never on id prefixes — ids may themselves contain hyphens).
+   * Freeze procedure: docs/VERSIONS.md.
+   */
+  archivedOf?: string;
+  /** Archived snapshots only: the date the snapshot was frozen (YYYY-MM-DD). */
+  capturedOn?: string;
+  /**
+   * DERIVED for listed entries (status ready + kind reproduction); hand-set
+   * false on unlisted and archived entries — an archived snapshot is ready and
+   * a reproduction, but it must never earn the rail's starred section or the
+   * palette star.
+   */
   lead: boolean;
   /** the real client's shipping default theme; unset = follow the OS preference */
   defaultTheme?: 'dark' | 'light';
@@ -109,6 +133,8 @@ const MOUNTS: Record<
     repo: string;
     upstreamLicense: string;
     installNote: string;
+    /** see ClientEntry.reproduces — version tag when the screen-map pins one, month of verification otherwise */
+    reproduces?: string;
     load: Loader;
   }
 > = {
@@ -121,6 +147,8 @@ const MOUNTS: Record<
     repo: 'https://github.com/damus-io/damus',
     upstreamLicense: 'GPL-3.0',
     installNote: 'iOS App Store; Android as a direct APK from damus.io',
+    // screen-map pins damus-io/damus@master verified 2026-07-14 — no tag, so a date label
+    reproduces: 'as of Jul 2026',
     load: () => import('./simulators/damus/DamusSimulatorWithTour'),
   },
   amethyst: {
@@ -132,6 +160,8 @@ const MOUNTS: Record<
     repo: 'https://github.com/vitorpamplona/amethyst',
     upstreamLicense: 'MIT',
     installNote: 'Google Play, Zapstore, Obtainium, or a release APK',
+    // docs/refs/amethyst/screen-map.md:3 — vitorpamplona/amethyst @ tag v1.12.6
+    reproduces: 'v1.12.6',
     load: () => import('./simulators/amethyst/AmethystSimulatorWithTour'),
   },
   keychat: {
@@ -154,6 +184,8 @@ const MOUNTS: Record<
     repo: 'https://github.com/YakiHonne/web-app',
     upstreamLicense: 'MIT',
     installNote: 'Web app, no install; also on the iOS App Store and Google Play',
+    // screen-map: YakiHonne/mobile-app@main, 11-surface pass 2026-07-14 — no tag pinned
+    reproduces: 'as of Jul 2026',
     load: () => import('./simulators/yakihonne/YakiHonneSimulatorWithTour'),
   },
   snort: {
@@ -169,6 +201,8 @@ const MOUNTS: Record<
     repo: 'https://github.com/v0l/snort',
     upstreamLicense: 'MIT',
     installNote: 'Web app, no install; Android wrapper on Google Play',
+    // screen-map: v0l/snort@3cc8317 (2026-07-29) + owner's 2026-07-14 recording — no tag
+    reproduces: 'as of Jul 2026',
     load: () => import('./simulators/snort/SnortSimulatorWithTour'),
   },
   primal: {
@@ -180,6 +214,8 @@ const MOUNTS: Record<
     repo: 'https://github.com/PrimalHQ/primal-web-app',
     upstreamLicense: 'MIT',
     installNote: 'Web app, no install; native iOS and Android apps too',
+    // screen-map: PrimalHQ/primal-web-app@main, recon 2026-07-14 — weakest pin of the set
+    reproduces: 'as of Jul 2026',
     load: () => import('./simulators/primal/PrimalWebSimulatorWithTour'),
   },
   wisp: {
@@ -195,6 +231,8 @@ const MOUNTS: Record<
     repo: 'https://github.com/barrydeen/wisp',
     upstreamLicense: 'MIT',
     installNote: 'Google Play, or Zapstore (zapstore.yaml ships in the repo)',
+    // screen-map: barrydeen/wisp@11ac08f = release v1.2.1 (2026-07-23)
+    reproduces: 'v1.2.1',
     load: () => import('./simulators/wisp/WispSimulatorWithTour'),
   },
   nostur: {
@@ -216,6 +254,8 @@ const MOUNTS: Record<
     repo: 'https://github.com/nostur-com/nostur-ios-public',
     upstreamLicense: 'GPL-3.0',
     installNote: 'iOS App Store; macOS also as a direct .dmg from nostur.com',
+    // screen-map:26 — app version 1.30.2 (Build 527) read off the reference recording
+    reproduces: 'v1.30.2',
     load: () => import('./simulators/nostur/NosturSimulatorWithTour'),
   },
   coracle: {
@@ -234,6 +274,8 @@ const MOUNTS: Record<
     repo: 'https://github.com/coracle-social/coracle',
     upstreamLicense: 'MIT',
     installNote: 'Web app, no install; installable as a PWA',
+    // screen-map: coracle-social/coracle@efea13f (2026-08-04) + 2026-08-05 recording — no tag
+    reproduces: 'as of Aug 2026',
     // Wrapped since 2026-08-06 (gaps cor-01): the wrapper carries no guided
     // tour — Coracle has no entry in src/data/tours/ — it exists so the FAQ
     // panel's "Show me" can drive the simulator. `tour` stays false.
@@ -308,6 +350,7 @@ const branded: ClientEntry[] = Object.values(allSimulatorConfigs).map((cfg) => {
     repo: mount.repo,
     upstreamLicense: mount.upstreamLicense,
     installNote: mount.installNote,
+    reproduces: mount.reproduces,
     lead: mount.status === 'ready',
     defaultTheme: mount.theme,
     className: mount.className,
@@ -329,7 +372,73 @@ export const clients: ClientEntry[] = [...branded].sort((a, b) => rank(a) - rank
 /** Reachable at /c/<id>, listed nowhere. See the Nostr Kitten note above. */
 const unlisted: ClientEntry[] = [nostrKitten];
 
-/** Routing resolves unlisted clients too — that is what keeps the egg findable. */
+/**
+ * Frozen older versions of listed clients — the third registry list, empty
+ * until the first client version bump. Entries are HAND-BUILT like nostrKitten
+ * above — never via SimulatorClient/allSimulatorConfigs/MOUNTS (the enum forces
+ * a config, and a config without a MOUNTS key crashes the join at module load).
+ * Each points its loader at a frozen sibling directory
+ * (src/simulators/<id>-v<major>-<minor>/), keeps `name` as the bare brand
+ * (Disclaimer/Handoff interpolate it), and carries archivedOf + reproduces +
+ * capturedOn. Routable at /c/<id>, invisible in the gallery, the ⌘K palette
+ * and the rail. A verbatim directory copy is NOT enough — the theme CSS is
+ * global and the tour id drives events and storage. The full freeze procedure
+ * lives in docs/VERSIONS.md; follow it, don't improvise. (Executed end-to-end
+ * and verified in-browser on 2026-08-13 as a dry run, then reverted — the
+ * first real freeze is the Amethyst v1.12.6 snapshot, due when the simulator
+ * gets rebuilt against v1.13.1.)
+ */
+const archived: ClientEntry[] = [];
+
+/** Routing resolves unlisted and archived clients too — that is what keeps the egg (and old links) findable. */
 export function getClient(id: string | undefined): ClientEntry | undefined {
-  return clients.find((c) => c.id === id) ?? unlisted.find((c) => c.id === id);
+  return (
+    clients.find((c) => c.id === id) ??
+    unlisted.find((c) => c.id === id) ??
+    archived.find((c) => c.id === id)
+  );
+}
+
+/**
+ * The version family a client id belongs to, joined on `archivedOf` — never on
+ * id prefixes, which would break at the first client whose own name contains a
+ * hyphen. `current` is the living entry (an archived id resolves to its living
+ * sibling), `older` the frozen snapshots, newest first. ClientView shows the
+ * version menu only when `older` is non-empty, so until the first freeze every
+ * client keeps today's chrome untouched.
+ */
+export function versionsOf(id: string | undefined): {
+  current: ClientEntry | undefined;
+  older: ClientEntry[];
+} {
+  const entry = getClient(id);
+  const livingId = entry?.archivedOf ?? entry?.id;
+  const current = entry?.archivedOf ? getClient(entry.archivedOf) : entry;
+  const older = archived
+    .filter((a) => a.archivedOf === livingId)
+    .sort((a, b) => (b.capturedOn ?? '').localeCompare(a.capturedOn ?? ''));
+  return { current, older };
+}
+
+if (import.meta.env.DEV) {
+  // These mistakes all fail silent in production (the version menu just never
+  // appears, rows render identically, sorting quietly lies) — this loop is the
+  // only guard, so keep it loud.
+  for (const a of archived) {
+    if (!a.archivedOf || !clients.some((c) => c.id === a.archivedOf)) {
+      console.warn(
+        `[registry] archived entry "${a.id}" has archivedOf="${a.archivedOf}" matching no listed client — its version menu and rail highlight are broken`,
+      );
+    }
+    if (!a.reproduces) {
+      console.warn(
+        `[registry] archived entry "${a.id}" has no \`reproduces\` — the version menu rows and the switcher's sr-only announcement become indistinguishable from the living client`,
+      );
+    }
+    if (!a.capturedOn) {
+      console.warn(
+        `[registry] archived entry "${a.id}" has no \`capturedOn\` — it sorts last in versionsOf() regardless of age`,
+      );
+    }
+  }
 }

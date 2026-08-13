@@ -1,10 +1,10 @@
 import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ChevronDown, ChevronLeft, ExternalLink, Flag, HelpCircle, Info, Monitor, Moon, Play, Sun } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ExternalLink, Flag, HelpCircle, History, Info, Monitor, Moon, Play, Sun } from 'lucide-react';
 import MobilePhoneFrame from '../simulators/shared/components/MobilePhoneFrame';
 import { ClientGlyph, platformLabel } from './ClientGlyph';
-import { clients, getClient, type ClientEntry } from '../registry';
+import { clients, getClient, versionsOf, type ClientEntry } from '../registry';
 import { getFaq } from '../data/faq';
 import { showFaqInSimulator } from '../components/faq/FaqMiniTourLauncher';
 import FaqPanel from './FaqPanel';
@@ -71,6 +71,154 @@ function DisclaimerStrip({ name, real }: { name: string; real: boolean }) {
   );
 }
 
+/**
+ * Version menu — renders ONLY when the client has frozen older snapshots
+ * (docs/VERSIONS.md), so until the first freeze every client keeps today's
+ * chrome untouched. The trigger doubles as the version badge: its label is the
+ * upstream build this entry reproduces.
+ *
+ * A lightweight in-place popover, not a portaled dialog — but it still stamps
+ * `data-sandstr-modal` while open, because that attribute is the ONE contract
+ * every keyboard owner honours: the switcher's [ / ] and ⌘K go quiet
+ * (ClientSwitcher.tsx foreign-modal guard) and the tour yields the keys
+ * (HOST_MODAL_SELECTOR). Escape is self-handled like every host dialog, the
+ * transparent fixed backdrop catches outside clicks, and both ride
+ * `--z-host-modal`: a menu the visitor opened owns the screen.
+ */
+function VersionMenu({ entry }: { entry: ClientEntry }) {
+  const { current, older } = versionsOf(entry.id);
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  // The route can change under an open popover (browser back/forward — no
+  // click of ours to close on), and ClientView never remounts across client
+  // switches, so this state would otherwise arrive at the next client already
+  // open, with the invisible backdrop eating the first click.
+  useEffect(() => setOpen(false), [entry.id]);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    // Two instances exist (meta row sm–lg, ContextPanel lg+), CSS-hidden per
+    // breakpoint but always mounted. An open popover whose trigger goes
+    // display:none would keep stamping data-sandstr-modal invisibly, killing
+    // [ / ] and ⌘K with nothing on screen to explain it — so close when the
+    // trigger stops being rendered.
+    const onResize = () => {
+      const el = triggerRef.current;
+      if (el && !(el.checkVisibility?.() ?? el.offsetParent !== null)) setOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [open]);
+  if (!current) return null;
+
+  // Single-version family (every client until the first freeze): a static
+  // provenance badge, no menu. This is also the only desktop surface the
+  // frameless clients have for "which upstream build is this" — the ContextPanel
+  // is framed-only and the AboutSheet is phone-only.
+  const badgeClass =
+    'inline-flex items-center gap-1 rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400';
+  if (older.length === 0) {
+    if (!entry.reproduces) return null;
+    return (
+      <span className={badgeClass} title={`Modeled on ${entry.name} ${entry.reproduces}`}>
+        {entry.reproduces}
+      </span>
+    );
+  }
+
+  // Disclosure pattern on purpose — NOT role="menu", which would promise
+  // arrow-key navigation and focus management this popover doesn't have.
+  // Tab order: trigger → version links (the backdrop is a non-focusable div).
+  // data-sandstr-modal is the host-internal contract that quiets the
+  // switcher's [ / ] / ⌘K and makes the tour yield the keyboard while open.
+  const versions = [current, ...older];
+  return (
+    <div className="relative">
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-expanded={open}
+        aria-label={`Simulator version ${entry.reproduces ?? (entry.archivedOf ? 'older' : 'current')} — choose a version`}
+        onClick={() => setOpen((o) => !o)}
+        className={cn(badgeClass, 'transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-gray-200')}
+      >
+        {entry.reproduces ?? (entry.archivedOf ? 'older' : 'current')}
+        <ChevronDown className="h-3 w-3" />
+      </button>
+      {open && (
+        <>
+          <div
+            aria-hidden
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 z-[var(--z-host-modal)] cursor-default"
+          />
+          <div
+            aria-label="Simulator versions"
+            data-sandstr-modal=""
+            className="absolute start-0 top-full z-[var(--z-host-modal)] mt-1 w-56 rounded-xl border border-gray-200 bg-white p-1 shadow-xl dark:border-gray-700 dark:bg-gray-900"
+          >
+            {versions.map((v) => (
+              <Link
+                key={v.id}
+                to={`/c/${v.id}`}
+                onClick={() => setOpen(false)}
+                aria-current={v.id === entry.id ? 'true' : undefined}
+                className={cn(
+                  'flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-xs hover:bg-gray-100 dark:hover:bg-gray-800',
+                  v.id === entry.id && 'bg-gray-50 font-medium dark:bg-gray-800/60',
+                )}
+              >
+                <span>{v.reproduces ?? v.name}</span>
+                <span className="shrink-0 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                  {v.id === current.id ? 'current' : 'older'}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The archived-route banner — the primary defence against a stale shared link:
+ * someone landing here from a six-month-old note must be one tap from the
+ * current version, in plain language. In normal flow (it shares the row budget
+ * with the sim instead of covering it) and deliberately NOT amber: the
+ * disclaimer's colour means "this is a simulation", this one means "this is an
+ * old one" — blurring them would cost both messages.
+ */
+function ArchivedStrip({ entry }: { entry: ClientEntry }) {
+  const { current } = versionsOf(entry.id);
+  return (
+    <div
+      // Same pairing as DisclaimerStrip above, for the same reason: the tour
+      // backdrop (portaled to body) dims in-flow chrome to unreadable and the
+      // step card can cover it. A stale /c/<archId>?tour=1 link is exactly the
+      // visitor who must stay able to read "older version — open the current".
+      data-tour-keep-clear
+      className="relative z-[var(--z-disclaimer)] flex shrink-0 flex-wrap items-center justify-center gap-x-2 gap-y-0.5 border-b border-sky-300/60 bg-sky-50 px-3 py-1 text-[11px] leading-snug text-sky-800 dark:border-sky-500/25 dark:bg-sky-500/10 dark:text-sky-300">
+      <History className="h-3 w-3 shrink-0" />
+      <span className="text-center">
+        An older version of this simulator
+        {entry.reproduces ? ` — matches ${entry.name} ${entry.reproduces}` : ''}.
+      </span>
+      {current && (
+        <Link to={`/c/${current.id}`} className="font-medium underline underline-offset-2">
+          Open the current version
+        </Link>
+      )}
+    </div>
+  );
+}
+
 /** Brand-tinted skeleton for the rare cold path (a fresh deep-link that hasn't been preloaded). */
 function SimSkeleton({ color }: { color: string }) {
   return (
@@ -108,6 +256,7 @@ function ContextPanel({
           <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
             {platformLabel(entry.platform)}
           </span>
+          <VersionMenu entry={entry} />
         </div>
         <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">{entry.description}</p>
       </div>
@@ -193,6 +342,11 @@ function AboutSheet({ entry, real, onClose }: { entry: ClientEntry; real: boolea
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  // The phone home of version switching: the compact bar has no room for a
+  // fifth control at 320px, so the version list lives here, in the sheet the
+  // title button already opens.
+  const { current, older } = versionsOf(entry.id);
+
   return (
     <div
       className="fixed inset-0 z-[var(--z-host-modal)] flex items-end sm:hidden"
@@ -221,6 +375,37 @@ function AboutSheet({ entry, real, onClose }: { entry: ClientEntry; real: boolea
           <p className="mb-3 text-xs italic leading-relaxed text-gray-400 dark:text-gray-500">
             {entry.status === 'preview' ? `Early preview — ${entry.statusNote}` : entry.statusNote}
           </p>
+        )}
+        {real && !entry.archivedOf && entry.reproduces && (
+          <p className="mb-3 text-[11px] text-gray-400 dark:text-gray-500">
+            Modeled on {entry.name} {entry.reproduces}
+          </p>
+        )}
+        {current && older.length > 0 && (
+          <div className="mb-3">
+            <h3 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+              Versions
+            </h3>
+            <div className="flex flex-col gap-1">
+              {[current, ...older].map((v) => (
+                <Link
+                  key={v.id}
+                  to={`/c/${v.id}`}
+                  onClick={onClose}
+                  aria-current={v.id === entry.id ? 'true' : undefined}
+                  className={cn(
+                    'flex items-center justify-between gap-2 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs dark:border-gray-700',
+                    v.id === entry.id && 'border-gray-300 bg-gray-50 font-medium dark:border-gray-600 dark:bg-gray-800/60',
+                  )}
+                >
+                  <span>{v.reproduces ?? v.name}</span>
+                  <span className="shrink-0 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                    {v.id === current.id ? 'current' : 'older'}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
         )}
         {real && (
           <div className="space-y-2">
@@ -275,6 +460,11 @@ function Handoff({ entry, compact }: { entry: ClientEntry; compact?: boolean }) 
  * Nostr Kitten, which isn't a reproduction of anything.
  */
 function ReportLink({ entry }: { entry: ClientEntry }) {
+  // Living reproductions only: a frozen snapshot is untouchable by policy
+  // (docs/VERSIONS.md) and its gaps ledger is out of the GAPS arithmetic, so a
+  // fidelity report against it has no addressee. The Handoff stays — "get the
+  // real client" is as true on an archive as anywhere.
+  if (entry.archivedOf) return null;
   return (
     <a
       href={fidelityReportUrl(entry)}
@@ -522,8 +712,12 @@ export default function ClientView() {
   }
 
   const { Component, frame, className, primaryColor } = entry;
-  // Nostr Kitten is the only original (non-real) client in the set.
-  const isReal = entry.id !== 'nostr-kitten';
+  // "Real" = a reproduction of somebody else's client (Handoff, ReportLink and
+  // the disclaimer wording all key off this). Driven by `kind`, not by an id
+  // comparison — versioned ids like amethyst-v1-12 would silently break any
+  // check written against raw id strings.
+  const isReal = entry.kind === 'reproduction';
+  const isArchived = !!entry.archivedOf;
   // Curated per-client FAQ (prototype: Damus only). Null hides every affordance.
   const faq = getFaq(entry.id);
   const handleShowMe = (entryId: string) => {
@@ -617,7 +811,7 @@ export default function ClientView() {
           type="button"
           onClick={() => setAboutOpen(true)}
           aria-haspopup="dialog"
-          aria-label={`About this ${entry.name} reproduction`}
+          aria-label={`About this ${entry.name}${isArchived && entry.reproduces ? ` ${entry.reproduces} (older version)` : ''} reproduction`}
           className="flex min-w-0 items-center gap-1 rounded-lg px-1 py-1 hover:bg-gray-100 dark:hover:bg-gray-800"
         >
           <ClientGlyph client={entry} className="h-5 w-5 shrink-0" />
@@ -670,6 +864,11 @@ export default function ClientView() {
         <DisclaimerStrip name={entry.name} real={isReal} />
       </div>
 
+      {/* Older-version banner: every breakpoint — on phones it stacks under the
+          disclaimer strip, on desktop it is the full-width line above the meta
+          row. A stale shared link is exactly the visitor who must see it. */}
+      {isArchived && <ArchivedStrip entry={entry} />}
+
       {/* ---------------- desktop: one compact meta row ----------------------- */}
       {/* The name/description/features/tour/disclaimer all live in the context
           panel at lg+; this row is the fallback for the sm–lg band, where the
@@ -689,6 +888,7 @@ export default function ClientView() {
           <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
             {platformLabel(entry.platform)}
           </span>
+          <VersionMenu entry={entry} />
         </div>
         <Disclaimer name={entry.name} real={isReal} />
         {entry.hasTour && (

@@ -29,9 +29,12 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
 ## Mapa kodu
 
 - **`src/registry.tsx` — punkt wejścia.** `id → { Component (lazy), platforma, ramka, tour, status, kind }`;
-  tu podpinasz klienta. **Dwie listy:** `clients` (eksport) = to, co produkt POKAZUJE (galeria, ⌘K, rail);
-  `unlisted` (dziś sam Nostr Kitten) = routowalne pod `/c/<id>`, ale niewidoczne. `getClient()` czyta obie
-  — to trzyma easter-egg przy życiu.
+  tu podpinasz klienta. **Trzy listy:** `clients` (eksport) = to, co produkt POKAZUJE (galeria, ⌘K, rail);
+  `unlisted` (dziś sam Nostr Kitten) = routowalne pod `/c/<id>`, ale niewidoczne; `archived` (dziś pusta) =
+  zamrożone starsze wersje klientów: routowalne pod `/c/<archId>`, niewidoczne w galerii/⌘K/railu,
+  osiągalne z menu wersji w `ClientView`, listy Versions w AboutSheet i z bezpośrednich linków
+  (`versionsOf()`; freeze: `docs/VERSIONS.md`). `getClient()` czyta wszystkie trzy — to trzyma easter-egg
+  i stare linki przy życiu.
 - **`src/simulators/` — SERCE.** 11 katalogów klientów (10 brandowanych + `nostr-kitten`) + `shared/`
   (`SimulatorShell`, `MobilePhoneFrame`, `NoteCard`, `useParentTheme`, `configs.ts` = metadata klientów).
 - **`src/data/`** — `mock/` (users/notes/threads/relays; treść dla WSZYSTKICH symulatorów), `tours/`, `faq/`.
@@ -118,6 +121,8 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
 - `docs/GAPS.md` + `docs/gaps/<klient>.md` (schemat: `docs/gaps/README.md`) — ile z realnego klienta mamy
   (533 wiersze); czytaj ZANIM dodasz `showMe` w FAQ.
 - `docs/TOURS.md` — reguły silnika tourów; czytaj przed edycją `src/data/tours/` i `src/components/tour/`.
+- `docs/VERSIONS.md` — wersjonowanie symulatorów per klient: procedura freeze starszej wersji. Czytaj
+  ZANIM przebudujesz symulator do nowej wersji realnego klienta — freeze idzie PRZED przebudową.
 - `docs/FAQ.md` — stan wdrożenia FAQ (230 wpisów, 133 mini-toury, 8 klientów); kontrakt autorski
   w `src/data/faq/README.md`.
 - `docs/OUTREACH.md` — jak promować to na Nostrze: zmierzone formy, które działają na
