@@ -279,8 +279,13 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
             section === 'relays' ||
             section === 'security' ||
             section === 'security-hidden' ||
+            section === 'security-spammers' ||
             section === 'preferences' ||
-            section === 'backup-keys'
+            section === 'backup-keys' ||
+            section === 'media-servers' ||
+            section === 'privacy' ||
+            section === 'vanish' ||
+            section === 'vanish-history'
           ) {
             openSettingsAt(section);
           } else {

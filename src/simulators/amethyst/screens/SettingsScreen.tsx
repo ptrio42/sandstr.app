@@ -5,7 +5,7 @@ import {
   Waypoints, RefreshCw, UserPlus, CloudUpload, Zap, Heart, ThumbsUp, Mail, LayoutGrid,
   MonitorPlay, Music, Sparkles, Medal, CreditCard, Shield, Languages, Grid3x3, Lock, Phone,
   Droplet, Settings as SettingsIcon, Home, Bell, Pencil, CircleUserRound, Calendar, Search as SearchIcon,
-  ShieldCheck, Activity, KeyRound, SquareX, History, Trash2, QrCode, CircleX, Eye, EyeOff,
+  ShieldCheck, Activity, KeyRound, SquareX, History, Trash2, QrCode, CircleX, Eye, EyeOff, X,
 } from 'lucide-react';
 import { Avatar } from '../components/Avatar';
 import { DEMO_KEY_PLACEHOLDER, SECRET_INPUT_PROPS } from '../../shared/utils/keySafety';
@@ -41,7 +41,7 @@ const ACCOUNT_ROWS: Row[] = [
   { label: 'Relays', Icon: Waypoints, section: 'relays', tour: 'amethyst-settings-relays' },
   { label: 'Relay Sync', Icon: RefreshCw },
   { label: 'Import Follows', Icon: UserPlus },
-  { label: 'Media Servers', Icon: CloudUpload, tour: 'amethyst-settings-media-servers' },
+  { label: 'Media Servers', Icon: CloudUpload, section: 'media-servers', tour: 'amethyst-settings-media-servers' },
   { label: 'Nest servers', Icon: CloudUpload },
   { label: 'Zaps', Icon: Zap },
   { label: 'Reactions', Icon: Heart },
@@ -62,7 +62,7 @@ const ACCOUNT_ROWS: Row[] = [
 ];
 
 const APP_ROWS: Row[] = [
-  { label: 'Privacy Options', Icon: Droplet },
+  { label: 'Privacy Options', Icon: Droplet, section: 'privacy', tour: 'amethyst-settings-privacy' },
   { label: 'UI Preferences', Icon: SettingsIcon, section: 'preferences', tour: 'amethyst-settings-ui-preferences' },
   { label: 'Home', Icon: Home },
   { label: 'Notifications', Icon: Bell },
@@ -76,9 +76,11 @@ const APP_ROWS: Row[] = [
 
 const DANGER_ROWS: Row[] = [
   { label: 'Backup Keys', Icon: KeyRound, section: 'backup-keys', tour: 'amethyst-settings-backup-keys' },
-  { label: 'Request to Vanish', Icon: SquareX },
-  { label: 'Vanish History', Icon: History },
-  { label: 'Reset Marmot State', Icon: Trash2 },
+  { label: 'Request to Vanish', Icon: SquareX, section: 'vanish' },
+  { label: 'Vanish History', Icon: History, section: 'vanish-history' },
+  // No `section`: upstream this row opens a confirmation dialog in place rather
+  // than pushing a screen, so it is handled by the root card itself.
+  { label: 'Reset Marmot State', Icon: Trash2, tour: 'amethyst-settings-reset-marmot' },
 ];
 
 const DETAIL_TITLES: Record<string, string> = {
@@ -86,15 +88,79 @@ const DETAIL_TITLES: Record<string, string> = {
   security: 'Security Filters',
   relays: 'Relays',
   'backup-keys': 'Backup Keys',
+  'media-servers': 'Media Servers',
+  privacy: 'Privacy Options',
+  vanish: 'Request to Vanish',
+  'vanish-history': 'Vanish History',
 };
+
+/**
+ * The chooser dialog every "label + current value + chevron" row opens upstream.
+ * One shared component: the rows differ only in their option list, which is why
+ * ten of them could sit dead behind one missing handler (gaps ame-39/ame-40).
+ */
+function ChooserDialog({
+  title, options, value, onPick, onClose, note,
+}: {
+  title: string;
+  options: string[];
+  value: string;
+  onPick: (v: string) => void;
+  onClose: () => void;
+  note?: string;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[140] flex items-center justify-center px-6"
+      role="dialog"
+      aria-label={title}
+      data-tour="amethyst-settings-chooser"
+    >
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div
+        className="relative w-full rounded-3xl py-4 max-h-[80%] overflow-y-auto"
+        style={{ background: 'var(--md-surface-container-high)' }}
+      >
+        <p className="px-5 pb-2 text-lg font-bold text-[var(--md-on-surface)]">{title}</p>
+        {options.map((o) => (
+          <button
+            key={o}
+            type="button"
+            onClick={() => { onPick(o); onClose(); }}
+            className="w-full flex items-center gap-3 px-5 py-3 text-left"
+          >
+            <span
+              className="w-5 h-5 shrink-0 rounded-full flex items-center justify-center"
+              style={{ border: `2px solid ${o === value ? 'var(--md-primary)' : 'var(--md-outline)'}` }}
+            >
+              {o === value && (
+                <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--md-primary)' }} />
+              )}
+            </span>
+            <span className="text-[16px] text-[var(--md-on-surface)]">{o}</span>
+          </button>
+        ))}
+        {note && (
+          <p className="px-5 pt-2 text-xs leading-relaxed" style={{ color: 'var(--amethyst-placeholder)' }}>
+            {note}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export function SettingsScreen({ onBack, initialSection = null }: SettingsScreenProps) {
   const raw = initialSection || 'root';
-  const openDirect = raw === 'privacy' || raw === 'security-hidden' ? 'security' : raw;
+  const openDirect = raw === 'security-hidden' || raw === 'security-spammers' ? 'security' : raw;
   const [section, setSection] = useState<string>(
     DETAIL_TITLES[openDirect] ? openDirect : 'root',
   );
-  const securityTab = raw === 'security-hidden' ? 'hidden' : 'blocked';
+  const securityTab = raw === 'security-hidden' ? 'hidden' : raw === 'security-spammers' ? 'spammers' : 'blocked';
+
+  const [query, setQuery] = useState('');
+  const [resetMarmot, setResetMarmot] = useState(false);
+  const [marmotDone, setMarmotDone] = useState(false);
 
   // Backing out of a detail returns to the root list, the way a pushed screen
   // does upstream; backing out of the root closes Settings entirely.
@@ -108,13 +174,26 @@ export function SettingsScreen({ onBack, initialSection = null }: SettingsScreen
         </button>
         {section === 'root' ? (
           // The search field REPLACES the title in v1.13.1 — there is no
-          // "Settings" heading on this screen at all.
+          // "Settings" heading on this screen at all, and being searchable is
+          // the whole point of the rebuilt root (gaps ame-98).
           <div
             className="flex-1 flex items-center gap-3 rounded-full px-4 py-2.5 mr-2"
             style={{ background: 'var(--md-surface-container-high)' }}
+            data-tour="amethyst-settings-search"
           >
             <Search className="w-5 h-5 shrink-0 text-[var(--md-on-surface-variant)]" />
-            <span className="text-[15px] whitespace-nowrap text-[var(--md-on-surface-variant)]">Search settings</span>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search settings"
+              aria-label="Search settings"
+              className="flex-1 min-w-0 bg-transparent text-[15px] text-[var(--md-on-surface)] focus:outline-none placeholder:text-[var(--md-on-surface-variant)]"
+            />
+            {query && (
+              <button type="button" onClick={() => setQuery('')} aria-label="Clear search" className="shrink-0">
+                <X className="w-4 h-4 text-[var(--md-on-surface-variant)]" />
+              </button>
+            )}
           </div>
         ) : (
           <h1 className="flex-1 font-semibold text-[var(--md-on-surface)] px-1">{DETAIL_TITLES[section]}</h1>
@@ -123,36 +202,104 @@ export function SettingsScreen({ onBack, initialSection = null }: SettingsScreen
 
       <div className="flex-1 overflow-y-auto">
         {section === 'root' ? (
-          <SettingsRoot onOpen={setSection} />
+          <SettingsRoot onOpen={setSection} query={query} onResetMarmot={() => setResetMarmot(true)} />
         ) : section === 'relays' ? (
           <RelaysView />
         ) : section === 'security' ? (
           <SecurityView initialTab={securityTab} />
         ) : section === 'backup-keys' ? (
           <BackupKeysView />
+        ) : section === 'media-servers' ? (
+          <MediaServersView />
+        ) : section === 'privacy' ? (
+          <PrivacyOptionsView />
+        ) : section === 'vanish' ? (
+          <VanishRequestView />
+        ) : section === 'vanish-history' ? (
+          <VanishHistoryView />
         ) : (
           <PreferencesView />
         )}
       </div>
+
+      {/* `reset_marmot_confirm_*` — the one Danger Zone row the screen map says
+          asks for confirmation, and the only destructive control in the sim. */}
+      {resetMarmot && (
+        <div className="fixed inset-0 z-[140] flex items-center justify-center px-6" role="dialog" aria-label="Reset Marmot State?">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setResetMarmot(false)} />
+          <div className="relative w-full rounded-3xl p-5" style={{ background: 'var(--md-surface-container-high)' }}>
+            <p className="text-lg font-bold text-[var(--md-on-surface)]">Reset Marmot State?</p>
+            <p className="text-sm mt-2 leading-relaxed text-[var(--md-on-surface-variant)]">
+              This will permanently delete every Marmot group chat, message history, and MLS key on
+              this device for the current account. Peers will not be notified and may still see you in
+              groups until their next commit. This cannot be undone. A new KeyPackage will be
+              published the next time the app syncs.
+            </p>
+            <div className="flex items-center justify-end gap-2 mt-5">
+              <button
+                type="button"
+                onClick={() => setResetMarmot(false)}
+                className="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap text-[var(--md-on-surface)]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => { setResetMarmot(false); setMarmotDone(true); }}
+                className="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap"
+                style={{ background: 'var(--md-error)', color: 'var(--md-on-error, #fff)' }}
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {marmotDone && (
+        <button
+          type="button"
+          onClick={() => setMarmotDone(false)}
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[130]"
+        >
+          <div className="md-snackbar">
+            <span>Marmot state reset.</span>
+          </div>
+        </button>
+      )}
     </div>
   );
 }
 
 /* ---------- Settings root ---------- */
 
-function SettingsRoot({ onOpen }: { onOpen: (s: string) => void }) {
+function SettingsRoot({
+  onOpen, query, onResetMarmot,
+}: { onOpen: (s: string) => void; query: string; onResetMarmot: () => void }) {
+  const q = query.trim().toLowerCase();
+  const filter = (rows: Row[]) => (q ? rows.filter((r) => r.label.toLowerCase().includes(q)) : rows);
+  const account = filter(ACCOUNT_ROWS);
+  const app = filter(APP_ROWS);
+  const danger = filter(DANGER_ROWS);
+  const total = account.length + app.length + danger.length;
+
   return (
     <div className="px-3 pb-8 pt-2">
-      <SettingsCard title="Account Settings" rows={ACCOUNT_ROWS} onOpen={onOpen} />
-      <SettingsCard title="App Settings" rows={APP_ROWS} onOpen={onOpen} />
-      <SettingsCard title="Danger Zone" rows={DANGER_ROWS} onOpen={onOpen} danger />
+      {total === 0 && (
+        <p className="text-center py-16 text-[var(--md-on-surface-variant)]">No settings match "{query}"</p>
+      )}
+      {account.length > 0 && <SettingsCard title="Account Settings" rows={account} onOpen={onOpen} />}
+      {app.length > 0 && <SettingsCard title="App Settings" rows={app} onOpen={onOpen} />}
+      {danger.length > 0 && (
+        <SettingsCard title="Danger Zone" rows={danger} onOpen={onOpen} onResetMarmot={onResetMarmot} danger />
+      )}
     </div>
   );
 }
 
 function SettingsCard({
-  title, rows, onOpen, danger,
-}: { title: string; rows: Row[]; onOpen: (s: string) => void; danger?: boolean }) {
+  title, rows, onOpen, onResetMarmot, danger,
+}: { title: string; rows: Row[]; onOpen: (s: string) => void; onResetMarmot?: () => void; danger?: boolean }) {
   return (
     <div className="mt-4">
       <p
@@ -166,7 +313,10 @@ function SettingsCard({
           <button
             key={r.label}
             type="button"
-            onClick={() => r.section && onOpen(r.section)}
+            onClick={() => {
+              if (r.section) onOpen(r.section);
+              else if (r.label === 'Reset Marmot State') onResetMarmot?.();
+            }}
             data-tour={r.tour}
             className="relative w-full flex items-center gap-4 px-3 py-3 text-left"
           >
@@ -199,32 +349,83 @@ function SettingsCard({
 
 /* ---------- UI Preferences (v1.12.6's "Application Preferences") ---------- */
 
-const PREFS = [
-  { title: 'Language', desc: "For the App's interface", value: 'English' },
-  { title: 'Theme', desc: 'Dark, Light or System theme', value: 'System' },
-  { title: 'Image Preview', desc: 'Automatically load images and GIFs', value: 'Always' },
-  { title: 'Video Playback', desc: 'Automatically plays videos and GIFs', value: 'Always' },
-  { title: 'URL Preview', desc: 'Show URL previews', value: 'Always' },
-  { title: 'Profile Picture', desc: 'Show Profile pictures', value: 'Always' },
-  { title: 'Immersive Scrolling', desc: 'Hide Nav Bars when scrolling', value: 'Always' },
-  { title: 'UI Mode', desc: 'Choose the post style', value: 'Simplified' },
-  { title: 'Profile Gallery Style', desc: 'Choose the gallery style', value: 'Classic' },
-  { title: 'Push Notification', desc: 'From installed UnifiedPush apps', value: 'None' },
+/**
+ * Option sets are upstream enums, not invented: `ConnectivityType`
+ * (`connectivity_type_always` / `_unmetered_wifi_only` / `_never`),
+ * `FeatureSetType` (`ui_feature_set_type_complete` / `_simplified` /
+ * `_performance`), the gallery pair (`gallery_type_classic` / `_modern`) and the
+ * theme triple (`system` / `light` / `dark`).
+ *
+ * Two rows carry a note instead of a full list, because the real list is built
+ * from the device: Language enumerates the ~50 locales the app is translated
+ * into (`res/values-*`), and Push Notification enumerates the UnifiedPush
+ * distributors you have installed — on a phone with none, "None" is the only
+ * entry, which is what the reference screen shows.
+ */
+const CONNECTIVITY = ['Always', 'Unmetered WiFi', 'Never'];
+
+const PREFS: { title: string; desc: string; value: string; options: string[]; note?: string }[] = [
+  {
+    title: 'Language',
+    desc: "For the App's interface",
+    value: 'English',
+    options: ['English', 'Español', 'Português (Brasil)', 'Deutsch', 'Français', '日本語', 'Polski', 'Русский'],
+    note: 'Amethyst ships around fifty locales; this is a slice of them.',
+  },
+  { title: 'Theme', desc: 'Dark, Light or System theme', value: 'System', options: ['System', 'Light', 'Dark'],
+    note: 'In this reproduction the light/dark switch belongs to the page around the phone, not to the app inside it.' },
+  { title: 'Image Preview', desc: 'Automatically load images and GIFs', value: 'Always', options: CONNECTIVITY },
+  { title: 'Video Playback', desc: 'Automatically plays videos and GIFs', value: 'Always', options: CONNECTIVITY },
+  { title: 'URL Preview', desc: 'Show URL previews', value: 'Always', options: CONNECTIVITY },
+  { title: 'Profile Picture', desc: 'Show Profile pictures', value: 'Always', options: CONNECTIVITY },
+  { title: 'Immersive Scrolling', desc: 'Hide Nav Bars when scrolling', value: 'Always', options: CONNECTIVITY },
+  { title: 'UI Mode', desc: 'Choose the post style', value: 'Simplified', options: ['Complete', 'Simplified', 'Performance'] },
+  { title: 'Profile Gallery Style', desc: 'Choose the gallery style', value: 'Classic', options: ['Classic', 'Modern'] },
+  {
+    title: 'Push Notification',
+    desc: 'From installed UnifiedPush apps',
+    value: 'None',
+    options: ['None'],
+    note: 'The rest of this list is whichever UnifiedPush distributors are installed on the phone.',
+  },
 ];
 
 function PreferencesView() {
+  const [values, setValues] = useState<Record<string, string>>(
+    () => Object.fromEntries(PREFS.map((p) => [p.title, p.value])),
+  );
+  const [open, setOpen] = useState<string | null>(null);
+  const active = PREFS.find((p) => p.title === open);
+
   return (
-    <div className="py-1">
+    <div className="py-1" data-tour="amethyst-settings-preferences">
       {PREFS.map((p) => (
-        <button key={p.title} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--md-surface-variant)]/40 transition-colors text-left">
+        <button
+          key={p.title}
+          type="button"
+          onClick={() => setOpen(p.title)}
+          data-tour={`amethyst-pref-${p.title.toLowerCase().replace(/\s+/g, '-')}`}
+          className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--md-surface-variant)]/40 transition-colors text-left"
+        >
           <div className="flex-1 min-w-0">
             <p className="font-medium text-[var(--md-on-surface)]">{p.title}</p>
             <p className="text-sm text-[var(--md-on-surface-variant)]">{p.desc}</p>
           </div>
-          <span className="text-sm text-[var(--md-on-surface-variant)] shrink-0">{p.value}</span>
+          <span className="text-sm text-[var(--md-on-surface-variant)] shrink-0">{values[p.title]}</span>
           <ChevronRight className="w-4 h-4 text-[var(--md-on-surface-variant)] shrink-0" />
         </button>
       ))}
+
+      {active && (
+        <ChooserDialog
+          title={active.title}
+          options={active.options}
+          value={values[active.title]}
+          note={active.note}
+          onPick={(v) => setValues((cur) => ({ ...cur, [active.title]: v }))}
+          onClose={() => setOpen(null)}
+        />
+      )}
     </div>
   );
 }
@@ -409,6 +610,12 @@ function SecurityView({ initialTab = 'blocked' }: { initialTab?: 'blocked' | 'sp
   const [warnReports, setWarnReports] = useState(true);
   const [filterSpam, setFilterSpam] = useState(true);
   const [tab, setTab] = useState<'blocked' | 'spammers' | 'hidden'>(initialTab);
+  // `content_warning_*` options — the third control in this header is a chooser,
+  // not a switch, which is why it used to render as a dead `<span>` between two
+  // working toggles (gaps ame-40).
+  const [sensitive, setSensitive] = useState('Warn');
+  const [sensitiveOpen, setSensitiveOpen] = useState(false);
+  const [blocked, setBlocked] = useState(BLOCKED);
   // Hidden Words is the one tab the reference recordings never opened, so its
   // contents come from upstream `HiddenWordsScreen.kt` — see the [REC vs REPO]
   // note in docs/refs/amethyst/screen-map.md.
@@ -425,7 +632,7 @@ function SecurityView({ initialTab = 'blocked' }: { initialTab?: 'blocked' | 'sp
     // Full height, so the add-word field can sit at the BOTTOM of the screen the
     // way upstream's `bottomBar` does, instead of floating under the last row.
     <div className="flex flex-col min-h-full">
-      <div className="px-4 pt-3 space-y-4">
+      <div className="px-4 pt-3 space-y-4" data-tour="amethyst-security-toggles">
         <PrefRow title="Warn on reports" desc="Shows a warning message when posts have 5 or more reports from your follows">
           <Toggle on={warnReports} onToggle={() => setWarnReports((v) => !v)} />
         </PrefRow>
@@ -433,12 +640,29 @@ function SecurityView({ initialTab = 'blocked' }: { initialTab?: 'blocked' | 'sp
           <Toggle on={filterSpam} onToggle={() => setFilterSpam((v) => !v)} />
         </PrefRow>
         <PrefRow title="Show sensitive content" desc="Shows a warning message when the author of the post marked it as sensitive">
-          <span className="px-4 py-1.5 rounded-lg bg-[var(--md-surface-variant)] text-sm text-[var(--md-on-surface)]">Warn</span>
+          <button
+            type="button"
+            onClick={() => setSensitiveOpen(true)}
+            data-tour="amethyst-security-sensitive"
+            className="px-4 py-1.5 rounded-lg bg-[var(--md-surface-variant)] text-sm text-[var(--md-on-surface)]"
+          >
+            {sensitive}
+          </button>
         </PrefRow>
       </div>
 
+      {sensitiveOpen && (
+        <ChooserDialog
+          title="Show sensitive content"
+          options={['Hide', 'Show', 'Warn']}
+          value={sensitive}
+          onPick={setSensitive}
+          onClose={() => setSensitiveOpen(false)}
+        />
+      )}
+
       {/* sub-tabs */}
-      <div className="md-tabs mt-4 sticky top-0 bg-[var(--md-background)] z-10">
+      <div className="md-tabs mt-4 sticky top-0 bg-[var(--md-background)] z-10" data-tour="amethyst-security-tabs">
         {(['blocked', 'spammers', 'hidden'] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)} className={`md-tab whitespace-nowrap ${tab === t ? 'active' : ''}`}>
             {t === 'blocked' ? 'Blocked Users' : t === 'spammers' ? 'Spammers' : 'Hidden Words'}
@@ -448,17 +672,40 @@ function SecurityView({ initialTab = 'blocked' }: { initialTab?: 'blocked' | 'sp
       </div>
 
       {tab === 'blocked' ? (
-        <div className="py-1">
-          {BLOCKED.map((u) => (
+        <div className="py-1" data-tour="amethyst-blocked-list">
+          {blocked.length === 0 ? (
+            <div className="text-center py-12 text-[var(--md-on-surface-variant)]">No blocked users</div>
+          ) : blocked.map((u) => (
             <div key={u.name} className="flex items-center gap-3 px-4 py-2.5">
               <Avatar seed={u.name} className="w-10 h-10" />
               <span className="flex-1 min-w-0 truncate text-[var(--md-on-surface)]">{u.name}</span>
-              <button className="px-4 py-1.5 rounded-full text-sm font-medium bg-[var(--md-primary)] text-[var(--md-on-primary)]">Unblock</button>
+              <button
+                type="button"
+                onClick={() => setBlocked((cur) => cur.filter((b) => b.name !== u.name))}
+                className="px-4 py-1.5 rounded-full text-sm font-medium bg-[var(--md-primary)] text-[var(--md-on-primary)]"
+              >
+                Unblock
+              </button>
             </div>
           ))}
         </div>
       ) : tab === 'spammers' ? (
-        <div className="text-center py-12 text-[var(--md-on-surface-variant)]">No blocked spammers</div>
+        // Upstream this list fills itself from the "Filter spam" toggle above and
+        // resets on app restart (`security_spamming_users_empty`), so with the
+        // toggle off it can never fill at all — worth saying, because toggling it
+        // was the one thing on this screen that demonstrably changed nothing
+        // (gaps ame-104).
+        <div className="text-center px-8 py-12 text-[var(--md-on-surface-variant)]">
+          {filterSpam ? (
+            'No accounts have been flagged as spam in this session.'
+          ) : (
+            <>
+              Spam filtering is off, so nothing gets flagged.
+              <br />
+              Turn "Filter spam" back on above to start collecting this list.
+            </>
+          )}
+        </div>
       ) : (
         <div className="flex flex-1 flex-col">
           {hiddenWords.length === 0 ? (
@@ -531,6 +778,343 @@ function PrefRow({ title, desc, children }: { title: string; desc: string; child
   );
 }
 
+/* ---------- Media Servers (Blossom) ---------- */
+
+/**
+ * `media_servers_*` + `blossom_*`. The FAQ's `media-uploader` answer describes
+ * this screen row by row — upload priority with #1 as Primary, the recommended
+ * list, the paste-your-own field — and used to spotlight a row that did nothing
+ * (gaps ame-33).
+ */
+const RECOMMENDED_BLOSSOM = ['blossom.primal.net', 'cdn.satellite.earth', 'nostr.download'];
+
+function MediaServersView() {
+  const [servers, setServers] = useState<string[]>(['blossom.primal.net', 'cdn.satellite.earth']);
+  const [mirror, setMirror] = useState(true);
+  const [optimize, setOptimize] = useState(false);
+  const [draft, setDraft] = useState('');
+
+  const add = (host: string) => {
+    const clean = host.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/+$/, '');
+    if (!clean || servers.includes(clean)) return;
+    setServers((s) => [...s, clean]);
+    setDraft('');
+  };
+
+  return (
+    <div className="px-4 py-4 pb-8 space-y-6" data-tour="amethyst-media-servers">
+      <div>
+        <h3 className="font-semibold" style={{ color: 'var(--md-primary)' }}>Upload behaviour</h3>
+        <div className="mt-3 space-y-4">
+          <PrefRow title="Mirror uploads" desc="After uploading, copy the file to your other Blossom servers so it stays available if one goes offline.">
+            <Toggle on={mirror} onToggle={() => setMirror((v) => !v)} />
+          </PrefRow>
+          <PrefRow title="Optimize media on the server" desc="Upload through the server's /media endpoint so it can strip metadata and compress the file. The stored file may differ from the original.">
+            <Toggle on={optimize} onToggle={() => setOptimize((v) => !v)} />
+          </PrefRow>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="font-semibold" style={{ color: 'var(--md-primary)' }}>Upload priority</h3>
+        <p className="text-sm text-[var(--md-on-surface-variant)] mt-1 mb-3">
+          Drag to reorder. Uploads try each server from the top down.
+        </p>
+        {servers.length === 0 ? (
+          <p className="text-sm text-[var(--md-on-surface-variant)] py-6">
+            You have no Blossom servers set. You can use Amethyst's list, or add one below ↓
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {servers.map((host, i) => (
+              <div
+                key={host}
+                className="flex items-center gap-3 rounded-2xl px-3 py-2.5"
+                style={{ background: 'var(--md-surface-container-low)' }}
+              >
+                <span className="text-sm shrink-0 w-6 text-[var(--md-on-surface-variant)]">#{i + 1}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="truncate text-[var(--md-on-surface)]">{host}</p>
+                  {i === 0 && (
+                    <p className="text-xs" style={{ color: 'var(--md-primary)' }}>Primary</p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setServers((s) => s.filter((h) => h !== host))}
+                  aria-label={`Remove ${host}`}
+                  className="w-8 h-8 shrink-0 flex items-center justify-center text-[var(--md-on-surface-variant)]"
+                >
+                  <CircleX className="w-5 h-5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <h3 className="font-semibold" style={{ color: 'var(--md-primary)' }}>Add a server</h3>
+        <p className="text-sm text-[var(--md-on-surface-variant)] mt-2 mb-2">Recommended</p>
+        <div className="flex flex-wrap gap-2">
+          {RECOMMENDED_BLOSSOM.filter((h) => !servers.includes(h)).map((h) => (
+            <button
+              key={h}
+              type="button"
+              onClick={() => add(h)}
+              className="px-3 py-1.5 rounded-full text-sm"
+              style={{ border: '1px solid var(--md-outline)', color: 'var(--md-on-surface)' }}
+            >
+              + {h}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-4 relative">
+          <span className="absolute -top-2 left-3 px-1 text-[11px] z-10 bg-[var(--md-background)] text-[var(--md-on-surface-variant)]">
+            Or paste a server address
+          </span>
+          <div className="flex items-center gap-2 rounded border border-[var(--md-outline)] pl-3 pr-1.5 h-14">
+            <input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') add(draft); }}
+              placeholder="blossom.example"
+              aria-label="Or paste a server address"
+              autoCapitalize="off"
+              spellCheck={false}
+              className="flex-1 min-w-0 bg-transparent text-[16px] text-[var(--md-on-surface)] focus:outline-none placeholder:text-[var(--amethyst-placeholder)]"
+            />
+            <button
+              type="button"
+              onClick={() => add(draft)}
+              className="shrink-0 px-5 py-2 rounded-full text-sm font-medium text-white"
+              style={{ background: draft.trim() ? 'var(--md-primary)' : 'var(--amethyst-placeholder)' }}
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Privacy Options (Tor) ---------- */
+
+/** `tor_*`, verbatim: a preset row followed by one switch per traffic class. */
+const TOR_ROWS = [
+  { title: 'Onion Url/Relays', desc: 'Use Tor for any .onion url', on: true },
+  { title: 'DM Relays', desc: 'Force Tor to send and receive DMs', on: false },
+  { title: 'Untrusted Relays', desc: 'Force Tor on outbox/inbox relays', on: false },
+  { title: 'Trusted Relays', desc: 'Force Tor on all relays in your lists', on: false },
+  { title: 'Profile Pictures', desc: 'Force Tor when loading profile pictures', on: false },
+  { title: 'URL Previews', desc: 'Force Tor when loading url previews', on: false },
+  { title: 'Images', desc: 'Force Tor when loading images', on: false },
+  { title: 'Videos', desc: 'Force Tor when loading videos', on: false },
+  { title: 'Money Operations', desc: 'Force Tor on zaps, lightning and cashu transfers', on: false },
+  { title: 'Nostr Address Verification', desc: 'Force Tor when verifying NIP-05 addresses', on: false },
+];
+
+function PrivacyOptionsView() {
+  const [preset, setPreset] = useState('Default');
+  const [presetOpen, setPresetOpen] = useState(false);
+  const [flags, setFlags] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(TOR_ROWS.map((r) => [r.title, r.on])),
+  );
+
+  const applyPreset = (p: string) => {
+    setPreset(p);
+    // The presets exist precisely to flip the switches below in one go — a
+    // preset row that left them alone would be the dead control again.
+    if (p === 'Full Privacy') setFlags(Object.fromEntries(TOR_ROWS.map((r) => [r.title, true])));
+    if (p === 'No Tor') setFlags(Object.fromEntries(TOR_ROWS.map((r) => [r.title, false])));
+    if (p === 'Default') setFlags(Object.fromEntries(TOR_ROWS.map((r) => [r.title, r.on])));
+  };
+
+  return (
+    <div className="px-4 py-4 pb-8" data-tour="amethyst-privacy-options">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-[var(--md-on-surface)]">Tor/Privacy Presets</p>
+          <p className="text-sm text-[var(--md-on-surface-variant)]">Quickly modify all settings below</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setPresetOpen(true)}
+          className="shrink-0 px-4 py-1.5 rounded-lg bg-[var(--md-surface-variant)] text-sm text-[var(--md-on-surface)]"
+        >
+          {preset}
+        </button>
+      </div>
+
+      <div className="mt-5 space-y-4">
+        {TOR_ROWS.map((r) => (
+          <PrefRow key={r.title} title={r.title} desc={r.desc}>
+            <Toggle
+              on={flags[r.title]}
+              onToggle={() => {
+                setFlags((f) => ({ ...f, [r.title]: !f[r.title] }));
+                setPreset('Custom');
+              }}
+            />
+          </PrefRow>
+        ))}
+      </div>
+
+      <p className="text-xs mt-6 leading-relaxed" style={{ color: 'var(--amethyst-placeholder)' }}>
+        Simulation: nothing here reaches a network, so these switches change what the screen says and
+        nothing else. In the real app they route that traffic class through Tor.
+      </p>
+
+      {presetOpen && (
+        <ChooserDialog
+          title="Tor/Privacy Presets"
+          options={['Default', 'Full Privacy', 'No Tor', 'Custom']}
+          value={preset}
+          onPick={applyPreset}
+          onClose={() => setPresetOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ---------- Danger Zone: Request to Vanish + Vanish History ---------- */
+
+/** `vanish_*`, verbatim — including the ALL RELAYS warning, which is the point. */
+function VanishRequestView() {
+  const [target, setTarget] = useState('ALL RELAYS');
+  const [targetOpen, setTargetOpen] = useState(false);
+  const [reason, setReason] = useState('');
+  const [confirming, setConfirming] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  return (
+    <div className="px-4 py-4 pb-8" data-tour="amethyst-vanish">
+      <p className="text-sm leading-relaxed text-[var(--md-on-surface-variant)]">
+        Request relays to permanently delete all your data up to the selected date. This action is
+        based on NIP-62 and is legally binding in some jurisdictions.
+      </p>
+
+      <div className="mt-5 flex items-start justify-between gap-4">
+        <p className="flex-1 font-medium text-[var(--md-on-surface)]">Target Relays</p>
+        <button
+          type="button"
+          onClick={() => setTargetOpen(true)}
+          className="shrink-0 px-4 py-1.5 rounded-lg bg-[var(--md-surface-variant)] text-sm text-[var(--md-on-surface)]"
+        >
+          {target}
+        </button>
+      </div>
+
+      {target === 'ALL RELAYS' && (
+        <p className="text-sm mt-3 leading-relaxed" style={{ color: 'var(--md-error)' }}>
+          This will request ALL relays to delete everything associated with your key up to the
+          selected date. This event will be broadcast as widely as possible. This action cannot be
+          undone.
+        </p>
+      )}
+
+      <p className="font-medium mt-5 text-[var(--md-on-surface)]">Delete data up to</p>
+      <p className="text-sm text-[var(--md-on-surface-variant)]">
+        All your events created before this date will be requested for deletion from the selected relay.
+      </p>
+      <p className="mt-2 px-4 py-2.5 rounded-lg inline-block bg-[var(--md-surface-variant)] text-[var(--md-on-surface)]">
+        Today
+      </p>
+
+      <div className="mt-5 relative">
+        <span className="absolute -top-2 left-3 px-1 text-[11px] z-10 bg-[var(--md-background)] text-[var(--md-on-surface-variant)]">
+          Reason (optional)
+        </span>
+        <input
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Reason or legal notice for the relay operator"
+          aria-label="Reason (optional)"
+          className="w-full rounded border border-[var(--md-outline)] px-3 h-14 bg-transparent text-[16px] text-[var(--md-on-surface)] focus:outline-none placeholder:text-[var(--amethyst-placeholder)]"
+        />
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setConfirming(true)}
+        className="mt-5 w-full px-5 py-3 rounded-full text-sm font-medium"
+        style={{ background: 'var(--md-error)', color: 'var(--md-on-error, #fff)' }}
+      >
+        Send Vanish Request
+      </button>
+
+      {sent && (
+        <p className="text-sm mt-4 leading-relaxed" style={{ color: 'var(--amethyst-placeholder)' }}>
+          Simulation: nothing was broadcast. In the real app this publishes a NIP-62 event and the
+          request appears under Vanish History.
+        </p>
+      )}
+
+      {targetOpen && (
+        <ChooserDialog
+          title="Target Relays"
+          options={['ALL RELAYS', 'nostr.wine', 'nostr.mom', 'nos.lol', 'relay.damus.io']}
+          value={target}
+          onPick={setTarget}
+          onClose={() => setTargetOpen(false)}
+        />
+      )}
+
+      {confirming && (
+        <div className="fixed inset-0 z-[140] flex items-center justify-center px-6" role="dialog" aria-label="Confirm Vanish Request">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setConfirming(false)} />
+          <div className="relative w-full rounded-3xl p-5" style={{ background: 'var(--md-surface-container-high)' }}>
+            <p className="text-lg font-bold text-[var(--md-on-surface)]">Confirm Vanish Request</p>
+            <p className="text-sm mt-2 leading-relaxed text-[var(--md-on-surface-variant)]">
+              {target === 'ALL RELAYS'
+                ? 'You are about to request EVERY relay to permanently delete all your data created before the selected date. This will be broadcast everywhere and cannot be undone.'
+                : `You are about to request ${target} to permanently delete all your data created before the selected date. This cannot be undone.`}
+            </p>
+            <div className="flex items-center justify-end gap-2 mt-5">
+              <button
+                type="button"
+                onClick={() => setConfirming(false)}
+                className="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap text-[var(--md-on-surface)]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => { setConfirming(false); setSent(true); }}
+                className="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap"
+                style={{ background: 'var(--md-error)', color: 'var(--md-on-error, #fff)' }}
+              >
+                Send Vanish Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** `vanish_events_*` — an account that never sent one has only the empty state. */
+function VanishHistoryView() {
+  return (
+    <div className="px-4 py-4" data-tour="amethyst-vanish-history">
+      <p className="text-sm leading-relaxed text-[var(--md-on-surface-variant)]">
+        These are your past Request to Vanish events found on connected relays. Relays tagged in
+        these events should not hold any of your data from before the event date.
+      </p>
+      <div className="flex flex-col items-center text-center px-6 pt-20">
+        <p className="text-xl font-bold text-[var(--md-on-surface)]">No vanish requests found</p>
+        <p className="text-[15px] mt-2 text-[var(--md-on-surface-variant)]">
+          You haven't sent any Request to Vanish events yet.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /* ---------- Relays ---------- */
 
 type Relay = { name: string; size: string; hue: number };
@@ -599,6 +1183,7 @@ function RelaysView() {
         relays={inbox}
         onAdd={add(setInbox)}
         onRemove={remove(setInbox)}
+        tour="amethyst-relays-inbox"
       />
     </div>
   );

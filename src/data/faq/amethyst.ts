@@ -566,10 +566,19 @@ export const amethystFaq: ClientFaq = {
         {
           target: '[data-tour="amethyst-settings-media-servers"]',
           title: 'Media Servers',
-          // Descriptive — the sim's row is display-only (gaps ame-33).
-          content: 'Your upload servers are picked here — media from the composer goes to the selected server.',
+          content: 'Your upload servers are picked here, under Settings → Account Settings. Tap it.',
           position: 'bottom',
           commands: openSettingsRoot,
+        },
+        {
+          // Live since 2026-08-13 (gaps ame-33): the priority list really
+          // reorders by removal, and both add paths really add.
+          target: '[data-tour="amethyst-media-servers"]',
+          title: 'Upload priority',
+          content:
+            'Row #1 is "Primary" and uploads try each server from the top down. Below the list: the recommended servers, and a field for your own. The two switches above decide whether every upload gets mirrored to the rest and whether the server may re-encode it.',
+          position: 'bottom',
+          commands: cmd({ type: 'login' }, { type: 'openSettings', payload: 'media-servers' }),
         },
       ],
     },
