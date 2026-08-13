@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Heart, MessageCircle, Repeat, Zap, Share2, ChevronDown, ChevronUp, MoreVertical,
-  MapPin, Cog, Stamp, Timer, Pencil, Pin, Server,
+  MapPin, Cog, Stamp, Timer, Pencil, Pin, Server, Image as ImageIcon, QrCode,
 } from 'lucide-react';
 import { Avatar } from './Avatar';
 import '../amethyst.theme.css';
@@ -174,6 +174,7 @@ export function MaterialCard({
   // breakdown — one row per reaction glyph, with the avatars of whoever reacted.
   const [showReactionDetail, setShowReactionDetail] = React.useState(false);
   const markers = React.useMemo(() => headerMarkers(post), [post.id]);
+  const [shareOpen, setShareOpen] = React.useState(false);
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -422,12 +423,57 @@ export function MaterialCard({
         <motion.button
           whileTap={{ scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+          onClick={() => setShareOpen(true)}
           aria-label="Share"
           className="action-btn action-btn-share md-ripple flex items-center text-[var(--amethyst-placeholder)]"
         >
           <Share2 className="w-5 h-5" />
         </motion.button>
       </div>
+
+      {/* Share sheet. In v1.13.1 the Share button stopped firing the Android
+          chooser directly and opens this in-app ModalBottomSheet instead; only
+          the first row still hands off to the OS. Strings verbatim:
+          quick_action_share / share_as_image / share_as_image_url / share_as_qr. */}
+      {shareOpen && (
+        <div
+          className="absolute inset-0 z-[130] flex items-end"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShareOpen(false);
+          }}
+        >
+          <div className="absolute inset-0 bg-black/60" />
+          <div
+            role="dialog"
+            aria-label="Share"
+            data-tour="amethyst-share-sheet"
+            className="relative w-full rounded-t-3xl pb-3"
+            style={{ background: 'var(--md-surface-container-high)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-center text-sm py-3" style={{ color: 'var(--md-on-surface-variant)' }}>
+              Share
+            </p>
+            {[
+              { label: 'Share', Icon: Share2 },
+              { label: 'Share as Image', Icon: ImageIcon },
+              { label: 'Share as Image Url', Icon: ImageIcon },
+              { label: 'Share as QR', Icon: QrCode },
+            ].map((row, i) => (
+              <button
+                key={`${row.label}-${i}`}
+                type="button"
+                onClick={() => setShareOpen(false)}
+                className="w-full flex items-center gap-4 px-5 py-3.5 text-left text-[var(--md-on-surface)]"
+              >
+                <row.Icon className="w-5 h-5 shrink-0 text-[var(--md-on-surface-variant)]" />
+                {row.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Per-reaction-type breakdown, revealed by the leading chevron. One row
           per reaction glyph with the reactors' avatars; the zap row carries the
