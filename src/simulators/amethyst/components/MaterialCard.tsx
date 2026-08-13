@@ -1,6 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Heart, MessageCircle, Repeat, Zap, Share2, ChevronDown, ChevronUp, MoreVertical } from 'lucide-react';
+import {
+  Heart, MessageCircle, Repeat, Zap, Share2, ChevronDown, ChevronUp, MoreVertical,
+  MapPin, Cog, Stamp, Timer, Pencil, Pin, Server,
+} from 'lucide-react';
 import { Avatar } from './Avatar';
 import '../amethyst.theme.css';
 
@@ -40,6 +43,83 @@ interface MaterialCardProps {
   onShare?: (id: string) => void;
   /** Tap the card body to open the note/thread detail. */
   onOpenThread?: () => void;
+}
+
+/**
+ * The two header-marker primitives v1.13.1 introduced.
+ *
+ * `HeaderPill` carries tappable/verifiable metadata (PoW, OpenTimestamps,
+ * location, expiration): a 6dp-rounded surface filled with onSurface @7%, a
+ * 13px glyph, 3px gap, labelSmall text in placeholderText.
+ * `QuietMark` carries passive markers (edited, pinned, Draft, private rumor):
+ * bold grey text at row size with an optional 16px glyph and no background.
+ *
+ * Before v1.13.1 these were coloured bold text links scattered across two rows;
+ * the second row is Complete-mode-only and SIMPLIFIED is the shipping default,
+ * so moving them into the first row is precisely what a default user newly sees.
+ */
+function HeaderPill({ Icon, label }: { Icon: React.ComponentType<{ className?: string }>; label: string }) {
+  return (
+    <span
+      className="inline-flex items-center gap-[3px] shrink-0 rounded-md px-1.5 py-0.5 text-[11px] leading-tight"
+      style={{ background: 'color-mix(in srgb, var(--md-on-surface) 7%, transparent)', color: 'var(--amethyst-placeholder)' }}
+    >
+      <Icon className="w-[13px] h-[13px]" />
+      {label}
+    </span>
+  );
+}
+
+function QuietMark({ Icon }: { Icon: React.ComponentType<{ className?: string }> }) {
+  return (
+    <span className="shrink-0" style={{ color: 'var(--amethyst-placeholder)' }}>
+      <Icon className="w-4 h-4" />
+    </span>
+  );
+}
+
+const MARKER_CITIES = ['Lisbon', 'Riga', 'Tbilisi', 'Nairobi'];
+
+/**
+ * Which header markers a note carries. Derived deterministically from the note
+ * id rather than from `MockNote`: those fields do not exist upstream in our mock
+ * data, and `src/data/mock/types.ts` is read by ~78 files across ten simulators,
+ * so extending it to decorate ONE client would be a shared-surface change for no
+ * shared gain.
+ *
+ * At most ONE marker per note, on roughly a quarter of them. That is denser than
+ * the reference recording (where the visible feed carries essentially none), and
+ * deliberately so: a marker nobody ever sees teaches nothing about the client.
+ * Sparse enough to read as an exception, common enough to be discoverable.
+ */
+function headerMarkers(post: PostData) {
+  let h = 0;
+  for (let i = 0; i < post.id.length; i++) h = (h * 31 + post.id.charCodeAt(i)) >>> 0;
+  const slot = h % 23;
+  return {
+    location: slot === 1 ? MARKER_CITIES[h % MARKER_CITIES.length] : null,
+    ots: slot === 3 ? `${1 + (h % 9)}d` : null,
+    pow: slot === 5 ? String(20 + (h % 8)) : null,
+    expiration: slot === 7 ? '1y+' : null,
+    edited: slot === 9,
+    pinned: slot === 11,
+  };
+}
+
+/** The relays a note was seen on — same mock relay hosts the Settings editor lists. */
+const RELAY_POOL = [
+  { host: 'nostr.wine', hue: 300 },
+  { host: 'nostr.mom', hue: 140 },
+  { host: 'nos.lol', hue: 40 },
+  { host: 'relay.damus.io', hue: 260 },
+  { host: 'garden.zap.cooking', hue: 90 },
+];
+
+function relaysFor(post: PostData) {
+  let h = 0;
+  for (let i = 0; i < post.id.length; i++) h = (h * 33 + post.id.charCodeAt(i)) >>> 0;
+  const count = 2 + (h % 3);
+  return Array.from({ length: count }, (_, i) => RELAY_POOL[(h + i) % RELAY_POOL.length]);
 }
 
 /**
@@ -93,6 +173,7 @@ export function MaterialCard({
   // ReactionRowExpandButton): a chevron that expands the per-reaction-type
   // breakdown — one row per reaction glyph, with the avatars of whoever reacted.
   const [showReactionDetail, setShowReactionDetail] = React.useState(false);
+  const markers = React.useMemo(() => headerMarkers(post), [post.id]);
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -170,42 +251,56 @@ export function MaterialCard({
           )}
         </motion.div>
         
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1 flex-wrap">
-            <span className="font-semibold text-[var(--md-on-surface)] truncate">
-              {post.author.name}
+        {/* v1.13.1 header: ONE row, `Arrangement.spacedBy(5.dp)` — name (weight 1),
+            then every metadata marker, then the timestamp and ⋮ as an unspaced
+            pair pinned right. v1.12.6 split this across two rows and hung the
+            timestamp under the name. */}
+        <div className="flex-1 min-w-0 flex items-center gap-[5px]">
+          <span className="font-semibold text-[var(--md-on-surface)] truncate">
+            {post.author.name}
+          </span>
+
+          {markers.edited && <QuietMark Icon={Pencil} />}
+          {markers.pinned && <QuietMark Icon={Pin} />}
+          {markers.location && <HeaderPill Icon={MapPin} label={markers.location} />}
+          {markers.ots && <HeaderPill Icon={Stamp} label={markers.ots} />}
+          {markers.pow && <HeaderPill Icon={Cog} label={markers.pow} />}
+          {markers.expiration && <HeaderPill Icon={Timer} label={markers.expiration} />}
+
+          {post.isLive && (
+            <span className="live-badge text-xs font-bold px-2 py-0.5 rounded-full text-white shrink-0">
+              LIVE
             </span>
-            {post.author.nip05 && (
-              <div className="flex items-center gap-0.5 text-[var(--md-primary)]">
-                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                <span className="text-xs font-medium truncate max-w-[120px]">
-                  {post.author.nip05}
-                </span>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-[var(--md-on-surface-variant)]">
-              {post.timestamp}
+          )}
+
+          {/* Timestamp + ⋮ share their own unspaced row so the pair stays tight */}
+          <span className="ml-auto flex items-center shrink-0">
+            <span className="text-sm" style={{ color: 'var(--amethyst-placeholder)' }}>
+              • {post.timestamp}
             </span>
-            {post.isLive && (
-              <span className="live-badge text-xs font-bold px-2 py-0.5 rounded-full text-white">
-                LIVE
-              </span>
-            )}
-          </div>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              aria-label="Note options"
+              className="p-1"
+            >
+              <MoreVertical className="w-5 h-5" style={{ color: 'var(--amethyst-placeholder)' }} />
+            </motion.button>
+          </span>
         </div>
-        
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-          className="md-app-bar-icon-btn"
-        >
-          <MoreVertical className="w-5 h-5 text-[var(--md-on-surface-variant)]" />
-        </motion.button>
       </div>
+
+      {/* NIP-05 sits on the second row, which is Complete-mode only upstream —
+          we keep it visible because it is the one identity signal the FAQ leans
+          on, but it no longer competes with the markers for the first row. */}
+      {post.author.nip05 && (
+        <div className="px-4 -mt-2 pb-1 flex items-center gap-0.5 text-[var(--md-primary)]">
+          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+          </svg>
+          <span className="text-xs font-medium truncate max-w-[180px]">{post.author.nip05}</span>
+        </div>
+      )}
 
       {/* Community Tag */}
       {post.community && (
@@ -267,7 +362,7 @@ export function MaterialCard({
           onClick={() => setShowReactionDetail((v) => !v)}
           aria-label={showReactionDetail ? 'Hide reaction details' : 'Show reaction details'}
           aria-expanded={showReactionDetail}
-          className="action-btn action-btn-expand md-ripple flex items-center text-[var(--md-on-surface-variant)]"
+          className="action-btn action-btn-expand md-ripple flex items-center text-[var(--amethyst-placeholder)]"
         >
           {showReactionDetail ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
         </motion.button>
@@ -276,7 +371,7 @@ export function MaterialCard({
           whileTap={{ scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
           onClick={() => onReply?.(post.id)}
-          className={`action-btn action-btn-reply md-ripple flex items-center gap-1.5 text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)] transition-colors`}
+          className={`action-btn action-btn-reply md-ripple flex items-center gap-1.5 text-[var(--amethyst-placeholder)] hover:text-[var(--md-on-surface)] transition-colors`}
         >
           <MessageCircle className="w-5 h-5" />
           <ActionCount value={post.stats.replies} />
@@ -328,7 +423,7 @@ export function MaterialCard({
           whileTap={{ scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
           aria-label="Share"
-          className="action-btn action-btn-share md-ripple flex items-center text-[var(--md-on-surface-variant)]"
+          className="action-btn action-btn-share md-ripple flex items-center text-[var(--amethyst-placeholder)]"
         >
           <Share2 className="w-5 h-5" />
         </motion.button>
@@ -359,6 +454,30 @@ export function MaterialCard({
               )}
             </div>
           ))}
+
+          {/* "Accepted by relays" — new in v1.13.1. The relay favicons used to
+              sit in a column under the author's avatar on the note card itself;
+              that slot was deleted from NoteComposeLayout and the same set
+              reappears here, so it is now visible to every user instead of only
+              Complete-mode ones. Marks are drawn locally: this simulator makes
+              zero remote requests, so real relay favicons are out of scope. */}
+          <div className="flex items-center gap-3 pt-1">
+            <span className="w-6 shrink-0 flex justify-center">
+              <Server className="w-5 h-5" style={{ color: 'var(--amethyst-placeholder)' }} />
+            </span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {relaysFor(post).map((r) => (
+                <span
+                  key={r.host}
+                  title={r.host}
+                  className="w-[26px] h-[26px] rounded-md shrink-0 flex items-center justify-center text-[11px] font-semibold text-black"
+                  style={{ background: `linear-gradient(135deg, hsl(${r.hue} 55% 62%), hsl(${(r.hue + 40) % 360} 60% 48%))` }}
+                >
+                  {r.host[0].toUpperCase()}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </motion.article>

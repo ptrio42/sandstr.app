@@ -1147,3 +1147,11 @@
 .amethyst-simulator .md-bottom-nav-item.active .md-bottom-nav-indicator {
   background-color: var(--md-secondary-container);
 }
+
+/* Upstream derives these from onSurface, so one definition covers both themes:
+   placeholderText = onSurface @42%, grayText = onSurface @52%. They carry the
+   note header's markers, timestamps and action-row icons. */
+.amethyst-simulator {
+  --amethyst-placeholder: color-mix(in srgb, var(--md-on-surface) 42%, transparent);
+  --amethyst-gray-text: color-mix(in srgb, var(--md-on-surface) 52%, transparent);
+}
