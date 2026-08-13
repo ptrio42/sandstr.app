@@ -42,7 +42,8 @@ export function AppTopBar({ onOpenDrawer, center }: AppTopBarProps) {
         data-tour="amethyst-topbar-search"
         className="md-app-bar-icon-btn"
       >
-        <Search className="w-[22px] h-[22px] text-[var(--md-on-surface-variant)]" />
+        {/* tint = placeholderText (onSurface @42%), per UserDrawerSearchTopBar.kt */}
+        <Search className="w-[22px] h-[22px] text-[var(--amethyst-placeholder)]" />
       </button>
     </div>
   );
