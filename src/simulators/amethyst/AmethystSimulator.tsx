@@ -436,6 +436,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
             }}
             onFollowToggle={() => registerAction('follow')}
             onMessage={() => { setProfileUser(null); setActiveTab('messages'); }}
+            onReplyTo={(post) => { setReplyTo(post as PostData); setIsComposeOpen(true); }}
           />
         );
       default:

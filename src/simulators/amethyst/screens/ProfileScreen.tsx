@@ -28,6 +28,8 @@ interface ProfileScreenProps {
   initialTab?: ProfileTab;
   /** The envelope in the action row opens the DM list (gaps ame-45). */
   onMessage?: () => void;
+  /** Reply on a card here opens the composer quoting that note (gaps ame-77). */
+  onReplyTo?: (post: { author: { name: string }; content: string }) => void;
 }
 
 // Real Amethyst profile (ProfileScreen.kt, verified vs shots/profile.png):
@@ -122,7 +124,7 @@ export type ProfileTab = (typeof TABS)[number];
 
 const badgeHues = [275, 45, 30, 200, 320, 160, 260];
 
-export function ProfileScreen({ onBack, onFollowToggle, user, initialTab = 'Notes', onMessage }: ProfileScreenProps) {
+export function ProfileScreen({ onBack, onFollowToggle, user, initialTab = 'Notes', onMessage, onReplyTo }: ProfileScreenProps) {
   const toast = useAmethystToast();
   const [menuOpen, setMenuOpen] = useState(false);
   const [listOpen, setListOpen] = useState(false);
@@ -323,7 +325,9 @@ export function ProfileScreen({ onBack, onFollowToggle, user, initialTab = 'Note
         <div className="p-2">
           {activeTab === 'Notes' && userPosts.length > 0 ? (
             <div className="space-y-2">
-              {userPosts.map((post) => <MaterialCard key={post.id} post={post} />)}
+              {userPosts.map((post) => (
+                <MaterialCard key={post.id} post={post} onReply={() => onReplyTo?.(post)} />
+              ))}
             </div>
           ) : activeTab === 'Notes' ? (
             <div className="text-center py-12 text-[var(--md-on-surface-variant)]">No notes yet</div>

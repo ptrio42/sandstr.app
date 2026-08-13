@@ -27,11 +27,18 @@
 > realnych 4 — poprawiony). Kolumnę `Kotwice`, zostawioną 2026-08-08 bez metodologii, też przeliczono
 > — metodologia jest teraz zapisana pod tabelą.
 
-> **Re-audyt 2026-08-13 — tylko Amethyst.** Symulator został przebudowany z v1.12.6 do v1.13.1
-> i jego ledger policzono od zera (7 audytorów + adwersaryjna weryfikacja każdego wiersza innego
-> niż `ok`): 139 wierszy = **95 luk + 44 `ok`**, kotwice 26 → **74**. Wiersz `Razem` przeliczono
-> deltą na tym jednym kliencie; pozostałe dziewięć kolumn niesie wartości z przeliczenia
-> 2026-08-11. **Amethyst ma teraz ~2,5× więcej wierszy niż inni klienci nie dlatego, że jest
+> **Re-audyt 2026-08-13 + domknięcie backlogu 2026-08-13/14 — tylko Amethyst.** Symulator został
+> przebudowany z v1.12.6 do v1.13.1, jego ledger policzono od zera (7 audytorów + adwersaryjna
+> weryfikacja każdego wiersza innego niż `ok`) na **139 wierszy = 95 luk + 44 `ok`**, a potem
+> sesja domykająca zeszła do **18 luk + 121 `ok`** (77 zamknięć; dwa dalsze wiersze — ame-78,
+> ame-86 — okazały się nieaktualne, nie otwarte). Kotwice 26 → 74 → **158**. `unreachable`
+> i `unanchored` spadły do zera. Wiersz `Razem` przeliczono deltą na tym jednym kliencie;
+> pozostałe dziewięć kolumn niesie wartości z przeliczenia 2026-08-11. Liczby Amethysta
+> policzone skryptem po kolumnie *Status* jego ledgera i po `data-tour` w źródle, nie ręcznie.
+> Wiersz `Razem` sprawdzony drugą metodą: zsumowany po kolumnach z dziesięciu wierszy tabeli,
+> zgadza się z przeliczeniem deltą.
+>
+> **Amethyst ma teraz ~2,5× więcej wierszy niż inni klienci nie dlatego, że jest
 > gorszy — jego szuflada urosła z 11 do 49 pozycji i doszły dwa pełne ekrany.** Porównuj
 > proporcje, nie liczby bezwzględne; metodologia zwijania rodzin jest opisana w jego ledgerze.
 > Zamrożony ledger `gaps/amethyst-v1-12.md` **nie wchodzi** do tej tabeli.
@@ -39,7 +46,7 @@
 | Klient | Status | Luki | `missing` | `dead` | `partial` | `unreachable` | `unanchored` | `ok` | Kotwice | Mostek FAQ |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|:--:|
 | [Damus](gaps/damus.md) | ready | 51 | 10 | 23 | 10 | 2 | 6 | 8 | 28 | ✅ |
-| [Amethyst](gaps/amethyst.md) | ready | 95 | 12 | 50 | 19 | 5 | 9 | 44 | 74 | ✅ |
+| [Amethyst](gaps/amethyst.md) | ready | 18 | 6 | 4 | 8 | 0 | 0 | 121 | 158 | ✅ |
 | [Primal](gaps/primal.md) | ready | 50 | 17 | 17 | 12 | 1 | 3 | 14 | 18 | ✅ |
 | [YakiHonne](gaps/yakihonne.md) | ready | 76 | 27 | 30 | 13 | 4 | 2 | 20 | 27 | ✅ |
 | [Snort](gaps/snort.md) | ready | 48 | 11 | 22 | 4 | 6 | 5 | 15 | 23 | ✅ |
@@ -48,7 +55,7 @@
 | [Nostur](gaps/nostur.md) | ready | 51 | 1 | 33 | 8 | 6 | 3 | 12 | 41 | ✅ |
 | [Keychat](gaps/keychat.md) | preview | 38 | 6 | 18 | 8 | 3 | 3 | 5 | 19 | ❌ |
 | [Gossip](gaps/gossip.md) | preview | 35 | 9 | 11 | 6 | 5 | 4 | 2 | 0 | ❌ brak wrappera |
-| **Razem** | | **583** | **148** | **253** | **102** | **40** | **40** | **149** | **268** | **8/10** |
+| **Razem** | | **506** | **142** | **207** | **91** | **35** | **31** | **226** | **352** | **8/10** |
 
 **Metodologia kolumny `Kotwice`:** liczba **różnych wartości `data-tour`, jakie mogą trafić do DOM**
 danego klienta — każdy literał `data-tour="…"` plus każda wartość, jaką potrafi wyprodukować

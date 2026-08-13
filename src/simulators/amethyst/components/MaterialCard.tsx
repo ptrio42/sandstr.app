@@ -507,7 +507,10 @@ export function MaterialCard({
       <div className="px-4 pb-3">
         <div className="relative">
           <p
-            className="text-[var(--md-on-surface)] leading-relaxed whitespace-pre-wrap"
+            /* `md-note-body` is the hook the thread's root treatment keys on —
+               a structural selector would break the next time this markup gains
+               a wrapper, which is exactly how it broke once already. */
+            className="md-note-body text-[var(--md-on-surface)] leading-relaxed whitespace-pre-wrap"
             style={truncated && !expanded ? { maxHeight: 160, overflow: 'hidden' } : undefined}
           >
             {renderContent(post.content)}

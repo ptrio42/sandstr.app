@@ -1,7 +1,8 @@
 # Amethyst — gap ledger
 
 > Ground truth: `docs/refs/amethyst/screen-map.md` · Sim: `src/simulators/amethyst/`
-> **Audytowany 2026-08-13, po przebudowie do v1.13.1** · Registry status: ready · reproduces: v1.13.1
+> **Audytowany 2026-08-13, po przebudowie do v1.13.1; backlog domknięty 2026-08-13/14**
+> Registry status: ready · reproduces: v1.13.1
 > Zamrożony ledger poprzedniej wersji: `docs/gaps/amethyst-v1-12.md` — **NIE wliczaj go**
 > do arytmetyki [`../GAPS.md`](../GAPS.md).
 
@@ -26,28 +27,49 @@ bez celu są **zwinięte do jednego wiersza**, tak jak stary ledger traktował r
 ekranu = jeden, 8 App Settings = jeden, 10 wierszy UI Preferences = jeden. Nie porównuj tej
 liczby wprost z innymi klientami w `GAPS.md` — porównuj proporcje.
 
-**80 ze 139 wierszy zmieniło się przez przebudowę** (nowe albo status się ruszył).
+**80 ze 139 wierszy zmieniło się przez przebudowę** (nowe albo status się ruszył),
+a **79 zmieniło status w sesji domykającej 2026-08-13/14** — 77 zamknięć plus dwa
+wiersze (ame-78, ame-86), które okazały się **nieaktualne, a nie otwarte**:
+opisywały stan sprzed commita `97bc3d0`, który wszedł PRZED audytem. Dowód stoi
+w tych wierszach.
 
 ## Rollup
 
 | missing | dead | partial | unreachable | unanchored | ok |
 |---|---|---|---|---|---|
-| 12 | 50 | 19 | 5 | 9 | 44 |
+| 6 | 4 | 8 | 0 | 0 | 121 |
 
-Razem **139**. Poprzedni audyt (2026-08-05, przed przebudową): 45 wierszy, rozkład
+Razem **139**. Audyt z 2026-08-13 (przed tą sesją): 12 / 50 / 19 / 5 / 9 / 44.
+Poprzedni audyt (2026-08-05, przed przebudową do v1.13.1): 45 wierszy,
 9 / 26 / 7 / 2 / 1 / 12.
 
-**Co przebudowa ZAMKNĘŁA** (były lukami wierności, nie martwymi kontrolkami): licznik „16/16"
-w app barze → lupa; „stats" w rzędzie akcji → Share; stały pasek LIVE → usunięty; płaski popup
-selektora feedu → zgrupowany dialog; brak kotwicy na selektorze feedu.
+**Sesja 2026-08-13/14 zamknęła 77 z 95 luk.** Liczby przeliczone mechanicznie ze
+statusów w tabeli niżej (skrypt liczący kolumnę *Status*), nie ręcznie.
 
-**Co przebudowa OTWORZYŁA**: 28 pozycji sekcji Feeds w szufladzie bez ekranów docelowych,
-statyczne pola „Search settings" i „Search or enter address", gwiazdki ulubionych w katalogu
-web-appek, wiersze Danger Zone bez dialogów, oraz lupa w app barze — dodałem przycisk, którego
-upstream używa do nawigacji na `Route.Search`, a my nie mamy dokąd nim iść.
+Kategorie `unreachable` i `unanchored` są **puste** — każda powierzchnia, którą
+ktoś umiał nazwać, ma dziś kotwicę albo komendę.
 
-**Top 3 do zrobienia:** ame-35 „Backup Keys" (dziś w Danger Zone, nadal tylko wskazanie
-lokalizacji) · ame-42 „Add a Relay" · ame-57 profil autora z feedu.
+### Co zostaje otwarte (18 wierszy)
+
+**Nie moje — druga sesja** (Search / Discover / Shorts / app bar): ame-28, ame-29,
+ame-64, ame-65, ame-66.
+
+**Effort L, świadomie odłożone** (wymagają reconu albo całego podsystemu):
+ame-09 (widok live activity — ekranu nie ma wcale), ame-19 (sekcje warunkowe
+composera), ame-103 (18 wierszy Account Settings bez ekranów), ame-107 (8 wierszy
+App Settings bez ekranów), ame-114 (28 pozycji sekcji Feeds bez ekranów).
+
+**Domknięte połowicznie, z nazwaną resztą:** ame-07 (taby dzielą feed, ale żadna
+komenda ich nie osiąga), ame-16 (toolbar composera ma handlery, ale sekcje to
+ame-19), ame-22 (widok rozmowy istnieje, wnętrze niereconnowane), ame-49
+(liczniki w zakładkach są, treść ma tylko Notes), ame-82 (tekst jest tokenizowany
+i klikalny, ale nie ma dokąd iść z hashtagiem), ame-92 (zakładki Messages bez
+komendy), ame-101 (relaye bez flag read/write; podział grup do reconu), ame-135
+(odpowiedzi cięte po liczniku, ale bez zagnieżdżenia i zebry).
+
+**Top 3 do zrobienia** (poprzednio: ame-35, ame-42, ame-57 — wszystkie zamknięte):
+ame-114 · ame-103 · ame-19. Wszystkie trzy to effort L i wszystkie trzy zaczynają
+się od reconu, nie od kodu.
 
 ## Gaps
 
@@ -124,7 +146,7 @@ lokalizacji) · ame-42 „Add a Relay" · ame-57 profil autora z feedu.
 | ame-74 | Home -> app bar -> feed selector -> grouped feed-filter dialog | §Home — dialog filtra feedu | ok | **Closed 2026-08-13.** `FeedSelector` takes an `onChange` and HomeScreen re-slices the list on it, so the choice stops being cosmetic: **Mute List** empties the feed (with `feed_is_empty` under it), **Global** reverses the order, **Default Follow List** thins it. The dialog is anchored `amethyst-feed-filter-dialog`. Still no command opens the dialog itself — it is local state inside the trigger, and the screen map documents no other way in. | components/FeedSelector.tsx (onChange, anchor); screens/HomeScreen.tsx (feed state, visiblePosts) | was-breaks-showme | — |
 | ame-75 | Home -> feed -> note card -> action row -> Boost | §Home — treść | ok | Toggles local state, green tint, counter +1, self-contained so it works in every mount context (feed, profile, thread). Upstream's Boost/Quote choice popup is documented in neither screen map, so it is not rated here — see notes. | components/MaterialCard.tsx:380-390 (onClick=handleRepost), :183-186 | none | — |
 | ame-76 | Home -> feed -> note card -> action row -> expand chevron | §Home — treść | ok | Leading slot, real handler, flips ChevronDown/ChevronUp with aria-expanded, and renders on EVERY note — matching v1.13.1, which stopped gating it on reactions/zaps/boosts. No dedicated data-tour, but `.action-btn-expand` is a stable class selector, the same convention the ledger already blesses for `.action-btn-reply` et al. | components/MaterialCard.tsx:359-368 (button + onClick), :175 (showReactionDetail state) | none | — |
-| ame-77 | Home -> feed -> note card -> action row -> Reply | §Home — treść | partial | Half closed 2026-08-13. On Home the composer now opens **with the note quoted**: `ComposeScreen` takes `replyTo`, draws a "Replying to <name>" card above the field and swaps the placeholder to "Post your reply", so Reply is no longer indistinguishable from a new note. What remains is the other half the row named: on Profile and inside Thread the card is still mounted bare (`<MaterialCard post={post} />`), so `onReply?.()` is a literal no-op there — and `data-tour="amethyst-actions"` matches those cards too. Closing it belongs with the Thread/Profile work, where the thread's own docked reply bar is the correct target rather than the full-screen composer. | screens/ComposeScreen.tsx (replyTo); screens/HomeScreen.tsx (handleReply); AmethystSimulator.tsx (replyTo state); screens/ProfileScreen.tsx:~200 and screens/ThreadScreen.tsx:34,36 (still bare) | breaks-showme | S |
+| ame-77 | Home -> feed -> note card -> action row -> Reply | §Home — treść | ok | **Closed 2026-08-13**, both halves. On Home the composer opens with the note quoted — `ComposeScreen` takes `replyTo`, draws a "Replying to <name>" card above the field and swaps the placeholder to "Post your reply" — so Reply is no longer indistinguishable from a new note. And the bare cards are wired: on Profile the card's Reply opens the same quoting composer, while **inside a thread it focuses the docked "reply here.." bar**, which is where a reply belongs there rather than a full-screen composer. `data-tour="amethyst-actions"` matching those cards is no longer a trap. | screens/ComposeScreen.tsx (replyTo); screens/HomeScreen.tsx (handleReply); screens/ThreadScreen.tsx (replyRef focus); screens/ProfileScreen.tsx (onReplyTo); AmethystSimulator.tsx | was-breaks-showme | — |
 | ame-78 | Home -> feed -> note card -> action row -> Share | §Home — treść | ok | **This row was STALE, not open.** It describes a state that commit `97bc3d0` ("give the note Share button its v1.13.1 bottom sheet") had already fixed *before* the 2026-08-13 re-audit ran — `git show 663bfd9:components/MaterialCard.tsx` contains `setShareOpen` four times, so the button had its handler and the sheet existed while the row was being written as `dead`. Verified 2026-08-13: the Share button opens the in-app sheet, which is ame-86. Nothing was changed in the code for this row. | components/MaterialCard.tsx (onClick={() => setShareOpen(true)}); provenance: `git show 663bfd9:src/simulators/amethyst/components/MaterialCard.tsx \| grep -c setShareOpen` = 4 | none | — |
 | ame-79 | Home -> feed -> note card -> action row -> Zap | §Home — treść | ok | **Closed 2026-08-13.** `PostStats` carries `satsZapped` and HomeScreen maps the mock note's `zapAmount`, which it was dropping; the counter renders the sat amount (formatted k/M) instead of the zap count, so +21 is finally added to the right quantity. The expanded gallery's ⚡ row shows the same amount. No zap-amount dialog still — un-reconned, as the previous ledger said; the screen map does not document it. | components/MaterialCard.tsx (satsZapped + formatSats); screens/HomeScreen.tsx (zapAmount mapping) | was-breaks-showme | — |
 | ame-80 | Home -> feed -> note card -> attached media (inline image grid) | §Home — treść | ok | **Closed 2026-08-13** by *removing* an affordance rather than adding one. Neither screen map documents a tap target on note media, so static is correct — but the tiles carried `whileHover`/`whileTap` springs, which made them look tappable while the click fell through to the card and opened the thread. The springs are gone and the block is anchored `amethyst-note-media`. The unreachable "+N" overlay stays: mock notes carry 1–3 images and the grid draws up to 4, which is data, not code. | components/MaterialCard.tsx (media grid) | was-blocks-showme | — |
@@ -154,7 +176,7 @@ lokalizacji) · ame-42 „Add a Relay" · ame-57 profil autora z feedu.
 | ame-105 | Settings → Security Filters → tabs „Blocked Users" / „Spammers" / „Hidden Words" | §Settings — Account Settings | ok | **Closed 2026-08-13.** Rząd zakładek ma kotwicę `amethyst-security-tabs`, a trzecia zakładka wreszcie jest osiągalna komendą: doszedł payload `openSettings: 'security-spammers'` obok `'security'` (Blocked Users) i `'security-hidden'` (Hidden Words). | screens/SettingsScreen.tsx (securityTab mapping, tabs anchor); AmethystSimulator.tsx (payload allow-list) | was-blocks-showme | — |
 | ame-106 | Settings (root) → "App Settings" card (10 rows) | §Settings — App Settings | ok | Labels and order match §Settings verbatim (Privacy Options · UI Preferences · Home · Notifications · Compose Settings · Profile UI · Calendar reminders · Bitcoin Explorer (OTS) · Namecoin Settings · App resource usage). Dead clicks tracked in ame-65/ame-34. | screens/SettingsScreen.tsx:63-74, :143 | none | — |
 | ame-107 | Settings → App Settings → the 8 rows with no destination (Home, Notifications, Compose Settings, Profile UI, Calendar reminders, Bitcoin Explorer (OTS), Namecoin Settings, App resource usage) | §Settings — App Settings | dead | Same no-op handler. Two of these hide v1.13.1 news documented elsewhere in the screen-map and unreachable here: Settings → Home carries "Visible tabs" plus a "Content in the feed" card with 19 toggles (§Home sub-taby), and the F-Droid Notifications screen carries the "Push provider" row (§Settings). | screens/SettingsScreen.tsx:66-73 + :165 | breaks-showme | L |
-| ame-108 | Settings → App Settings → UI Preferences (detail screen) | §Settings — App Settings | dead | The screen opens both by tapping the row and by `openSettings` payload `'preferences'`, and its top bar swaps the search pill for the title "UI Preferences" — but the screen and its individual rows carry no `data-tour` at all; the only anchors in reach are the root row (`amethyst-settings-ui-preferences`) and the screen-wide `amethyst-settings` container, which the tour overlay treats as too large to ring. So "how do I switch to the light theme" cannot spotlight the Theme row. Rows are also dead — ame-39. *(weryfikacja: Verifier: duplicates ame-39 — the ten preference rows render value + chevron with no onClick.)* | screens/SettingsScreen.tsx:118 (title), :129-131, :211-226 (no data-tour in the whole view) | blocks-showme | S |
+| ame-108 | Settings → App Settings → UI Preferences (detail screen) | §Settings — App Settings | ok | **Closed 2026-08-13** as a side effect of ame-39, which is what the verifier predicted when it called this a duplicate. The rows are live (each opens its chooser) and the screen finally has anchors at both levels: `amethyst-settings-preferences` on the view and `amethyst-pref-<slug>` per row — so "how do I switch to the light theme" can ring the **Theme** row itself instead of falling back to the screen-wide container the tour overlay refuses to spotlight. | screens/SettingsScreen.tsx (PreferencesView anchors) | was-blocks-showme | — |
 | ame-109 | Settings (root) → "Danger Zone" card (colour coding) | §Settings — Danger Zone | ok | Four rows in screen-map order (Backup Keys · Request to Vanish · Vanish History · Reset Marmot State), labels tinted `--md-error` and tiles swapped to `--md-error-container`, exactly as §Settings describes. Only the rendering is `ok` — every row's click is dead (ame-35, ame-74, ame-75). | screens/SettingsScreen.tsx:76-81, :144, :156, :169-181 | none | — |
 | ame-110 | Settings → Danger Zone → „Request to Vanish" / „Vanish History" | §Settings — Danger Zone | ok | **Closed 2026-08-13**, oba wiersze. **Request to Vanish**: `request_to_vanish_description` (NIP-62, „legally binding in some jurisdictions"), chooser `vanish_target_relay` domyślnie na `vanish_all_relays` („ALL RELAYS") wraz z ostrzeżeniem `vanish_all_relays_warning` w kolorze błędu, blok daty `vanish_date_label`/`_explainer`, pole `vanish_reason_label` i przycisk `vanish_send_request` prowadzący do dialogu `vanish_confirm_title` — z osobną treścią dla ALL RELAYS i dla pojedynczego relaya, tak jak upstream ma dwa stringi. Po potwierdzeniu ekran mówi wprost, że nic nie zostało rozgłoszone. **Vanish History**: `vanish_events_description` + pusty stan `vanish_events_empty`/`_empty_hint`. Kotwice `amethyst-vanish` i `amethyst-vanish-history`. | screens/SettingsScreen.tsx (VanishRequestView, VanishHistoryView) | was-breaks-showme | — |
 | ame-111 | Settings → Danger Zone → „Reset Marmot State" | §Settings — Danger Zone | ok | **Closed 2026-08-13.** Screen-mapa mówi wprost, że ten wiersz pyta dialogiem — teraz pyta: `reset_marmot_confirm_title` („Reset Marmot State?") i pełne `reset_marmot_confirm_body` (kasuje wszystkie czaty Marmot, historię i klucze MLS na tym urządzeniu, peerzy nie zostaną powiadomieni, nie da się cofnąć), przyciski Cancel i `reset_marmot_confirm_action` („Reset"), a po potwierdzeniu snackbar `reset_marmot_success`. Wiersz **nie ma** `section`, bo upstreamowo nie pcha ekranu — dialog otwiera się w miejscu. Kotwica `amethyst-settings-reset-marmot`. | screens/SettingsScreen.tsx (DANGER_ROWS + resetMarmot dialog) | was-breaks-showme | — |
@@ -194,63 +216,71 @@ lokalizacji) · ame-42 „Add a Relay" · ame-57 profil autora z feedu.
 | ame-145 | Wallet -> pusty stan NWC (nagłówek + podtytuł) | §Wallet (NOWA zakładka) | ok | Oba stringi dosłownie jak w screen-mapie: „No wallets connected" + „Connect one or more NWC wallets to send and receive payments.". Wyśrodkowane pod kartą, w typografii Amethysta. Czysta powierzchnia opisowa — interakcję niesie dopiero pigułka (ame-65). | screens/WalletScreen.tsx:75-79 | none | — |
 ## Anchors — `data-tour` obecne w symulatorze
 
-**Razem 74 różne wartości** (metodologia: [`../GAPS.md`](../GAPS.md) — literały plus każda
-wartość, jaką potrafi wyprodukować wyrażenie, bez powtórzeń):
+**Razem 158 różnych wartości** (metodologia: [`../GAPS.md`](../GAPS.md) — literały
+plus każda wartość, jaką potrafi wyprodukować wyrażenie, bez powtórzeń). Policzone
+skryptem po źródle, nie ręcznie; było 74.
 
-- **20 literałów:** `amethyst-actions` · `amethyst-browser` · `amethyst-drawer` · `amethyst-fab` ·
-  `amethyst-feed` · `amethyst-feed-selector` · `amethyst-follow` · `amethyst-hidden-list` ·
-  `amethyst-hidden-words` · `amethyst-login` · `amethyst-login-key` · `amethyst-messages` ·
-  `amethyst-nav` · `amethyst-notifications` · `amethyst-post` · `amethyst-profile` ·
-  `amethyst-profile-avatar` · `amethyst-settings` · `amethyst-topbar-search` · `amethyst-wallet`
-- **5 z pola `tour:`** w wierszach Settings (`SettingsScreen.tsx:166`, `data-tour={r.tour}`):
-  `amethyst-settings-backup-keys` · `-media-servers` · `-relays` · `-security-filters` ·
-  `-ui-preferences`
-- **1 z propa sekcji relayów** (`SettingsScreen.tsx:411`): `amethyst-relays-outbox`
-- **48 z rodziny szuflady** `amethyst-drawer-<slug>` (`Drawer.tsx:189`, slug z etykiety)
+| źródło | ile |
+|---|---|
+| literały `data-tour="…"` w `.tsx` | 75 |
+| pole `tour:` w wierszach Settings (`data-tour={r.tour}`) | 7 |
+| wiersze UI Preferences (`amethyst-pref-<slug>`) | 10 |
+| propy sekcji relayów (`tour=` / `addTour=`) | 3 |
+| ekrany szuflady (`amethyst-detail-<id>`) | 10 |
+| nagłówki sekcji szuflady (`amethyst-drawer-section-<tytuł>`) | 5 |
+| rodzina wierszy szuflady (`amethyst-drawer-<slug>`) | 48 |
 
-⚠️ **Rodzina szuflady ma 49 wierszy, ale 48 unikalnych slugów** — „Shorts" występuje dwa razy
-(sekcja Navigate i sekcja Feeds) i oba wiersze emitują `amethyst-drawer-shorts`. Spotlight na tej
-kotwicy trafi w dwa elementy.
+⚠️ **Rodzina szuflady ma 50 wierszy, ale 48 unikalnych slugów** — „Shorts"
+występuje dwa razy (Navigate i Feeds) i oba wiersze emitują
+`amethyst-drawer-shorts`. Spotlight na tej kotwicy trafi w dwa elementy.
+Niezmienione tą sesją: przemianowanie slugów zepsułoby zapisane cele FAQ.
 
-**Zmiana względem poprzedniego audytu:** znikły `amethyst-drawer-security-filters`,
-`-media-servers` i `-backup-keys` (te destynacje wyszły ze szuflady do Settings); doszły
-`amethyst-topbar-search`, `-feed-selector`, `-wallet`, `-browser`, `-share-sheet` i pięć
-`amethyst-settings-*`. **Wszystkie 18 targetów `src/data/faq/amethyst.ts` nadal się rozwiązuje** —
-sprawdzone mechanicznie, 15 kotwic istnieje, a trzy selektory pomocnicze (`.action-btn-reply`,
+**Wszystkie 24 cele `showMe` w `src/data/faq/amethyst.ts` się rozwiązują** —
+sprawdzone mechanicznie: 21 kotwic `data-tour` istnieje w zbiorze wyżej, a trzy
+selektory pomocnicze (`.action-btn-reply`,
 `.md-bottom-nav-item[aria-label="Messages"|"Notifications"]`) nadal trafiają.
+
+**Wpisy FAQ, które ożyły w tej sesji:** `logout` i `connect-wallet` przestały być
+TEXT-ONLY (doszły `showMe`), a `backup-keys`, `manage-relays` i `media-servers`
+dostały drugi/trzeci krok wchodzący na realny ekran zamiast opisywać go z zewnątrz.
 
 ## Reachability — komendy toura
 
 **Union bez zmian** (interfejs komend jest nietykalny):
 `login | navigate | compose | post | viewProfile | back | openSettings | openDrawer`.
-Limit kolejki nadal **2 komendy na krok**.
+Limit kolejki nadal **2 komendy na krok**. Wszystko poniżej to **payloady dołożone
+do istniejących komend**, nigdy nowe typy.
 
-`navigate` przyjmuje teraz osiem payloadów: `home` · `search` (= Browser) · `video` (= Shorts) ·
-`wallet` · `discover` · `notifications` · `messages` · `profile`. Payload `'search'` jest
-**świadomie zachowanym reliktem** — w v1.13.1 globus to Browser, ale przemianowanie zepsułoby
-każdą zapisaną komendę toura i FAQ bez widocznego zysku.
+`navigate` przyjmuje: `home` · `search` (= Browser) · `video` (= Shorts) · `wallet` ·
+`discover` · `notifications` · `messages` · `profile` · **`thread`** *(nowe — otwiera
+detal najnowszej notatki)* · **`drawer:<id>`** *(nowe — 10 ekranów szuflady:
+`my-lists`, `web-bookmarks`, `drafts`, `scheduled-posts`, `hashtag-sets`,
+`blossom-files`, `emoji-packs`, `remote-signer`, `hls-upload`, `accounts`)*.
+Nieznane `drawer:<id>` jest ignorowane, nie montuje pustego overlaya.
 
-`openSettings` bez payloadu ląduje na **roocie** listy Settings; z payloadem
-`relays | security | security-hidden | preferences` otwiera od razu dany ekran szczegółowy.
+`openSettings` bez payloadu ląduje na **roocie**; z payloadem
+`relays | security | security-hidden | security-spammers | preferences |
+backup-keys | media-servers | privacy | vanish | vanish-history`.
+
+`viewProfile` przyjmuje opcjonalny **pubkey** (bez niego = własny profil, jak dotąd).
+`back` przyjmuje opcjonalne **`'signup'`** (bez niego = wylogowanie na Login, jak dotąd).
 
 | Powierzchnia | Osiągalna komendą? | Czym |
 |---|---|---|
 | Login (logged-off) | tak | `back` |
+| **Sign Up** | tak *(nowe)* | `back` payload `'signup'` |
 | Home / feed | tak | `login` + `navigate:'home'` |
-| **Wallet** | tak *(nowe)* | `login` + `navigate:'wallet'` |
-| **Browser** | tak *(nowe)* | `login` + `navigate:'search'` |
-| Shorts / Discover (placeholdery) | tak | `login` + `navigate:'video'` / `'discover'` |
-| Messages | tak | `login` + `navigate:'messages'` |
-| Notifications | tak | `login` + `navigate:'notifications'` |
-| Profile | tak | `login` + `viewProfile` |
+| Wallet · Browser · Shorts · Discover · Messages · Notifications | tak | `login` + `navigate:<id>` |
+| Profile (własny) | tak | `login` + `viewProfile` |
+| **Profile (konkretny autor)** | tak *(nowe)* | `viewProfile` z pubkeyem |
 | Compose | tak | `login` + `compose` |
 | Account drawer | tak | `login` + `openDrawer` |
-| **Settings — root** | tak *(nowe)* | `login` + `openSettings` bez payloadu |
-| Settings → Relays / Security / UI Preferences | tak | `openSettings` z payloadem |
-| Thread / note detail | **nie** | tylko tap w kartę — ame-20 |
-| Sign Up | **nie** | lokalny `mode` — ame-04 |
+| **Thread / note detail** | tak *(nowe)* | `login` + `navigate:'thread'` |
+| **10 ekranów szuflady** | tak *(nowe)* | `login` + `navigate:'drawer:<id>'` |
+| Settings — root i 10 sekcji | tak | `openSettings` (± payload) |
 | Rozwinięty dialog filtra feedu | **nie** | lokalny `useState` w `FeedSelector` |
-| Arkusz Share | **nie** | lokalny `useState` w `MaterialCard` |
+| Arkusz Share / menu ⋮ / paleta reakcji | **nie** | lokalny `useState` w `MaterialCard` |
+| Sub-taby Home i Messages | **nie** | lokalny `useState` — ame-07, ame-92 |
 
 ## Poza zakresem / do reconu
 

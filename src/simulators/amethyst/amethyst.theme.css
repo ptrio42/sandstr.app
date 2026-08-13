@@ -1161,7 +1161,7 @@
    `.amethyst-simulator` so the frozen `amethyst-v1-12` archive, which shares
    this sheet through un-scoped selectors, is untouched (see the guard comment
    at the top of this file). */
-.amethyst-simulator .amethyst-thread-root article > div > p {
+.amethyst-simulator .amethyst-thread-root .md-note-body {
   font-size: 18px;
   line-height: 1.55;
 }

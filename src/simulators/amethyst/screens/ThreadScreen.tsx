@@ -20,6 +20,7 @@ const REPLY_POOL: PostData[] = [
 ];
 
 export function ThreadScreen({ post, onBack, onOpenProfile }: ThreadScreenProps) {
+  const replyRef = React.useRef<HTMLInputElement>(null);
   const [reply, setReply] = useState('');
   const canSend = reply.trim().length > 0;
   // Replies the visitor writes here, newest last, so a posted reply is visible
@@ -63,12 +64,19 @@ export function ThreadScreen({ post, onBack, onOpenProfile }: ThreadScreenProps)
             reaction gallery already expanded, which is what
             `showReactionDetail = true` gives it upstream (gaps ame-136/ame-137). */}
         <div className="amethyst-thread-root" data-tour="amethyst-thread-root">
-          <MaterialCard post={post} onOpenProfile={onOpenProfile} defaultReactionDetail />
+          {/* Inside a thread, Reply belongs to the docked bar at the bottom —
+              not the full-screen composer (gaps ame-77). */}
+          <MaterialCard
+            post={post}
+            onOpenProfile={onOpenProfile}
+            onReply={() => replyRef.current?.focus()}
+            defaultReactionDetail
+          />
         </div>
         {(replies.length > 0 || posted.length > 0) && (
           <div className="mt-1 ml-3 pl-3 border-l-2 border-[var(--md-outline-variant)] space-y-2">
             {[...replies, ...posted].map((r) => (
-              <MaterialCard key={r.id} post={r} onOpenProfile={onOpenProfile} />
+              <MaterialCard key={r.id} post={r} onOpenProfile={onOpenProfile} onReply={() => replyRef.current?.focus()} />
             ))}
           </div>
         )}
@@ -77,6 +85,7 @@ export function ThreadScreen({ post, onBack, onOpenProfile }: ThreadScreenProps)
       {/* Reply composer */}
       <div className="flex items-center gap-2 p-2 border-t border-[var(--md-outline-variant)] safe-area-bottom bg-[var(--md-surface)]" data-tour="amethyst-thread-reply">
         <input
+          ref={replyRef}
           value={reply}
           onChange={(e) => setReply(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') send(); }}
