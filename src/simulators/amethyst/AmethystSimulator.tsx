@@ -19,7 +19,7 @@ import type { PostData } from './components/MaterialCard';
 import { useParentTheme } from '../shared/hooks/useParentTheme';
 import './amethyst.theme.css';
 import type { MockUser } from '../../data/mock';
-import { generateAvatarGradient } from '../../data/mock';
+import { generateAvatarGradient, getUserByPubkey } from '../../data/mock';
 import { TourContext } from '../../components/tour';
 
 // Types.
@@ -56,8 +56,18 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settingsSection, setSettingsSection] = useState<string | null>('root');
+  // Bumped every time something asks Settings to open. `SettingsScreen` seeds
+  // its own `section` once with useState, and the user can walk deeper inside
+  // it, so neither the prop nor the section alone is enough to force the screen
+  // back where a command wants it — keying on this token remounts it every
+  // time, which is what a pushed screen does upstream (gaps ame-96).
+  const [settingsOpenToken, setSettingsOpenToken] = useState(0);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [threadPost, setThreadPost] = useState<PostData | null>(null);
+  // Whose profile the Profile tab is showing. `null` = the signed-in demo
+  // account, which is where the drawer's Profile row and `viewProfile` land;
+  // a MockUser = an author tapped in the feed (gaps ame-57).
+  const [profileUser, setProfileUser] = useState<MockUser | null>(null);
   const parentTheme = useParentTheme();
   const tourContext = useContext(TourContext);
   const registerAction = (actionType: string) => {
@@ -73,6 +83,13 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
     type: 'success' | 'error' | 'info';
   }>({ message: '', isVisible: false, type: 'info' });
 
+  /** The one way Settings gets opened, so every caller bumps the token. */
+  const openSettingsAt = useCallback((section: string) => {
+    setSettingsSection(section);
+    setSettingsOpenToken((n) => n + 1);
+    setIsSettingsOpen(true);
+  }, []);
+
   // Show toast notification
   const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToast({ message, isVisible: true, type });
@@ -84,14 +101,14 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
   // Handle tab change
   const handleTabChange = useCallback((tab: string) => {
     if (tab === 'settings') {
-      setIsSettingsOpen(true);
+      openSettingsAt('root');
       registerAction('navigate_settings');
     } else {
       setActiveTab(tab as TabId);
       if (tab === 'home') registerAction('navigate_home');
       if (tab === 'profile') registerAction('view_profile');
     }
-  }, [registerAction]);
+  }, [registerAction, openSettingsAt]);
 
   // Handle drawer navigation. Some drawer items (relays/security) are sections
   // inside Settings rather than standalone screens, and bookmarks lives on the
@@ -100,13 +117,17 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
     if (TABS.includes(id as TabId)) {
       setActiveTab(id as TabId);
       if (id === 'home') registerAction('navigate_home');
-      if (id === 'profile') registerAction('view_profile');
+      // The drawer's Profile row always means YOUR profile, so it clears any
+      // author left over from a feed tap.
+      if (id === 'profile') {
+        setProfileUser(null);
+        registerAction('view_profile');
+      }
     } else if (id === 'relays') {
       // "Relays" is still its own drawer row under System in v1.13.1 (with the
       // live connected/total counter); Security Filters is not — it moved into
       // Settings › Account Settings this release.
-      setSettingsSection('relays');
-      setIsSettingsOpen(true);
+      openSettingsAt('relays');
       registerAction('navigate_settings');
     } else if (id === 'bookmarks') {
       setActiveTab('profile');
@@ -115,7 +136,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       setActiveTab('home');
     }
     setIsDrawerOpen(false);
-  }, [registerAction]);
+  }, [registerAction, openSettingsAt]);
 
   // Handle new post
   const handleNewPost = useCallback((content: string) => {
@@ -173,6 +194,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         const tab = tourCommand.payload as TabId;
         if (TABS.includes(tab)) {
           setActiveTab(tab);
+          if (tab === 'profile') setProfileUser(null);
           setIsComposeOpen(false); // don't let an open composer linger over later steps
           // Navigation also dismisses the one-way overlays (settings/drawer/
           // thread) — otherwise every step after openSettings spotlights
@@ -205,6 +227,11 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         
       case 'viewProfile':
         if (isAuthenticated) {
+          // Optional payload: a mock pubkey opens THAT author's profile. No
+          // payload keeps the historical meaning — your own profile — so every
+          // stored tour/FAQ command keeps working.
+          const who = typeof tourCommand.payload === 'string' ? getUserByPubkey(tourCommand.payload) : undefined;
+          setProfileUser(who ?? null);
           setActiveTab('profile');
           setIsComposeOpen(false);
           setIsSettingsOpen(false);
@@ -227,16 +254,16 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
             section === 'relays' ||
             section === 'security' ||
             section === 'security-hidden' ||
-            section === 'preferences'
+            section === 'preferences' ||
+            section === 'backup-keys'
           ) {
-            setSettingsSection(section);
+            openSettingsAt(section);
           } else {
             // No payload = the v1.13.1 root list, which is what the drawer's
             // Settings row opens. Reset explicitly: without this the screen
             // reopened on whatever detail a previous command had selected.
-            setSettingsSection('root');
+            openSettingsAt('root');
           }
-          setIsSettingsOpen(true);
           setIsComposeOpen(false);
           setIsDrawerOpen(false);
         }
@@ -263,7 +290,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
     
     // Mark command as handled
     onCommandHandled?.();
-  }, [tourCommand, isAuthenticated, handleLogin, handleNewPost, onCommandHandled]);
+  }, [tourCommand, isAuthenticated, handleLogin, handleNewPost, onCommandHandled, openSettingsAt]);
 
   // Render active screen
   const renderScreen = () => {
@@ -275,6 +302,12 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
             onOpenCompose={() => setIsComposeOpen(true)}
             onOpenDrawer={() => setIsDrawerOpen(true)}
             onOpenThread={(post) => setThreadPost(post)}
+            onOpenProfile={(post) => {
+              setProfileUser(post.pubkey ? getUserByPubkey(post.pubkey) ?? null : null);
+              setThreadPost(null);
+              setActiveTab('profile');
+              registerAction('view_profile');
+            }}
             onLikePost={() => registerAction('like')}
           />
         );
@@ -296,8 +329,14 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       case 'profile':
         return (
           <ProfileScreen
-            key="profile"
-            onBack={() => setActiveTab('home')}
+            // Keyed by subject so switching authors resets the tab row and the
+            // follow pill instead of carrying the previous profile's state over.
+            key={`profile-${profileUser?.pubkey ?? 'self'}`}
+            user={profileUser}
+            onBack={() => {
+              setProfileUser(null);
+              setActiveTab('home');
+            }}
             onFollowToggle={() => registerAction('follow')}
           />
         );
@@ -332,8 +371,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         onOpenSettings={() => {
           // The drawer's System › Settings row lands on the searchable root
           // list, not on a detail screen.
-          setSettingsSection('root');
-          setIsSettingsOpen(true);
+          openSettingsAt('root');
           setIsDrawerOpen(false);
           // Same destination as the drawer's relays/security entries, so it has
           // to report the same tour action — without this the settings step sat
@@ -399,6 +437,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       {isSettingsOpen && (
         <div className="absolute inset-0 z-[55] bg-[var(--md-background)]">
           <SettingsScreen
+            key={`${settingsSection ?? 'root'}-${settingsOpenToken}`}
             onBack={() => setIsSettingsOpen(false)}
             initialSection={settingsSection}
           />

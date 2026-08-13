@@ -380,8 +380,8 @@ export const amethystFaq: ClientFaq = {
       answer: [
         'Tap your profile picture in the top-left to open the account drawer.',
         'Tap "Relays".',
-        'The screen groups your Public Outbox and Public Inbox relays, each row with its own stats.',
-        'Tap "Add a Relay" to add one.',
+        'The screen groups your Public Outbox and Public Inbox relays, each row with its own stats and an ✕ to remove it.',
+        'To add one, type the address into the "Add a Relay" field under the group and tap "Add" — each group has its own field.',
       ],
       note: 'Your connected/total relay counter is the coloured number on the drawer\'s "Relays" row (e.g. "355/1810") — there is no relay indicator in the app bar. The relay editor is split by purpose (outbox model): Outbox, Inbox, Local, Trusted, Favorite and Blocked, each with its own "Add a Relay" field.',
       showMe: [
@@ -399,11 +399,19 @@ export const amethystFaq: ClientFaq = {
           // one group also lets the caption stop generalising over both.
           target: '[data-tour="amethyst-relays-outbox"]',
           title: 'Your relays',
-          // Descriptive — the sim's "Add a Relay" button is display-only
-          // (gaps ame-42).
           content:
-            'Public Outbox/Home Relays: the ones your posts are written to, each with its stored size, and "Add a Relay" under the list. Public Inbox Relays follow below.',
+            'Public Outbox/Home Relays: the ones your posts are written to, each with its stored size and an ✕ to drop it. Public Inbox Relays follow below.',
           position: 'bottom',
+          commands: cmd({ type: 'openSettings', payload: 'relays' }),
+        },
+        {
+          // Live since 2026-08-13 (gaps ame-42): the field really adds a row to
+          // this group, and the ✕ on any row really removes it.
+          target: '[data-tour="amethyst-relay-add"]',
+          title: 'Add a Relay',
+          content:
+            'Type a relay address here and tap "Add" — it joins the group above. Try it: the row appears at the bottom of the list.',
+          position: 'top',
           commands: cmd({ type: 'openSettings', payload: 'relays' }),
         },
       ],
@@ -411,8 +419,9 @@ export const amethystFaq: ClientFaq = {
 
     // ------------------------------------------------------ Account & keys --
     {
-      // §Account drawer — location only; screen internals need upstream
-      // grounding (recording never opens Backup Keys).
+      // §Settings — Danger Zone. Screen internals come from upstream
+      // `AccountBackupScreen.kt` (the recording never opens Backup Keys), and
+      // the simulator reproduces them as of 2026-08-13 — gaps ame-35.
       id: 'backup-keys',
       category: 'Account & keys',
       question: 'Where do I back up my private key (nsec)?',
@@ -443,10 +452,20 @@ export const amethystFaq: ClientFaq = {
         {
           target: '[data-tour="amethyst-settings-backup-keys"]',
           title: 'Backup Keys',
-          // Descriptive — the sim's row is display-only (gaps ame-35).
-          content: 'Your nsec lives here, at the bottom of Settings in the red Danger Zone — the single most important row in the app.',
+          content: 'Your nsec lives here, at the bottom of Settings in the red Danger Zone — the single most important row in the app. Tap it.',
           position: 'top',
           commands: openSettingsRoot,
+        },
+        {
+          // The screen itself, live since 2026-08-13 (gaps ame-35). It carries
+          // the real safety-tips copy and the real controls; the one thing it
+          // does NOT carry is a key — see the note in SettingsScreen.tsx.
+          target: '[data-tour="amethyst-backup-copy"]',
+          title: 'Copy my secret key',
+          content:
+            'This purple button is the whole backup. Under it, a password field turns the same key into an encrypted ncryptsec1 copy. (Here it hands you a placeholder — a demo account has no key.)',
+          position: 'bottom',
+          commands: cmd({ type: 'login' }, { type: 'openSettings', payload: 'backup-keys' }),
         },
       ],
     },

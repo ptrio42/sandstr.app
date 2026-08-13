@@ -11,11 +11,13 @@ interface HomeScreenProps {
   onOpenCompose: () => void;
   onOpenDrawer?: () => void;
   onOpenThread?: (post: PostData) => void;
+  /** Tap an author's avatar or name in the feed → that author's profile. */
+  onOpenProfile?: (post: PostData) => void;
   /** Reported so the guided tour's "like a post" step can complete. */
   onLikePost?: () => void;
 }
 
-export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onLikePost }: HomeScreenProps) {
+export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onOpenProfile, onLikePost }: HomeScreenProps) {
   // Real Amethyst home has TWO switchers: the feed selector in the app bar
   // ("All Follows ▾") and the content sub-tabs below it.
   const [activeTab, setActiveTab] = useState<'new_threads' | 'conversations'>('new_threads');
@@ -31,6 +33,7 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onLikePo
       const author = getUserByPubkey(note.pubkey);
       return {
         id: note.id,
+        pubkey: note.pubkey,
         author: {
           name: author?.displayName || 'Unknown',
           handle: author?.nip05 || author?.username || 'unknown',
@@ -207,6 +210,7 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onLikePo
                 onZap={handleZap}
                 onReply={handleReply}
                 onOpenThread={() => onOpenThread?.(post)}
+                onOpenProfile={onOpenProfile}
               />
             </motion.div>
           ))}

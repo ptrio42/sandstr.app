@@ -5,9 +5,10 @@ import {
   Waypoints, RefreshCw, UserPlus, CloudUpload, Zap, Heart, ThumbsUp, Mail, LayoutGrid,
   MonitorPlay, Music, Sparkles, Medal, CreditCard, Shield, Languages, Grid3x3, Lock, Phone,
   Droplet, Settings as SettingsIcon, Home, Bell, Pencil, CircleUserRound, Calendar, Search as SearchIcon,
-  ShieldCheck, Activity, KeyRound, SquareX, History, Trash2,
+  ShieldCheck, Activity, KeyRound, SquareX, History, Trash2, QrCode, CircleX, Eye, EyeOff,
 } from 'lucide-react';
 import { Avatar } from '../components/Avatar';
+import { DEMO_KEY_PLACEHOLDER, SECRET_INPUT_PROPS } from '../../shared/utils/keySafety';
 import '../amethyst.theme.css';
 
 interface SettingsScreenProps {
@@ -74,7 +75,7 @@ const APP_ROWS: Row[] = [
 ];
 
 const DANGER_ROWS: Row[] = [
-  { label: 'Backup Keys', Icon: KeyRound, tour: 'amethyst-settings-backup-keys' },
+  { label: 'Backup Keys', Icon: KeyRound, section: 'backup-keys', tour: 'amethyst-settings-backup-keys' },
   { label: 'Request to Vanish', Icon: SquareX },
   { label: 'Vanish History', Icon: History },
   { label: 'Reset Marmot State', Icon: Trash2 },
@@ -84,6 +85,7 @@ const DETAIL_TITLES: Record<string, string> = {
   preferences: 'UI Preferences',
   security: 'Security Filters',
   relays: 'Relays',
+  'backup-keys': 'Backup Keys',
 };
 
 export function SettingsScreen({ onBack, initialSection = null }: SettingsScreenProps) {
@@ -126,6 +128,8 @@ export function SettingsScreen({ onBack, initialSection = null }: SettingsScreen
           <RelaysView />
         ) : section === 'security' ? (
           <SecurityView initialTab={securityTab} />
+        ) : section === 'backup-keys' ? (
+          <BackupKeysView />
         ) : (
           <PreferencesView />
         )}
@@ -221,6 +225,163 @@ function PreferencesView() {
           <ChevronRight className="w-4 h-4 text-[var(--md-on-surface-variant)] shrink-0" />
         </button>
       ))}
+    </div>
+  );
+}
+
+/* ---------- Backup Keys (Danger Zone) ---------- */
+
+/**
+ * `AccountBackupScreen.kt`, structure for structure: the markdown safety-tips
+ * block, a filled "Copy my secret key" button beside a QR icon button, then the
+ * ncryptsec explainer, a password field, and the outlined "Encrypt and copy my
+ * secret key" button paired with its own QR button. Both encrypted controls take
+ * `enabled = password.isNotBlank()`, which is why the reference screen shows the
+ * whole encryption block greyed out. Strings are `account_backup_tips2_md`,
+ * `account_backup_tips3_md`, `copy_my_secret_key`, `ncryptsec_password` and
+ * `encrypt_and_copy_my_secret_key`, verbatim.
+ *
+ * THE ONE DELIBERATE DEVIATION, and the reason this screen took so long to
+ * ship: there is no key here. This simulator holds no keypair, and a faithful
+ * clone of the "back up your nsec" screen that hands out a realistic-looking
+ * secret key — or writes one into a visitor's clipboard — teaches exactly the
+ * habit `shared/utils/keySafety.ts` exists to prevent. So both copy paths reveal
+ * `DEMO_KEY_PLACEHOLDER` inline and say plainly that nothing was copied.
+ */
+const BACKUP_TIPS = [
+  'Your account is secured by a secret key. The key is a long sequence of characters starting with **nsec1**. Anyone who has access to this secret key can post and change your identity.',
+  '- Do **not** put your secret key in any website or software you do not trust.',
+  '- Amethyst developers will **never** ask for your secret key.',
+  '- **Do** keep a secure backup of your secret key for account recovery. We recommend using a password manager.',
+];
+
+/** Renders the `**bold**` runs of the upstream markdown strings, nothing else. */
+function Md({ text, className = '' }: { text: string; className?: string }) {
+  return (
+    <p className={`text-[15px] leading-relaxed text-[var(--md-on-surface)] ${className}`}>
+      {text.split(/(\*\*[^*]+\*\*)/g).map((chunk, i) =>
+        chunk.startsWith('**') ? (
+          <strong key={i} className="font-bold">{chunk.slice(2, -2)}</strong>
+        ) : (
+          <React.Fragment key={i}>{chunk}</React.Fragment>
+        ),
+      )}
+    </p>
+  );
+}
+
+function BackupKeysView() {
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  // Which copy path the visitor tapped — only ever used to reveal the demo
+  // placeholder and the "nothing was copied" line.
+  const [revealed, setRevealed] = useState<'plain' | 'encrypted' | null>(null);
+  const canEncrypt = password.trim().length > 0;
+
+  return (
+    <div className="px-5 py-3 pb-10 flex flex-col items-center" data-tour="amethyst-backup-keys">
+      <div className="w-full space-y-3">
+        <h2 className="text-xl font-bold text-[var(--md-on-surface)]">Key Backup and Safety Tips</h2>
+        {BACKUP_TIPS.map((line) => (
+          <Md key={line} text={line} />
+        ))}
+      </div>
+
+      {/* Copy row: filled primary button + QR icon button, side by side */}
+      <div className="flex items-center gap-1 mt-5">
+        <button
+          type="button"
+          onClick={() => setRevealed('plain')}
+          data-tour="amethyst-backup-copy"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium"
+          style={{ background: 'var(--md-primary)', color: 'var(--md-on-primary)' }}
+        >
+          <KeyRound className="w-4 h-4" /> Copy my secret key
+        </button>
+        <button
+          type="button"
+          onClick={() => setRevealed('plain')}
+          aria-label="Show private key QR code"
+          className="w-11 h-11 flex items-center justify-center"
+          style={{ color: 'var(--md-primary)' }}
+        >
+          <QrCode className="w-6 h-6" />
+        </button>
+      </div>
+
+      <div className="w-full mt-7 space-y-3">
+        <Md text="For additional security, you can encrypt your key with a password. This key starts with **ncryptsec1** and cannot be used without your password." />
+        <Md text="If you lose your password, you will not be able to recover your key." />
+      </div>
+
+      {/* ncryptsec password field */}
+      <div className="w-full mt-5 flex items-center gap-1 rounded border border-[var(--md-outline)] px-3 h-14">
+        <input
+          {...SECRET_INPUT_PROPS}
+          type={showPassword ? 'text' : 'password'}
+          value={password}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setRevealed(null);
+          }}
+          placeholder="password to open the key"
+          aria-label="password to open the key"
+          className="flex-1 min-w-0 bg-transparent text-[16px] text-[var(--md-on-surface)] focus:outline-none placeholder:text-[var(--amethyst-placeholder)]"
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword((v) => !v)}
+          aria-label={showPassword ? 'Hide password' : 'Show password'}
+          className="w-10 h-10 shrink-0 flex items-center justify-center text-[var(--md-on-surface)]"
+        >
+          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+        </button>
+      </div>
+
+      {/* Encrypted copy row — disabled until the password field has content,
+          which is the greyed-out state the reference screen is filmed in. */}
+      <div className="flex items-center gap-1 mt-3">
+        <button
+          type="button"
+          disabled={!canEncrypt}
+          onClick={() => setRevealed('encrypted')}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium"
+          style={{
+            border: '1px solid var(--md-outline)',
+            color: canEncrypt ? 'var(--md-primary)' : 'var(--amethyst-placeholder)',
+            opacity: canEncrypt ? 1 : 0.38,
+          }}
+        >
+          <KeyRound className="w-4 h-4" /> Encrypt and copy my secret key
+        </button>
+        <button
+          type="button"
+          disabled={!canEncrypt}
+          onClick={() => setRevealed('encrypted')}
+          aria-label="Show encrypted private key QR code"
+          className="w-11 h-11 flex items-center justify-center"
+          style={{ color: canEncrypt ? 'var(--md-primary)' : 'var(--amethyst-placeholder)', opacity: canEncrypt ? 1 : 0.38 }}
+        >
+          <QrCode className="w-6 h-6" />
+        </button>
+      </div>
+
+      {revealed && (
+        <div
+          className="w-full mt-5 rounded-xl px-4 py-3"
+          style={{ background: 'var(--md-surface-container-high)' }}
+        >
+          <p className="text-xs font-mono break-all text-[var(--md-on-surface)]">
+            {revealed === 'encrypted'
+              ? DEMO_KEY_PLACEHOLDER.replace('nsec1…', 'ncryptsec1…')
+              : DEMO_KEY_PLACEHOLDER}
+          </p>
+          <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--amethyst-placeholder)' }}>
+            Simulation: this demo account has no key, so nothing was copied to your clipboard. In the
+            real app this row is where your nsec would be — copying asks for your fingerprint first.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -372,41 +533,88 @@ function PrefRow({ title, desc, children }: { title: string; desc: string; child
 
 /* ---------- Relays ---------- */
 
-const OUTBOX = [
+type Relay = { name: string; size: string; hue: number };
+
+const OUTBOX: Relay[] = [
   { name: 'nostr.wine', size: '196 MB', hue: 300 },
   { name: 'nostr.mom', size: '163 MB', hue: 140 },
   { name: 'nos.lol', size: '2 MB', hue: 40 },
   { name: 'relay.damus.io', size: '1 MB', hue: 260 },
   { name: 'garden.zap.cooking', size: '0', hue: 90 },
 ];
-const INBOX = [
+const INBOX: Relay[] = [
   { name: 'nostr.wine', size: '196 MB', hue: 300 },
   { name: 'nostr.mom', size: '163 MB', hue: 140 },
 ];
 
+/**
+ * `RelayUrlNormalizer.normalizeOrNull` in one line of what a simulator can
+ * honestly do: upstream refuses the input when it does not normalise to a relay
+ * url, so an empty or scheme-only entry must not create a row.
+ */
+function normalizeRelay(input: string): string | null {
+  const host = input
+    .trim()
+    .toLowerCase()
+    .replace(/^(wss?|https?):\/\//, '')
+    .replace(/\/+$/, '');
+  return /^[a-z0-9.-]+\.[a-z]{2,}(\/.*)?$/.test(host) ? host : null;
+}
+
+function hueFor(name: string): number {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
+  return h;
+}
+
 function RelaysView() {
+  // Local per-group lists: upstream keeps home (outbox) and notification
+  // (inbox) relays in separate flows on Nip65RelayListViewModel, each with its
+  // own add/delete pair, so a relay added to one group does not appear in the other.
+  const [outbox, setOutbox] = useState<Relay[]>(OUTBOX);
+  const [inbox, setInbox] = useState<Relay[]>(INBOX);
+
+  const add = (setter: React.Dispatch<React.SetStateAction<Relay[]>>) => (host: string) =>
+    setter((rs) => (rs.some((r) => r.name === host) ? rs : [...rs, { name: host, size: '0', hue: hueFor(host) }]));
+  const remove = (setter: React.Dispatch<React.SetStateAction<Relay[]>>) => (host: string) =>
+    setter((rs) => rs.filter((r) => r.name !== host));
+
   return (
     <div className="pb-6">
       <RelaySection
         title="Public Outbox/Home Relays"
         desc="This relay type stores all your posts here and others read your content. Insert between 1–3 relays, paid relays or public relays."
-        relays={OUTBOX}
-        showAdd
+        relays={outbox}
+        onAdd={add(setOutbox)}
+        onRemove={remove(setOutbox)}
         // Anchored per section: a caption about the outbox group has to ring the
         // group, not the whole scrolling settings screen (which the overlay
         // refuses to spotlight at all).
         tour="amethyst-relays-outbox"
+        addTour="amethyst-relay-add"
       />
       <RelaySection
         title="Public Inbox Relays"
         desc="This relay type receives all your tags. They can be public so the relay operator can limit the good and for the bad."
-        relays={INBOX}
+        relays={inbox}
+        onAdd={add(setInbox)}
+        onRemove={remove(setInbox)}
       />
     </div>
   );
 }
 
-function RelaySection({ title, desc, relays, showAdd, tour }: { title: string; desc: string; relays: typeof OUTBOX; showAdd?: boolean; tour?: string }) {
+function RelaySection({
+  title, desc, relays, onAdd, onRemove, tour, addTour,
+}: {
+  title: string;
+  desc: string;
+  relays: Relay[];
+  onAdd: (host: string) => void;
+  onRemove: (host: string) => void;
+  tour?: string;
+  addTour?: string;
+}) {
   return (
     <div data-tour={tour} className="px-4 pt-4">
       <h3 className="font-semibold" style={{ color: 'var(--md-primary)' }}>{title}</h3>
@@ -417,14 +625,70 @@ function RelaySection({ title, desc, relays, showAdd, tour }: { title: string; d
             <div className="w-10 h-10 rounded-full shrink-0" style={{ background: `linear-gradient(135deg, hsl(${r.hue} 55% 55%), hsl(${(r.hue + 40) % 360} 60% 42%))` }} />
             <span className="flex-1 min-w-0 truncate text-[var(--md-on-surface)]">{r.name}</span>
             <span className="text-sm text-[var(--md-on-surface-variant)] shrink-0">{r.size}</span>
+            {/* RelayNameAndRemoveButton's trailing 30dp Cancel IconButton,
+                contentDescription `remove` — present on every row upstream. */}
+            <button
+              type="button"
+              onClick={() => onRemove(r.name)}
+              aria-label={`Remove ${r.name}`}
+              className="w-8 h-8 shrink-0 flex items-center justify-center text-[var(--md-on-surface-variant)]"
+            >
+              <CircleX className="w-5 h-5" />
+            </button>
           </div>
         ))}
       </div>
-      {showAdd && (
-        <button className="mt-3 flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--md-primary)' }}>
-          <Plus className="w-4 h-4" /> Add a Relay
+      <RelayUrlEditField onAdd={onAdd} tour={addTour} />
+    </div>
+  );
+}
+
+/**
+ * `RelayUrlEditField` — an OutlinedTextField LABELLED "Add a Relay" with the
+ * placeholder "server.com" and a filled trailing "Add" button, not the plain
+ * text link we shipped until now. Upstream renders one per group (see
+ * `renderNip65HomeItems` / `renderNip65NotifItems`), so both get one here.
+ * The button's container is `primary` while the field has content and
+ * `placeholderText` while it is empty.
+ */
+function RelayUrlEditField({ onAdd, tour }: { onAdd: (host: string) => void; tour?: string }) {
+  const [url, setUrl] = useState('');
+  const submit = () => {
+    const host = normalizeRelay(url);
+    if (!host) return;
+    onAdd(host);
+    setUrl('');
+  };
+  const filled = url.trim().length > 0;
+
+  return (
+    <div data-tour={tour} className="mt-4 relative">
+      <span className="absolute -top-2 left-3 px-1 text-[11px] z-10 bg-[var(--md-background)] text-[var(--md-on-surface-variant)]">
+        Add a Relay
+      </span>
+      <div className="flex items-center gap-2 rounded border border-[var(--md-outline)] pl-3 pr-1.5 h-14">
+        <input
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') submit();
+          }}
+          placeholder="server.com"
+          aria-label="Add a Relay"
+          autoComplete="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          className="flex-1 min-w-0 bg-transparent text-[16px] text-[var(--md-on-surface)] focus:outline-none placeholder:text-[var(--amethyst-placeholder)]"
+        />
+        <button
+          type="button"
+          onClick={submit}
+          className="shrink-0 px-5 py-2 rounded-full text-sm font-medium text-white"
+          style={{ background: filled ? 'var(--md-primary)' : 'var(--amethyst-placeholder)' }}
+        >
+          Add
         </button>
-      )}
+      </div>
     </div>
   );
 }

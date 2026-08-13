@@ -24,6 +24,8 @@ interface PostStats {
 
 export interface PostData {
   id: string;
+  /** Author's key, so a tap on the avatar can open THAT author's profile. */
+  pubkey?: string;
   author: PostAuthor;
   content: string;
   timestamp: string;
@@ -43,6 +45,8 @@ interface MaterialCardProps {
   onShare?: (id: string) => void;
   /** Tap the card body to open the note/thread detail. */
   onOpenThread?: () => void;
+  /** Tap the author's avatar or name to open THEIR profile (not the thread). */
+  onOpenProfile?: (post: PostData) => void;
 }
 
 /**
@@ -165,6 +169,7 @@ export function MaterialCard({
   onZap,
   onReply,
   onOpenThread,
+  onOpenProfile,
 }: MaterialCardProps) {
   const [isLiked, setIsLiked] = React.useState(false);
   const [isReposted, setIsReposted] = React.useState(false);
@@ -189,6 +194,17 @@ export function MaterialCard({
   const handleZap = () => {
     setIsZapped(!isZapped);
     onZap?.(post.id);
+  };
+
+  /**
+   * Avatar and name are their own tap targets upstream (`UserPicture` /
+   * `NoteAuthorPicture` both route to the author's profile). They sit INSIDE
+   * the card, whose own onClick opens the thread, so the tap has to be stopped
+   * here — without that the ring the FAQ puts on an avatar leads to a thread.
+   */
+  const handleOpenProfile = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onOpenProfile?.(post);
   };
 
   const formatNumber = (num: number): string => {
@@ -237,10 +253,14 @@ export function MaterialCard({
     >
       {/* Card Header */}
       <div className="p-4 flex items-start gap-3">
-        <motion.div
+        <motion.button
+          type="button"
           whileTap={{ scale: 0.95 }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-          className="relative z-10"
+          onClick={handleOpenProfile}
+          aria-label={`Open ${post.author.name}'s profile`}
+          data-tour="amethyst-note-avatar"
+          className="relative z-10 shrink-0"
         >
           <Avatar seed={post.author.handle || post.author.name || 'default'} className="md-avatar" />
           {post.author.nip05 && (
@@ -250,16 +270,20 @@ export function MaterialCard({
               </svg>
             </div>
           )}
-        </motion.div>
-        
+        </motion.button>
+
         {/* v1.13.1 header: ONE row, `Arrangement.spacedBy(5.dp)` — name (weight 1),
             then every metadata marker, then the timestamp and ⋮ as an unspaced
             pair pinned right. v1.12.6 split this across two rows and hung the
             timestamp under the name. */}
         <div className="flex-1 min-w-0 flex items-center gap-[5px]">
-          <span className="font-semibold text-[var(--md-on-surface)] truncate">
+          <button
+            type="button"
+            onClick={handleOpenProfile}
+            className="font-semibold text-[var(--md-on-surface)] truncate text-left min-w-0"
+          >
             {post.author.name}
-          </span>
+          </button>
 
           {markers.edited && <QuietMark Icon={Pencil} />}
           {markers.pinned && <QuietMark Icon={Pin} />}

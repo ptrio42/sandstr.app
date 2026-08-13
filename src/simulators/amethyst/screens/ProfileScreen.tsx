@@ -6,13 +6,20 @@ import {
 } from 'lucide-react';
 import { MaterialCard } from '../components/MaterialCard';
 import { Avatar } from '../components/Avatar';
-import { mockNotes, getUserByPubkey } from '../../../data/mock';
+import { mockNotes, getNotesByAuthor, getUserByPubkey } from '../../../data/mock';
+import type { MockUser } from '../../../data/mock';
 import '../amethyst.theme.css';
 
 interface ProfileScreenProps {
   onBack?: () => void;
   /** Reported so the guided tour's follow step can complete. */
   onFollowToggle?: () => void;
+  /**
+   * Whose profile this is. Absent = the signed-in demo account ("sandy"), which
+   * is where the drawer's Profile row and the `viewProfile` command land; a
+   * `MockUser` = an author tapped in the feed (gaps ame-57).
+   */
+  user?: MockUser | null;
 }
 
 // Real Amethyst profile (ProfileScreen.kt, verified vs shots/profile.png):
@@ -21,8 +28,22 @@ interface ProfileScreenProps {
 // lightning links · bio · tabs Notes/Replies/Yours/Gallery. NO Twitter-style
 // stat strip and NO "joined date" (Nostr has neither).
 
-const profile = {
+type ProfileSubject = {
+  name: string;
+  seed: string;
+  npub: string;
+  nprofile: string;
+  lastSeen: string;
+  nip05?: string;
+  website?: string;
+  lightning?: string;
+  bio: string;
+};
+
+/** The signed-in demo account — the drawer's Profile row and `viewProfile`. */
+const SELF: ProfileSubject = {
   name: 'sandy',
+  seed: 'sandy',
   npub: 'npub178u…vq05qrg4',
   nprofile: 'nprofile1qqs9p…9uvrafdc',
   lastSeen: 'Last seen 31 minutes ago',
@@ -31,6 +52,37 @@ const profile = {
   lightning: 'sandy@wallet.example',
   bio: 'All-round buidler.',
 };
+
+/** `npub1abc…xyz` — the elided form the profile header renders. */
+function elide(key: string): string {
+  return key.length > 20 ? `${key.slice(0, 9)}…${key.slice(-8)}` : key;
+}
+
+function lastSeen(unixSeconds: number): string {
+  const diff = Math.max(0, Date.now() / 1000 - unixSeconds);
+  if (diff < 3600) return `Last seen ${Math.max(1, Math.floor(diff / 60))} minutes ago`;
+  if (diff < 86400) return `Last seen ${Math.floor(diff / 3600)} hours ago`;
+  return `Last seen ${Math.floor(diff / 86400)} days ago`;
+}
+
+/**
+ * A feed author rendered as a profile. `nprofile` is derived rather than stored:
+ * NIP-19 wraps the same key with relay hints, so it shares the key's tail — this
+ * is a display shape, not an encoding (no crypto anywhere in this project).
+ */
+function subjectFor(user: MockUser): ProfileSubject {
+  return {
+    name: user.displayName,
+    seed: user.username || user.pubkey,
+    npub: elide(user.pubkey),
+    nprofile: `nprofile1qqs${user.pubkey.slice(5, 9)}…${user.pubkey.slice(-8)}`,
+    lastSeen: lastSeen(user.lastActive),
+    nip05: user.nip05,
+    website: user.website?.replace(/^https?:\/\//, ''),
+    lightning: user.lightningAddress,
+    bio: user.bio,
+  };
+}
 
 // Profile tab row @ v1.13.1, upstream order (strings notes/replies/mutual/
 // gallery/profile_tab_apps/…). "Yours" really is the label of the `mutual`
@@ -43,15 +95,23 @@ const TABS = [
 
 const badgeHues = [275, 45, 30, 200, 320, 160, 260];
 
-export function ProfileScreen({ onBack, onFollowToggle }: ProfileScreenProps) {
+export function ProfileScreen({ onBack, onFollowToggle, user }: ProfileScreenProps) {
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>('Notes');
-  const [isFollowing, setIsFollowing] = useState(true);
+  // Own profile keeps the "Unfollow" state the guided tour was built against;
+  // a stranger opened from the feed starts on "Follow", which is what the
+  // reference recording shows on a profile you do not follow (see ame-44).
+  const [isFollowing, setIsFollowing] = useState(!user);
+  const profile = user ? subjectFor(user) : SELF;
 
-  const userPosts = mockNotes.slice(0, 6).map((note) => {
+  // Own profile borrows the newest notes (the demo account has none of its own);
+  // a real author shows the notes actually attributed to their key.
+  const sourceNotes = user ? getNotesByAuthor(user.pubkey).slice(0, 6) : mockNotes.slice(0, 6);
+  const userPosts = sourceNotes.map((note) => {
     const author = getUserByPubkey(note.pubkey);
     return {
       id: note.id,
-      author: { name: profile.name, handle: profile.nip05, avatar: author?.avatar || '', isVerified: true, nip05: profile.nip05 },
+      pubkey: note.pubkey,
+      author: { name: profile.name, handle: profile.nip05 || profile.name, avatar: author?.avatar || '', isVerified: true, nip05: profile.nip05 },
       content: note.content,
       timestamp: formatTimestamp(note.created_at),
       stats: { replies: note.replies, reposts: note.reposts, zaps: note.zaps, likes: note.likes },
@@ -78,7 +138,7 @@ export function ProfileScreen({ onBack, onFollowToggle }: ProfileScreenProps) {
         <div className="px-4">
           <div className="flex justify-between items-end -mt-12">
             <div className="relative">
-              <Avatar seed="sandy" className="w-24 h-24 border-4 border-[var(--md-background)]" />
+              <Avatar seed={profile.seed} className="w-24 h-24 border-4 border-[var(--md-background)]" />
               <span className="absolute top-1 right-1 w-6 h-6 rounded-full bg-[var(--md-primary)] ring-2 ring-[var(--md-background)] flex items-center justify-center">
                 <BadgeCheck className="w-3.5 h-3.5 text-[var(--md-on-primary)]" />
               </span>
@@ -135,14 +195,18 @@ export function ProfileScreen({ onBack, onFollowToggle }: ProfileScreenProps) {
 
           {/* Links */}
           <div className="mt-3 space-y-1.5 text-[15px]">
-            <div className="flex items-center gap-2">
-              <BadgeCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span style={{ color: 'var(--md-primary)' }}>{profile.nip05}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <LinkIcon className="w-4 h-4 text-[var(--md-on-surface-variant)] shrink-0" />
-              <span style={{ color: 'var(--md-primary)' }}>{profile.website}</span>
-            </div>
+            {profile.nip05 && (
+              <div className="flex items-center gap-2">
+                <BadgeCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span className="truncate" style={{ color: 'var(--md-primary)' }}>{profile.nip05}</span>
+              </div>
+            )}
+            {profile.website && (
+              <div className="flex items-center gap-2">
+                <LinkIcon className="w-4 h-4 text-[var(--md-on-surface-variant)] shrink-0" />
+                <span className="truncate" style={{ color: 'var(--md-primary)' }}>{profile.website}</span>
+              </div>
+            )}
           </div>
 
           {/* Payment-rail chips. v1.13.1 renders each rail as its own outlined
@@ -150,14 +214,16 @@ export function ProfileScreen({ onBack, onFollowToggle }: ProfileScreenProps) {
               line — the recording shows "⚡ Lightning <addr>" and "₿ On-chain"
               side by side, both bitcoin-orange. */}
           <div className="flex items-center gap-2 mt-3 flex-wrap">
-            <span
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm"
-              style={{ border: '1px solid var(--bitcoin-orange)' }}
-            >
-              <Zap className="w-4 h-4 shrink-0" style={{ color: 'var(--bitcoin-orange)' }} />
-              <span className="font-medium" style={{ color: 'var(--bitcoin-orange)' }}>Lightning</span>
-              <span className="text-[var(--md-on-surface-variant)] truncate max-w-[130px]">{profile.lightning}</span>
-            </span>
+            {profile.lightning && (
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm"
+                style={{ border: '1px solid var(--bitcoin-orange)' }}
+              >
+                <Zap className="w-4 h-4 shrink-0" style={{ color: 'var(--bitcoin-orange)' }} />
+                <span className="font-medium" style={{ color: 'var(--bitcoin-orange)' }}>Lightning</span>
+                <span className="text-[var(--md-on-surface-variant)] truncate max-w-[130px]">{profile.lightning}</span>
+              </span>
+            )}
             <span
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm"
               style={{ border: '1px solid var(--bitcoin-orange)' }}
@@ -185,10 +251,12 @@ export function ProfileScreen({ onBack, onFollowToggle }: ProfileScreenProps) {
 
         {/* Tab content */}
         <div className="p-2">
-          {activeTab === 'Notes' ? (
+          {activeTab === 'Notes' && userPosts.length > 0 ? (
             <div className="space-y-2">
               {userPosts.map((post) => <MaterialCard key={post.id} post={post} />)}
             </div>
+          ) : activeTab === 'Notes' ? (
+            <div className="text-center py-12 text-[var(--md-on-surface-variant)]">No notes yet</div>
           ) : (
             <div className="text-center py-12 text-[var(--md-on-surface-variant)]">No {activeTab.toLowerCase()} yet</div>
           )}
