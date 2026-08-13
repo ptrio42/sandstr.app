@@ -66,13 +66,35 @@ Bitcoin-orange `#F7931A` bez zmian.
 z nagrania (`#34224B`) w granicach zaokrągleń — to potwierdza, że `lerp` Compose'a działa w Oklab,
 nie w sRGB.
 
+Light, akcent PURPLE (**nie** szipujemy go jako domyślki, ale symulator ma jasny motyw — patrz niżej):
+
+| rola | v1.12.6 | v1.13.1 |
+|---|---|---|
+| `primary` | `#7F67BE` | **`#6200EE`** (Purple500) |
+| `onPrimary` | `#FFFFFF` | `#FFFFFF` — `onAccent()` na tym głębokim fiolecie daje biel (7,7:1 vs 2,7:1) |
+| `secondary` | `#03DAC6` | `#03DAC5` (Teal200) |
+| `primary/secondary/tertiaryContainer` | baseline `#EADDFF` | **`#E2E2FF`** = `lerp(primary, White, 0.85)` |
+| `onXContainer` | baseline `#21005D` | **`#2D0077`** = `lerp(primary, Black, 0.40)` |
+| `background`/`surface` | baseline `#FFFBFE` | **`#FDFDFD`** |
+| `onBackground`/`onSurface` | baseline `#1C1B1F` | **`#1C1C1C`** |
+| `surfaceVariant` | baseline `#E7E0EC` | **`#FAFAFA`** |
+| `onSurfaceVariant` | baseline `#49454F` | **`#484848`** |
+| `outline` / `outlineVariant` | baseline `#79747E` / `#CAC4D0` | **`#767676`** / **`#CACACA`** |
+| rampa kontenerów | brak | `surfaceDim #DEDEDE` · `Bright #FDFDFD` · `Lowest #FFFFFF` · `Low #F7F7F7` · `Container #F2F2F2` · `High #ECECEC` · `Highest #EBEBEB` |
+| `inversePrimary` | `#BB86FC` | `#BB86FC` (Purple200 — akcent trybu ciemnego) |
+
+Uwaga: **light odwraca kierunek obu lerpów** (`accentContainer` jaśnieje ku bieli,
+`onAccentContainer` ciemnieje ku czerni z ułamkiem **0.40**, nie 0.85). Role `error*` i
+`inverseSurface`/`inverseOnSurface` **nie są** nadpisywane w `lightColorScheme()`, więc zostają na
+baseline Material. `surfaceDim` w dark = `Color.Black`.
+
 ---
 
 ## Home — app bar
 
 Od lewej: **avatar konta** (tap → szuflada; `LoggedInUserPictureDrawer`, `nav::openDrawer`) ·
 **selektor feedu „All Follows ⌄"** (`follow_list_kind3follows`, chevron `ExpandMore` 20 dp) ·
-**lupa** (`SearchIcon`, 22 dp, tint `placeholderText` → nawiguje do `Route.Search`).
+**lupa** (`SearchIcon`, 22 dp, tint `placeholderText` → nawiguje do `Route.Search`, patrz §Search).
 Wysokość paska `TopBarSize = 50 dp`. Pasek **auto-chowa się przy scrollu** (`DisappearingScaffold`).
 
 `HomeTopBar.kt` **nie występuje w diffie v1.12.6→v1.13.1** — kompozycja jest bajt w bajt ta sama.
@@ -171,6 +193,76 @@ Saldo w nagraniu realnie ładuje się przez spinner; odtwarzamy stan **końcowy*
 webowych klientów Nostr: ikona · nazwa · jednolinijkowy opis · gwiazdka ulubionych.
 Z nagrania, w kolejności: Primal · Coracle · Snort · noStrudel · Iris · Nostter · Jumble · Nostria ·
 Nosotros · lumilumi · (Phoenix — ucięty krawędzią kadru, opis nieczytelny → **nie odtwarzamy**).
+
+## Search (lupa w app barze)
+
+**[REC vs REPO] — cała sekcja pochodzi ze źródła, nie z nagrania.** Nagranie nie otwiera tego ekranu
+(lupa nie jest w nim tapnięta), więc opis jest czytany z `screen/loggedIn/search/SearchScreen.kt`
+@ v1.13.1. Layout w takim wypadku też rozstrzyga repo — nie ma klatki, która mogłaby go obalić.
+
+- **Top bar to NIE `TopAppBar`,** tylko zwykła `Column` na `surface` z własnym paddingiem od
+  systemowych insetów. Nie ma w nim **ani strzałki wstecz, ani avatara, ani tytułu** — wyjście z
+  ekranu niesie systemowy back Androida.
+- **Pole:** `TextField`, `RoundedCornerShape(25.dp)`, wiodąca `SearchIcon` 20 dp w `placeholderText`,
+  placeholder `npub_hex_username` = **„npub, username, text"**, przycisk czyszczenia w slocie
+  końcowym, gdy coś wpisano, `singleLine`, obie linie wskaźnika przezroczyste.
+- **Rząd filtrów** (`padding(horizontal = 10.dp, vertical = 4.dp)`, `spacedBy(8.dp)`):
+  `SingleChoiceSegmentedButtonRow` z trzema segmentami **All · People · Notes**
+  (`search_scope_*`) na całą szerokość + przycisk **`Tune`** (`search_filters_open`). Przy każdym
+  filtrze poza domyślnym Tune dostaje **kropkę 8 dp w `primary`** (offset -10/+10 dp).
+- **Arkusz filtrów** (`ModalBottomSheet`, `skipPartiallyExpanded`): tytuł **„Filters"** →
+  **„Source"** + segmenty **Local · Relays** (domyślka **Relays**) → wiersz **„Follows only"**
+  z `Switch` → **„Sort by"** z radiami **Relevance · Newest · Popular** (`EVENT_OPTIONS` w tej
+  kolejności, domyślka **Newest**) → `TextButton` **„Reset"**. Sekcja sortowania **nie renderuje
+  się w zakresie People**.
+- **Wyniki** to jedna `LazyColumn`, w kolejności: linie hashtagów (`Search hashtag: #tag`, pogrubione
+  i wyśrodkowane) → użytkownicy (`UserCompose`: zdjęcie 55 dp, nazwa, jednolinijkowe „about"
+  w `placeholderText`, w slocie końcowym Follow/Unfollow + przycisk listy) → relaye → czaty
+  publiczne → kanały efemeryczne → aktywności live → notatki (`NoteCompose`, czyli ta sama karta
+  co w feedzie). Między blokami hairline'y `DividerThickness`.
+- **Bramkowanie zakresem** (`SearchBarViewModel`): hashtagi i notatki znikają w People, użytkownicy
+  w Notes, a relaye i kanały renderują się **wyłącznie w All** (relaye dodatkowo wymagają frazy
+  dłuższej niż 1 znak). **Przy pustym polu nie renderuje się żaden blok wyników.**
+- **Dolny pasek na tym ekranie NIE występuje** — `AppBottomBar` wychodzi wcześniej przy
+  `nav.canPop()`, a Search jest wpychany na stos, nie jest korzeniem zakładki.
+- Nagłówek listy to warunkowa karta „dodaj relay wyszukiwania" (`AddInboxRelayForSearchCard`),
+  renderowana tylko kontu bez takiego relaya → **nie odtwarzamy**.
+
+## Discover (szuflada → Navigate)
+
+**[REC vs REPO] — cała sekcja pochodzi ze źródła** (`screen/loggedIn/discover/DiscoverScreen.kt`);
+nagranie nie otwiera Discover, bo zakładka wypadła z dolnego paska.
+
+- **Top bar = `DiscoveryTopBar`, czyli TEN SAM `UserDrawerSearchTopBar` co na Home:** avatar konta ·
+  **selektor feedu** (`FeedFilterSpinner`, ten sam dialog `select_list_to_filter`, tyle że wiązany
+  z `defaultDiscoveryFollowList`) · lupa. Logo Amethysta na środku tego ekranu **nie występuje**.
+- Pod paskiem **`SecondaryScrollableTabRow`** (`edgePadding = 8.dp`) z **siedmioma** zakładkami
+  w kolejności, etykiety dosłownie: **Follow Packs** (`discover_follows`) · **Reads**
+  (`discover_reads`) · **Feed Algorithms** (`discover_content_v2`) · **Live Streams**
+  (`discover_live_v2`) · **Communities** (`discover_community_v2`) · **Marketplace**
+  (`discover_marketplace`) · **Chats** (`discover_chat`). Strony przełącza `HorizontalPager`.
+- **Marketplace jako jedyna** renderuje się w siatce `GridCells.Fixed(2)`; reszta to `LazyColumn`.
+  Element w każdej zakładce to `ChannelCardCompose`, który maluje **inną kartę na rodzaj zdarzenia**
+  (follow set / long-form / NIP-89 / live activity / community / classified / public chat).
+- **FAB tylko na dwóch zakładkach:** Reads → `NewLongFormMarkdownButton`, Marketplace →
+  `NewProductButton` (oba: kółko 55 dp, `Add` 26 dp, `primary`/`onPrimary`).
+- Pusty feed to `FeedEmpty`: wyśrodkowane **„Feed is empty."** + obrysowy **„Refresh"**.
+
+## Shorts (szuflada → Navigate)
+
+**[REC vs REPO] — cała sekcja pochodzi ze źródła** (`screen/loggedIn/shorts/ShortsScreen.kt`).
+
+- **Top bar = `ShortsTopBar`, czyli znowu `UserDrawerSearchTopBar`** z selektorem feedu
+  (`defaultShortsFollowList`) — avatar · selektor · lupa.
+- **To NIE jest pełnoekranowy pionowy pager wideo.** `ShortsFeedLoaded` to zwykła `LazyColumn`
+  kart `VideoCardCompose`, każda w układzie: **nagłówek autora → media na całą szerokość →
+  rząd reakcji z `showReactionDetail = true` → tytuł (bold, `titleSmall`, 1 linia) + treść**,
+  a między kartami hairline + `Spacer(8.dp)`. Element renderuje się wyłącznie
+  `if (item.event is VideoEvent)`.
+- **FAB jest zawsze** i jest rozwijany (`NewShortVideoButton`): tap otwiera dwa kolejne FAB-y
+  ponad nim — `Videocam` („Record a video") i `AddPhotoAlternate` („Upload image") — a sam
+  przełącza glif na `Close`.
+- Pusty feed: to samo `FeedEmpty` co w Discover.
 
 ## Messages
 
@@ -276,8 +368,12 @@ Toolbar u dołu, przewijalny. **Bez limitu znaków i bez kółka postępu.**
   Dlatego przeniesienie znaczników do pierwszego wiersza jest tym, co domyślny użytkownik NOWO widzi.
 - Bąble live, chip lokalizacji przy filtrze, przycisk BOLT12 na profilu, karta pseudonimu,
   pusty stan zablokowanego użytkownika — wszystkie warunkowe, żadnego nie widać w nagraniu.
-- **Discover** i **Shorts**: nagranie ich nie otwiera (wychodzą z dolnego paska), więc obie zakładki
-  zostają uczciwymi placeholderami w języku wizualnym Amethysta.
+- **Discover** i **Shorts**: nagranie ich nie otwiera (wychodzą z dolnego paska). **Chrome obu
+  ekranów jest odtworzone ze źródła** (patrz §Discover i §Shorts, oznaczone `[REC vs REPO]`);
+  nieodtworzone zostaje **ciało list** — siedem wariantów `ChannelCardCompose` i karta
+  `VideoCardCompose` — bo nie ma ani klatki referencyjnej, ani zdarzeń, którymi dałoby się je
+  wypełnić (mock w symulatorze to wyłącznie notatki kind-1). Obie zakładki pokazują za to
+  **`FeedEmpty` upstreamu**, czyli realny stan appki bez treści w zasięgu.
 - Ekrany z szuflady poza Wallet/Browser/Messages/Notifications/Profile: wiersze renderujemy wiernie
   (szuflada JEST mapą możliwości appki), ale bez ekranów docelowych — rejestr luk w
   [`docs/gaps/amethyst.md`](../../gaps/amethyst.md).

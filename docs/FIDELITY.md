@@ -87,6 +87,13 @@ i wprowadził wybieralny akcent (domyślny Purple bez zmian, `#BB86FC`), a `onPr
 teraz **czarny** (wybór przez kontrast) — dlatego glif FAB-a zmienił kolor z białego na czarny.
 Kontenery liczone formułą `lerp(primary, Black, 0.58)` w **Oklab** → `#36244C`; zgodność
 potwierdzona próbką piksela pigułki nawigacji z nagrania (`#34224B`).
+**Dogrywka: jasny motyw (2026-08-13).** Przebudowa objęła najpierw sam dark (bo to szipująca
+domyślka); light dociągnięty osobno do `lightColors(AccentColorType.PURPLE)`: akcent `#6200EE`
+(Purple500), neutralne `#FDFDFD`/`#1C1C1C`/`#FAFAFA`/`#484848`, `outline` `#767676`, pełna rampa
+kontenerów (`#DEDEDE` … `#EBEBEB`). Light **odwraca oba lerpy**: `accentContainer` =
+`lerp(primary, White, 0.85)` = `#E2E2FF`, `onAccentContainer` = `lerp(primary, Black, **0.40**)` =
+`#2D0077`. Ta sama implementacja Oklaba odtwarza udokumentowane wartości dark (`#36244C`/`#F4EDFF`)
+co do bajtu — tak zostały sprawdzone. Tabela obu motywów: screen-mapa Amethysta, §Motyw i tokeny.
 **Trzy błędy ery v1.12.6 skorygowane** (szczegóły w ramce na górze screen-mapy): licznika relayów
 nigdy nie było w app barze, 5. slot akcji to Share a nie „stats", a pasek LIVE jest warunkowym
 rzędem bąbli, nie stałym paskiem. Archiwum `amethyst-v1-12` zachowuje starą (błędną) postać —

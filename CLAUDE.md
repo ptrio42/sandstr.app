@@ -119,7 +119,7 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
   zmianą jego symulatora. Keychat i Gossip screen-mapy NIE mają.
 - `docs/FIDELITY.md` — tokeny marki per klient + ich pliki-źródła w repo klienta + kanały opt-in.
 - `docs/GAPS.md` + `docs/gaps/<klient>.md` (schemat: `docs/gaps/README.md`) — ile z realnego klienta mamy
-  (533 wiersze); czytaj ZANIM dodasz `showMe` w FAQ.
+  (736 wierszy w dziesięciu ledgerach, stan 2026-08-13); czytaj ZANIM dodasz `showMe` w FAQ.
 - `docs/TOURS.md` — reguły silnika tourów; czytaj przed edycją `src/data/tours/` i `src/components/tour/`.
 - `docs/VERSIONS.md` — wersjonowanie symulatorów per klient: procedura freeze starszej wersji. Czytaj
   ZANIM przebudujesz symulator do nowej wersji realnego klienta — freeze idzie PRZED przebudową.

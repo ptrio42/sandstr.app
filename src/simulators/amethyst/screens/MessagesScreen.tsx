@@ -7,6 +7,7 @@ import '../amethyst.theme.css';
 
 interface MessagesScreenProps {
   onOpenDrawer?: () => void;
+  onOpenSearch?: () => void;
 }
 
 type Convo = {
@@ -54,13 +55,14 @@ function seedStyle(seed: string): React.CSSProperties {
   return { background: `linear-gradient(135deg, hsl(${h} 55% 55%), hsl(${(h + 40) % 360} 60% 42%))` };
 }
 
-export function MessagesScreen({ onOpenDrawer }: MessagesScreenProps) {
+export function MessagesScreen({ onOpenDrawer, onOpenSearch }: MessagesScreenProps) {
   const [tab, setTab] = useState<'known' | 'requests'>('known');
 
   return (
     <div className="flex flex-col h-full bg-[var(--md-background)]" data-tour="amethyst-messages">
       <AppTopBar
         onOpenDrawer={onOpenDrawer}
+        onOpenSearch={onOpenSearch}
         center={<img src="/icons/amethyst.png" alt="Amethyst" className="w-8 h-8 object-contain" />}
       />
 

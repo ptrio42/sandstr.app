@@ -14,6 +14,7 @@ import { ProfileScreen } from './screens/ProfileScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { ComposeScreen } from './screens/ComposeScreen';
 import { VideoScreen } from './screens/VideoScreen';
+import { SearchScreen } from './screens/SearchScreen';
 import { ThreadScreen } from './screens/ThreadScreen';
 import type { PostData } from './components/MaterialCard';
 import { useParentTheme } from '../shared/hooks/useParentTheme';
@@ -27,9 +28,13 @@ import { TourContext } from '../../components/tour';
 // globe destination, which in v1.13.1 stopped being Discover and became the
 // Browser. Renaming it would break every stored `navigate:'search'` command for
 // no visible gain; the screen it mounts is what changed.
+// `search-screen` is the real Search destination (upstream `Route.Search`, the
+// app bar's magnifier) — spelled out precisely because `search` was already
+// taken by that legacy payload.
 export type TabId =
   | 'home'
   | 'search'
+  | 'search-screen'
   | 'video'
   | 'wallet'
   | 'discover'
@@ -49,7 +54,13 @@ export interface AmethystSimulatorProps {
 }
 
 // Valid bottom-nav / drawer-reachable main tabs
-const TABS: TabId[] = ['home', 'search', 'video', 'wallet', 'discover', 'notifications', 'messages', 'profile'];
+const TABS: TabId[] = ['home', 'search', 'search-screen', 'video', 'wallet', 'discover', 'notifications', 'messages', 'profile'];
+
+// Screens upstream PUSHES rather than selecting as a tab root: `navBottomBar`
+// stamps a tab-root marker on the entry it creates, while the drawer and the
+// app bar's magnifier plain-push. `canPop()` reads that marker, and it is what
+// hides the bottom bar and swaps the app bar's avatar for a back arrow.
+const PUSHED_TABS: TabId[] = ['search-screen', 'discover', 'video'];
 
 export function AmethystSimulator({ className = '', tourCommand, onCommandHandled }: AmethystSimulatorProps) {
   const [activeTab, setActiveTab] = useState<TabId>('home');
@@ -58,6 +69,18 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
   const [settingsSection, setSettingsSection] = useState<string | null>('root');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [threadPost, setThreadPost] = useState<PostData | null>(null);
+  // Leaving a pushed screen pops back to whichever screen pushed it, so the
+  // chain Messages -> Discover -> Search unwinds one step at a time the way the
+  // real back stack does.
+  const [pushStack, setPushStack] = useState<TabId[]>([]);
+  const pushTab = useCallback((tab: TabId) => {
+    setPushStack((stack) => [...stack, activeTab]);
+    setActiveTab(tab);
+  }, [activeTab]);
+  const popTab = useCallback(() => {
+    setActiveTab(pushStack[pushStack.length - 1] ?? 'home');
+    setPushStack((stack) => stack.slice(0, -1));
+  }, [pushStack]);
   const parentTheme = useParentTheme();
   const tourContext = useContext(TourContext);
   const registerAction = (actionType: string) => {
@@ -98,7 +121,10 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
   // profile — route those so every drawer item lands on a real destination.
   const handleDrawerNavigate = useCallback((id: string) => {
     if (TABS.includes(id as TabId)) {
-      setActiveTab(id as TabId);
+      // Drawer rows push, so the ones that render a back arrow instead of the
+      // drawer avatar need somewhere to pop back to.
+      if (PUSHED_TABS.includes(id as TabId)) pushTab(id as TabId);
+      else setActiveTab(id as TabId);
       if (id === 'home') registerAction('navigate_home');
       if (id === 'profile') registerAction('view_profile');
     } else if (id === 'relays') {
@@ -115,7 +141,12 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       setActiveTab('home');
     }
     setIsDrawerOpen(false);
-  }, [registerAction]);
+  }, [registerAction, pushTab]);
+
+  // The app bar's magnifier — upstream `nav.nav(Route.Search)`.
+  const handleOpenSearch = useCallback(() => {
+    pushTab('search-screen');
+  }, [pushTab]);
 
   // Handle new post
   const handleNewPost = useCallback((content: string) => {
@@ -172,6 +203,10 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       case 'navigate':
         const tab = tourCommand.payload as TabId;
         if (TABS.includes(tab)) {
+          // A tour jump is not a push: it resets the stack the way
+          // `navBottomBar` clears sibling entries, so back never walks a chain
+          // the user did not take.
+          setPushStack(PUSHED_TABS.includes(tab) ? ['home'] : []);
           setActiveTab(tab);
           setIsComposeOpen(false); // don't let an open composer linger over later steps
           // Navigation also dismisses the one-way overlays (settings/drawer/
@@ -275,24 +310,58 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
             onOpenCompose={() => setIsComposeOpen(true)}
             onOpenDrawer={() => setIsDrawerOpen(true)}
             onOpenThread={(post) => setThreadPost(post)}
+            onOpenSearch={handleOpenSearch}
             onLikePost={() => registerAction('like')}
           />
         );
       // The globe destination: Browser in v1.13.1 (was Discover in v1.12.6).
       case 'search':
         return <BrowserScreen key="browser" />;
+      // The real Search destination, pushed by the app bar's magnifier.
+      case 'search-screen':
+        return (
+          <SearchScreen
+            key="search-screen"
+            onBack={popTab}
+            onOpenThread={(post) => setThreadPost(post)}
+          />
+        );
       case 'wallet':
         return <WalletScreen key="wallet" />;
       // Both dropped out of the bottom bar this release; still reachable from
       // the drawer's "Navigate" section, so they keep their screens.
       case 'discover':
-        return <DiscoverScreen key="discover" onOpenDrawer={() => setIsDrawerOpen(true)} />;
+        return (
+          <DiscoverScreen
+            key="discover"
+            onBack={popTab}
+            onOpenSearch={handleOpenSearch}
+          />
+        );
       case 'video':
-        return <VideoScreen key="video" onOpenDrawer={() => setIsDrawerOpen(true)} />;
+        return (
+          <VideoScreen
+            key="video"
+            onBack={popTab}
+            onOpenSearch={handleOpenSearch}
+          />
+        );
       case 'notifications':
-        return <NotificationsScreen key="notifications" onOpenDrawer={() => setIsDrawerOpen(true)} />;
+        return (
+          <NotificationsScreen
+            key="notifications"
+            onOpenDrawer={() => setIsDrawerOpen(true)}
+            onOpenSearch={handleOpenSearch}
+          />
+        );
       case 'messages':
-        return <MessagesScreen key="messages" onOpenDrawer={() => setIsDrawerOpen(true)} />;
+        return (
+          <MessagesScreen
+            key="messages"
+            onOpenDrawer={() => setIsDrawerOpen(true)}
+            onOpenSearch={handleOpenSearch}
+          />
+        );
       case 'profile':
         return (
           <ProfileScreen
@@ -374,8 +443,11 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         )}
       </AnimatePresence>
 
-      {/* Bottom Navigation - hidden on Profile (full-screen), while composing, and in the thread view */}
-      {activeTab !== 'profile' && !isComposeOpen && !threadPost && !isSettingsOpen && (
+      {/* Bottom Navigation — hidden on Profile (full-screen), while composing,
+          in the thread view, over Settings, and on every pushed screen
+          (Search / Discover / Shorts) — `AppBottomBar` returns early on
+          `nav.canPop()`. */}
+      {activeTab !== 'profile' && !PUSHED_TABS.includes(activeTab) && !isComposeOpen && !threadPost && !isSettingsOpen && (
         <BottomNav
           activeTab={activeTab}
           onTabChange={handleTabChange}

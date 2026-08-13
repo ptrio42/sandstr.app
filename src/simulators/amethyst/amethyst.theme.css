@@ -11,64 +11,92 @@
  * live on the renamed root class. See docs/VERSIONS.md.
  */
 
-/* Material Design 3 Color Tokens - Light Theme */
+/* Material Design 3 Color Tokens - Light Theme.
+   Rebuilt against v1.13.1 `Theme.kt` → lightColors(AccentColorType.PURPLE). The
+   same release that de-purpled the dark ramp did it to the light one: quoting
+   the source, "Left unset, these fall back to Material's violet-tinted baseline
+   greys (e.g. surface #FEF7FF), which read as a faint purple wash independent of
+   the accent." The dark rebuild landed first because dark is the shipping
+   default; this is the light half of the same table.
+   Accent = Purple500 #6200EE (light) / Purple200 #BB86FC (dark, hence
+   inversePrimary). Container roles derive from the accent with the same two
+   Oklab lerps Compose uses — light flips their direction:
+   accentContainer = lerp(primary, White, 0.85) = #E2E2FF and
+   onAccentContainer = lerp(primary, Black, 0.40) = #2D0077. The same
+   implementation reproduces the documented dark values (#36244C / #F4EDFF)
+   exactly, which is how these two were checked.
+   Error and inverse-surface roles are NOT overridden upstream, so they stay on
+   the Material baseline below. */
 /* Scoped to .amethyst-simulator so these light tokens don't leak onto the host document. */
 .amethyst-simulator {
-  /* Primary Palette — real Amethyst signature purple (Color.kt Primary50 #7F67BE), NOT generic Material #6750A4 */
-  --md-primary: #7F67BE;
+  /* Primary Palette — Amethyst's light accent (Color.kt Purple500), NOT generic Material #6750A4 */
+  --md-primary: #6200EE;
+  /* onAccent() picks by WCAG contrast; on this deep purple that is white (7.7:1 vs 2.7:1). */
   --md-on-primary: #FFFFFF;
-  --md-primary-container: #EADDFF;
-  --md-on-primary-container: #21005D;
-  
-  /* Secondary Palette - Amethyst Brand Teal */
-  --md-secondary: #03DAC6;
+  --md-primary-container: #E2E2FF;
+  --md-on-primary-container: #2D0077;
+
+  /* Secondary Palette - Amethyst Brand Teal (Teal200; only the purple accent keeps teal) */
+  --md-secondary: #03DAC5;
   --md-on-secondary: #000000;
-  --md-secondary-container: #E8DEF8;
-  --md-on-secondary-container: #1D192B;
-  
+  --md-secondary-container: #E2E2FF;
+  --md-on-secondary-container: #2D0077;
+
   /* Bitcoin Orange for Zaps */
   --bitcoin-orange: #F7931A;
   --bitcoin-orange-light: #B66605;
   --bitcoin-orange-dark: #F7931A;
-  
-  /* Tertiary Palette */
-  --md-tertiary: #7D5260;
-  --md-on-tertiary: #FFFFFF;
-  --md-tertiary-container: #FFD8E4;
-  --md-on-tertiary-container: #31111D;
-  
-  /* Error Palette */
+
+  /* Tertiary Palette — tertiary follows the secondary (teal), its container the accent */
+  --md-tertiary: #03DAC5;
+  --md-on-tertiary: #000000;
+  --md-tertiary-container: #E2E2FF;
+  --md-on-tertiary-container: #2D0077;
+
+  /* Error Palette (Material baseline — lightColors() leaves the error roles unset) */
   --md-error: #B3261E;
   --md-on-error: #FFFFFF;
   --md-error-container: #F9DEDC;
   --md-on-error-container: #410E0B;
-  
-  /* Surface Colors */
-  --md-surface: #FFFBFE;
-  --md-on-surface: #1C1B1F;
-  --md-surface-variant: #E7E0EC;
-  --md-on-surface-variant: #49454F;
-  
+
+  /* Surface Colors — hue-free neutrals, same lightness as the baseline they replace */
+  --md-surface: #FDFDFD;
+  --md-on-surface: #1C1C1C;
+  --md-surface-variant: #FAFAFA;
+  --md-on-surface-variant: #484848;
+
   /* Background */
-  --md-background: #FFFBFE;
-  --md-on-background: #1C1B1F;
-  
+  --md-background: #FDFDFD;
+  --md-on-background: #1C1C1C;
+
+  /* Neutral surface ramp introduced in v1.13.1. Until now these were defined for
+     dark only, so every `var(--md-surface-container-*)` fill in the simulator
+     (Settings cards, the feed-filter dialog, the Browser omnibox, the reaction
+     gallery) resolved to nothing in light and painted transparent. */
+  --md-surface-dim: #DEDEDE;
+  --md-surface-bright: #FDFDFD;
+  --md-surface-container-lowest: #FFFFFF;
+  --md-surface-container-low: #F7F7F7;
+  --md-surface-container: #F2F2F2;
+  --md-surface-container-high: #ECECEC;
+  --md-surface-container-highest: #EBEBEB;
+
   /* Outline */
-  --md-outline: #79747E;
-  --md-outline-variant: #CAC4D0;
-  
-  /* Inverse Colors */
+  --md-outline: #767676;
+  --md-outline-variant: #CACACA;
+
+  /* Inverse Colors (baseline surfaces; inversePrimary is the dark accent) */
   --md-inverse-surface: #313033;
   --md-inverse-on-surface: #F4EFF4;
   --md-inverse-primary: #BB86FC;
-  
-  /* Elevation Surface Tints — tinted with the real Amethyst purple #7F67BE (rgb 127,103,190) */
-  --md-surface-tint: #7F67BE;
-  --md-surface-1: linear-gradient(0deg, rgba(127, 103, 190, 0.05), rgba(127, 103, 190, 0.05)), #FFFBFE;
-  --md-surface-2: linear-gradient(0deg, rgba(127, 103, 190, 0.08), rgba(127, 103, 190, 0.08)), #FFFBFE;
-  --md-surface-3: linear-gradient(0deg, rgba(127, 103, 190, 0.11), rgba(127, 103, 190, 0.11)), #FFFBFE;
-  --md-surface-4: linear-gradient(0deg, rgba(127, 103, 190, 0.12), rgba(127, 103, 190, 0.12)), #FFFBFE;
-  --md-surface-5: linear-gradient(0deg, rgba(127, 103, 190, 0.14), rgba(127, 103, 190, 0.14)), #FFFBFE;
+
+  /* Elevation Surface Tints — tinted with the light accent #6200EE (rgb 98,0,238) */
+  --md-surface-tint: #6200EE;
+  --md-surface-1: linear-gradient(0deg, rgba(98, 0, 238, 0.05), rgba(98, 0, 238, 0.05)), #FDFDFD;
+  --md-surface-2: linear-gradient(0deg, rgba(98, 0, 238, 0.08), rgba(98, 0, 238, 0.08)), #FDFDFD;
+  --md-surface-3: linear-gradient(0deg, rgba(98, 0, 238, 0.11), rgba(98, 0, 238, 0.11)), #FDFDFD;
+  --md-surface-4: linear-gradient(0deg, rgba(98, 0, 238, 0.12), rgba(98, 0, 238, 0.12)), #FDFDFD;
+  --md-surface-5: linear-gradient(0deg, rgba(98, 0, 238, 0.14), rgba(98, 0, 238, 0.14)), #FDFDFD;
 
   /* Bitcoin Orange for Zaps — defined once above (was triplicated) */
 
@@ -124,8 +152,10 @@
   --md-font-label-small: 500 11px/16px var(--md-font-family);
   
   /* Animation */
-  /* Flat feed divider between notes (light-theme counterpart of dark #2F2F2F) */
-  --amethyst-feed-divider: #E4E1E6;
+  /* Flat feed divider between notes (light-theme counterpart of dark #2F2F2F).
+     De-purpled with the rest of the ramp: same perceived lightness as the old
+     #E4E1E6, hue removed — the release's own rule for the neutral greys. */
+  --amethyst-feed-divider: #E2E2E2;
 
   --md-duration-short: 150ms;
   --md-duration-medium: 300ms;
@@ -182,6 +212,7 @@
   --md-on-background: #E6E6E6;
 
   /* Neutral surface ramp introduced in v1.13.1 */
+  --md-surface-dim: #000000;
   --md-surface-bright: #383838;
   --md-surface-container-lowest: #141414;
   --md-surface-container-low: #1A1A1A;

@@ -3,19 +3,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MaterialCard, PostData } from '../components/MaterialCard';
 import { AppTopBar } from '../components/AppTopBar';
 import { FeedSelector } from '../components/FeedSelector';
-import { getRecentNotes, getUserByPubkey, generateAvatarGradient } from '../../../data/mock';
-import type { MockNote } from '../../../data/mock';
+import { getRecentNotes } from '../../../data/mock';
+import { toPostData } from '../notesToPosts';
 import '../amethyst.theme.css';
 
 interface HomeScreenProps {
   onOpenCompose: () => void;
   onOpenDrawer?: () => void;
   onOpenThread?: (post: PostData) => void;
+  /** Opens the Search screen — the app bar's magnifier (upstream `Route.Search`). */
+  onOpenSearch?: () => void;
   /** Reported so the guided tour's "like a post" step can complete. */
   onLikePost?: () => void;
 }
 
-export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onLikePost }: HomeScreenProps) {
+export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onOpenSearch, onLikePost }: HomeScreenProps) {
   // Real Amethyst home has TWO switchers: the feed selector in the app bar
   // ("All Follows ▾") and the content sub-tabs below it.
   const [activeTab, setActiveTab] = useState<'new_threads' | 'conversations'>('new_threads');
@@ -25,34 +27,7 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onLikePo
   const feedRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef(0);
 
-  const [posts, setPosts] = useState(() => {
-    // Convert mock notes to post format
-    return getRecentNotes(20).map(note => {
-      const author = getUserByPubkey(note.pubkey);
-      return {
-        id: note.id,
-        author: {
-          name: author?.displayName || 'Unknown',
-          handle: author?.nip05 || author?.username || 'unknown',
-          avatar: author?.avatar || generateAvatarGradient(note.pubkey), // local, offline — no DiceBear
-          nip05: author?.nip05,
-          isVerified: author?.isVerified,
-        },
-        content: note.content,
-        timestamp: formatTimestamp(note.created_at),
-        stats: {
-          replies: note.replies,
-          reposts: note.reposts,
-          zaps: note.zaps,
-          likes: note.likes,
-        },
-        images: note.images,
-        hashtags: note.hashtags,
-        community: note.community,
-        isLive: note.isLive,
-      };
-    });
-  });
+  const [posts, setPosts] = useState(() => getRecentNotes(20).map(toPostData));
 
   // Pull-to-refresh handlers
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -116,7 +91,11 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onLikePo
   return (
     <div className="flex flex-col h-full bg-[var(--md-background)]" data-tour="amethyst-feed">
       {/* Shared Amethyst app bar; center = feed selector "All Follows ▾" */}
-      <AppTopBar onOpenDrawer={onOpenDrawer} center={<FeedSelector defaultFeed="All Follows" />} />
+      <AppTopBar
+        onOpenDrawer={onOpenDrawer}
+        onOpenSearch={onOpenSearch}
+        center={<FeedSelector defaultFeed="All Follows" />}
+      />
 
       {/* Content sub-tabs (distinct from the feed selector above) */}
       <div className="md-tabs sticky top-16 z-10 bg-[var(--md-surface)]">
@@ -230,16 +209,4 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onLikePo
       </div>
     </div>
   );
-}
-
-// Helper function to format timestamps
-function formatTimestamp(timestamp: number): string {
-  const now = Date.now() / 1000;
-  const diff = now - timestamp;
-  
-  if (diff < 60) return 'now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
-  if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
-  return new Date(timestamp * 1000).toLocaleDateString();
 }

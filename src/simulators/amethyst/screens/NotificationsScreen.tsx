@@ -8,6 +8,7 @@ import '../amethyst.theme.css';
 
 interface NotificationsScreenProps {
   onOpenDrawer?: () => void;
+  onOpenSearch?: () => void;
 }
 
 const BITCOIN = 'var(--bitcoin-orange)';
@@ -19,10 +20,14 @@ const BLUE = '#3B9EFF';
 // Real Amethyst Notifications screen (v1.12.6 screenshot): app bar + a period
 // summary, a signature weekly multi-series stats chart (dual axis: counts + sats),
 // then reactions grouped by type with avatar clusters.
-export function NotificationsScreen({ onOpenDrawer }: NotificationsScreenProps) {
+export function NotificationsScreen({ onOpenDrawer, onOpenSearch }: NotificationsScreenProps) {
   return (
     <div className="flex flex-col h-full bg-[var(--md-background)]" data-tour="amethyst-notifications">
-      <AppTopBar onOpenDrawer={onOpenDrawer} center={<FeedSelector defaultFeed="All Follows" />} />
+      <AppTopBar
+        onOpenDrawer={onOpenDrawer}
+        onOpenSearch={onOpenSearch}
+        center={<FeedSelector defaultFeed="All Follows" />}
+      />
 
       <div className="flex-1 overflow-y-auto">
         {/* Period + totals summary */}
