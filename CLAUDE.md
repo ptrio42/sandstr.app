@@ -120,6 +120,9 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
 - `docs/TOURS.md` — reguły silnika tourów; czytaj przed edycją `src/data/tours/` i `src/components/tour/`.
 - `docs/FAQ.md` — stan wdrożenia FAQ (230 wpisów, 133 mini-toury, 8 klientów); kontrakt autorski
   w `src/data/faq/README.md`.
+- `docs/OUTREACH.md` — jak promować to na Nostrze: zmierzone formy, które działają na
+  koncie właściciela, realne tematy pytań z `#asknostr`, playbook odpowiadania i lista
+  rzeczy, których nie wolno twierdzić. Czytaj ZANIM zaczniesz robić materiał promocyjny.
 - `docs/clips/README.md` + `docs/clips/faq-teaser.md` — scenariusze klipów demo.
 - `docs/AUDIT.md` — snapshot historyczny; „owned-IP-first / front door = Nostr Kitten" jest NIEAKTUALNE.
   Tak samo przeterminowane `SHIP-AND-GRANT.md` i `GRANT-WOW.md` — sprawdź ich zarzuty, zanim je powtórzysz.

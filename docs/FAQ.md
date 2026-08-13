@@ -223,6 +223,40 @@ Sugerowany kształt: temat kanoniczny `delete-note` (kompilator znów wypisze ro
 z osobnym objawem `trouble-dm-not-delivered`. Proces bez zmian — recon → treść → klik-po-kliku →
 rewizja → **critic** — bo w tej rundzie zadziałał.
 
+## Runda 3 (2026-08-11/12): `searchAliases` i linkowalne odpowiedzi
+
+Dwie zmiany wymuszone przez promocję, obie z twardym pomiarem pod spodem.
+
+**Wyszukiwarka mówiła naszym słownictwem, nie słownictwem pytającego.** `score()`
+dopasowuje wyłącznie słowa, które wpis już zawiera, więc bank odpowiadał tym, którzy
+znają termin, a nowicjuszom nie odpowiadał wcale. Zmierzone na realnych danych przed
+zmianą: **„lost my phone", „reset my password", „tip someone", „send someone money",
+„where is the like button", „block someone" i „how do people find me" dawały po ZERO
+trafień** — w banku, który odpowiada na wszystkie siedem.
+
+`searchAliases` (kontrakt w [`src/data/faq/README.md`](../src/data/faq/README.md))
+to dodatkowe frazy: przeszukiwane, nigdy renderowane, trafienie liczone jak
+trafienie w tytuł. Dwie zasady, obie wymuszone doborem danych, nie kodem:
+nie aliasuj frazy, którą inny wpis ma jako TYTUŁ (wpis z demem nie może porwać
+pytania objawowego), i alias to co użytkownik wpisuje, nie teza odpowiedzi.
+
+Pokryte dziś: `damus/{backup-keys,shaka,copy-npub,zap}`, `amethyst/{manage-relays,
+backup-keys,zap}`, `wisp/post-note`, `coracle/mute`, `nostur/low-data`, `primal/zap`.
+Weryfikacja przy każdej rundzie: wszystkie frazy na #1, strażnicy objawowi trzymają
+swoje tytuły, 230 tytułów w 8 klientach bez przesunięć.
+
+**Odpowiedzi nie dało się zalinkować** — panel był stanem komponentu, więc
+odpowiedź w cudzym wątku brzmiała „wejdź, kliknij znak zapytania, wyszukaj". Dziś
+`/c/<klient>?faq=<id>` ląduje na konkretnej odpowiedzi, `?tour=1` odpala przewodnik,
+a pasek adresu synchronizuje rozwinięty wpis, więc każdy link kopiuje się sam.
+Szczegół implementacyjny wart pamięci: rozwinięty wpis mieszka w osobnym stanie niż
+`initialEntryId` — wpuszczenie go z powrotem jako „wyląduj tutaj" restartowało efekt
+otwarcia panelu i kasowało wpisane zapytanie pod rękami czytelnika.
+
+Po co to całe zamieszanie: patrz [`OUTREACH.md`](OUTREACH.md) — bez linkowalnych
+odpowiedzi kanał „odpowiadaj ludziom, którzy właśnie pytają" nie działa, a to on ma
+lepszy zwrot niż nadawanie.
+
 ## Możliwy kierunek (decyzja produktowa, nie techniczna)
 
 „How to change relays in Damus" to klasyczny long-tail search — ludzie to googlują i lądują na

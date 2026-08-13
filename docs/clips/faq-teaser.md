@@ -81,6 +81,42 @@ failure to a healthy screen.
   `Page.bringToFront` makes it worse — it flips the very tab you are driving to
   `visibilityState: 'hidden'`.
 
+## Tour teaser (the opposite rules to the FAQ clips)
+
+`capture-faq.mjs` carries a separate `TOURS` table: it lands on `/c/<client>?tour=1`
+and lets the tour drive. Two decisions are deliberately **inverted** from the FAQ clips.
+
+- **The tour tooltip stays on top.** In the FAQ clips it is hidden, because there it
+  is our chrome sitting on somebody else's app. In a "take the tour" post the card IS
+  the product being advertised — the viewer should see it drive itself, step counter
+  and all.
+- **No captions.** The note above the video carries the words, the card in frame
+  carries the rest.
+- Modest pace (12s for five steps): the card has to be READABLE, which is the entire
+  claim the clip is making.
+- The clip is recorded through **the same link that goes in the note**, so it doubles
+  as proof that the link does what it promises.
+
+## The cursor points, it never covers
+
+The cursor parks **outside the ring's bottom-right corner** (+16px, clamped to the
+viewport). It used to park dead centre, where a 22px dot hid a 40px zap icon — the
+exact thing the caption was naming. Without the tour tooltip nothing else in frame
+says "look here", so the cursor earns its place; it just must not sit on the subject.
+
+## Filming finds bugs nothing else does
+
+Every time we filmed the product, real defects fell out: anchors framing whole
+screens instead of controls (FAQ demos), no scroll to a target that mounts late
+(Nostur, Coracle), and on the Wisp tour three at once — including a step that **lost
+its entire body text** at 430px. No test catches that, because nothing else measures
+whether the words fit in the card.
+
+Practical rule: **look at the frames before anything ships.** A suspicious frame is
+sometimes a transition artifact — measure the same thing live in the browser before
+calling it a bug. One alarm here was false (a card "cut in half" mid-transition), one
+was real, and they looked identical.
+
 ## Outputs
 
 | file | what |

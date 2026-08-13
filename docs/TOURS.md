@@ -83,6 +83,37 @@ zmian wizualnych, zero rozgałęzień w JSX.
   Liczenie prosto w callbacku `ResizeObservera` zmienia layout z jego wnętrza — przeglądarka zgłasza
   to jako `ResizeObserver loop completed with undelivered notifications`, czyli realny błąd w konsoli.
 
+## Znaleziska z nagrywania promocyjnego (2026-08-12)
+
+Trzy błędy, wszystkie w jednym kroku przewodnika po Wispie, wszystkie znalezione
+dopiero przez **sfilmowanie touru** — nie przez przegląd kodu i nie przez klikanie.
+
+- **Pasmo, w którym karta się mieści, to nie to samo co pasmo, w którym da się ją
+  przeczytać.** Matematyka pozycjonowania miała próg czytelności (`LEGIBLE` 240),
+  ale stosowała go tylko w pierwszym z trzech przejść, a podłoga dla zwycięskiego
+  pasma wynosiła 180 px. Zmierzone na 430×775: karta 180 px, nagłówek plus pasek
+  akcji plus przyciski biorą 155, na przewijaną treść zostaje **25 px przy 140 px
+  zawartości**. Tekst kroku nie był ucięty — był **nieobecny**, bez paska
+  przewijania, który by to zdradził. Próg `UNUSABLE` (200) odrzuca teraz takie
+  pasmo we wszystkich przejściach; karta idzie wtedy do krawędzi ekranu i zasłania
+  kawałek celu. Cel zasłonięty częściowo wciąż jest na ekranie; słowa nie były.
+- **Selektor z przecinkiem trafia w pierwszy element w kolejności DOKUMENTU, nie
+  listy.** `'[data-tour="wisp-post-card"], [data-tour="wisp-feed"]'` z komentarzem
+  „the top post card, not the whole feed root" robił dokładnie odwrotnie:
+  `wisp-feed` jest rodzicem kart, więc wygrywał zawsze, cel wypełniał ekran, a
+  przy takim celu silnik świadomie nie rysuje pierścienia. Pułapka była już
+  opisana w `src/data/faq/README.md` dla mini-tourów — tu weszła do zwykłego touru.
+- **Podpis opisywał coś, czego pierścień nie obejmował.** Krok mówił o pigułkach
+  „online" i „relays" w górnym pasku, a ring siedział na karcie notatki trzysta
+  pikseli niżej; pigułki nie miały żadnej kotwicy. Rozbite na dwa kroki (tour ma
+  teraz 11), pigułki dostały wspólną kotwicę `wisp-pills`. To ta sama klasa błędu,
+  która była ~70% znalezisk przy rewizji FAQ — obowiązuje tak samo w tourach.
+
+**Wniosek przenośny: nagranie jest testem integracyjnym.** Przechodzi ścieżki,
+których nie przechodzi żaden test — montuje ekran komendą, mierzy prostokąt,
+utrzymuje kadr na tyle długo, żeby dało się przeczytać. Zanim cokolwiek z touru
+pójdzie w świat, sfilmuj go i obejrzyj klatka po klatce.
+
 ## Jak to weryfikować
 
 Pomiary geometrii z `javascript_exec` są **śmieciowe, gdy panel podglądu nie jest na wierzchu**:
