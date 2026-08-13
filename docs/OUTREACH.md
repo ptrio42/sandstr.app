@@ -20,8 +20,16 @@ it the other way round cost a session of editing.
 
 ## How to measure
 
-Everything comes **straight from relays**, via one Node script (global `WebSocket`,
-no dependencies). The pattern that worked:
+Everything comes **straight from relays**, via `scripts/nostr-pull.mjs` (global
+`WebSocket`, no dependencies):
+
+```bash
+node scripts/nostr-pull.mjs notes <npub> > notes.json
+node scripts/nostr-pull.mjs engagement <npub> > engagement.json
+node scripts/nostr-pull.mjs tag asknostr > asknostr.json
+```
+
+JSON on stdout, progress on stderr. What it does under the hood:
 
 - `bech32` decodes an `npub` to hex in twenty lines — no library needed;
 - `{authors:[hex], kinds:[1], limit:400}`, paged backwards with `until` set to the
