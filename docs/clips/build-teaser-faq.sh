@@ -108,6 +108,9 @@ LOOPS=(
 "damus-zap|How do I tip someone?|It is called a zap.|3.0"
 "amethyst-keys|Lost my phone.|Backup Keys, in the drawer.|3.0"
 "amethyst-zap|How do I tip someone?|Zap, fourth under the note.|3.0"
+# The keyword-mute clip: the demo lands on the field and the harness types
+# into it, so the D phase carries the typing and needs the room.
+"amethyst-mute|Tired of the current thing?|Add it to Hidden Words.|9.0"
 )
 
 for row in "${LOOPS[@]}"; do

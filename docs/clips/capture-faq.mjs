@@ -130,6 +130,18 @@ const LOOPS = [
     steps: 1,
   },
   {
+    // The one loop that types INSIDE the simulator: the point of the clip is
+    // watching the words land, not just finding the field.
+    id: 'amethyst-mute',
+    path: '/c/amethyst',
+    viewport: PHONE,
+    faq: '[aria-label="Amethyst FAQ"]',
+    query: 'too much noise',
+    entry: 'mute',
+    steps: 2,
+    typeInSim: { selector: '[data-tour="amethyst-hidden-words"] input', words: ['bip110', 'coldcard'] },
+  },
+  {
     id: 'amethyst-zap',
     path: '/c/amethyst',
     viewport: PHONE,
@@ -347,11 +359,39 @@ class Page {
     await this.eval(`(() => { const c=document.getElementById('__cap_cursor'); if(c){c.style.width='22px';c.style.height='22px';} return true; })()`);
   }
 
+  /**
+   * Scroll a target into its scroll container before measuring it.
+   *
+   * `getBoundingClientRect()` is happily non-zero for an element scrolled out
+   * of an `overflow:auto` parent, so "visible" was a lie: the FAQ entry with the
+   * longest answer put "Show me" below the bottom sheet's clip box, and the
+   * click went to whatever was painted at those coordinates instead. The tour
+   * never started and the failure looked like a broken anchor.
+   */
+  async ensureInView(selector) {
+    const js = selector.startsWith('text:')
+      ? `[...document.querySelectorAll('button')].filter(b => b.textContent.includes(${JSON.stringify(selector.slice(5))}))`
+      : `[...document.querySelectorAll(${JSON.stringify(selector)})]`;
+    await this.eval(`(() => {
+      const el = ${js}.find(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
+      if (el) el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      return true;
+    })()`);
+    await sleep(220);
+  }
+
   async click(selector) {
+    await this.ensureInView(selector);
     const r = await this.waitVisible(selector);
     await this.moveCursor(r.x, r.y);
-    await this.clickAt(r.x, r.y);
-    return r;
+    // Re-measure right before pressing. The cursor move takes ~340ms, and an
+    // accordion that is still expanding moves its own button in that window:
+    // the FAQ entry with the longest answer had "Show me" slide out from under
+    // the click, which landed on the header instead and silently collapsed it.
+    const fresh = (await this.visibleRect(selector)) ?? r;
+    if (Math.hypot(fresh.x - r.x, fresh.y - r.y) > 4) await this.moveCursor(fresh.x, fresh.y, { settle: 160 });
+    await this.clickAt(fresh.x, fresh.y);
+    return fresh;
   }
 
   async typeText(text, perChar) {
@@ -361,10 +401,13 @@ class Page {
     }
   }
 
-  async pressKey(key, code = key, vk = key === 'ArrowRight' ? 39 : 0) {
+  async pressKey(key, code = key, vk = { ArrowRight: 39, Enter: 13 }[key] ?? 0) {
     for (const type of ['rawKeyDown', 'keyUp']) {
       await this.send('Input.dispatchKeyEvent', {
         type, key, code, windowsVirtualKeyCode: vk, nativeVirtualKeyCode: vk,
+        // Enter needs the text payload or the renderer treats it as a bare
+        // keydown and the field never sees a submit.
+        ...(key === 'Enter' && type === 'rawKeyDown' ? { text: '\r' } : {}),
       });
     }
   }
@@ -571,11 +614,27 @@ async function captureLoop(page, pool, loop, baseUrl) {
     // tooltip renders centred with NO spotlight — filming that ships the exact
     // failure mode the FAQ review spent itself hunting. (The tooltip is hidden
     // for the camera, so this wait is also the only proof the step landed.)
-    const rect = await page.until(
+    let rect;
+    try {
+      rect = await page.until(
       `(() => { const s = document.querySelector('.tour-spotlight'); if (!s) return null; const r = s.getBoundingClientRect();
         return (r.width > 8 && r.height > 8) ? JSON.stringify({x: r.x, y: r.y, w: r.width, h: r.height}) : null; })()`,
-      { timeout: 12000, label: `spotlight for step ${step}` },
-    );
+        { timeout: 12000, label: `spotlight for step ${step}` },
+      );
+    } catch (err) {
+      const state = await page.eval(`JSON.stringify({
+        tourActive: !!document.querySelector('.tour-overlay'),
+        step: document.querySelector('.tour-tooltip__title')?.textContent ?? null,
+        anchors: [...document.querySelectorAll('[data-tour]')].map(e => e.getAttribute('data-tour')).slice(0, 8),
+        url: location.pathname + location.search,
+        panelOpen: !!document.querySelector('[role="dialog"][aria-modal="true"]'),
+        showMeVisible: [...document.querySelectorAll('button')].some(b => /Show me/.test(b.textContent) && b.getBoundingClientRect().width > 0),
+        expanded: [...document.querySelectorAll('[data-faq-entry]')].map(e => e.getAttribute('data-faq-entry')).slice(0, 3),
+        spotlight: (() => { const s = document.querySelector('.tour-spotlight'); if (!s) return null;
+          const r = s.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height) }; })(),
+      })`);
+      throw new Error(`${err.message}\n     state: ${state}`);
+    }
     // Park the pointer just OUTSIDE the ring's bottom-right, not on its centre.
     // Without the tooltip nothing else in frame says "look here", but a 22px dot
     // dead-centre on a 40px zap icon hides the very thing the caption names.
@@ -593,6 +652,21 @@ async function captureLoop(page, pool, loop, baseUrl) {
         `JSON.stringify(document.querySelector('.tour-spotlight')?.getBoundingClientRect()) !== ${JSON.stringify(before)}`,
         { timeout: 12000, label: `spotlight to move for step ${step + 1}` },
       );
+    }
+  }
+  if (loop.typeInSim) {
+    // The tour is still up, so its ring stays around the field while the words
+    // go in. Enter is safe: TourOverlay ignores its nav keys while the event
+    // target is an input, which is exactly where we are typing.
+    const box = await page.waitVisible(loop.typeInSim.selector);
+    await page.moveCursor(box.x, box.y);
+    await page.clickAt(box.x, box.y);
+    marks.typing2 = Date.now() - t0;
+    for (const word of loop.typeInSim.words) {
+      await page.typeText(word, T.perChar);
+      await sleep(400);
+      await page.pressKey('Enter');
+      await sleep(900);
     }
   }
   await sleep(T.tail);
