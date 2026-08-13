@@ -20,6 +20,11 @@ interface ProfileScreenProps {
    * `MockUser` = an author tapped in the feed (gaps ame-57).
    */
   user?: MockUser | null;
+  /**
+   * Which tab to land on. The drawer's Bookmarks row is a tab on your own
+   * profile upstream, not its own screen (gaps ame-37).
+   */
+  initialTab?: ProfileTab;
 }
 
 // Real Amethyst profile (ProfileScreen.kt, verified vs shots/profile.png):
@@ -93,10 +98,12 @@ const TABS = [
   'Follows', 'Followers', 'Zaps', 'Bookmarks', 'Followed Tags', 'Reports', 'Relays',
 ] as const;
 
+export type ProfileTab = (typeof TABS)[number];
+
 const badgeHues = [275, 45, 30, 200, 320, 160, 260];
 
-export function ProfileScreen({ onBack, onFollowToggle, user }: ProfileScreenProps) {
-  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>('Notes');
+export function ProfileScreen({ onBack, onFollowToggle, user, initialTab = 'Notes' }: ProfileScreenProps) {
+  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>(initialTab);
   // Own profile keeps the "Unfollow" state the guided tour was built against;
   // a stranger opened from the feed starts on "Follow", which is what the
   // reference recording shows on a profile you do not follow (see ame-44).

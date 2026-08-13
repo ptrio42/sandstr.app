@@ -517,10 +517,10 @@ export const amethystFaq: ClientFaq = {
     },
 
     {
-      // Upstream (vitorpamplona/amethyst, main, checked 2026-08-06):
-      // DrawerContent.kt "Accounts" row → AccountSwitchBottomSheet with a
-      // per-account logout icon + confirmation dialog. The recording-era
-      // drawer has no such row, so this entry is TEXT-ONLY.
+      // Upstream (vitorpamplona/amethyst @ v1.13.1): DrawerContent.kt "Accounts"
+      // row → AccountSwitchBottomSheet (`account_switch_*`) with a per-account
+      // logout icon and a confirmation dialog. Live in the sim since
+      // 2026-08-13 — gaps ame-112.
       id: 'logout',
       category: 'Account & keys',
       question: 'How do I log out of Amethyst?',
@@ -530,6 +530,23 @@ export const amethystFaq: ClientFaq = {
         'In the account sheet, tap the logout icon on your account\'s row and confirm.',
       ],
       note: 'The dialog warns you: logging out deletes all local data on this phone. Back up your nsec first — without it the account is gone for good.',
+      showMe: [
+        {
+          target: '[data-tour="amethyst-drawer-accounts"]',
+          title: 'Accounts',
+          content: 'The very bottom row of the drawer, under the whole menu — that is where every account on this phone is listed.',
+          position: 'top',
+          commands: openDrawer,
+        },
+        {
+          target: '[data-tour="amethyst-accounts-logout"]',
+          title: 'Log out',
+          content:
+            'Each account row carries this icon. Tapping it asks you to confirm — and the confirmation is where Amethyst warns you that logging out wipes the local data.',
+          position: 'bottom',
+          commands: cmd({ type: 'login' }, { type: 'navigate', payload: 'drawer:accounts' }),
+        },
+      ],
     },
 
     // ------------------------------------------------------------ Advanced --

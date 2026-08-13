@@ -11,10 +11,13 @@ import { DiscoverScreen } from './screens/DiscoverScreen';
 import { NotificationsScreen } from './screens/NotificationsScreen';
 import { MessagesScreen } from './screens/MessagesScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
+import type { ProfileTab } from './screens/ProfileScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { ComposeScreen } from './screens/ComposeScreen';
 import { VideoScreen } from './screens/VideoScreen';
 import { ThreadScreen } from './screens/ThreadScreen';
+import { DrawerDetailScreen, DRAWER_DETAIL_IDS } from './screens/DrawerDetailScreen';
+import type { DrawerDetailId } from './screens/DrawerDetailScreen';
 import type { PostData } from './components/MaterialCard';
 import { useParentTheme } from '../shared/hooks/useParentTheme';
 import './amethyst.theme.css';
@@ -68,6 +71,10 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
   // account, which is where the drawer's Profile row and `viewProfile` land;
   // a MockUser = an author tapped in the feed (gaps ame-57).
   const [profileUser, setProfileUser] = useState<MockUser | null>(null);
+  const [profileTab, setProfileTab] = useState<ProfileTab>('Notes');
+  // The drawer's "You" / "Create" / "Accounts" destinations, pushed over the
+  // tab content the way Settings is (gaps ame-31/32/112/113/126…133).
+  const [drawerDetail, setDrawerDetail] = useState<DrawerDetailId | null>(null);
   const parentTheme = useParentTheme();
   const tourContext = useContext(TourContext);
   const registerAction = (actionType: string) => {
@@ -110,9 +117,10 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
     }
   }, [registerAction, openSettingsAt]);
 
-  // Handle drawer navigation. Some drawer items (relays/security) are sections
-  // inside Settings rather than standalone screens, and bookmarks lives on the
-  // profile — route those so every drawer item lands on a real destination.
+  // Handle drawer navigation. "Relays" is a section inside Settings rather than
+  // a standalone screen; the drawer's own pushed destinations go through
+  // `onOpenDetail` and Bookmarks through `onOpenProfileTab`, so they never
+  // arrive here.
   const handleDrawerNavigate = useCallback((id: string) => {
     if (TABS.includes(id as TabId)) {
       setActiveTab(id as TabId);
@@ -129,9 +137,6 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       // Settings › Account Settings this release.
       openSettingsAt('relays');
       registerAction('navigate_settings');
-    } else if (id === 'bookmarks') {
-      setActiveTab('profile');
-      registerAction('view_profile');
     } else {
       setActiveTab('home');
     }
@@ -190,11 +195,27 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         }
         break;
         
-      case 'navigate':
-        const tab = tourCommand.payload as TabId;
+      case 'navigate': {
+        // `drawer:<id>` reaches the drawer's own pushed screens. Additive: the
+        // eight TabId payloads keep their exact meaning, and an unknown id is
+        // ignored rather than landing the visitor on a blank overlay.
+        const raw = tourCommand.payload;
+        if (typeof raw === 'string' && raw.startsWith('drawer:')) {
+          const id = raw.slice(7) as DrawerDetailId;
+          if (DRAWER_DETAIL_IDS.includes(id)) {
+            setIsComposeOpen(false);
+            setIsSettingsOpen(false);
+            setIsDrawerOpen(false);
+            setThreadPost(null);
+            setDrawerDetail(id);
+          }
+          break;
+        }
+        const tab = raw as TabId;
         if (TABS.includes(tab)) {
           setActiveTab(tab);
-          if (tab === 'profile') setProfileUser(null);
+          setDrawerDetail(null);
+          if (tab === 'profile') { setProfileUser(null); setProfileTab('Notes'); }
           setIsComposeOpen(false); // don't let an open composer linger over later steps
           // Navigation also dismisses the one-way overlays (settings/drawer/
           // thread) — otherwise every step after openSettings spotlights
@@ -204,12 +225,14 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
           setThreadPost(null);
         }
         break;
+      }
 
       case 'compose':
         if (isAuthenticated) {
           setIsSettingsOpen(false);
           setIsDrawerOpen(false);
           setThreadPost(null);
+          setDrawerDetail(null);
           setIsComposeOpen(true);
         }
         break;
@@ -232,7 +255,9 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
           // stored tour/FAQ command keeps working.
           const who = typeof tourCommand.payload === 'string' ? getUserByPubkey(tourCommand.payload) : undefined;
           setProfileUser(who ?? null);
+          setProfileTab('Notes');
           setActiveTab('profile');
+          setDrawerDetail(null);
           setIsComposeOpen(false);
           setIsSettingsOpen(false);
           setIsDrawerOpen(false);
@@ -266,6 +291,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
           }
           setIsComposeOpen(false);
           setIsDrawerOpen(false);
+          setDrawerDetail(null);
         }
         break;
       }
@@ -278,6 +304,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
           setIsComposeOpen(false);
           setIsSettingsOpen(false);
           setThreadPost(null);
+          setDrawerDetail(null);
           setIsDrawerOpen(true);
         }
         break;
@@ -285,6 +312,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       case 'back':
         setIsAuthenticated(false);
         setCurrentUser(null);
+        setDrawerDetail(null);
         break;
     }
     
@@ -331,10 +359,12 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
           <ProfileScreen
             // Keyed by subject so switching authors resets the tab row and the
             // follow pill instead of carrying the previous profile's state over.
-            key={`profile-${profileUser?.pubkey ?? 'self'}`}
+            key={`profile-${profileUser?.pubkey ?? 'self'}-${profileTab}`}
             user={profileUser}
+            initialTab={profileTab}
             onBack={() => {
               setProfileUser(null);
+              setProfileTab('Notes');
               setActiveTab('home');
             }}
             onFollowToggle={() => registerAction('follow')}
@@ -368,6 +398,17 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         onClose={() => setIsDrawerOpen(false)}
         activeTab={activeTab}
         onTabChange={handleDrawerNavigate}
+        onOpenDetail={(detail) => {
+          setDrawerDetail(detail);
+          setIsDrawerOpen(false);
+        }}
+        onOpenProfileTab={(tab) => {
+          setProfileUser(null);
+          setProfileTab(tab);
+          setDrawerDetail(null);
+          setActiveTab('profile');
+          registerAction('view_profile');
+        }}
         onOpenSettings={() => {
           // The drawer's System › Settings row lands on the searchable root
           // list, not on a detail screen.
@@ -394,7 +435,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
 
       {/* FAB - Only show on Home tab */}
       <AnimatePresence>
-        {activeTab === 'home' && !isComposeOpen && (
+        {activeTab === 'home' && !isComposeOpen && !drawerDetail && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -413,7 +454,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       </AnimatePresence>
 
       {/* Bottom Navigation - hidden on Profile (full-screen), while composing, and in the thread view */}
-      {activeTab !== 'profile' && !isComposeOpen && !threadPost && !isSettingsOpen && (
+      {activeTab !== 'profile' && !isComposeOpen && !threadPost && !isSettingsOpen && !drawerDetail && (
         <BottomNav
           activeTab={activeTab}
           onTabChange={handleTabChange}
@@ -426,6 +467,23 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         onClose={() => setIsComposeOpen(false)}
         onPost={handleNewPost}
       />
+
+      {/* Drawer destinations — same overlay band as Settings (both are pushed
+          screens over the tab content, not tabs of their own). */}
+      {drawerDetail && (
+        <div className="absolute inset-0 z-[55] bg-[var(--md-background)]">
+          <DrawerDetailScreen
+            key={drawerDetail}
+            detail={drawerDetail}
+            onBack={() => setDrawerDetail(null)}
+            onLogout={() => {
+              setDrawerDetail(null);
+              setIsAuthenticated(false);
+              setCurrentUser(null);
+            }}
+          />
+        </div>
+      )}
 
       {/* Note / thread detail overlay */}
       {threadPost && (
