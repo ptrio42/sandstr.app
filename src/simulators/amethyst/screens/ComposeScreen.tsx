@@ -11,6 +11,12 @@ interface ComposeScreenProps {
   isOpen: boolean;
   onClose: () => void;
   onPost?: (content: string) => void;
+  /**
+   * The note being replied to. Upstream a reply opens this same full-screen
+   * composer with the parent quoted above the field and the recipients listed —
+   * without it, "Reply" was indistinguishable from "new note" (gaps ame-77).
+   */
+  replyTo?: { author: string; content: string } | null;
 }
 
 // Real Amethyst composer (ShortNotePostScreen.kt, verified vs shots/compose*.png):
@@ -32,7 +38,7 @@ const TOOLBAR = [
   { icon: MapPin, label: 'Location' },
 ];
 
-export function ComposeScreen({ isOpen, onClose, onPost }: ComposeScreenProps) {
+export function ComposeScreen({ isOpen, onClose, onPost, replyTo }: ComposeScreenProps) {
   const [content, setContent] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const canPost = content.trim().length > 0;
@@ -82,6 +88,20 @@ export function ComposeScreen({ isOpen, onClose, onPost }: ComposeScreenProps) {
 
           {/* Body: avatar + text field (inline) */}
           <div className="flex-1 overflow-y-auto px-4 pt-2">
+            {replyTo && (
+              <div
+                className="mb-3 rounded-2xl px-4 py-3"
+                style={{ background: 'var(--md-surface-container-low)' }}
+                data-tour="amethyst-compose-reply-to"
+              >
+                <p className="text-sm" style={{ color: 'var(--md-primary)' }}>
+                  Replying to {replyTo.author}
+                </p>
+                <p className="text-sm mt-1 line-clamp-3 text-[var(--md-on-surface-variant)]">
+                  {replyTo.content}
+                </p>
+              </div>
+            )}
             <div className="flex gap-3">
               <div className="relative shrink-0">
                 <Avatar seed="sandy" className="w-11 h-11" />
@@ -94,7 +114,7 @@ export function ComposeScreen({ isOpen, onClose, onPost }: ComposeScreenProps) {
                 ref={textareaRef}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="What's on your mind?"
+                placeholder={replyTo ? 'Post your reply' : "What's on your mind?"}
                 className="flex-1 bg-transparent border-none resize-none outline-none text-[var(--md-on-surface)] text-lg min-h-[140px] placeholder:text-[var(--md-on-surface-variant)]"
                 autoFocus
               />

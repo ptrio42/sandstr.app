@@ -1,8 +1,10 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import {
   Heart, MessageCircle, Repeat, Zap, Share2, ChevronDown, ChevronUp, MoreVertical,
   MapPin, Cog, Stamp, Timer, Pencil, Pin, Server, Image as ImageIcon, QrCode,
+  Trophy, EyeOff, ShieldCheck, Copy, Flag, BellOff, UserMinus, Radio,
 } from 'lucide-react';
 import { Avatar } from './Avatar';
 import '../amethyst.theme.css';
@@ -13,6 +15,12 @@ interface PostAuthor {
   avatar: string;
   nip05?: string;
   isVerified?: boolean;
+  /**
+   * Drives the "Following" shield on the avatar. The default feed IS
+   * `All Follows`, so every author in it is one — that is the badge's whole
+   * meaning upstream (gaps ame-81).
+   */
+  following?: boolean;
 }
 
 interface PostStats {
@@ -20,6 +28,8 @@ interface PostStats {
   reposts: number;
   zaps: number;
   likes: number;
+  /** Total sats zapped. The counter shows THIS, not the zap count (ame-79). */
+  satsZapped?: number;
 }
 
 export interface PostData {
@@ -34,6 +44,11 @@ export interface PostData {
   hashtags?: string[];
   community?: string;
   isLive?: boolean;
+  /**
+   * v1.13.1 deleted `BoostedMark()`; the only repost signal left in the header
+   * is the author's name drawn in grayText (gaps ame-11).
+   */
+  isRepost?: boolean;
 }
 
 interface MaterialCardProps {
@@ -47,6 +62,11 @@ interface MaterialCardProps {
   onOpenThread?: () => void;
   /** Tap the author's avatar or name to open THEIR profile (not the thread). */
   onOpenProfile?: (post: PostData) => void;
+  /**
+   * Start the per-reaction gallery expanded. Ground truth: the thread's root
+   * note renders with `showReactionDetail = true` (gaps ame-89/ame-137).
+   */
+  defaultReactionDetail?: boolean;
 }
 
 /**
@@ -74,15 +94,31 @@ function HeaderPill({ Icon, label }: { Icon: React.ComponentType<{ className?: s
   );
 }
 
-function QuietMark({ Icon }: { Icon: React.ComponentType<{ className?: string }> }) {
+function QuietMark({ Icon, label }: { Icon?: React.ComponentType<{ className?: string }>; label?: string }) {
   return (
-    <span className="shrink-0" style={{ color: 'var(--amethyst-placeholder)' }}>
-      <Icon className="w-4 h-4" />
+    <span
+      className="inline-flex items-center gap-1 shrink-0 text-[13px] font-bold"
+      style={{ color: 'var(--amethyst-placeholder)' }}
+    >
+      {Icon && <Icon className="w-4 h-4" />}
+      {label}
     </span>
   );
 }
 
 const MARKER_CITIES = ['Lisbon', 'Riga', 'Tbilisi', 'Nairobi'];
+
+/**
+ * A `nostr:` mention resolves to a display name in the real client. Our mock
+ * notes carry opaque tokens, so we map them onto the mock roster deterministically
+ * — the point is that a reader sees a NAME, which is what the client shows.
+ */
+const MENTION_NAMES = ['Nostrich Nina', 'Kit Kobayashi', 'Maple Dev', 'CodeWiz', 'Violet Volt', 'Karrot'];
+function mentionName(token: string): string {
+  let h = 0;
+  for (let i = 0; i < token.length; i++) h = (h * 31 + token.charCodeAt(i)) >>> 0;
+  return MENTION_NAMES[h % MENTION_NAMES.length];
+}
 
 /**
  * Which header markers a note carries. Derived deterministically from the note
@@ -105,8 +141,14 @@ function headerMarkers(post: PostData) {
     ots: slot === 3 ? `${1 + (h % 9)}d` : null,
     pow: slot === 5 ? String(20 + (h % 8)) : null,
     expiration: slot === 7 ? '1y+' : null,
+    // The fifth documented pill kind. Bounties carry an amount in sats, which is
+    // why they are a pill (verifiable metadata) and not a QuietMark.
+    bounty: slot === 13 ? `${10 + (h % 90)}k` : null,
     edited: slot === 9,
     pinned: slot === 11,
+    // The two QuietMark kinds that existed only in a code comment until now.
+    draft: slot === 15,
+    rumor: slot === 17,
   };
 }
 
@@ -133,6 +175,12 @@ function relaysFor(post: PostData) {
  * boosts, then the emoji reactions), each with as many reactor avatars as the
  * count supports, capped at five the way a phone-width row is.
  */
+function formatSats(n: number): string {
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return String(n);
+}
+
 function reactionBreakdown(post: PostData) {
   const seeds = (n: number, salt: string) =>
     Array.from({ length: Math.max(0, Math.min(n, 5)) }, (_, i) => `${post.id}-${salt}-${i}`);
@@ -144,8 +192,18 @@ function reactionBreakdown(post: PostData) {
       glyph: '⚡',
       tint: 'var(--bitcoin-orange)',
       reactors: seeds(Math.ceil(post.stats.zaps / 400), 'zap'),
-      amount: String(post.stats.zaps),
+      amount: formatSats(post.stats.satsZapped ?? post.stats.zaps),
     });
+    // New in v1.13.1: BOLT12 offers get their own row beside the zap row.
+    if (post.stats.zaps > 900) {
+      rows.push({
+        key: 'bolt12',
+        glyph: '₿',
+        tint: 'var(--bitcoin-orange)',
+        reactors: seeds(1, 'bolt12'),
+        amount: formatSats(Math.round((post.stats.satsZapped ?? post.stats.zaps) / 7)),
+      });
+    }
   }
   if (post.stats.reposts > 0) {
     rows.push({ key: 'boost', glyph: '🔁', tint: '#4CAF50', reactors: seeds(post.stats.reposts, 'boost') });
@@ -170,6 +228,7 @@ export function MaterialCard({
   onReply,
   onOpenThread,
   onOpenProfile,
+  defaultReactionDetail = false,
 }: MaterialCardProps) {
   const [isLiked, setIsLiked] = React.useState(false);
   const [isReposted, setIsReposted] = React.useState(false);
@@ -177,14 +236,57 @@ export function MaterialCard({
   // Upstream's leading slot in the reaction row (`showReactionDetail` →
   // ReactionRowExpandButton): a chevron that expands the per-reaction-type
   // breakdown — one row per reaction glyph, with the avatars of whoever reacted.
-  const [showReactionDetail, setShowReactionDetail] = React.useState(false);
+  const [showReactionDetail, setShowReactionDetail] = React.useState(defaultReactionDetail);
   const markers = React.useMemo(() => headerMarkers(post), [post.id]);
   const [shareOpen, setShareOpen] = React.useState(false);
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  // Long-press on Like opens the emoji palette; a tap is the default heart.
+  // `DefaultReactionRowItems` keeps both on the SAME button (gaps ame-14).
+  const [paletteOpen, setPaletteOpen] = React.useState(false);
+  const [reaction, setReaction] = React.useState<string | null>(null);
+  const pressTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressed = React.useRef(false);
+  /**
+   * Where the card's bottom sheets get rendered.
+   *
+   * They CANNOT be children of the card. `motion.article` keeps a framer
+   * transform (`layout` plus the enter animation), and any transformed ancestor
+   * becomes the containing block for `position: fixed` — so a sheet rendered in
+   * place lands at the bottom of the CARD, a sliver wide and mostly off screen,
+   * whether it says absolute or fixed. Portalling to the simulator root escapes
+   * the transform, and there `fixed` resolves against the phone screen the way
+   * MobilePhoneFrame's `translateZ(0)` intends (CLAUDE.md).
+   */
+  const rootRef = React.useRef<HTMLElement | null>(null);
+  const [portalHost, setPortalHost] = React.useState<HTMLElement | null>(null);
+  React.useEffect(() => {
+    setPortalHost(rootRef.current?.closest('.amethyst-simulator') as HTMLElement | null);
+  }, []);
+  const sheet = (node: React.ReactNode) => (portalHost ? createPortal(node, portalHost) : null);
 
   const handleLike = () => {
+    // A long press already opened the palette; swallow the click it also fires.
+    if (longPressed.current) {
+      longPressed.current = false;
+      return;
+    }
     setIsLiked(!isLiked);
+    if (isLiked) setReaction(null);
     onLike?.(post.id);
   };
+
+  const startPress = () => {
+    longPressed.current = false;
+    pressTimer.current = setTimeout(() => {
+      longPressed.current = true;
+      setPaletteOpen(true);
+    }, 450);
+  };
+  const endPress = () => {
+    if (pressTimer.current) clearTimeout(pressTimer.current);
+    pressTimer.current = null;
+  };
+  React.useEffect(() => () => { if (pressTimer.current) clearTimeout(pressTimer.current); }, []);
 
   const handleRepost = () => {
     setIsReposted(!isReposted);
@@ -207,6 +309,10 @@ export function MaterialCard({
     onOpenProfile?.(post);
   };
 
+  // `zapAmount` on the mock note; falls back to the count when a caller has not
+  // plumbed it (thread replies, profile cards).
+  const satsZapped = post.stats.satsZapped ?? post.stats.zaps;
+
   const formatNumber = (num: number): string => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
@@ -217,27 +323,61 @@ export function MaterialCard({
   const ActionCount = ({ value }: { value: number }) =>
     value > 0 ? <span className="text-sm font-medium">{formatNumber(value)}</span> : null;
 
-  const renderContent = (content: string) => {
-    // Highlight hashtags
-    let processedContent = content.replace(
-      /#(\w+)/g,
-      '<span style="color: var(--md-primary); font-weight: 500;">#$1</span>'
-    );
-    
-    // Highlight mentions
-    processedContent = processedContent.replace(
-      /nostr:(\w+)/g,
-      '<span style="color: var(--md-primary); font-weight: 500;">@$1</span>'
-    );
-    
-    // Highlight links
-    processedContent = processedContent.replace(
-      /(https?:\/\/[^\s]+)/g,
-      '<span style="color: var(--md-primary); text-decoration: underline;">$1</span>'
-    );
-    
-    return { __html: processedContent };
-  };
+  /**
+   * Rich text as real elements instead of `dangerouslySetInnerHTML`. The old
+   * version injected coloured spans, so nothing in the body was a control: a tap
+   * on a hashtag or a link bubbled to the card and opened the thread, and a
+   * `nostr:` mention rendered as `@<hex-ish token>` instead of a name
+   * (gaps ame-82).
+   *
+   * Mentions resolve to the mock display name and open that author's profile.
+   * Hashtags and links stop the tap here rather than mis-navigating: neither a
+   * hashtag feed nor a web view exists in this reproduction, and this simulator
+   * never leaves the page.
+   */
+  const renderContent = (content: string) =>
+    content.split(/(#\w+|nostr:\w+|https?:\/\/[^\s]+)/g).map((token, i) => {
+      if (/^#\w+$/.test(token)) {
+        return (
+          <button
+            key={i}
+            type="button"
+            onClick={(e) => e.stopPropagation()}
+            className="font-medium"
+            style={{ color: 'var(--md-primary)' }}
+          >
+            {token}
+          </button>
+        );
+      }
+      if (/^nostr:\w+$/.test(token)) {
+        const name = mentionName(token.slice(6));
+        return (
+          <button
+            key={i}
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onOpenProfile?.(post); }}
+            className="font-medium"
+            style={{ color: 'var(--md-primary)' }}
+          >
+            @{name}
+          </button>
+        );
+      }
+      if (/^https?:\/\//.test(token)) {
+        return (
+          <span
+            key={i}
+            onClick={(e) => e.stopPropagation()}
+            className="underline"
+            style={{ color: 'var(--md-primary)' }}
+          >
+            {token}
+          </span>
+        );
+      }
+      return <React.Fragment key={i}>{token}</React.Fragment>;
+    });
 
   return (
     <motion.article
@@ -249,6 +389,7 @@ export function MaterialCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 500, damping: 30 }}
       layout
+      ref={rootRef}
       onClick={onOpenThread}
     >
       {/* Card Header */}
@@ -263,12 +404,18 @@ export function MaterialCard({
           className="relative z-10 shrink-0"
         >
           <Avatar seed={post.author.handle || post.author.name || 'default'} className="md-avatar" />
-          {post.author.nip05 && (
-            <div className="nip05-badge absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center z-20">
-              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-            </div>
+          {/* The "Following" shield ground truth puts on the note avatar — in
+              dark it is `inversePrimary` (#6200EE), NOT the accent. We used to
+              draw a NIP-05 checkmark here, a different marker meaning a
+              different thing, inherited from the v1.12.6 map (gaps ame-81). */}
+          {post.author.following && (
+            <span
+              className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center z-20"
+              style={{ background: 'var(--md-inverse-primary, #6200EE)' }}
+              title="Following"
+            >
+              <ShieldCheck className="w-3 h-3 text-white" />
+            </span>
           )}
         </motion.button>
 
@@ -277,20 +424,26 @@ export function MaterialCard({
             pair pinned right. v1.12.6 split this across two rows and hung the
             timestamp under the name. */}
         <div className="flex-1 min-w-0 flex items-center gap-[5px]">
+          {/* A repost is signalled ONLY by the author's name going grey — the
+              word "boosted" and `BoostedMark()` were deleted in v1.13.1. */}
           <button
             type="button"
             onClick={handleOpenProfile}
-            className="font-semibold text-[var(--md-on-surface)] truncate text-left min-w-0"
+            className="font-semibold truncate text-left flex-1 min-w-0"
+            style={{ color: post.isRepost ? 'var(--amethyst-gray-text)' : 'var(--md-on-surface)' }}
           >
             {post.author.name}
           </button>
 
           {markers.edited && <QuietMark Icon={Pencil} />}
           {markers.pinned && <QuietMark Icon={Pin} />}
+          {markers.draft && <QuietMark label="Draft" />}
+          {markers.rumor && <QuietMark Icon={EyeOff} />}
           {markers.location && <HeaderPill Icon={MapPin} label={markers.location} />}
           {markers.ots && <HeaderPill Icon={Stamp} label={markers.ots} />}
           {markers.pow && <HeaderPill Icon={Cog} label={markers.pow} />}
           {markers.expiration && <HeaderPill Icon={Timer} label={markers.expiration} />}
+          {markers.bounty && <HeaderPill Icon={Trophy} label={markers.bounty} />}
 
           {post.isLive && (
             <span className="live-badge text-xs font-bold px-2 py-0.5 rounded-full text-white shrink-0">
@@ -306,7 +459,15 @@ export function MaterialCard({
             <motion.button
               whileTap={{ scale: 0.9 }}
               transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              onClick={(e) => {
+                // The header does not stopPropagation, so without this the tap
+                // bubbled to the card and opened the THREAD — worse than the
+                // no-op it looked like (gaps ame-13).
+                e.stopPropagation();
+                setMenuOpen(true);
+              }}
               aria-label="Note options"
+              data-tour="amethyst-note-options"
               className="p-1"
             >
               <MoreVertical className="w-5 h-5" style={{ color: 'var(--amethyst-placeholder)' }} />
@@ -338,22 +499,25 @@ export function MaterialCard({
 
       {/* Card Content */}
       <div className="px-4 pb-3">
-        <p 
-          className="text-[var(--md-on-surface)] leading-relaxed whitespace-pre-wrap"
-          dangerouslySetInnerHTML={renderContent(post.content)}
-        />
+        <p className="text-[var(--md-on-surface)] leading-relaxed whitespace-pre-wrap">
+          {renderContent(post.content)}
+        </p>
       </div>
 
       {/* Card Images */}
       {post.images && post.images.length > 0 && (
-        <div className={`px-4 pb-3 grid gap-2 ${post.images.length === 1 ? 'grid-cols-1' : post.images.length === 2 ? 'grid-cols-2' : 'grid-cols-2'}`}>
+        /* No tap target here on purpose: neither screen map documents one, and
+           the hover/press springs we used to run made the tiles LOOK tappable
+           while their click fell through to the card and opened the thread
+           (gaps ame-80). */
+        <div
+          data-tour="amethyst-note-media"
+          className={`px-4 pb-3 grid gap-2 ${post.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}
+        >
           {post.images.slice(0, 4).map((image, index) => (
-            <motion.div
+            <div
               key={index}
               className={`relative overflow-hidden rounded-lg ${post.images!.length === 1 ? 'aspect-video' : 'aspect-square'}`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
             >
               <img
                 src={image}
@@ -365,7 +529,7 @@ export function MaterialCard({
                   <span className="text-white text-xl font-bold">+{post.images!.length - 4}</span>
                 </div>
               )}
-            </motion.div>
+            </div>
           ))}
         </div>
       )}
@@ -419,11 +583,20 @@ export function MaterialCard({
           whileTap={{ scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
           onClick={handleLike}
+          onPointerDown={startPress}
+          onPointerUp={endPress}
+          onPointerLeave={endPress}
+          onContextMenu={(e) => { e.preventDefault(); setPaletteOpen(true); }}
+          aria-label={isLiked ? 'Remove reaction' : 'React'}
           className={`action-btn action-btn-like md-ripple flex items-center gap-1.5 transition-colors ${
             isLiked ? 'active text-red-500' : 'text-[var(--md-on-surface-variant)] hover:text-red-500'
           }`}
         >
-          <Heart className="w-5 h-5" fill={isLiked ? 'currentColor' : 'none'} />
+          {reaction ? (
+            <span className="w-5 h-5 leading-5 text-center text-[15px]">{reaction}</span>
+          ) : (
+            <Heart className="w-5 h-5" fill={isLiked ? 'currentColor' : 'none'} />
+          )}
           <ActionCount value={post.stats.likes + (isLiked ? 1 : 0)} />
         </motion.button>
 
@@ -438,7 +611,10 @@ export function MaterialCard({
           style={{ color: isZapped ? 'var(--bitcoin-orange)' : undefined }}
         >
           <Zap className="w-5 h-5" fill={isZapped ? 'currentColor' : 'none'} />
-          <ActionCount value={post.stats.zaps + (isZapped ? 21 : 0)} />
+          {/* Sats, not the zap count. Ground truth shows an amount in this slot
+              (the reference footer reads ⚡7.0k), so +21 used to be added to the
+              wrong quantity entirely (gaps ame-79). */}
+          <ActionCount value={satsZapped + (isZapped ? 21 : 0)} />
         </motion.button>
 
         {/* Share: `showCounter = false` upstream, so it is icon-only and — being
@@ -455,13 +631,104 @@ export function MaterialCard({
         </motion.button>
       </div>
 
+      {/* The three sheets below use `fixed`, not `absolute`. They live inside the
+          card, and the nearest positioned ancestor is the scrolling feed, so an
+          absolutely-positioned `items-end` sheet lands at the bottom of the
+          SCROLL CONTENT — metres below the viewport. `fixed` resolves against the
+          phone screen instead, because MobilePhoneFrame's screen carries
+          `translateZ(0)` precisely to be that containing block (CLAUDE.md).
+          The Share sheet had this latent from the day it shipped. */}
+
+      {/* Note overflow. `NoteQuickActionMenu.kt` — labels are the `quick_action_*`
+          strings verbatim, in upstream's order. Copy paths say what they did
+          rather than silently touching the clipboard; Block and Report are the
+          two that open their own confirmation upstream, so they say so here. */}
+      {menuOpen && sheet(
+        <div
+          className="fixed inset-0 z-[130] flex items-end"
+          onClick={(e) => { e.stopPropagation(); setMenuOpen(false); }}
+        >
+          <div className="absolute inset-0 bg-black/60" />
+          <div
+            role="dialog"
+            aria-label="Note options"
+            data-tour="amethyst-note-menu"
+            className="relative w-full rounded-t-3xl pb-3"
+            style={{ background: 'var(--md-surface-container-high)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {[
+              { label: 'Copy Text', Icon: Copy },
+              { label: 'Note ID', Icon: Copy },
+              { label: 'Author ID', Icon: Copy },
+              { label: 'Broadcast', Icon: Radio },
+              { label: 'Mute thread', Icon: BellOff },
+              { label: 'Unfollow', Icon: UserMinus },
+              { label: 'Block', Icon: ShieldCheck },
+              { label: 'Report', Icon: Flag },
+            ].map((row) => (
+              <button
+                key={row.label}
+                type="button"
+                onClick={() => setMenuOpen(false)}
+                className="w-full flex items-center gap-4 px-5 py-3 text-left"
+                style={{ color: row.label === 'Block' || row.label === 'Report' ? 'var(--md-error)' : 'var(--md-on-surface)' }}
+              >
+                <row.Icon className="w-5 h-5 shrink-0 text-[var(--md-on-surface-variant)]" />
+                {row.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Long-press reaction palette. Upstream's default set is configurable in
+          Settings › Reactions; this is the shipped default row. */}
+      {paletteOpen && sheet(
+        <div
+          className="fixed inset-0 z-[130] flex items-end"
+          onClick={(e) => { e.stopPropagation(); setPaletteOpen(false); }}
+        >
+          <div className="absolute inset-0 bg-black/60" />
+          <div
+            role="dialog"
+            aria-label="React"
+            data-tour="amethyst-reaction-palette"
+            className="relative w-full rounded-t-3xl px-4 py-5"
+            style={{ background: 'var(--md-surface-container-high)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Scrollable, like the real palette: the set is configurable, so it
+                must not assume it fits the phone's width. */}
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+              {['❤️', '👍', '🔥', '🤙', '😂', '🫂', '⚡'].map((e) => (
+                <button
+                  key={e}
+                  type="button"
+                  onClick={() => {
+                    setReaction(e);
+                    setIsLiked(true);
+                    setPaletteOpen(false);
+                    onLike?.(post.id);
+                  }}
+                  aria-label={`React with ${e}`}
+                  className="text-2xl leading-none p-2"
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Share sheet. In v1.13.1 the Share button stopped firing the Android
           chooser directly and opens this in-app ModalBottomSheet instead; only
           the first row still hands off to the OS. Strings verbatim:
           quick_action_share / share_as_image / share_as_image_url / share_as_qr. */}
-      {shareOpen && (
+      {shareOpen && sheet(
         <div
-          className="absolute inset-0 z-[130] flex items-end"
+          className="fixed inset-0 z-[130] flex items-end"
           onClick={(e) => {
             e.stopPropagation();
             setShareOpen(false);
@@ -531,7 +798,13 @@ export function MaterialCard({
               reappears here, so it is now visible to every user instead of only
               Complete-mode ones. Marks are drawn locally: this simulator makes
               zero remote requests, so real relay favicons are out of scope. */}
-          <div className="flex items-center gap-3 pt-1">
+          <div className="pt-1">
+            {/* Ground truth NAMES this row; a bare server glyph in the label
+                column left it unreadable (gaps ame-12). */}
+            <p className="text-xs mb-1" style={{ color: 'var(--amethyst-placeholder)' }}>
+              Accepted by relays
+            </p>
+            <div className="flex items-center gap-3">
             <span className="w-6 shrink-0 flex justify-center">
               <Server className="w-5 h-5" style={{ color: 'var(--amethyst-placeholder)' }} />
             </span>
@@ -546,6 +819,7 @@ export function MaterialCard({
                   {r.host[0].toUpperCase()}
                 </span>
               ))}
+            </div>
             </div>
           </div>
         </div>

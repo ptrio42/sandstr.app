@@ -13,11 +13,13 @@ interface HomeScreenProps {
   onOpenThread?: (post: PostData) => void;
   /** Tap an author's avatar or name in the feed → that author's profile. */
   onOpenProfile?: (post: PostData) => void;
+  /** Reply opens the composer with THIS note quoted (gaps ame-77). */
+  onReplyTo?: (post: PostData) => void;
   /** Reported so the guided tour's "like a post" step can complete. */
   onLikePost?: () => void;
 }
 
-export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onOpenProfile, onLikePost }: HomeScreenProps) {
+export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onOpenProfile, onReplyTo, onLikePost }: HomeScreenProps) {
   // Real Amethyst home has TWO switchers: the feed selector in the app bar
   // ("All Follows ▾") and the content sub-tabs below it.
   const [activeTab, setActiveTab] = useState<'new_threads' | 'conversations'>('new_threads');
@@ -40,6 +42,9 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onOpenPr
           avatar: author?.avatar || generateAvatarGradient(note.pubkey), // local, offline — no DiceBear
           nip05: author?.nip05,
           isVerified: author?.isVerified,
+          // This IS the All Follows feed, so every author in it is one — which
+          // is exactly what the avatar's "Following" shield means upstream.
+          following: true,
         },
         content: note.content,
         timestamp: formatTimestamp(note.created_at),
@@ -48,7 +53,11 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onOpenPr
           reposts: note.reposts,
           zaps: note.zaps,
           likes: note.likes,
+          // The zap slot shows an AMOUNT upstream; the count alone was the wrong
+          // quantity (gaps ame-79).
+          satsZapped: note.zapAmount,
         },
+        isRepost: note.isRepost,
         images: note.images,
         hashtags: note.hashtags,
         community: note.community,
@@ -113,8 +122,10 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onOpenPr
   }, []);
 
   const handleReply = useCallback((id: string) => {
-    onOpenCompose();
-  }, [onOpenCompose]);
+    const post = posts.find((p) => p.id === id);
+    if (post && onReplyTo) onReplyTo(post);
+    else onOpenCompose();
+  }, [onOpenCompose, onReplyTo, posts]);
 
   return (
     <div className="flex flex-col h-full bg-[var(--md-background)]" data-tour="amethyst-feed">

@@ -75,6 +75,8 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
   // The drawer's "You" / "Create" / "Accounts" destinations, pushed over the
   // tab content the way Settings is (gaps ame-31/32/112/113/126…133).
   const [drawerDetail, setDrawerDetail] = useState<DrawerDetailId | null>(null);
+  // The note a reply is aimed at, so the composer can quote it (gaps ame-77).
+  const [replyTo, setReplyTo] = useState<PostData | null>(null);
   const parentTheme = useParentTheme();
   const tourContext = useContext(TourContext);
   const registerAction = (actionType: string) => {
@@ -233,6 +235,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
           setIsDrawerOpen(false);
           setThreadPost(null);
           setDrawerDetail(null);
+          setReplyTo(null);
           setIsComposeOpen(true);
         }
         break;
@@ -332,7 +335,8 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         return (
           <HomeScreen
             key="home"
-            onOpenCompose={() => setIsComposeOpen(true)}
+            onOpenCompose={() => { setReplyTo(null); setIsComposeOpen(true); }}
+            onReplyTo={(post) => { setReplyTo(post); setIsComposeOpen(true); }}
             onOpenDrawer={() => setIsDrawerOpen(true)}
             onOpenThread={(post) => setThreadPost(post)}
             onOpenProfile={(post) => {
@@ -469,8 +473,9 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       {/* Compose Modal */}
       <ComposeScreen
         isOpen={isComposeOpen}
-        onClose={() => setIsComposeOpen(false)}
+        onClose={() => { setIsComposeOpen(false); setReplyTo(null); }}
         onPost={handleNewPost}
+        replyTo={replyTo ? { author: replyTo.author.name, content: replyTo.content } : null}
       />
 
       {/* Drawer destinations — same overlay band as Settings (both are pushed
