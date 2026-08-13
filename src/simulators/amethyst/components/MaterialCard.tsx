@@ -240,6 +240,10 @@ export function MaterialCard({
   const markers = React.useMemo(() => headerMarkers(post), [post.id]);
   const [shareOpen, setShareOpen] = React.useState(false);
   const [menuOpen, setMenuOpen] = React.useState(false);
+  // `showMore` — upstream truncates a long body and puts a pill over the faded
+  // remainder. The thread's root note is the same card, which is where ground
+  // truth documents the pill explicitly (gaps ame-10).
+  const [expanded, setExpanded] = React.useState(false);
   // Long-press on Like opens the emoji palette; a tap is the default heart.
   // `DefaultReactionRowItems` keeps both on the SAME button (gaps ame-14).
   const [paletteOpen, setPaletteOpen] = React.useState(false);
@@ -312,6 +316,8 @@ export function MaterialCard({
   // `zapAmount` on the mock note; falls back to the count when a caller has not
   // plumbed it (thread replies, profile cards).
   const satsZapped = post.stats.satsZapped ?? post.stats.zaps;
+  /** Long enough that the real client would fold it. */
+  const truncated = post.content.length > 280 || post.content.split('\n').length > 8;
 
   const formatNumber = (num: number): string => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
@@ -499,9 +505,32 @@ export function MaterialCard({
 
       {/* Card Content */}
       <div className="px-4 pb-3">
-        <p className="text-[var(--md-on-surface)] leading-relaxed whitespace-pre-wrap">
-          {renderContent(post.content)}
-        </p>
+        <div className="relative">
+          <p
+            className="text-[var(--md-on-surface)] leading-relaxed whitespace-pre-wrap"
+            style={truncated && !expanded ? { maxHeight: 160, overflow: 'hidden' } : undefined}
+          >
+            {renderContent(post.content)}
+          </p>
+          {truncated && !expanded && (
+            <>
+              {/* The faded remainder the pill sits over */}
+              <span
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-16"
+                style={{ background: 'linear-gradient(transparent, var(--md-background))' }}
+              />
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
+                data-tour="amethyst-show-more"
+                className="absolute left-0 bottom-0 px-3 py-1 rounded-full text-sm font-medium"
+                style={{ background: 'var(--md-surface-container-high)', color: 'var(--md-primary)' }}
+              >
+                Show More
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Card Images */}

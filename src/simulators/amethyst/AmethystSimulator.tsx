@@ -24,6 +24,7 @@ import './amethyst.theme.css';
 import type { MockUser } from '../../data/mock';
 import { generateAvatarGradient, getUserByPubkey } from '../../data/mock';
 import { TourContext } from '../../components/tour';
+import { AmethystToastContext } from './toast';
 
 // Types.
 // `search` is a legacy id kept on purpose: it is the tour/FAQ payload for the
@@ -77,6 +78,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
   const [drawerDetail, setDrawerDetail] = useState<DrawerDetailId | null>(null);
   // The note a reply is aimed at, so the composer can quote it (gaps ame-77).
   const [replyTo, setReplyTo] = useState<PostData | null>(null);
+  const [loginMode, setLoginMode] = useState<'login' | 'signup'>('login');
   /**
    * Bottom-bar unread dots. Visiting a tab clears its dot, so the dot means
    * something instead of being permanent decoration (gaps ame-70). Wallet and
@@ -158,8 +160,31 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
     setIsDrawerOpen(false);
   }, [registerAction, openSettingsAt]);
 
-  // Handle new post
+  /**
+   * A published note. It used to only toast — `HomeScreen` took no prop for a
+   * fresh note and never called `setPosts`, so the note the visitor had just
+   * written was nowhere (gaps ame-15).
+   */
+  const [newPost, setNewPost] = useState<PostData | null>(null);
   const handleNewPost = useCallback((content: string) => {
+    const body = content.trim();
+    if (body) {
+      setNewPost({
+        id: `own-${Date.now()}`,
+        author: {
+          name: 'sandy',
+          handle: 'sandy.example',
+          avatar: '',
+          nip05: 'sandy.example',
+          isVerified: true,
+          following: true,
+        },
+        content: body,
+        timestamp: 'now',
+        stats: { replies: 0, reposts: 0, zaps: 0, likes: 0 },
+      });
+      setActiveTab('home');
+    }
     registerAction('post');
     showToast('Post published successfully! 🎉', 'success');
   }, [showToast, registerAction]);
@@ -346,6 +371,10 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         break;
         
       case 'back':
+        // Optional payload 'signup' lands on the Welcome Ostrich! page. Without
+        // it `back` keeps its historical meaning — log out onto Login — so every
+        // stored command is unaffected (gaps ame-04).
+        setLoginMode(tourCommand.payload === 'signup' ? 'signup' : 'login');
         setIsAuthenticated(false);
         setCurrentUser(null);
         setDrawerDetail(null);
@@ -363,6 +392,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         return (
           <HomeScreen
             key="home"
+            newPost={newPost}
             onOpenCompose={() => { setReplyTo(null); setIsComposeOpen(true); }}
             onReplyTo={(post) => { setReplyTo(post); setIsComposeOpen(true); }}
             onOpenDrawer={() => setIsDrawerOpen(true)}
@@ -405,6 +435,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
               setActiveTab('home');
             }}
             onFollowToggle={() => registerAction('follow')}
+            onMessage={() => { setProfileUser(null); setActiveTab('messages'); }}
           />
         );
       default:
@@ -415,16 +446,19 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
   // Show login screen if not authenticated
   if (!isAuthenticated) {
     return (
-      <div 
-        className={`amethyst-simulator ${getThemeClass()} ${className}`}
-        data-theme={parentTheme}
-      >
-        <LoginScreen onLogin={handleLogin} />
-      </div>
+      <AmethystToastContext.Provider value={showToast}>
+        <div
+          className={`amethyst-simulator ${getThemeClass()} ${className}`}
+          data-theme={parentTheme}
+        >
+          <LoginScreen onLogin={handleLogin} initialMode={loginMode} />
+        </div>
+      </AmethystToastContext.Provider>
     );
   }
 
   return (
+    <AmethystToastContext.Provider value={showToast}>
     <div 
       className={`amethyst-simulator ${getThemeClass()} ${className}`}
       data-theme={parentTheme}
@@ -566,6 +600,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         )}
       </AnimatePresence>
     </div>
+    </AmethystToastContext.Provider>
   );
 }
 

@@ -586,7 +586,7 @@ export const amethystFaq: ClientFaq = {
       // Upstream: DrawerSections.kt (Wallet in the "You" section),
       // WalletScreen.kt ("Add NWC Connection", wallet-type chooser, paste
       // nostr+walletconnect:// URI, per-wallet Set as Default/Rename).
-      // The recording-era drawer has no Wallet row — TEXT-ONLY.
+      // Live in the sim since 2026-08-13 — gaps ame-140/ame-141.
       id: 'connect-wallet',
       category: 'Advanced',
       question: 'How do I connect a Lightning wallet (for zaps)?',
@@ -597,6 +597,15 @@ export const amethystFaq: ClientFaq = {
         'You can attach several wallets — set one as the default for zaps.',
       ],
       note: 'Quick Zap amounts and zap privacy live separately, under Settings → Zaps.',
+      showMe: [
+        {
+          target: '[data-tour="amethyst-wallet-nwc"]',
+          title: 'Add NWC Connection',
+          content: 'The Wallet tab opens on the on-chain card and an empty NWC list. This lavender pill is where a Lightning wallet gets attached — tap it.',
+          position: 'top',
+          commands: cmd({ type: 'login' }, { type: 'navigate', payload: 'wallet' }),
+        },
+      ],
     },
     {
       // Upstream: exists=false — strings.xml (all 5126 lines) has no

@@ -8,6 +8,8 @@ import type { MockNote } from '../../../data/mock';
 import '../amethyst.theme.css';
 
 interface HomeScreenProps {
+  /** A note the visitor just published, prepended to the feed (gaps ame-15). */
+  newPost?: PostData | null;
   onOpenCompose: () => void;
   onOpenDrawer?: () => void;
   onOpenThread?: (post: PostData) => void;
@@ -60,7 +62,7 @@ export function buildFeedPosts(): PostData[] {
   });
 }
 
-export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onOpenProfile, onReplyTo, onLikePost }: HomeScreenProps) {
+export function HomeScreen({ newPost, onOpenCompose, onOpenDrawer, onOpenThread, onOpenProfile, onReplyTo, onLikePost }: HomeScreenProps) {
   // Real Amethyst home has TWO switchers: the feed selector in the app bar
   // ("All Follows ▾") and the content sub-tabs below it.
   const [activeTab, setActiveTab] = useState<'new_threads' | 'conversations'>('new_threads');
@@ -71,16 +73,26 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onOpenPr
   const touchStartY = useRef(0);
 
   const [posts, setPosts] = useState(buildFeedPosts);
+  // Publishing used to only toast: `setPosts` was never called and the screen
+  // took no prop for a fresh note, so a post the visitor just wrote vanished.
+  React.useEffect(() => {
+    if (newPost) setPosts((cur) => (cur[0]?.id === newPost.id ? cur : [newPost, ...cur]));
+  }, [newPost]);
   // Which feed the app-bar selector is on. Picking one really re-slices the
   // list — before, the dialog set a label and left the same notes on screen
   // (gaps ame-74). Mute List is the honest empty case.
   const [feed, setFeed] = useState('All Follows');
   const visiblePosts = useMemo(() => {
-    if (feed === 'Mute List') return [];
-    if (feed === 'Global') return [...posts].reverse();
-    if (feed === 'Default Follow List') return posts.filter((_, i) => i % 2 === 0);
-    return posts;
-  }, [feed, posts]);
+    let list = posts;
+    if (feed === 'Mute List') list = [];
+    else if (feed === 'Global') list = [...posts].reverse();
+    else if (feed === 'Default Follow List') list = posts.filter((_, i) => i % 2 === 0);
+    // The sub-tabs are a real split upstream: "New Threads" is root notes,
+    // "Conversations" is the ones with replies under them. The indicator used to
+    // move over an identical list (gaps ame-07).
+    if (activeTab === 'conversations') return list.filter((p) => p.stats.replies > 0);
+    return list;
+  }, [feed, posts, activeTab]);
 
   // Pull-to-refresh handlers
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -149,7 +161,7 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onOpenPr
       <AppTopBar onOpenDrawer={onOpenDrawer} center={<FeedSelector defaultFeed="All Follows" onChange={setFeed} />} />
 
       {/* Content sub-tabs (distinct from the feed selector above) */}
-      <div className="md-tabs sticky top-16 z-10 bg-[var(--md-surface)]">
+      <div className="md-tabs sticky top-16 z-10 bg-[var(--md-surface)]" data-tour="amethyst-home-tabs">
         <button
           onClick={() => setActiveTab('new_threads')}
           className={`md-tab ${activeTab === 'new_threads' ? 'active' : ''}`}
