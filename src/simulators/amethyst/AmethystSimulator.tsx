@@ -4,7 +4,7 @@ import { BottomNav } from './components/BottomNav';
 import { FloatingActionButton } from './components/FloatingActionButton';
 import { Drawer } from './components/Drawer';
 import { LoginScreen } from './screens/LoginScreen';
-import { HomeScreen } from './screens/HomeScreen';
+import { HomeScreen, buildFeedPosts } from './screens/HomeScreen';
 import { BrowserScreen } from './screens/BrowserScreen';
 import { WalletScreen } from './screens/WalletScreen';
 import { DiscoverScreen } from './screens/DiscoverScreen';
@@ -77,6 +77,18 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
   const [drawerDetail, setDrawerDetail] = useState<DrawerDetailId | null>(null);
   // The note a reply is aimed at, so the composer can quote it (gaps ame-77).
   const [replyTo, setReplyTo] = useState<PostData | null>(null);
+  /**
+   * Bottom-bar unread dots. Visiting a tab clears its dot, so the dot means
+   * something instead of being permanent decoration (gaps ame-70). Wallet and
+   * Browser are absent on purpose — upstream never dots them.
+   */
+  const [seenTabs, setSeenTabs] = useState<Record<string, boolean>>({});
+  // Home is where the visitor starts, so it never opens with a dot even though
+  // upstream can dot it.
+  const unreadDots = {
+    messages: !seenTabs.messages,
+    notifications: !seenTabs.notifications,
+  };
   const parentTheme = useParentTheme();
   const tourContext = useContext(TourContext);
   const registerAction = (actionType: string) => {
@@ -114,6 +126,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       registerAction('navigate_settings');
     } else {
       setActiveTab(tab as TabId);
+      setSeenTabs((s) => ({ ...s, [tab]: true }));
       if (tab === 'home') registerAction('navigate_home');
       if (tab === 'profile') registerAction('view_profile');
     }
@@ -202,6 +215,21 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         // eight TabId payloads keep their exact meaning, and an unknown id is
         // ignored rather than landing the visitor on a blank overlay.
         const raw = tourCommand.payload;
+        // `thread` opens the note detail on the newest feed note. Until now the
+        // overlay was reachable only by physically tapping a card, so no tour or
+        // FAQ step could land on it (gaps ame-20).
+        if (raw === 'thread') {
+          const first = buildFeedPosts()[0];
+          if (first) {
+            setIsComposeOpen(false);
+            setIsSettingsOpen(false);
+            setIsDrawerOpen(false);
+            setDrawerDetail(null);
+            setActiveTab('home');
+            setThreadPost(first);
+          }
+          break;
+        }
         if (typeof raw === 'string' && raw.startsWith('drawer:')) {
           const id = raw.slice(7) as DrawerDetailId;
           if (DRAWER_DETAIL_IDS.includes(id)) {
@@ -467,6 +495,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         <BottomNav
           activeTab={activeTab}
           onTabChange={handleTabChange}
+          unread={unreadDots}
         />
       )}
 
@@ -497,7 +526,16 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
 
       {/* Note / thread detail overlay */}
       {threadPost && (
-        <ThreadScreen post={threadPost} onBack={() => setThreadPost(null)} />
+        <ThreadScreen
+          post={threadPost}
+          onBack={() => setThreadPost(null)}
+          onOpenProfile={(post) => {
+            setProfileUser(post.pubkey ? getUserByPubkey(post.pubkey) ?? null : null);
+            setThreadPost(null);
+            setActiveTab('profile');
+            registerAction('view_profile');
+          }}
+        />
       )}
 
       {/* Settings — full-screen within the phone (plain div: a framer opacity spring

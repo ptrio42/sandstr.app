@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MaterialCard, PostData } from '../components/MaterialCard';
 import { AppTopBar } from '../components/AppTopBar';
@@ -19,6 +19,47 @@ interface HomeScreenProps {
   onLikePost?: () => void;
 }
 
+/**
+ * The feed, built once from mock notes. Exported because `AmethystSimulator`
+ * needs the same first note to answer `navigate: 'thread'` — duplicating the
+ * mapping there would let the two drift (gaps ame-20).
+ */
+export function buildFeedPosts(): PostData[] {
+  return getRecentNotes(20).map((note) => {
+    const author = getUserByPubkey(note.pubkey);
+    return {
+      id: note.id,
+      pubkey: note.pubkey,
+      author: {
+        name: author?.displayName || 'Unknown',
+        handle: author?.nip05 || author?.username || 'unknown',
+        avatar: author?.avatar || generateAvatarGradient(note.pubkey), // local, offline — no DiceBear
+        nip05: author?.nip05,
+        isVerified: author?.isVerified,
+        // This IS the All Follows feed, so every author in it is one — which is
+        // exactly what the avatar's "Following" shield means upstream.
+        following: true,
+      },
+      content: note.content,
+      timestamp: formatTimestamp(note.created_at),
+      stats: {
+        replies: note.replies,
+        reposts: note.reposts,
+        zaps: note.zaps,
+        likes: note.likes,
+        // The zap slot shows an AMOUNT upstream; the count alone was the wrong
+        // quantity (gaps ame-79).
+        satsZapped: note.zapAmount,
+      },
+      isRepost: note.isRepost,
+      images: note.images,
+      hashtags: note.hashtags,
+      community: note.community,
+      isLive: note.isLive,
+    };
+  });
+}
+
 export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onOpenProfile, onReplyTo, onLikePost }: HomeScreenProps) {
   // Real Amethyst home has TWO switchers: the feed selector in the app bar
   // ("All Follows ▾") and the content sub-tabs below it.
@@ -29,42 +70,17 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onOpenPr
   const feedRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef(0);
 
-  const [posts, setPosts] = useState(() => {
-    // Convert mock notes to post format
-    return getRecentNotes(20).map(note => {
-      const author = getUserByPubkey(note.pubkey);
-      return {
-        id: note.id,
-        pubkey: note.pubkey,
-        author: {
-          name: author?.displayName || 'Unknown',
-          handle: author?.nip05 || author?.username || 'unknown',
-          avatar: author?.avatar || generateAvatarGradient(note.pubkey), // local, offline — no DiceBear
-          nip05: author?.nip05,
-          isVerified: author?.isVerified,
-          // This IS the All Follows feed, so every author in it is one — which
-          // is exactly what the avatar's "Following" shield means upstream.
-          following: true,
-        },
-        content: note.content,
-        timestamp: formatTimestamp(note.created_at),
-        stats: {
-          replies: note.replies,
-          reposts: note.reposts,
-          zaps: note.zaps,
-          likes: note.likes,
-          // The zap slot shows an AMOUNT upstream; the count alone was the wrong
-          // quantity (gaps ame-79).
-          satsZapped: note.zapAmount,
-        },
-        isRepost: note.isRepost,
-        images: note.images,
-        hashtags: note.hashtags,
-        community: note.community,
-        isLive: note.isLive,
-      };
-    });
-  });
+  const [posts, setPosts] = useState(buildFeedPosts);
+  // Which feed the app-bar selector is on. Picking one really re-slices the
+  // list — before, the dialog set a label and left the same notes on screen
+  // (gaps ame-74). Mute List is the honest empty case.
+  const [feed, setFeed] = useState('All Follows');
+  const visiblePosts = useMemo(() => {
+    if (feed === 'Mute List') return [];
+    if (feed === 'Global') return [...posts].reverse();
+    if (feed === 'Default Follow List') return posts.filter((_, i) => i % 2 === 0);
+    return posts;
+  }, [feed, posts]);
 
   // Pull-to-refresh handlers
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -130,7 +146,7 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onOpenPr
   return (
     <div className="flex flex-col h-full bg-[var(--md-background)]" data-tour="amethyst-feed">
       {/* Shared Amethyst app bar; center = feed selector "All Follows ▾" */}
-      <AppTopBar onOpenDrawer={onOpenDrawer} center={<FeedSelector defaultFeed="All Follows" />} />
+      <AppTopBar onOpenDrawer={onOpenDrawer} center={<FeedSelector defaultFeed="All Follows" onChange={setFeed} />} />
 
       {/* Content sub-tabs (distinct from the feed selector above) */}
       <div className="md-tabs sticky top-16 z-10 bg-[var(--md-surface)]">
@@ -201,7 +217,7 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onOpenPr
             gating; it came from the same old promo screenshot that gave us the
             wrong app-bar right slot. */}
         <AnimatePresence mode="popLayout">
-          {posts.map((post, index) => (
+          {visiblePosts.map((post, index) => (
             <motion.div
               key={post.id}
               initial={{ opacity: 0, y: 20 }}
@@ -240,7 +256,7 @@ export function HomeScreen({ onOpenCompose, onOpenDrawer, onOpenThread, onOpenPr
         
         {/* End of Feed */}
         <div className="text-center py-6 text-[var(--md-on-surface-variant)] text-sm">
-          You've reached the end
+          {visiblePosts.length === 0 ? 'Feed is empty.' : "You've reached the end"}
         </div>
       </div>
     </div>
