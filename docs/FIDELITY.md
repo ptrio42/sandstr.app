@@ -80,6 +80,13 @@
 
 **Do zrobienia (druga fala, słabsza wierność / stare stuby):** Keychat, Gossip. Tokeny + killery każdego są niżej w tym pliku; korekty kolorów w `[[client-fidelity-ground-truth]]`. (Primal-MOBILE nadal stary stub — zrobiony tylko web.)
 
+**ZAMROŻONE 2026-08-13 — Amethyst v1.12.6 → archiwum `amethyst-v1-12`.** Pierwszy realny freeze
+wg `docs/VERSIONS.md`, wykonany przed przebudową żywego symulatora do v1.13.1-fdroid. Snapshot:
+`src/simulators/amethyst-v1-12/` (wpis w liście `archived` w `src/registry.tsx`, trasa
+`/c/amethyst-v1-12`), zamrożone dokumenty: `docs/refs/amethyst-v1-12/screen-map.md` +
+`docs/gaps/amethyst-v1-12.md`. Tokeny marki Amethysta niżej w tym pliku opisują wersję ŻYWĄ;
+archiwum nosi własną kopię arkusza (`amethyst-v1-12.theme.css`) i własną klasę rootową.
+
 **USUNIĘTE 2026-08-05 — Olas.** Upstream `pablof7z/olas` bez pushu od 2025-07 (a `olas-nmp` to nielicencjonowany, niedokończony rewrite), więc nie ma stabilnego ground truth do odwzorowania, a nasza wersja była generycznym klonem Instagrama ze Stories/Follow Requests, których Nostr nie ma. Wypadły: `src/simulators/olas/`, `olas-tour.ts`, `public/icons/olas.svg`, wpisy w rejestrze/configs/typach oraz sekcja tokenów w tym pliku. Historia jest w gicie — gdyby upstream ożył, wracamy przez normalny proces reference-first, nie przez `git revert`.
 
 **Start następnej sesji (agent robiący kolejny symulator):**

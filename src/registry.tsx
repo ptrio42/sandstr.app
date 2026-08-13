@@ -385,10 +385,54 @@ const unlisted: ClientEntry[] = [nostrKitten];
  * global and the tour id drives events and storage. The full freeze procedure
  * lives in docs/VERSIONS.md; follow it, don't improvise. (Executed end-to-end
  * and verified in-browser on 2026-08-13 as a dry run, then reverted — the
- * first real freeze is the Amethyst v1.12.6 snapshot, due when the simulator
- * gets rebuilt against v1.13.1.)
+ * first real freeze landed the same day: the Amethyst v1.12.6 snapshot below,
+ * frozen when the simulator was rebuilt against v1.13.1.)
  */
-const archived: ClientEntry[] = [];
+const amethystV112Load: Loader = () => import('./simulators/amethyst-v1-12/AmethystSimulatorWithTour');
+
+const archived: ClientEntry[] = [
+  {
+    id: 'amethyst-v1-12',
+    // Bare brand, not "Amethyst v1.12.6" — Disclaimer ("not affiliated with X")
+    // and Handoff ("Get the real X") interpolate this; `reproduces` carries the version.
+    name: 'Amethyst',
+    description: 'Android Nostr client with rich features and modern design.',
+    platform: 'android',
+    primaryColor: '#6B21A8',
+    secondaryColor: '#A855F7',
+    icon: '/icons/amethyst-v1-12.png',
+    features: [
+      'dm',
+      'zaps',
+      'threads',
+      'search',
+      'relays',
+      'badges',
+      'nip05',
+      'long form',
+      'live streaming',
+      'mute list',
+      'pinned notes',
+    ],
+    frame: 'android',
+    hasTour: true,
+    status: 'ready',
+    kind: 'reproduction',
+    homepage: 'https://amethyst.social',
+    repo: 'https://github.com/vitorpamplona/amethyst',
+    upstreamLicense: 'MIT',
+    installNote: 'Google Play, Zapstore, Obtainium, or a release APK',
+    reproduces: 'v1.12.6',
+    archivedOf: 'amethyst',
+    capturedOn: '2026-08-13',
+    lead: false,
+    // Pinned to the living entry's value at freeze time — a mismatch would flip
+    // the whole page's theme when switching versions.
+    defaultTheme: 'dark',
+    Component: lazy(amethystV112Load),
+    preload: once(amethystV112Load),
+  },
+];
 
 /** Routing resolves unlisted and archived clients too — that is what keeps the egg (and old links) findable. */
 export function getClient(id: string | undefined): ClientEntry | undefined {
