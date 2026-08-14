@@ -7,7 +7,8 @@ import {
 import { useAmethystToast } from '../toast';
 import { MaterialCard } from '../components/MaterialCard';
 import { Avatar } from '../components/Avatar';
-import { mockNotes, getNotesByAuthor, getUserByPubkey } from '../../../data/mock';
+import { mockNotes, mockUsers, getNotesByAuthor, getUserByPubkey } from '../../../data/mock';
+import { toPostData } from '../notesToPosts';
 import type { MockUser } from '../../../data/mock';
 import '../amethyst.theme.css';
 
@@ -120,6 +121,9 @@ const TABS = [
   'Follows', 'Followers', 'Zaps', 'Bookmarks', 'Followed Tags', 'Reports', 'Relays',
 ] as const;
 
+/** Exported so `viewProfile`'s optional `tab` payload can be validated. */
+export const PROFILE_TABS: readonly string[] = TABS;
+
 export type ProfileTab = (typeof TABS)[number];
 
 const badgeHues = [275, 45, 30, 200, 320, 160, 260];
@@ -143,6 +147,24 @@ export function ProfileScreen({ onBack, onFollowToggle, user, initialTab = 'Note
   // Own profile borrows the newest notes (the demo account has none of its own);
   // a real author shows the notes actually attributed to their key.
   const sourceNotes = user ? getNotesByAuthor(user.pubkey).slice(0, 6) : mockNotes.slice(0, 6);
+  /**
+   * Four tabs have honest content sitting in the corpus already, and were
+   * rendering an empty state anyway — the Follows header said 2374 while the
+   * tab under it said "No follows yet", which contradicts itself on screen
+   * (gaps ame-49). Replies are the notes carrying an `['e', …, 'reply']` marker,
+   * Gallery the ones with media, and Follows/Followers slices of the mock
+   * directory. The other seven stay empty on purpose: Zaps, Reports and Relays
+   * are event kinds this corpus does not carry, and synthesising them would be
+   * inventing content, not reproducing it.
+   */
+  const allByAuthor = user ? getNotesByAuthor(user.pubkey) : mockNotes;
+  const replyNotes = allByAuthor
+    .filter((n) => (n.tags || []).some((t) => t[0] === 'e' && t[3] === 'reply'))
+    .slice(0, 6);
+  const galleryNotes = allByAuthor.filter((n) => (n.images?.length ?? 0) > 0).slice(0, 12);
+  // Sized to the counts the tab headers already render, so the two agree.
+  const followsPeople = mockUsers.filter((u) => u.pubkey !== user?.pubkey).slice(0, 8);
+  const followersPeople = mockUsers.filter((u) => u.pubkey !== user?.pubkey).slice(-8);
   const userPosts = sourceNotes.map((note) => {
     const author = getUserByPubkey(note.pubkey);
     return {
@@ -312,7 +334,12 @@ export function ProfileScreen({ onBack, onFollowToggle, user, initialTab = 'Note
             numbers had nowhere to appear at all (gaps ame-49). */}
         <div className="md-tabs sticky top-0 z-10 bg-[var(--md-background)] mt-2 overflow-x-auto" data-tour="amethyst-profile-tabs">
           {TABS.map((t) => (
-            <button key={t} onClick={() => setActiveTab(t)} className={`md-tab whitespace-nowrap ${activeTab === t ? 'active' : ''}`}>
+            <button
+              key={t}
+              onClick={() => setActiveTab(t)}
+              data-tour={`amethyst-profile-tab-${t.toLowerCase().replace(/[^a-z]+/g, '-')}`}
+              className={`md-tab whitespace-nowrap ${activeTab === t ? 'active' : ''}`}
+            >
               {t}{tabCounts[t] !== undefined ? ` ${tabCounts[t]}` : ''}
               {activeTab === t && (
                 <motion.div layoutId="profile-tab-indicator" className="md-tab-indicator" transition={{ type: 'spring', stiffness: 500, damping: 30 }} />
@@ -323,14 +350,57 @@ export function ProfileScreen({ onBack, onFollowToggle, user, initialTab = 'Note
 
         {/* Tab content */}
         <div className="p-2">
-          {activeTab === 'Notes' && userPosts.length > 0 ? (
-            <div className="space-y-2">
-              {userPosts.map((post) => (
-                <MaterialCard key={post.id} post={post} onReply={() => onReplyTo?.(post)} />
+          {activeTab === 'Notes' ? (
+            userPosts.length > 0 ? (
+              <div className="space-y-2">
+                {userPosts.map((post) => (
+                  <MaterialCard key={post.id} post={post} onReply={() => onReplyTo?.(post)} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-[var(--md-on-surface-variant)]">No notes yet</div>
+            )
+          ) : activeTab === 'Replies' ? (
+            replyNotes.length > 0 ? (
+              <div className="space-y-2">
+                {replyNotes.map((n) => (
+                  <MaterialCard key={n.id} post={toPostData(n)} onReply={() => onReplyTo?.(toPostData(n))} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-[var(--md-on-surface-variant)]">No replies yet</div>
+            )
+          ) : activeTab === 'Gallery' ? (
+            galleryNotes.length > 0 ? (
+              <div className="grid grid-cols-3 gap-1" data-tour="amethyst-profile-gallery">
+                {galleryNotes.flatMap((n) =>
+                  (n.images || []).map((src, i) => (
+                    <img key={`${n.id}-${i}`} src={src} alt="" className="w-full aspect-square object-cover rounded-sm" />
+                  )),
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-[var(--md-on-surface-variant)]">No gallery yet</div>
+            )
+          ) : activeTab === 'Follows' || activeTab === 'Followers' ? (
+            <div>
+              {(activeTab === 'Follows' ? followsPeople : followersPeople).map((u) => (
+                <div key={u.pubkey} className="flex items-center gap-3 px-2 py-2.5">
+                  <Avatar seed={u.nip05 || u.username} className="md-avatar shrink-0" />
+                  <span className="flex-1 min-w-0">
+                    <span className="block font-medium truncate text-[var(--md-on-surface)]">{u.displayName}</span>
+                    <span className="block text-sm truncate" style={{ color: 'var(--amethyst-placeholder)' }}>{u.bio}</span>
+                  </span>
+                </div>
               ))}
+              {/* The header count is the real follow graph; this list is the
+                  slice of it the mock directory can show. Saying so beats a
+                  number and a list that disagree. */}
+              <p className="px-2 py-4 text-center text-xs" style={{ color: 'var(--amethyst-placeholder)' }}>
+                Showing {(activeTab === 'Follows' ? followsPeople : followersPeople).length} of{' '}
+                {tabCounts[activeTab]} — this reproduction ships a sample directory, not the whole graph.
+              </p>
             </div>
-          ) : activeTab === 'Notes' ? (
-            <div className="text-center py-12 text-[var(--md-on-surface-variant)]">No notes yet</div>
           ) : (
             <div className="text-center py-12 text-[var(--md-on-surface-variant)]">No {activeTab.toLowerCase()} yet</div>
           )}

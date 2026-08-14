@@ -7,6 +7,9 @@ import '../amethyst.theme.css';
 
 interface MessagesScreenProps {
   onOpenDrawer?: () => void;
+  onOpenSearch?: () => void;
+  /** Which sub-tab to open on, so a command can land on New Requests (ame-92). */
+  initialTab?: 'known' | 'requests';
 }
 
 type Convo = {
@@ -58,8 +61,8 @@ function seedStyle(seed: string): React.CSSProperties {
   return { background: `linear-gradient(135deg, hsl(${h} 55% 55%), hsl(${(h + 40) % 360} 60% 42%))` };
 }
 
-export function MessagesScreen({ onOpenDrawer }: MessagesScreenProps) {
-  const [tab, setTab] = useState<'known' | 'requests'>('known');
+export function MessagesScreen({ onOpenDrawer, onOpenSearch, initialTab = 'known' }: MessagesScreenProps) {
+  const [tab, setTab] = useState<'known' | 'requests'>(initialTab);
   const [open, setOpen] = useState<Convo | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
@@ -77,11 +80,12 @@ export function MessagesScreen({ onOpenDrawer }: MessagesScreenProps) {
     <div className="flex flex-col h-full bg-[var(--md-background)]" data-tour="amethyst-messages">
       <AppTopBar
         onOpenDrawer={onOpenDrawer}
+        onOpenSearch={onOpenSearch}
         center={<img src="/icons/amethyst.png" alt="Amethyst" className="w-8 h-8 object-contain" />}
       />
 
       {/* Tabs: Known / New Requests + overflow */}
-      <div className="md-tabs sticky top-16 z-10 bg-[var(--md-surface)] flex items-center">
+      <div className="md-tabs sticky top-16 z-10 bg-[var(--md-surface)] flex items-center" data-tour="amethyst-messages-tabs">
         <button onClick={() => setTab('known')} className={`md-tab ${tab === 'known' ? 'active' : ''}`}>
           Known
           {tab === 'known' && (

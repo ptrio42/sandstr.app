@@ -7,6 +7,9 @@ import {
   Trophy, EyeOff, ShieldCheck, Copy, Flag, BellOff, UserMinus, Radio,
 } from 'lucide-react';
 import { Avatar } from './Avatar';
+import { useAmethystToast } from '../toast';
+import { useSecurity } from '../securityState';
+import { getUserByPubkey } from '../../../data/mock';
 import '../amethyst.theme.css';
 
 interface PostAuthor {
@@ -62,6 +65,8 @@ interface MaterialCardProps {
   onOpenThread?: () => void;
   /** Tap the author's avatar or name to open THEIR profile (not the thread). */
   onOpenProfile?: (post: PostData) => void;
+  /** A `#tag` in the body opens that hashtag's feed (gaps ame-82). */
+  onOpenHashtag?: (tag: string) => void;
   /**
    * Start the per-reaction gallery expanded. Ground truth: the thread's root
    * note renders with `showReactionDetail = true` (gaps ame-89/ame-137).
@@ -228,6 +233,7 @@ export function MaterialCard({
   onReply,
   onOpenThread,
   onOpenProfile,
+  onOpenHashtag,
   defaultReactionDetail = false,
 }: MaterialCardProps) {
   const [isLiked, setIsLiked] = React.useState(false);
@@ -240,6 +246,12 @@ export function MaterialCard({
   const markers = React.useMemo(() => headerMarkers(post), [post.id]);
   const [shareOpen, setShareOpen] = React.useState(false);
   const [menuOpen, setMenuOpen] = React.useState(false);
+  // Two rows of the overflow menu really change account state upstream, and both
+  // land in Security Filters: Block adds the author to Blocked Users, Mute
+  // thread adds this note to Muted threads. Neither had anywhere to go until
+  // that screen was rebuilt to v1.13.1.
+  const toast = useAmethystToast();
+  const { blockUser, muteThread } = useSecurity();
   // `showMore` — upstream truncates a long body and puts a pill over the faded
   // remainder. The thread's root note is the same card, which is where ground
   // truth documents the pill explicitly (gaps ame-10).
@@ -336,10 +348,10 @@ export function MaterialCard({
    * `nostr:` mention rendered as `@<hex-ish token>` instead of a name
    * (gaps ame-82).
    *
-   * Mentions resolve to the mock display name and open that author's profile.
-   * Hashtags and links stop the tap here rather than mis-navigating: neither a
-   * hashtag feed nor a web view exists in this reproduction, and this simulator
-   * never leaves the page.
+   * Mentions resolve to the mock display name and open that author's profile,
+   * and a hashtag now opens its feed (gaps ame-82). Links still stop the tap
+   * here: there is no web view in this reproduction and this simulator never
+   * leaves the page.
    */
   const renderContent = (content: string) =>
     content.split(/(#\w+|nostr:\w+|https?:\/\/[^\s]+)/g).map((token, i) => {
@@ -348,7 +360,10 @@ export function MaterialCard({
           <button
             key={i}
             type="button"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenHashtag?.(token.slice(1));
+            }}
             className="font-medium"
             style={{ color: 'var(--md-primary)' }}
           >
@@ -702,7 +717,19 @@ export function MaterialCard({
               <button
                 key={row.label}
                 type="button"
-                onClick={() => setMenuOpen(false)}
+                onClick={() => {
+                  setMenuOpen(false);
+                  if (row.label === 'Mute thread') {
+                    muteThread({ id: post.id, title: post.content.split('\n')[0].slice(0, 60) });
+                    toast('Thread muted — Settings › Security Filters › Muted threads', 'success');
+                  } else if (row.label === 'Block') {
+                    const author = post.pubkey ? getUserByPubkey(post.pubkey) : undefined;
+                    if (author) {
+                      blockUser(author);
+                      toast(`${author.displayName} blocked — Settings › Security Filters › Blocked Users`, 'success');
+                    }
+                  }
+                }}
                 className="w-full flex items-center gap-4 px-5 py-3 text-left"
                 style={{ color: row.label === 'Block' || row.label === 'Report' ? 'var(--md-error)' : 'var(--md-on-surface)' }}
               >

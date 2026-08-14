@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MaterialCard, PostData } from '../components/MaterialCard';
 import { AppTopBar } from '../components/AppTopBar';
 import { FeedSelector } from '../components/FeedSelector';
-import { getRecentNotes, getUserByPubkey, generateAvatarGradient } from '../../../data/mock';
-import type { MockNote } from '../../../data/mock';
+import { getRecentNotes } from '../../../data/mock';
+import { toPostData } from '../notesToPosts';
 import '../amethyst.theme.css';
 
 interface HomeScreenProps {
@@ -13,6 +13,16 @@ interface HomeScreenProps {
   onOpenCompose: () => void;
   onOpenDrawer?: () => void;
   onOpenThread?: (post: PostData) => void;
+  /** Opens the Search screen — the app bar's magnifier (upstream `Route.Search`). */
+  onOpenSearch?: () => void;
+  /** A `#tag` tapped in a note body opens that hashtag's feed (gaps ame-82). */
+  onOpenHashtag?: (tag: string) => void;
+  /**
+   * Which sub-tab to open on. The tabs really split the feed, but the state was
+   * screen-local, so no tour or FAQ step could land on "Conversations"
+   * (gaps ame-07).
+   */
+  initialTab?: 'new_threads' | 'conversations';
   /** Tap an author's avatar or name in the feed → that author's profile. */
   onOpenProfile?: (post: PostData) => void;
   /** Reply opens the composer with THIS note quoted (gaps ame-77). */
@@ -24,53 +34,38 @@ interface HomeScreenProps {
 /**
  * The feed, built once from mock notes. Exported because `AmethystSimulator`
  * needs the same first note to answer `navigate: 'thread'` — duplicating the
- * mapping there would let the two drift (gaps ame-20).
+ * mapping there would let the two drift (gaps ame-20). The per-note mapping
+ * itself lives in `notesToPosts`, which the Search results list shares.
+ * `following: true` is true by construction here: this IS the All Follows feed.
  */
 export function buildFeedPosts(): PostData[] {
-  return getRecentNotes(20).map((note) => {
-    const author = getUserByPubkey(note.pubkey);
-    return {
-      id: note.id,
-      pubkey: note.pubkey,
-      author: {
-        name: author?.displayName || 'Unknown',
-        handle: author?.nip05 || author?.username || 'unknown',
-        avatar: author?.avatar || generateAvatarGradient(note.pubkey), // local, offline — no DiceBear
-        nip05: author?.nip05,
-        isVerified: author?.isVerified,
-        // This IS the All Follows feed, so every author in it is one — which is
-        // exactly what the avatar's "Following" shield means upstream.
-        following: true,
-      },
-      content: note.content,
-      timestamp: formatTimestamp(note.created_at),
-      stats: {
-        replies: note.replies,
-        reposts: note.reposts,
-        zaps: note.zaps,
-        likes: note.likes,
-        // The zap slot shows an AMOUNT upstream; the count alone was the wrong
-        // quantity (gaps ame-79).
-        satsZapped: note.zapAmount,
-      },
-      isRepost: note.isRepost,
-      images: note.images,
-      hashtags: note.hashtags,
-      community: note.community,
-      isLive: note.isLive,
-    };
-  });
+  return getRecentNotes(20).map((note) => toPostData(note, { following: true }));
 }
 
-export function HomeScreen({ newPost, onOpenCompose, onOpenDrawer, onOpenThread, onOpenProfile, onReplyTo, onLikePost }: HomeScreenProps) {
+export function HomeScreen({ newPost, onOpenCompose, onOpenDrawer, onOpenThread, onOpenSearch, onOpenHashtag, onOpenProfile, onReplyTo, onLikePost, initialTab = 'new_threads' }: HomeScreenProps) {
   // Real Amethyst home has TWO switchers: the feed selector in the app bar
   // ("All Follows ▾") and the content sub-tabs below it.
-  const [activeTab, setActiveTab] = useState<'new_threads' | 'conversations'>('new_threads');
+  const [activeTab, setActiveTab] = useState<'new_threads' | 'conversations'>(initialTab);
   const [refreshing, setRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [isPulling, setIsPulling] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef(0);
+  // `DisappearingScaffold`: the top bar collapses once you are scrolling DOWN
+  // and away from the top, and comes back on the first upward scroll. The bar
+  // used to be a plain sticky element with no scroll source at all
+  // (gaps ame-64, ame-66).
+  const [barHidden, setBarHidden] = useState(false);
+  const lastScrollY = useRef(0);
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const y = e.currentTarget.scrollTop;
+    const previous = lastScrollY.current;
+    lastScrollY.current = y;
+    if (y <= 8) setBarHidden(false);
+    // A few pixels of slack so a jittery wheel does not flap the bar.
+    else if (y - previous > 6) setBarHidden(true);
+    else if (previous - y > 6) setBarHidden(false);
+  }, []);
 
   const [posts, setPosts] = useState(buildFeedPosts);
   // Publishing used to only toast: `setPosts` was never called and the screen
@@ -158,7 +153,12 @@ export function HomeScreen({ newPost, onOpenCompose, onOpenDrawer, onOpenThread,
   return (
     <div className="flex flex-col h-full bg-[var(--md-background)]" data-tour="amethyst-feed">
       {/* Shared Amethyst app bar; center = feed selector "All Follows ▾" */}
-      <AppTopBar onOpenDrawer={onOpenDrawer} center={<FeedSelector defaultFeed="All Follows" onChange={setFeed} />} />
+      <AppTopBar
+        onOpenDrawer={onOpenDrawer}
+        onOpenSearch={onOpenSearch}
+        hidden={barHidden}
+        center={<FeedSelector defaultFeed="All Follows" onChange={setFeed} />}
+      />
 
       {/* Content sub-tabs (distinct from the feed selector above) */}
       <div className="md-tabs sticky top-16 z-10 bg-[var(--md-surface)]" data-tour="amethyst-home-tabs">
@@ -214,6 +214,7 @@ export function HomeScreen({ newPost, onOpenCompose, onOpenDrawer, onOpenThread,
       <div
         ref={feedRef}
         className="flex-1 overflow-y-auto"
+        onScroll={handleScroll}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -250,6 +251,7 @@ export function HomeScreen({ newPost, onOpenCompose, onOpenDrawer, onOpenThread,
                 onReply={handleReply}
                 onOpenThread={() => onOpenThread?.(post)}
                 onOpenProfile={onOpenProfile}
+                onOpenHashtag={onOpenHashtag}
               />
             </motion.div>
           ))}
@@ -273,16 +275,4 @@ export function HomeScreen({ newPost, onOpenCompose, onOpenDrawer, onOpenThread,
       </div>
     </div>
   );
-}
-
-// Helper function to format timestamps
-function formatTimestamp(timestamp: number): string {
-  const now = Date.now() / 1000;
-  const diff = now - timestamp;
-  
-  if (diff < 60) return 'now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
-  if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
-  return new Date(timestamp * 1000).toLocaleDateString();
 }

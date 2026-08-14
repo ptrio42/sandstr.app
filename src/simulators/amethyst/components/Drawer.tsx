@@ -36,6 +36,8 @@ type Item = {
   detail?: DrawerDetailId;
   value?: string;
   accent?: boolean;
+  /** Overrides the anchor slug when two sections share a label (ame-122). */
+  tourSlug?: string;
 };
 
 /**
@@ -77,35 +79,48 @@ const NAVIGATE: Item[] = [
   { label: 'Notifications', Icon: Bell, action: 'notifications' },
 ];
 
+/**
+ * The drawer's Feeds section: 28 rows that all fired `action: 'close'`, the
+ * largest cluster of dead controls in the simulator — a header advertising 28
+ * feed types where every tap just shut the drawer (gaps ame-114). Each now
+ * pushes a screen. What that screen can honestly show is upstream's own
+ * `FeedEmpty` plus one line naming this reproduction's data limit: the corpus
+ * is kind-1 text notes, so there are no long-form articles, videos, polls,
+ * calendars or badges to list. Same ruling as Discover and Shorts (ame-28/29).
+ *
+ * "Shorts" appears in Navigate as well, and the slug is computed from the
+ * label, so this one row carries an explicit slug — otherwise a spotlight on
+ * `amethyst-drawer-shorts` rings two elements (gaps ame-122).
+ */
 const FEEDS: Item[] = [
-  { label: 'Reads', Icon: BookOpen, action: 'close' },
-  { label: 'Pictures', Icon: Image, action: 'close' },
-  { label: 'Shorts', Icon: PlayCircle, action: 'close' },
-  { label: 'Videos', Icon: Video, action: 'close' },
-  { label: 'Episodes', Icon: Headphones, action: 'close' },
-  { label: 'Podcasts', Icon: Podcast, action: 'close' },
-  { label: 'Music', Icon: Music, action: 'close' },
-  { label: 'Playlists', Icon: ListMusic, action: 'close' },
-  { label: 'Polls', Icon: BarChart3, action: 'close' },
-  { label: 'Marketplace', Icon: Store, action: 'close' },
-  { label: 'Workouts', Icon: Footprints, action: 'close' },
-  { label: 'Git Repositories', Icon: Code2, action: 'close' },
-  { label: 'Live Streams', Icon: RadioTower, action: 'close' },
-  { label: 'Nests', Icon: Mic, action: 'close' },
-  { label: 'Communities', Icon: Users, action: 'close' },
-  { label: 'Public Chats', Icon: MessagesSquare, action: 'close' },
-  { label: 'Relay Groups', Icon: Server, action: 'close' },
-  { label: 'Concord Channels', Icon: HashIcon, action: 'close' },
-  { label: 'Location Channels', Icon: MapPin, action: 'close' },
-  { label: 'Calendars', Icon: Calendar, action: 'close' },
-  { label: 'Calendar lists', Icon: CalendarRange, action: 'close' },
-  { label: 'App Store', Icon: LayoutGrid, action: 'close' },
-  { label: 'Web apps', Icon: AppWindow, action: 'close' },
-  { label: 'nApplets', Icon: Grid3x3, action: 'close' },
-  { label: 'nSites', Icon: Layers, action: 'close' },
-  { label: 'Follow Packs', Icon: Users, action: 'close' },
-  { label: 'Badges', Icon: Medal, action: 'close' },
-  { label: 'Emojis', Icon: Smile, action: 'close' },
+  { label: 'Reads', Icon: BookOpen, action: 'close', detail: 'feed:reads' },
+  { label: 'Pictures', Icon: Image, action: 'close', detail: 'feed:pictures' },
+  { label: 'Shorts', Icon: PlayCircle, action: 'close', detail: 'feed:shorts', tourSlug: 'feeds-shorts' },
+  { label: 'Videos', Icon: Video, action: 'close', detail: 'feed:videos' },
+  { label: 'Episodes', Icon: Headphones, action: 'close', detail: 'feed:episodes' },
+  { label: 'Podcasts', Icon: Podcast, action: 'close', detail: 'feed:podcasts' },
+  { label: 'Music', Icon: Music, action: 'close', detail: 'feed:music' },
+  { label: 'Playlists', Icon: ListMusic, action: 'close', detail: 'feed:playlists' },
+  { label: 'Polls', Icon: BarChart3, action: 'close', detail: 'feed:polls' },
+  { label: 'Marketplace', Icon: Store, action: 'close', detail: 'feed:marketplace' },
+  { label: 'Workouts', Icon: Footprints, action: 'close', detail: 'feed:workouts' },
+  { label: 'Git Repositories', Icon: Code2, action: 'close', detail: 'feed:git-repositories' },
+  { label: 'Live Streams', Icon: RadioTower, action: 'close', detail: 'feed:live-streams' },
+  { label: 'Nests', Icon: Mic, action: 'close', detail: 'feed:nests' },
+  { label: 'Communities', Icon: Users, action: 'close', detail: 'feed:communities' },
+  { label: 'Public Chats', Icon: MessagesSquare, action: 'close', detail: 'feed:public-chats' },
+  { label: 'Relay Groups', Icon: Server, action: 'close', detail: 'feed:relay-groups' },
+  { label: 'Concord Channels', Icon: HashIcon, action: 'close', detail: 'feed:concord-channels' },
+  { label: 'Location Channels', Icon: MapPin, action: 'close', detail: 'feed:location-channels' },
+  { label: 'Calendars', Icon: Calendar, action: 'close', detail: 'feed:calendars' },
+  { label: 'Calendar lists', Icon: CalendarRange, action: 'close', detail: 'feed:calendar-lists' },
+  { label: 'App Store', Icon: LayoutGrid, action: 'close', detail: 'feed:app-store' },
+  { label: 'Web apps', Icon: AppWindow, action: 'close', detail: 'feed:web-apps' },
+  { label: 'nApplets', Icon: Grid3x3, action: 'close', detail: 'feed:napplets' },
+  { label: 'nSites', Icon: Layers, action: 'close', detail: 'feed:nsites' },
+  { label: 'Follow Packs', Icon: Users, action: 'close', detail: 'feed:follow-packs' },
+  { label: 'Badges', Icon: Medal, action: 'close', detail: 'feed:badges' },
+  { label: 'Emojis', Icon: Smile, action: 'close', detail: 'feed:emojis' },
 ];
 
 const CREATE: Item[] = [{ label: 'HLS Upload', Icon: SatelliteDish, action: 'close', detail: 'hls-upload' }];
@@ -314,7 +329,7 @@ function Row({ item, onPick }: { item: Item; onPick: (item: Item) => void }) {
     <button
       onClick={() => onPick(item)}
       className="w-full flex items-center gap-4 px-5 py-3 text-left hover:bg-[var(--md-surface-variant)]/50 transition-colors"
-      data-tour={`amethyst-drawer-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+      data-tour={`amethyst-drawer-${item.tourSlug ?? item.label.toLowerCase().replace(/\s+/g, '-')}`}
     >
       <item.Icon className={`w-6 h-6 shrink-0 ${item.accent ? 'text-[var(--md-primary)]' : 'text-[var(--md-on-surface)]'}`} />
       <span className="flex-1 text-[var(--md-on-surface)]">{item.label}</span>

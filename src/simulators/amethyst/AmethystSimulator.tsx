@@ -12,9 +12,12 @@ import { NotificationsScreen } from './screens/NotificationsScreen';
 import { MessagesScreen } from './screens/MessagesScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import type { ProfileTab } from './screens/ProfileScreen';
+import { PROFILE_TABS } from './screens/ProfileScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { ComposeScreen } from './screens/ComposeScreen';
 import { VideoScreen } from './screens/VideoScreen';
+import { SearchScreen } from './screens/SearchScreen';
+import { HashtagScreen } from './screens/HashtagScreen';
 import { ThreadScreen } from './screens/ThreadScreen';
 import { DrawerDetailScreen, DRAWER_DETAIL_IDS } from './screens/DrawerDetailScreen';
 import type { DrawerDetailId } from './screens/DrawerDetailScreen';
@@ -25,15 +28,20 @@ import type { MockUser } from '../../data/mock';
 import { generateAvatarGradient, getUserByPubkey } from '../../data/mock';
 import { TourContext } from '../../components/tour';
 import { AmethystToastContext } from './toast';
+import { AmethystSecurityContext, useSecurityState } from './securityState';
 
 // Types.
 // `search` is a legacy id kept on purpose: it is the tour/FAQ payload for the
 // globe destination, which in v1.13.1 stopped being Discover and became the
 // Browser. Renaming it would break every stored `navigate:'search'` command for
 // no visible gain; the screen it mounts is what changed.
+// `search-screen` is the real Search destination (upstream `Route.Search`, the
+// app bar's magnifier) — spelled out precisely because `search` was already
+// taken by that legacy payload.
 export type TabId =
   | 'home'
   | 'search'
+  | 'search-screen'
   | 'video'
   | 'wallet'
   | 'discover'
@@ -53,7 +61,13 @@ export interface AmethystSimulatorProps {
 }
 
 // Valid bottom-nav / drawer-reachable main tabs
-const TABS: TabId[] = ['home', 'search', 'video', 'wallet', 'discover', 'notifications', 'messages', 'profile'];
+const TABS: TabId[] = ['home', 'search', 'search-screen', 'video', 'wallet', 'discover', 'notifications', 'messages', 'profile'];
+
+// Screens upstream PUSHES rather than selecting as a tab root: `navBottomBar`
+// stamps a tab-root marker on the entry it creates, while the drawer and the
+// app bar's magnifier plain-push. `canPop()` reads that marker, and it is what
+// hides the bottom bar and swaps the app bar's avatar for a back arrow.
+const PUSHED_TABS: TabId[] = ['search-screen', 'discover', 'video'];
 
 export function AmethystSimulator({ className = '', tourCommand, onCommandHandled }: AmethystSimulatorProps) {
   const [activeTab, setActiveTab] = useState<TabId>('home');
@@ -68,6 +82,18 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
   const [settingsOpenToken, setSettingsOpenToken] = useState(0);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [threadPost, setThreadPost] = useState<PostData | null>(null);
+  // Leaving a pushed screen pops back to whichever screen pushed it, so the
+  // chain Messages -> Discover -> Search unwinds one step at a time the way the
+  // real back stack does.
+  const [pushStack, setPushStack] = useState<TabId[]>([]);
+  const pushTab = useCallback((tab: TabId) => {
+    setPushStack((stack) => [...stack, activeTab]);
+    setActiveTab(tab);
+  }, [activeTab]);
+  const popTab = useCallback(() => {
+    setActiveTab(pushStack[pushStack.length - 1] ?? 'home');
+    setPushStack((stack) => stack.slice(0, -1));
+  }, [pushStack]);
   // Whose profile the Profile tab is showing. `null` = the signed-in demo
   // account, which is where the drawer's Profile row and `viewProfile` land;
   // a MockUser = an author tapped in the feed (gaps ame-57).
@@ -79,6 +105,13 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
   // The note a reply is aimed at, so the composer can quote it (gaps ame-77).
   const [replyTo, setReplyTo] = useState<PostData | null>(null);
   const [loginMode, setLoginMode] = useState<'login' | 'signup'>('login');
+  // The hashtag feed, pushed over the tab content the way the thread is. A
+  // `#tag` in a note body and Search's hashtag line both land here (ame-82).
+  const [hashtag, setHashtag] = useState<string | null>(null);
+  // Which sub-tab Home and Messages open on, so a command can land on
+  // "Conversations" / "New Requests" (gaps ame-07, ame-92).
+  const [homeTab, setHomeTab] = useState<'new_threads' | 'conversations'>('new_threads');
+  const [messagesTab, setMessagesTab] = useState<'known' | 'requests'>('known');
   /**
    * Bottom-bar unread dots. Visiting a tab clears its dot, so the dot means
    * something instead of being permanent decoration (gaps ame-70). Wallet and
@@ -91,6 +124,9 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
     messages: !seenTabs.messages,
     notifications: !seenTabs.notifications,
   };
+  // Security Filters state: the note overflow menu's Block and Mute thread fill
+  // its lists from outside Settings, so it cannot live inside the screen.
+  const security = useSecurityState();
   const parentTheme = useParentTheme();
   const tourContext = useContext(TourContext);
   const registerAction = (actionType: string) => {
@@ -140,7 +176,10 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
   // arrive here.
   const handleDrawerNavigate = useCallback((id: string) => {
     if (TABS.includes(id as TabId)) {
-      setActiveTab(id as TabId);
+      // Drawer rows push, so the ones that render a back arrow instead of the
+      // drawer avatar need somewhere to pop back to.
+      if (PUSHED_TABS.includes(id as TabId)) pushTab(id as TabId);
+      else setActiveTab(id as TabId);
       if (id === 'home') registerAction('navigate_home');
       // The drawer's Profile row always means YOUR profile, so it clears any
       // author left over from a feed tap.
@@ -158,7 +197,22 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       setActiveTab('home');
     }
     setIsDrawerOpen(false);
-  }, [registerAction, openSettingsAt]);
+  }, [registerAction, openSettingsAt, pushTab]);
+
+  /** Open a specific author's profile, from wherever they were tapped. */
+  const openProfile = useCallback((user: MockUser | null) => {
+    setProfileUser(user);
+    setProfileTab('Notes');
+    setThreadPost(null);
+    setHashtag(null);
+    setActiveTab('profile');
+    registerAction('view_profile');
+  }, [registerAction]);
+
+  // The app bar's magnifier — upstream `nav.nav(Route.Search)`.
+  const handleOpenSearch = useCallback(() => {
+    pushTab('search-screen');
+  }, [pushTab]);
 
   /**
    * A published note. It used to only toast — `HomeScreen` took no prop for a
@@ -255,6 +309,48 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
           }
           break;
         }
+        // `hashtag:<tag>` opens the hashtag feed; `home:<tab>` and
+        // `messages:<tab>` land on a sub-tab that used to be screen-local state
+        // (gaps ame-82, ame-07, ame-92). All three are payloads on the existing
+        // `navigate` command — the union itself is untouched.
+        if (typeof raw === 'string' && raw.startsWith('hashtag:')) {
+          const tag = raw.slice(8);
+          if (tag) {
+            setIsComposeOpen(false);
+            setIsSettingsOpen(false);
+            setIsDrawerOpen(false);
+            setDrawerDetail(null);
+            setThreadPost(null);
+            setHashtag(tag);
+          }
+          break;
+        }
+        if (typeof raw === 'string' && (raw === 'home:conversations' || raw === 'home:new-threads')) {
+          setHomeTab(raw === 'home:conversations' ? 'conversations' : 'new_threads');
+          setActiveTab('home');
+          setPushStack([]);
+          setIsComposeOpen(false);
+          setIsSettingsOpen(false);
+          setIsDrawerOpen(false);
+          setDrawerDetail(null);
+          setThreadPost(null);
+          setHashtag(null);
+          registerAction('navigate_home');
+          break;
+        }
+        if (typeof raw === 'string' && (raw === 'messages:requests' || raw === 'messages:known')) {
+          setMessagesTab(raw === 'messages:requests' ? 'requests' : 'known');
+          setActiveTab('messages');
+          setSeenTabs((sn) => ({ ...sn, messages: true }));
+          setPushStack([]);
+          setIsComposeOpen(false);
+          setIsSettingsOpen(false);
+          setIsDrawerOpen(false);
+          setDrawerDetail(null);
+          setThreadPost(null);
+          setHashtag(null);
+          break;
+        }
         if (typeof raw === 'string' && raw.startsWith('drawer:')) {
           const id = raw.slice(7) as DrawerDetailId;
           if (DRAWER_DETAIL_IDS.includes(id)) {
@@ -268,6 +364,10 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         }
         const tab = raw as TabId;
         if (TABS.includes(tab)) {
+          // A tour jump is not a push: it resets the stack the way
+          // `navBottomBar` clears sibling entries, so back never walks a chain
+          // the user did not take.
+          setPushStack(PUSHED_TABS.includes(tab) ? ['home'] : []);
           setActiveTab(tab);
           setDrawerDetail(null);
           if (tab === 'profile') { setProfileUser(null); setProfileTab('Notes'); }
@@ -278,6 +378,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
           setIsSettingsOpen(false);
           setIsDrawerOpen(false);
           setThreadPost(null);
+          setHashtag(null);
         }
         break;
       }
@@ -306,12 +407,17 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         
       case 'viewProfile':
         if (isAuthenticated) {
-          // Optional payload: a mock pubkey opens THAT author's profile. No
-          // payload keeps the historical meaning — your own profile — so every
+          // Optional payload: a mock pubkey opens THAT author's profile, and an
+          // object may also name the tab, so a step can land on Follows or
+          // Gallery instead of always on Notes (gaps ame-49). No payload keeps
+          // the historical meaning — your own profile, Notes tab — so every
           // stored tour/FAQ command keeps working.
-          const who = typeof tourCommand.payload === 'string' ? getUserByPubkey(tourCommand.payload) : undefined;
+          const payload = tourCommand.payload;
+          const pubkey = typeof payload === 'string' ? payload : payload?.pubkey;
+          const tab = typeof payload === 'object' && payload ? payload.tab : undefined;
+          const who = typeof pubkey === 'string' ? getUserByPubkey(pubkey) : undefined;
           setProfileUser(who ?? null);
-          setProfileTab('Notes');
+          setProfileTab(PROFILE_TABS.includes(tab) ? tab : 'Notes');
           setActiveTab('profile');
           setDrawerDetail(null);
           setIsComposeOpen(false);
@@ -328,14 +434,18 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
           // Optional payload picks the section (gaps ame-43) — without it the
           // Relays/Security sections were reachable only by a drawer tap.
           const section = tourCommand.payload;
-          // `security-hidden` is Security Filters with the Hidden Words tab
-          // preselected — the mute demo needs to land on the word field, and
-          // the tab is local state inside the screen.
+          // `security-hidden` / `security-spammers` keep their exact payloads
+          // through the v1.13.1 Security Filters rebuild, so stored FAQ and tour
+          // commands survive — they used to preselect a TAB inside the screen,
+          // and now open the pushed screen of the same name. `security-blocked`
+          // and `security-muted` are the two new ones.
           if (
             section === 'relays' ||
             section === 'security' ||
+            section === 'security-blocked' ||
             section === 'security-hidden' ||
             section === 'security-spammers' ||
+            section === 'security-muted' ||
             section === 'preferences' ||
             section === 'backup-keys' ||
             section === 'media-servers' ||
@@ -391,36 +501,70 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       case 'home':
         return (
           <HomeScreen
-            key="home"
+            key={`home-${homeTab}`}
             newPost={newPost}
             onOpenCompose={() => { setReplyTo(null); setIsComposeOpen(true); }}
             onReplyTo={(post) => { setReplyTo(post); setIsComposeOpen(true); }}
             onOpenDrawer={() => setIsDrawerOpen(true)}
             onOpenThread={(post) => setThreadPost(post)}
-            onOpenProfile={(post) => {
-              setProfileUser(post.pubkey ? getUserByPubkey(post.pubkey) ?? null : null);
-              setThreadPost(null);
-              setActiveTab('profile');
-              registerAction('view_profile');
-            }}
+            onOpenSearch={handleOpenSearch}
+            onOpenHashtag={setHashtag}
+            initialTab={homeTab}
+            onOpenProfile={(post) => openProfile(post.pubkey ? getUserByPubkey(post.pubkey) ?? null : null)}
             onLikePost={() => registerAction('like')}
           />
         );
       // The globe destination: Browser in v1.13.1 (was Discover in v1.12.6).
       case 'search':
         return <BrowserScreen key="browser" />;
+      // The real Search destination, pushed by the app bar's magnifier.
+      case 'search-screen':
+        return (
+          <SearchScreen
+            key="search-screen"
+            onBack={popTab}
+            onOpenThread={(post) => setThreadPost(post)}
+            onOpenProfile={openProfile}
+            onOpenHashtag={setHashtag}
+          />
+        );
       case 'wallet':
         return <WalletScreen key="wallet" />;
       // Both dropped out of the bottom bar this release; still reachable from
       // the drawer's "Navigate" section, so they keep their screens.
       case 'discover':
-        return <DiscoverScreen key="discover" onOpenDrawer={() => setIsDrawerOpen(true)} />;
+        return (
+          <DiscoverScreen
+            key="discover"
+            onBack={popTab}
+            onOpenSearch={handleOpenSearch}
+          />
+        );
       case 'video':
-        return <VideoScreen key="video" onOpenDrawer={() => setIsDrawerOpen(true)} />;
+        return (
+          <VideoScreen
+            key="video"
+            onBack={popTab}
+            onOpenSearch={handleOpenSearch}
+          />
+        );
       case 'notifications':
-        return <NotificationsScreen key="notifications" onOpenDrawer={() => setIsDrawerOpen(true)} />;
+        return (
+          <NotificationsScreen
+            key="notifications"
+            onOpenDrawer={() => setIsDrawerOpen(true)}
+            onOpenSearch={handleOpenSearch}
+          />
+        );
       case 'messages':
-        return <MessagesScreen key="messages" onOpenDrawer={() => setIsDrawerOpen(true)} />;
+        return (
+          <MessagesScreen
+            key={`messages-${messagesTab}`}
+            onOpenDrawer={() => setIsDrawerOpen(true)}
+            onOpenSearch={handleOpenSearch}
+            initialTab={messagesTab}
+          />
+        );
       case 'profile':
         return (
           <ProfileScreen
@@ -448,18 +592,21 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
   if (!isAuthenticated) {
     return (
       <AmethystToastContext.Provider value={showToast}>
-        <div
-          className={`amethyst-simulator ${getThemeClass()} ${className}`}
-          data-theme={parentTheme}
-        >
-          <LoginScreen onLogin={handleLogin} initialMode={loginMode} />
-        </div>
+        <AmethystSecurityContext.Provider value={security}>
+          <div
+            className={`amethyst-simulator ${getThemeClass()} ${className}`}
+            data-theme={parentTheme}
+          >
+            <LoginScreen onLogin={handleLogin} initialMode={loginMode} />
+          </div>
+        </AmethystSecurityContext.Provider>
       </AmethystToastContext.Provider>
     );
   }
 
   return (
     <AmethystToastContext.Provider value={showToast}>
+      <AmethystSecurityContext.Provider value={security}>
     <div 
       className={`amethyst-simulator ${getThemeClass()} ${className}`}
       data-theme={parentTheme}
@@ -525,8 +672,11 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         )}
       </AnimatePresence>
 
-      {/* Bottom Navigation - hidden on Profile (full-screen), while composing, and in the thread view */}
-      {activeTab !== 'profile' && !isComposeOpen && !threadPost && !isSettingsOpen && !drawerDetail && (
+      {/* Bottom Navigation — hidden on Profile (full-screen), while composing,
+          in the thread view, over Settings, over a drawer detail screen, and on
+          every pushed screen (Search / Discover / Shorts): `AppBottomBar`
+          returns early on `nav.canPop()`. */}
+      {activeTab !== 'profile' && !PUSHED_TABS.includes(activeTab) && !isComposeOpen && !threadPost && !hashtag && !isSettingsOpen && !drawerDetail && (
         <BottomNav
           activeTab={activeTab}
           onTabChange={handleTabChange}
@@ -560,6 +710,15 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       )}
 
       {/* Note / thread detail overlay */}
+      {/* Hashtag feed overlay — pushed over the tab content like the thread. */}
+      {hashtag && (
+        <HashtagScreen
+          tag={hashtag}
+          onBack={() => setHashtag(null)}
+          onOpenThread={(post) => setThreadPost(post)}
+        />
+      )}
+
       {threadPost && (
         <ThreadScreen
           post={threadPost}
@@ -581,6 +740,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
             key={`${settingsSection ?? 'root'}-${settingsOpenToken}`}
             onBack={() => setIsSettingsOpen(false)}
             initialSection={settingsSection}
+            security={security}
           />
         </div>
       )}
@@ -601,6 +761,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         )}
       </AnimatePresence>
     </div>
+      </AmethystSecurityContext.Provider>
     </AmethystToastContext.Provider>
   );
 }

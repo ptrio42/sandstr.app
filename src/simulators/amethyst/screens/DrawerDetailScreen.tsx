@@ -35,7 +35,13 @@ export type DrawerDetailId =
   | 'emoji-packs'
   | 'remote-signer'
   | 'hls-upload'
-  | 'accounts';
+  | 'accounts'
+  /**
+   * One per row of the drawer's Feeds section (gaps ame-114). Kept as a
+   * template literal rather than 28 more union members: they all render the
+   * same screen, and only the title changes.
+   */
+  | `feed:${string}`;
 
 interface DrawerDetailScreenProps {
   detail: DrawerDetailId;
@@ -76,6 +82,8 @@ const EMPTY_ONLY: Partial<Record<DrawerDetailId, { title?: string; body: string 
 
 export function DrawerDetailScreen({ detail, onBack, onLogout }: DrawerDetailScreenProps) {
   const empty = EMPTY_ONLY[detail];
+  const feedSlug = detail.startsWith('feed:') ? detail.slice(5) : null;
+  const title = feedSlug ? FEED_DETAIL_TITLES[feedSlug] ?? feedSlug : TITLES[detail];
 
   return (
     <div
@@ -86,11 +94,21 @@ export function DrawerDetailScreen({ detail, onBack, onLogout }: DrawerDetailScr
         <button onClick={onBack} aria-label="Back" className="md-app-bar-icon-btn">
           <ArrowLeft className="w-6 h-6 text-[var(--md-on-surface)]" />
         </button>
-        <h1 className="flex-1 font-semibold text-[var(--md-on-surface)] px-1">{TITLES[detail]}</h1>
+        <h1 className="flex-1 font-semibold text-[var(--md-on-surface)] px-1">{title}</h1>
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {empty ? (
+        {feedSlug ? (
+          /* Upstream's FeedEmpty, plus the one sentence that keeps 28 identical
+             empty screens from teaching a visitor that Amethyst is empty. */
+          <div className="flex flex-col items-center justify-center h-full px-10 text-center gap-3">
+            <p className="text-[var(--md-on-surface)]">Feed is empty.</p>
+            <p className="text-sm leading-relaxed text-[var(--md-on-surface-variant)]">
+              The real client fills this from {title.toLowerCase()} events on your relays. This
+              reproduction ships text notes only, so there are none to list here.
+            </p>
+          </div>
+        ) : empty ? (
           <EmptyState title={empty.title} body={empty.body} />
         ) : detail === 'my-lists' ? (
           <SetMakerView
@@ -451,7 +469,21 @@ function AccountsView({ onLogout }: { onLogout?: () => void }) {
 }
 
 /** Payload allow-list, so `navigate: 'drawer:<id>'` cannot land on nothing. */
+/** Titles for the 28 Feeds rows, in the drawer's own order. */
+export const FEED_DETAIL_TITLES: Record<string, string> = {
+  reads: 'Reads', pictures: 'Pictures', shorts: 'Shorts', videos: 'Videos',
+  episodes: 'Episodes', podcasts: 'Podcasts', music: 'Music', playlists: 'Playlists',
+  polls: 'Polls', marketplace: 'Marketplace', workouts: 'Workouts',
+  'git-repositories': 'Git Repositories', 'live-streams': 'Live Streams', nests: 'Nests',
+  communities: 'Communities', 'public-chats': 'Public Chats', 'relay-groups': 'Relay Groups',
+  'concord-channels': 'Concord Channels', 'location-channels': 'Location Channels',
+  calendars: 'Calendars', 'calendar-lists': 'Calendar lists', 'app-store': 'App Store',
+  'web-apps': 'Web apps', napplets: 'nApplets', nsites: 'nSites',
+  'follow-packs': 'Follow Packs', badges: 'Badges', emojis: 'Emojis',
+};
+
 export const DRAWER_DETAIL_IDS: DrawerDetailId[] = [
   'my-lists', 'web-bookmarks', 'drafts', 'scheduled-posts', 'hashtag-sets',
   'blossom-files', 'emoji-packs', 'remote-signer', 'hls-upload', 'accounts',
+  ...Object.keys(FEED_DETAIL_TITLES).map((k) => `feed:${k}` as DrawerDetailId),
 ];

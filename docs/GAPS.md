@@ -30,9 +30,16 @@
 > **Re-audyt 2026-08-13 + domknięcie backlogu 2026-08-13/14 — tylko Amethyst.** Symulator został
 > przebudowany z v1.12.6 do v1.13.1, jego ledger policzono od zera (7 audytorów + adwersaryjna
 > weryfikacja każdego wiersza innego niż `ok`) na **139 wierszy = 95 luk + 44 `ok`**, a potem
-> sesja domykająca zeszła do **18 luk + 121 `ok`** (77 zamknięć; dwa dalsze wiersze — ame-78,
-> ame-86 — okazały się nieaktualne, nie otwarte). Kotwice 26 → 74 → **158**. `unreachable`
-> i `unanchored` spadły do zera. Wiersz `Razem` przeliczono deltą na tym jednym kliencie;
+> sesja domykająca zeszła do 18 luk + 121 `ok` (77 zamknięć; dwa dalsze wiersze — ame-78,
+> ame-86 — okazały się nieaktualne, nie otwarte). Po scaleniu z **drugą, równoległą sesją**
+> (ekran Search, chrome Discover/Shorts ze źródła, tokeny jasnego motywu) ledger miał
+> 143 wiersze = 20 luk + 123 `ok`. **Trzecia tura 2026-08-14** zamknęła kolejne dziesięć
+> wierszy (feed hashtaga, sub-taby osiągalne komendą, chowający się app bar, realne wątki,
+> cztery zakładki profilu, 28 ekranów sekcji Feeds, statystyki relayów, FAB-y Discover
+> i Shorts) i **przebudowała Security Filters do kształtu v1.13.1** — sześć wierszy stało
+> `ok`, opisując zakładki, których ta wersja nie ma. Stan: **143 wiersze = 10 luk +
+> 133 `ok`**, kotwice 26 → 74 → 158 → 164 → **215**. `unreachable` i `unanchored`
+> spadły do zera. Wiersz `Razem` przeliczono deltą na tym jednym kliencie;
 > pozostałe dziewięć kolumn niesie wartości z przeliczenia 2026-08-11. Liczby Amethysta
 > policzone skryptem po kolumnie *Status* jego ledgera i po `data-tour` w źródle, nie ręcznie.
 > Wiersz `Razem` sprawdzony drugą metodą: zsumowany po kolumnach z dziesięciu wierszy tabeli,
@@ -46,7 +53,7 @@
 | Klient | Status | Luki | `missing` | `dead` | `partial` | `unreachable` | `unanchored` | `ok` | Kotwice | Mostek FAQ |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|:--:|
 | [Damus](gaps/damus.md) | ready | 51 | 10 | 23 | 10 | 2 | 6 | 8 | 28 | ✅ |
-| [Amethyst](gaps/amethyst.md) | ready | 18 | 6 | 4 | 8 | 0 | 0 | 121 | 158 | ✅ |
+| [Amethyst](gaps/amethyst.md) | ready | 10 | 3 | 2 | 5 | 0 | 0 | 133 | 215 | ✅ |
 | [Primal](gaps/primal.md) | ready | 50 | 17 | 17 | 12 | 1 | 3 | 14 | 18 | ✅ |
 | [YakiHonne](gaps/yakihonne.md) | ready | 76 | 27 | 30 | 13 | 4 | 2 | 20 | 27 | ✅ |
 | [Snort](gaps/snort.md) | ready | 48 | 11 | 22 | 4 | 6 | 5 | 15 | 23 | ✅ |
@@ -55,7 +62,7 @@
 | [Nostur](gaps/nostur.md) | ready | 51 | 1 | 33 | 8 | 6 | 3 | 12 | 41 | ✅ |
 | [Keychat](gaps/keychat.md) | preview | 38 | 6 | 18 | 8 | 3 | 3 | 5 | 19 | ❌ |
 | [Gossip](gaps/gossip.md) | preview | 35 | 9 | 11 | 6 | 5 | 4 | 2 | 0 | ❌ brak wrappera |
-| **Razem** | | **506** | **142** | **207** | **91** | **35** | **31** | **226** | **352** | **8/10** |
+| **Razem** | | **498** | **139** | **205** | **88** | **35** | **31** | **238** | **409** | **8/10** |
 
 **Metodologia kolumny `Kotwice`:** liczba **różnych wartości `data-tour`, jakie mogą trafić do DOM**
 danego klienta — każdy literał `data-tour="…"` plus każda wartość, jaką potrafi wyprodukować
