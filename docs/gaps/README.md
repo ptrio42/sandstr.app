@@ -47,6 +47,22 @@ Zapisz najcięższy, resztę wspomnij w kolumnie *Gap*.
 | `breaks-showme` | Istniejący/naturalny `showMe` podświetli martwy lub mylący element. |
 | `blocks-answer` | Nie da się nawet uczciwie opisać kroków — brakuje całej ścieżki (rzadkie; zwykle znaczy, że screen-mapa też tego nie pokrywa). |
 | `none` | FAQ na tym nie cierpi (czysta wierność wizualna). |
+| `was-blocks-showme` | Wiersz **domknięty**: blokada zniknęła. Powierzchnia istnieje, działa, ma kotwicę — autor FAQ może dopisać `showMe`, którego wcześniej nie wolno mu było obiecać. |
+| `was-breaks-showme` | Wiersz **domknięty**: `showMe` nie celuje już w martwy ani mylący element. Istniejący mini-tour można rozszerzyć albo doprowadzić do końca ścieżki, zamiast urywać go przed kliknięciem. |
+
+**Prefiks `was-` = dług do odebrania po stronie FAQ.** Wstawiasz go przy zamykaniu wiersza (procedura:
+`.claude/skills/audyt-luk-symulatora/references/aktualizacja-ledgera.md` §Zamknięcie wiersza): status
+idzie na `ok`, a `blocks-showme`/`breaks-showme` dostaje prefiks zamiast być kasowane do `none`. `none`
+skasowałoby jedyny ślad, że **wpis FAQ dla tej powierzchni może dziś obiecać więcej, niż obiecuje** —
+a to jest lista robocza kolejnej rewizji FAQ, nie ozdobnik. Dwie reguły:
+
+- **Prefiks nie zmienia arytmetyki.** Rollup i indeks liczą się z kolumny *Status*, a ta jest wtedy `ok`.
+- **Zdejmujesz go dopiero wtedy, gdy FAQ ten dług odbierze** (`showMe` dopisany/rozszerzony) → `none`.
+  `was-blocks-answer` nie występuje i nie zakładaj go z góry.
+
+Stan na 2026-08-14: prefiksu używa wyłącznie Amethyst — [`amethyst.md`](amethyst.md) (31 `was-blocks-showme`
++ 47 `was-breaks-showme`, wszystkie 78 na wierszach `ok`) i [`amethyst-v1-12.md`](amethyst-v1-12.md) (1).
+Pozostałe dziewięć ledgerów zna tylko cztery wartości bez prefiksu.
 
 ### Effort
 
