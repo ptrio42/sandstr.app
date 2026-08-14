@@ -23,9 +23,15 @@
  * `unknown` IS A REAL VERDICT AND IT IS LOAD-BEARING. The FAQ README's rule —
  * "'this client does not have it' is a first-class answer, provided it was
  * verified, not inferred from silence" — applies here with more force, because
- * a matrix cell reads as a claim even when it is a shrug. Where the cited
- * answer neither shows the feature nor denies it, the cell is `unknown` and
- * says what was not checked. Those cells are the recon backlog, not filler.
+ * a matrix cell reads as a claim even when it is a shrug. Where the sources
+ * neither show the feature nor deny it, the cell is `unknown` and says what was
+ * not checked.
+ *
+ * No cell is `unknown` today, and that is the point rather than a reason to drop
+ * the verdict: five were, they were treated as a work list, and four fell to the
+ * screen-maps and one to upstream. Keeping `unknown` available is what let the
+ * table ship honestly while that work was outstanding — the alternative was
+ * guessing, or leaving axes out because one client's cell was awkward.
  *
  * EVERY CLAIM IS DATED. A capability is a statement about someone else's
  * product at a point in time, and it decays the moment they ship. The version
@@ -66,17 +72,24 @@ export interface CapabilityCell {
    */
   source: string;
   /**
-   * Where the claim comes from when the cited FAQ answer does not settle it —
-   * a citation into `docs/refs/<client>/screen-map.md`, which is authoritative
-   * for the real client.
+   * Where the claim comes from when the cited FAQ answer does not settle it.
+   * Two tiers, the same two the FAQ authoring contract uses: a citation into
+   * `docs/refs/<client>/screen-map.md`, or — for surfaces no recording ever
+   * visited — into the client's own published source, named by file and symbol.
    *
-   * This field exists because the alternative was worse. Four cells started out
+   * This field exists because the alternative was worse. Cells started out
    * `unknown` purely because the FAQ entry they cite was written to answer a
-   * neighbouring question; the screen-map settles all four. Quietly upgrading
-   * the verdict while still citing only the FAQ would have turned `source` into
-   * a lie — the reader clicks through and finds an answer that does not say
-   * that. So the FAQ link stays (it is still the useful thing to read) and the
-   * real grounding is printed beside it.
+   * neighbouring question. Quietly upgrading the verdict while still citing
+   * only the FAQ would have turned `source` into a lie — the reader clicks
+   * through and finds an answer that does not say that. So the FAQ link stays
+   * (it is still the useful thing to read) and the real grounding prints beside
+   * it.
+   *
+   * The upstream tier is not a fallback for laziness; it is how a comparative
+   * axis gets settled at all. Screen-maps are recording-driven, so they cover
+   * what the camera visited — good for anything on a main screen, silent on
+   * Settings internals. Every one of these nine clients is open source, so the
+   * answer is always readable; it just costs a pass per client.
    */
   grounding?: string;
 }
@@ -166,6 +179,12 @@ export const COMPARISON_AXES = [
     question: 'Do you search a lot?',
     topic: 'search',
   },
+  {
+    id: 'fast-zap',
+    label: 'One tap spends sats',
+    question: 'Do you want zapping to be one tap, rather than a sheet every time?',
+    topic: 'zap',
+  },
 ] as const satisfies readonly CapabilityAxis[];
 
 export type AxisId = (typeof COMPARISON_AXES)[number]['id'];
@@ -239,6 +258,13 @@ export const capabilities: Record<string, ClientCapabilities> = {
       detail: 'The magnifier is the third tab; it opens the "Universe 🛸" screen.',
       source: 'search',
     },
+    'fast-zap': {
+      verdict: 'yes',
+      detail: 'A tap sends your default zap immediately. Long-press the same bolt for a custom amount.',
+      source: 'zap',
+      grounding:
+        'damus-io/damus — NoteZapButton.swift `tap()` calls send_zap(is_custom: false, amount_sats: nil), i.e. the default, with no sheet in between.',
+    },
   },
 
   // ------------------------------------------------------------- Amethyst --
@@ -298,6 +324,14 @@ export const capabilities: Record<string, ClientCapabilities> = {
       verdict: 'no',
       detail: 'No search tab at all — the five are Home, Messages, Shorts, Discover, Notifications. The magnifier lives in the top bar.',
       source: 'search',
+    },
+    'fast-zap': {
+      verdict: 'partial',
+      detail:
+        'A tap opens the amount picker, because Amethyst ships three choices (21, 50, 100). Trim the list to one in Settings → Zaps and the same tap sends it straight away.',
+      source: 'zap',
+      grounding:
+        'vitorpamplona/amethyst — ReusableZapButton.kt hands multiple amounts to onMultipleChoices and zaps directly otherwise; DefaultZapAmounts = listOf(21L, 50L, 100L) in AccountSyncedSettingsInternal.kt.',
     },
   },
 
@@ -364,6 +398,13 @@ export const capabilities: Record<string, ClientCapabilities> = {
       detail: 'A search pill rides the right-hand column on most pages, and Explore adds a full bar plus Advanced Search.',
       source: 'search',
     },
+    'fast-zap': {
+      verdict: 'yes',
+      detail: 'A click sends a quick zap. Holding the bolt for half a second opens the custom amount modal instead.',
+      source: 'zap',
+      grounding:
+        'PrimalHQ/primal-web-app — NoteFooter.tsx: startZap arms a 500ms quickZapDelay that opens the custom modal; commitZap clears it on release, so a short press zaps.',
+    },
   },
 
   // ------------------------------------------------------------ YakiHonne --
@@ -426,6 +467,11 @@ export const capabilities: Record<string, ClientCapabilities> = {
       verdict: 'partial',
       detail: 'A magnifier in the top-right of Home — one of exactly two icons up there — not a tab of its own.',
       source: 'search',
+    },
+    'fast-zap': {
+      verdict: 'partial',
+      detail: 'Your choice: with one-tap zap on, a tap sends 21 sats. With it off, the amount sheet opens.',
+      source: 'zap',
     },
   },
 
@@ -494,6 +540,12 @@ export const capabilities: Record<string, ClientCapabilities> = {
       detail: 'A box in the right-hand column, and Search in the left rail.',
       source: 'search',
     },
+    'fast-zap': {
+      verdict: 'yes',
+      detail:
+        'A single click sends 50 sats and there is no confirmation — worth knowing before you click around a feed.',
+      source: 'zap',
+    },
   },
 
   // ----------------------------------------------------------------- Wisp --
@@ -558,6 +610,11 @@ export const capabilities: Record<string, ClientCapabilities> = {
       detail: 'Its own tab in the bottom bar, opening on Profiles with a Notes tab beside it.',
       source: 'search',
     },
+    'fast-zap': {
+      verdict: 'no',
+      detail: 'The zap sheet always opens, with presets of 21, 100, 500, 1000 and 5000 plus a Custom pill.',
+      source: 'zap',
+    },
   },
 
   // --------------------------------------------------------------- Nostur --
@@ -621,6 +678,11 @@ export const capabilities: Record<string, ClientCapabilities> = {
       detail: 'The magnifier is one of the five bottom tabs.',
       source: 'search',
     },
+    'fast-zap': {
+      verdict: 'no',
+      detail: 'The "Send sats" sheet opens with sixteen amount coins, 21 preselected.',
+      source: 'zap',
+    },
   },
 
   // -------------------------------------------------------------- Coracle --
@@ -664,12 +726,12 @@ export const capabilities: Record<string, ClientCapabilities> = {
       source: 'react',
     },
     'builtin-wallet': {
-      verdict: 'unknown',
+      verdict: 'no',
       detail:
-        'There is a "Your Wallet" page and zapping a profile does not need it — but what that page actually offers is the one thing on this table nobody has checked.',
+        '"Your Wallet" connects one you already have — a browser extension (WebLN) or an NWC string — and then shows its balance. Coracle never creates a wallet.',
       source: 'connect-wallet',
       grounding:
-        'Genuinely open: docs/refs/coracle/screen-map.md lists /settings/wallet → "Your Wallet" with no fields, while enumerating every other settings page in full. Resolving this needs a pass over coracle-social/coracle.',
+        'coracle-social/coracle@efea13f — UserWallet.svelte offers "Connect Wallet" and reads a balance off whatever is attached; WalletConnect.svelte implements exactly two routes, connectWithWebLn and connectWithNWC; WalletDisconnect.svelte clears it. Nothing mints or custodies.',
     },
     'clear-cache': {
       verdict: 'no',
@@ -690,6 +752,11 @@ export const capabilities: Record<string, ClientCapabilities> = {
       verdict: 'partial',
       detail: 'One field in the top bar. There is no search page, and the sidebar has no magnifier — it has no icons at all.',
       source: 'search',
+    },
+    'fast-zap': {
+      verdict: 'yes',
+      detail: 'A click sends your default amount, which ships at 21 sats. Change it in App Settings.',
+      source: 'zap',
     },
   },
 };

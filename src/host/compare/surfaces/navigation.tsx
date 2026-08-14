@@ -10,12 +10,13 @@
  *
  * Each cell mounts that client's real bar or rail with its real item list.
  *
- * ONE CLIENT IS ABSENT AND SAYS SO. Coracle's sidebar is written inline inside
- * `CoracleSimulator.tsx`, closed over the simulator's screen, modal, auth and
- * submenu state. Pulling it out is a genuine refactor of a `ready` client, not
- * a one-line export like Snort's rail, so it is named here rather than faked
- * with a lookalike — the rule this whole page runs on.
+ * Two of the eight needed their component freed first, and neither was faked in
+ * the meantime: Snort's `Rail` only needed an `export`, and Coracle's sidebar —
+ * written inline in `CoracleSimulator`, closed over screen, modal, auth and
+ * submenu state — was lifted into `coracle/components/Sidebar.tsx` verbatim,
+ * with that state turned into props. Same markup, same classes, same order.
  */
+import { useState } from 'react';
 import { TabBar as DamusTabBar } from '../../../simulators/damus/components/TabBar';
 import { BottomNav as AmethystNav } from '../../../simulators/amethyst/components/BottomNav';
 import { TabBar as YakiTabBar } from '../../../simulators/yakihonne/components/TabBar';
@@ -23,6 +24,7 @@ import { BottomBar as WispBar } from '../../../simulators/wisp/components/Bottom
 import { BottomBar as NosturBar } from '../../../simulators/nostur/components/BottomBar';
 import { LeftSidebar as PrimalSidebar } from '../../../simulators/primal/web/components/LeftSidebar';
 import { Rail as SnortRail } from '../../../simulators/snort/SnortSimulator';
+import { Sidebar as CoracleSidebar } from '../../../simulators/coracle/components/Sidebar';
 
 import type { Surface, SurfacePreviewProps } from './types';
 
@@ -67,6 +69,29 @@ function SnortNav({ author }: SurfacePreviewProps) {
   );
 }
 
+// Coracle's submenu is controlled by design (the simulator closes it on every
+// navigation), so the shop-window copy holds it too — it is the one thing on
+// this surface that opens, and a dead Settings row would misrepresent it.
+function CoracleNav({ author }: SurfacePreviewProps) {
+  const [submenu, setSubmenu] = useState<'settings' | 'account' | null>(null);
+  return (
+    <CoracleSidebar
+      screen="feeds"
+      modalOpen={false}
+      isAuthed
+      currentUser={author}
+      submenu={submenu}
+      onSubmenu={setSubmenu}
+      onNavigate={noop}
+      onOpenModal={noop}
+      onOpenSettings={noop}
+      onViewOwnProfile={noop}
+      onLogout={noop}
+      onToast={noop}
+    />
+  );
+}
+
 export const navigationSurface: Surface = {
   id: 'navigation',
   label: 'Getting around',
@@ -80,9 +105,6 @@ export const navigationSurface: Surface = {
     snort: { Component: SnortNav, rootClass: 'snort-simulator', natural: RAIL },
     wisp: { Component: WispNav, rootClass: 'wisp-simulator', natural: BAR },
     nostur: { Component: NosturNav, rootClass: 'nostur-simulator', natural: BAR },
-  },
-  absent: {
-    coracle:
-      'Coracle’s sidebar is written inline in its simulator, closed over screen, modal and auth state. Extracting it is a refactor of a ready client, not a one-line export — so it is missing here rather than approximated.',
+    coracle: { Component: CoracleNav, rootClass: 'coracle-simulator', natural: RAIL },
   },
 };
