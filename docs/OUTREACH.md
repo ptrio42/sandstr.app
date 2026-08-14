@@ -128,23 +128,39 @@ clip for "how do I even do this".
 
 ## Next material: the zap comparison
 
-Owner's call, 2026-08-14. `/compare`'s `fast-zap` axis turned out to be the strongest
-thing on the page as a story, and it aims at the tag's **biggest** topic (zaps/wallet,
-17%) rather than at a feature announcement:
+Owner's call, 2026-08-14, and the framing matters: this is **flavour, not a warning**.
+An earlier draft led with "a stray click in Snort spends sats", which is true and is
+also mildly patronising to a feed of people who have used Nostr for years. The
+interesting thing is not that one client is risky — it is that eight teams looked at
+the same gesture and disagreed about literally every part of it.
 
-> A single click in Snort spends 50 sats with no confirmation. Coracle sends 21 the
-> same way. Wisp and Nostur always open a sheet. Amethyst zaps straight away only if
-> you have exactly one amount configured — and it ships three.
+What the matrix and the FAQ banks already hold (`/compare`, axis `fast-zap`, plus each
+client's `zap` entry):
 
-Why it fits the measured channel: it is a **question the reader can check on
-themselves** ("does your client spend sats on a stray click?"), not an announcement —
-and announcements are the weakest category this account has. It is also true of the
-pinned versions and every claim carries its source, so a maintainer reading it finds a
-citation rather than a swipe.
+| | |
+|---|---|
+| **Where the bolt sits** | 2nd in Primal and Coracle (before the heart), 4th in Damus, Amethyst, Wisp and Nostur, last in Snort and YakiHonne |
+| **What it looks like** | a lightning bolt everywhere except Wisp, which draws **₿** unless you switch it to fiat |
+| **What one tap does** | Snort sends 50 sats and Coracle 21, with no sheet; Wisp and Nostur always open one; YakiHonne makes it a setting; Amethyst zaps straight away only if you have exactly one amount configured, and ships three |
+| **The default** | three of them default to **21** (YakiHonne, Nostur, Coracle); Snort picked 50. Amethyst's and Wisp's preset rows also start at 21 — but 21 is a bitcoin convention, so read it as a shared idiom, not as eight teams converging by accident |
+| **The number beside it** | a total of **sats** in six of them, not a count of zaps (Amethyst, Primal, YakiHonne, Wisp, Nostur, Coracle) — Nostur even writes "sats" after it. Damus and Snort do not say |
+| **One-offs** | Coracle has a "Platform zap split" deciding how much of each zap goes to its developer (ships at 0); YakiHonne's "Invoice" makes a QR someone else pays — zapping backwards; Wisp lets you keep a custom amount as your own preset |
+
+Why it fits the measured channel: it aims at the tag's **biggest** topic (zaps/wallet,
+17%), it is a question the reader can answer about their own client rather than an
+announcement — announcements are the weakest category this account has — and it is
+about design taste, which is what a room of long-time users actually enjoys arguing
+about.
+
+It also comes with its own picture, which is rare: `/compare?show=note` renders the
+same post in all eight, so the action rows sit side by side and the reader can count
+the positions themselves. The claim and the evidence are one link.
+
+The linkable forms: `sandstr.app/compare?cell=snort:fast-zap` for the single claim,
+`sandstr.app/compare?show=note` for the row-by-row picture.
 
 Two rules from above still bind: the note names other people's brands, so it carries
-"unofficial, not affiliated"; and the teaser goes UNDER a question, not instead of it.
-The linkable form is `sandstr.app/compare?cell=snort:fast-zap`.
+"unofficial, not affiliated"; and a teaser goes UNDER a question, not instead of it.
 
 ## What not to claim
 
