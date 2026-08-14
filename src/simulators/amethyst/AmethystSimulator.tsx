@@ -26,6 +26,7 @@ import type { MockUser } from '../../data/mock';
 import { generateAvatarGradient, getUserByPubkey } from '../../data/mock';
 import { TourContext } from '../../components/tour';
 import { AmethystToastContext } from './toast';
+import { AmethystSecurityContext, useSecurityState } from './securityState';
 
 // Types.
 // `search` is a legacy id kept on purpose: it is the tour/FAQ payload for the
@@ -114,6 +115,9 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
     messages: !seenTabs.messages,
     notifications: !seenTabs.notifications,
   };
+  // Security Filters state: the note overflow menu's Block and Mute thread fill
+  // its lists from outside Settings, so it cannot live inside the screen.
+  const security = useSecurityState();
   const parentTheme = useParentTheme();
   const tourContext = useContext(TourContext);
   const registerAction = (actionType: string) => {
@@ -363,14 +367,18 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
           // Optional payload picks the section (gaps ame-43) — without it the
           // Relays/Security sections were reachable only by a drawer tap.
           const section = tourCommand.payload;
-          // `security-hidden` is Security Filters with the Hidden Words tab
-          // preselected — the mute demo needs to land on the word field, and
-          // the tab is local state inside the screen.
+          // `security-hidden` / `security-spammers` keep their exact payloads
+          // through the v1.13.1 Security Filters rebuild, so stored FAQ and tour
+          // commands survive — they used to preselect a TAB inside the screen,
+          // and now open the pushed screen of the same name. `security-blocked`
+          // and `security-muted` are the two new ones.
           if (
             section === 'relays' ||
             section === 'security' ||
+            section === 'security-blocked' ||
             section === 'security-hidden' ||
             section === 'security-spammers' ||
+            section === 'security-muted' ||
             section === 'preferences' ||
             section === 'backup-keys' ||
             section === 'media-servers' ||
@@ -517,18 +525,21 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
   if (!isAuthenticated) {
     return (
       <AmethystToastContext.Provider value={showToast}>
-        <div
-          className={`amethyst-simulator ${getThemeClass()} ${className}`}
-          data-theme={parentTheme}
-        >
-          <LoginScreen onLogin={handleLogin} initialMode={loginMode} />
-        </div>
+        <AmethystSecurityContext.Provider value={security}>
+          <div
+            className={`amethyst-simulator ${getThemeClass()} ${className}`}
+            data-theme={parentTheme}
+          >
+            <LoginScreen onLogin={handleLogin} initialMode={loginMode} />
+          </div>
+        </AmethystSecurityContext.Provider>
       </AmethystToastContext.Provider>
     );
   }
 
   return (
     <AmethystToastContext.Provider value={showToast}>
+      <AmethystSecurityContext.Provider value={security}>
     <div 
       className={`amethyst-simulator ${getThemeClass()} ${className}`}
       data-theme={parentTheme}
@@ -653,6 +664,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
             key={`${settingsSection ?? 'root'}-${settingsOpenToken}`}
             onBack={() => setIsSettingsOpen(false)}
             initialSection={settingsSection}
+            security={security}
           />
         </div>
       )}
@@ -673,6 +685,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         )}
       </AnimatePresence>
     </div>
+      </AmethystSecurityContext.Provider>
     </AmethystToastContext.Provider>
   );
 }

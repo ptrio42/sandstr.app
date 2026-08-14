@@ -7,6 +7,9 @@ import {
   Trophy, EyeOff, ShieldCheck, Copy, Flag, BellOff, UserMinus, Radio,
 } from 'lucide-react';
 import { Avatar } from './Avatar';
+import { useAmethystToast } from '../toast';
+import { useSecurity } from '../securityState';
+import { getUserByPubkey } from '../../../data/mock';
 import '../amethyst.theme.css';
 
 interface PostAuthor {
@@ -240,6 +243,12 @@ export function MaterialCard({
   const markers = React.useMemo(() => headerMarkers(post), [post.id]);
   const [shareOpen, setShareOpen] = React.useState(false);
   const [menuOpen, setMenuOpen] = React.useState(false);
+  // Two rows of the overflow menu really change account state upstream, and both
+  // land in Security Filters: Block adds the author to Blocked Users, Mute
+  // thread adds this note to Muted threads. Neither had anywhere to go until
+  // that screen was rebuilt to v1.13.1.
+  const toast = useAmethystToast();
+  const { blockUser, muteThread } = useSecurity();
   // `showMore` — upstream truncates a long body and puts a pill over the faded
   // remainder. The thread's root note is the same card, which is where ground
   // truth documents the pill explicitly (gaps ame-10).
@@ -702,7 +711,19 @@ export function MaterialCard({
               <button
                 key={row.label}
                 type="button"
-                onClick={() => setMenuOpen(false)}
+                onClick={() => {
+                  setMenuOpen(false);
+                  if (row.label === 'Mute thread') {
+                    muteThread({ id: post.id, title: post.content.split('\n')[0].slice(0, 60) });
+                    toast('Thread muted — Settings › Security Filters › Muted threads', 'success');
+                  } else if (row.label === 'Block') {
+                    const author = post.pubkey ? getUserByPubkey(post.pubkey) : undefined;
+                    if (author) {
+                      blockUser(author);
+                      toast(`${author.displayName} blocked — Settings › Security Filters › Blocked Users`, 'success');
+                    }
+                  }
+                }}
                 className="w-full flex items-center gap-4 px-5 py-3 text-left"
                 style={{ color: row.label === 'Block' || row.label === 'Report' ? 'var(--md-error)' : 'var(--md-on-surface)' }}
               >
