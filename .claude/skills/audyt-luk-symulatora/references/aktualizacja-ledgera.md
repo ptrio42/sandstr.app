@@ -10,13 +10,13 @@ wiersz → Rollup → `docs/GAPS.md`.
   w `docs/GAPS.md`, w innych ledgerach i w komentarzach commitów. Prefiksy: `dam` `ame` `pri` `yak`
   `sno` `wis` `cor` `nos` `key` `gos`.
 - Kolumny w kolejności: `ID | Surface | § | Status | Gap | Evidence | FAQ impact | Effort`.
-- **Język opisu bierzesz z pliku, do którego piszesz**: dziewięć ledgerów jest **po polsku**, a jedyny
-  po angielsku to **`docs/gaps/wisp.md`**. Zweryfikowane 2026-08-11 wierszami tabel.
-  **`docs/GAPS.md` twierdzi coś odwrotnego** („Keychat i YakiHonne po polsku, pozostałe po angielsku",
-  sekcja *Metoda i zaufanie*) — ta notka jest nieaktualna, wygrywa plik, który masz otwarty.
-  ID, statusy i cytaty są w tym samym formacie wszędzie. Po polsku są też **wszędzie**, łącznie z Wispem,
-  nagłówki tabel („Surface (ścieżka w UI)", „Osiągalna komendą?") i zdanie zamykające wiersz niżej —
-  angielski w `wisp.md` dotyczy wyłącznie opisu luki.
+- **Język opisu bierzesz z pliku, do którego piszesz**: osiem z dziesięciu ledgerów jest **po polsku**,
+  po angielsku są dwa — **`docs/gaps/wisp.md`** i **`docs/gaps/amethyst.md`** (ten drugi od przebudowy
+  do v1.13.1; zamrożony `docs/gaps/amethyst-v1-12.md` został po polsku). Zweryfikowane 2026-08-14
+  wierszami tabel. ID, statusy i cytaty są w tym samym formacie wszędzie, a **nagłówki tabel są polskie
+  we wszystkich jedenastu plikach** („Surface (ścieżka w UI)", „Osiągalna komendą?") — angielski dotyczy
+  wyłącznie kolumn opisowych. Zdanie zamykające wiersz idzie za językiem pliku: `**Zamknięte …**`
+  w polskich (także w Wispie), `**Closed …**` w `amethyst.md`.
 - `§` = nagłówek `##` ze screen-mapy, dosłownie: numer albo nazwa, zależnie od klienta — pełny podział
   w `metoda-audytu.md` §0.
 
@@ -28,10 +28,16 @@ wiersz → Rollup → `docs/GAPS.md`.
 1. status → `ok`,
 2. kolumna *Gap* zaczyna się od `**Zamknięte YYYY-MM-DD (powód).** Poprzednio: <stary status>.`,
    a **pierwotny opis luki zostaje** za tym zdaniem,
-3. `Evidence` zostawiasz — pokazuje, gdzie luka była.
+3. `Evidence` zostawiasz — pokazuje, gdzie luka była,
+4. `FAQ impact` dostaje prefiks `was-`: `blocks-showme` → `was-blocks-showme`, `breaks-showme` →
+   `was-breaks-showme` (definicje: `docs/gaps/README.md` §FAQ impact). **Nie kasuj do `none`** — `none`
+   znaczy „FAQ na tym nie cierpiało", a tu cierpiało i właśnie przestało: prefiks jest jedynym śladem,
+   że wpis FAQ dla tej powierzchni może dziś obiecać więcej, niż obiecuje. `none` wpisujesz dopiero,
+   gdy rewizja FAQ ten dług odbierze.
 
-Dzięki temu wiersz dalej liczy się w Rollupie (w kolumnie `ok`), a następny audytor widzi, że ta
-powierzchnia była sprawdzana, zamiast zgłaszać ją drugi raz.
+Dzięki temu wiersz dalej liczy się w Rollupie (w kolumnie `ok` — prefiks `was-` nie zmienia arytmetyki,
+bo ta idzie z kolumny *Status*), a następny audytor widzi, że ta powierzchnia była sprawdzana, zamiast
+zgłaszać ją drugi raz.
 
 ## Rollup i nagłówek
 
