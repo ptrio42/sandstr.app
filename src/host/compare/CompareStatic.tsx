@@ -16,7 +16,7 @@
  */
 import { getClient, type ClientEntry } from '../../registry';
 import { COMPARED_CLIENTS } from '../../data/capabilities';
-import { CapabilityTable, CapabilityDetails } from './CapabilityTable';
+import { CapabilityTable, CapabilityDetails, BackToShelf } from './CapabilityTable';
 
 export default function CompareStatic() {
   const clients = COMPARED_CLIENTS.map((id) => getClient(id)).filter(
@@ -41,6 +41,8 @@ export default function CompareStatic() {
 
       <h2 className="mb-4 mt-12 text-lg font-semibold">Every answer, in words</h2>
       <CapabilityDetails clients={clients} />
+
+      <BackToShelf />
     </main>
   );
 }

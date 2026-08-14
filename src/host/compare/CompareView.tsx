@@ -31,6 +31,7 @@ import {
 import {
   CapabilityTable,
   CapabilityDetails,
+  BackToShelf,
   VERDICT_META,
   type Selection,
 } from './CapabilityTable';
@@ -486,6 +487,7 @@ export default function CompareView() {
           checked against.
         </p>
         <CapabilityDetails clients={entries} />
+        <BackToShelf />
       </section>
     </div>
   );

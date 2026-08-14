@@ -151,6 +151,30 @@ export function CapabilityTable({
 }
 
 /**
+ * The way back to the shelf, rendered by the live page and the prerender alike.
+ *
+ * It exists because of a dead end only the prerendered file has. That file is
+ * the page body without `Layout`, so it carries no header and no footer, and
+ * every other link on it points under `/c/` — which `robots.txt` Disallows. A
+ * crawler landing on `/compare` therefore had nowhere allowed to go next, which
+ * is close to the worst shape an indexable page can have.
+ *
+ * On the live page Layout's logo already goes home, so this is one extra link
+ * there. That is the right way round: the shared component is a strict superset
+ * of what the static file needs, rather than the static file quietly growing
+ * markup the real page does not have.
+ */
+export function BackToShelf() {
+  return (
+    <p className="mt-12 text-sm">
+      <Link to="/" className="font-medium text-primary-600 hover:underline dark:text-primary-400">
+        See all the reproductions and try one →
+      </Link>
+    </p>
+  );
+}
+
+/**
  * Every claim in the matrix, in words, grouped by capability. This is the
  * readable form of the same 96 cells — and the reason `/compare` is worth
  * crawling at all.

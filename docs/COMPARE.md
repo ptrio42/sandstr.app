@@ -162,6 +162,26 @@ Three pieces, all of which have to hold together:
 - **`sitemap.xml` lists both.** Nothing under `/c/` is listed; asking crawlers to fetch what the
   same site forbids is worse than silence.
 
+### Inbound links
+
+Until 2026-08-14 there was exactly **one** — the gallery's hero — which is close to the worst shape
+an indexable page can have. Three now, each covering a case the others cannot:
+
+- **Gallery hero** (`Gallery.tsx`) — the shelf's "not sure which one?" step. In the prerendered
+  `dist/index.html`.
+- **Layout footer** — every page that has a footer, which is `/` and `/compare`. Deliberately **not**
+  `/c/:id`: Layout drops the whole footer there (it cost 81px and was never seen).
+- **The FAQ answer itself** (`FaqPanel.tsx`) — "How the other 7 clients do this", linking to
+  `/compare?cell=<client>:<axis>`. This is the only route out of a client view, and the strongest of
+  the three: someone reading how Damus zaps is one click from how the other seven do. It uses the
+  matrix's own `source` mapping in reverse, so there is no new data and a renamed FAQ entry silently
+  stops offering the link rather than pointing somewhere wrong. 8 entries per client qualify.
+
+**And one link back.** The prerendered `/compare` is the page body without `Layout`, so it has no
+header and no footer, and every other link on it points under `/c/` — which `robots.txt` Disallows.
+A crawler landing there had nowhere allowed to go next. `BackToShelf` fixes that, and lives in the
+shared module so the static file is never quietly given markup the live page lacks.
+
 ## Linkable state
 
 Every part of the page state lives in the query string and is read on arrival:
