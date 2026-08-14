@@ -490,26 +490,46 @@ export const amethystFaq: ClientFaq = {
         'To mute a word or phrase: open the account drawer, tap "Settings", tap "Security Filters", open "Hidden Words" and type it into "Hide new word or sentence".',
         'To mute a thread: long-press any note in it and tap "Mute thread" — the same menu then offers "Unmute thread", and Security Filters lists them under "Muted threads".',
         'To mute a hashtag: tap the #tag to open its feed, then tap ⋮ beside Follow in the top bar and pick "Mute hashtag" — that menu is also the only way to unmute it.',
-        'To manage the lists: account drawer → Settings → "Security Filters" → the "Blocked Users", "Spammers" and "Hidden Words" tabs, each row with an "Unblock" button.',
+        'To manage the lists: account drawer → Settings → "Security Filters" → the "Blocked content" card, which opens "Blocked Users", "Spammers", "Hidden Words" or "Muted threads" as its own screen, each row with an "Unblock" button.',
       ],
       note: 'Amethyst says "Block" only about people; words, threads and hashtags are "muted" — and nothing can be muted for a limited time, every entry stays until you remove it. Blocking hides that account inside your app and adds it to your mute list encrypted, so their notes stay visible to everyone else; "Spammers" fills itself from the "Filter spam" toggle and empties the moment you switch that toggle off. v1.13.1 has no tabs here: Security Filters is two cards — "Filtering preferences" and "Blocked content" — and the four lists (Blocked Users, Spammers, Hidden Words, Muted threads) are screens of their own, each with a count beside it. A hashtag is the one kind that never gets a list; you unmute it from the same ⋮ menu on its feed. Relays are blocked separately, in the "Blocked Relays" section of the relay editor.',
+      // Four steps, one per screen the answer names. Each step still ARRIVES by
+      // command rather than by clicking its way there — the queue takes at most
+      // two commands a step, so a mini-tour cannot drive a four-screen walk. But
+      // the ring should stop on every screen the reader is told to pass through:
+      // with the drawer and the Security Filters screen missing, the demo jumped
+      // from the Settings row to the docked field and skipped both, which read
+      // as the tour being broken rather than as it being brief.
       showMe: [
+        {
+          target: '[data-tour="amethyst-drawer-settings"]',
+          title: 'Settings',
+          content: 'Open the account drawer with your profile picture. "Settings" is under System, near the bottom.',
+          position: 'top',
+          commands: openDrawer,
+        },
         {
           target: '[data-tour="amethyst-settings-security-filters"]',
           title: 'Security Filters',
-          content: 'Everything you have blocked, muted or hidden is managed from this row, under Settings → Account Settings.',
+          content: 'Everything you have blocked, muted or hidden is managed from this row, under Account Settings.',
           position: 'bottom',
           commands: openSettingsRoot,
         },
         {
+          target: '[data-tour="amethyst-security-hidden-row"]',
+          title: 'Hidden Words',
+          content: 'The "Blocked content" card opens four lists, each as its own screen. This is the one for words and phrases.',
+          position: 'bottom',
+          commands: cmd({ type: 'openSettings', payload: 'security' }),
+        },
+        {
           // The field, not the screen root: `amethyst-settings` is the whole
           // scrolling screen and the overlay refuses to spotlight a target that
-          // size. `security-hidden` is the same section with the Hidden Words
-          // tab preselected.
+          // size. `security-hidden` opens the Hidden Words screen itself.
           target: '[data-tour="amethyst-hidden-words"]',
           title: 'Hide new word or sentence',
           content:
-            'Under the Hidden Words tab, docked at the bottom: type a word here and posts containing it stop showing up.',
+            'Docked at the bottom of that screen: type a word here and posts containing it stop showing up.',
           position: 'top',
           commands: cmd({ type: 'openSettings', payload: 'security-hidden' }),
         },
