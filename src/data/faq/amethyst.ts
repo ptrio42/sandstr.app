@@ -380,8 +380,8 @@ export const amethystFaq: ClientFaq = {
       answer: [
         'Tap your profile picture in the top-left to open the account drawer.',
         'Tap "Relays".',
-        'The screen groups your Public Outbox and Public Inbox relays, each row with its own stats.',
-        'Tap "Add a Relay" to add one.',
+        'The screen groups your Public Outbox and Public Inbox relays, each row with its own stats and an ✕ to remove it.',
+        'To add one, type the address into the "Add a Relay" field under the group and tap "Add" — each group has its own field.',
       ],
       note: 'Your connected/total relay counter is the coloured number on the drawer\'s "Relays" row (e.g. "355/1810") — there is no relay indicator in the app bar. The relay editor is split by purpose (outbox model): Outbox, Inbox, Local, Trusted, Favorite and Blocked, each with its own "Add a Relay" field.',
       showMe: [
@@ -399,11 +399,19 @@ export const amethystFaq: ClientFaq = {
           // one group also lets the caption stop generalising over both.
           target: '[data-tour="amethyst-relays-outbox"]',
           title: 'Your relays',
-          // Descriptive — the sim's "Add a Relay" button is display-only
-          // (gaps ame-42).
           content:
-            'Public Outbox/Home Relays: the ones your posts are written to, each with its stored size, and "Add a Relay" under the list. Public Inbox Relays follow below.',
+            'Public Outbox/Home Relays: the ones your posts are written to, each with its stored size and an ✕ to drop it. Public Inbox Relays follow below.',
           position: 'bottom',
+          commands: cmd({ type: 'openSettings', payload: 'relays' }),
+        },
+        {
+          // Live since 2026-08-13 (gaps ame-42): the field really adds a row to
+          // this group, and the ✕ on any row really removes it.
+          target: '[data-tour="amethyst-relay-add"]',
+          title: 'Add a Relay',
+          content:
+            'Type a relay address here and tap "Add" — it joins the group above. Try it: the row appears at the bottom of the list.',
+          position: 'top',
           commands: cmd({ type: 'openSettings', payload: 'relays' }),
         },
       ],
@@ -411,8 +419,9 @@ export const amethystFaq: ClientFaq = {
 
     // ------------------------------------------------------ Account & keys --
     {
-      // §Account drawer — location only; screen internals need upstream
-      // grounding (recording never opens Backup Keys).
+      // §Settings — Danger Zone. Screen internals come from upstream
+      // `AccountBackupScreen.kt` (the recording never opens Backup Keys), and
+      // the simulator reproduces them as of 2026-08-13 — gaps ame-35.
       id: 'backup-keys',
       category: 'Account & keys',
       question: 'Where do I back up my private key (nsec)?',
@@ -443,10 +452,20 @@ export const amethystFaq: ClientFaq = {
         {
           target: '[data-tour="amethyst-settings-backup-keys"]',
           title: 'Backup Keys',
-          // Descriptive — the sim's row is display-only (gaps ame-35).
-          content: 'Your nsec lives here, at the bottom of Settings in the red Danger Zone — the single most important row in the app.',
+          content: 'Your nsec lives here, at the bottom of Settings in the red Danger Zone — the single most important row in the app. Tap it.',
           position: 'top',
           commands: openSettingsRoot,
+        },
+        {
+          // The screen itself, live since 2026-08-13 (gaps ame-35). It carries
+          // the real safety-tips copy and the real controls; the one thing it
+          // does NOT carry is a key — see the note in SettingsScreen.tsx.
+          target: '[data-tour="amethyst-backup-copy"]',
+          title: 'Copy my secret key',
+          content:
+            'This purple button is the whole backup. Under it, a password field turns the same key into an encrypted ncryptsec1 copy. (Here it hands you a placeholder — a demo account has no key.)',
+          position: 'bottom',
+          commands: cmd({ type: 'login' }, { type: 'openSettings', payload: 'backup-keys' }),
         },
       ],
     },
@@ -498,10 +517,10 @@ export const amethystFaq: ClientFaq = {
     },
 
     {
-      // Upstream (vitorpamplona/amethyst, main, checked 2026-08-06):
-      // DrawerContent.kt "Accounts" row → AccountSwitchBottomSheet with a
-      // per-account logout icon + confirmation dialog. The recording-era
-      // drawer has no such row, so this entry is TEXT-ONLY.
+      // Upstream (vitorpamplona/amethyst @ v1.13.1): DrawerContent.kt "Accounts"
+      // row → AccountSwitchBottomSheet (`account_switch_*`) with a per-account
+      // logout icon and a confirmation dialog. Live in the sim since
+      // 2026-08-13 — gaps ame-112.
       id: 'logout',
       category: 'Account & keys',
       question: 'How do I log out of Amethyst?',
@@ -511,6 +530,23 @@ export const amethystFaq: ClientFaq = {
         'In the account sheet, tap the logout icon on your account\'s row and confirm.',
       ],
       note: 'The dialog warns you: logging out deletes all local data on this phone. Back up your nsec first — without it the account is gone for good.',
+      showMe: [
+        {
+          target: '[data-tour="amethyst-drawer-accounts"]',
+          title: 'Accounts',
+          content: 'The very bottom row of the drawer, under the whole menu — that is where every account on this phone is listed.',
+          position: 'top',
+          commands: openDrawer,
+        },
+        {
+          target: '[data-tour="amethyst-accounts-logout"]',
+          title: 'Log out',
+          content:
+            'Each account row carries this icon. Tapping it asks you to confirm — and the confirmation is where Amethyst warns you that logging out wipes the local data.',
+          position: 'bottom',
+          commands: cmd({ type: 'login' }, { type: 'navigate', payload: 'drawer:accounts' }),
+        },
+      ],
     },
 
     // ------------------------------------------------------------ Advanced --
@@ -530,10 +566,19 @@ export const amethystFaq: ClientFaq = {
         {
           target: '[data-tour="amethyst-settings-media-servers"]',
           title: 'Media Servers',
-          // Descriptive — the sim's row is display-only (gaps ame-33).
-          content: 'Your upload servers are picked here — media from the composer goes to the selected server.',
+          content: 'Your upload servers are picked here, under Settings → Account Settings. Tap it.',
           position: 'bottom',
           commands: openSettingsRoot,
+        },
+        {
+          // Live since 2026-08-13 (gaps ame-33): the priority list really
+          // reorders by removal, and both add paths really add.
+          target: '[data-tour="amethyst-media-servers"]',
+          title: 'Upload priority',
+          content:
+            'Row #1 is "Primary" and uploads try each server from the top down. Below the list: the recommended servers, and a field for your own. The two switches above decide whether every upload gets mirrored to the rest and whether the server may re-encode it.',
+          position: 'bottom',
+          commands: cmd({ type: 'login' }, { type: 'openSettings', payload: 'media-servers' }),
         },
       ],
     },
@@ -541,7 +586,7 @@ export const amethystFaq: ClientFaq = {
       // Upstream: DrawerSections.kt (Wallet in the "You" section),
       // WalletScreen.kt ("Add NWC Connection", wallet-type chooser, paste
       // nostr+walletconnect:// URI, per-wallet Set as Default/Rename).
-      // The recording-era drawer has no Wallet row — TEXT-ONLY.
+      // Live in the sim since 2026-08-13 — gaps ame-140/ame-141.
       id: 'connect-wallet',
       category: 'Advanced',
       question: 'How do I connect a Lightning wallet (for zaps)?',
@@ -552,6 +597,15 @@ export const amethystFaq: ClientFaq = {
         'You can attach several wallets — set one as the default for zaps.',
       ],
       note: 'Quick Zap amounts and zap privacy live separately, under Settings → Zaps.',
+      showMe: [
+        {
+          target: '[data-tour="amethyst-wallet-nwc"]',
+          title: 'Add NWC Connection',
+          content: 'The Wallet tab opens on the on-chain card and an empty NWC list. This lavender pill is where a Lightning wallet gets attached — tap it.',
+          position: 'top',
+          commands: cmd({ type: 'login' }, { type: 'navigate', payload: 'wallet' }),
+        },
+      ],
     },
     {
       // Upstream: exists=false — strings.xml (all 5126 lines) has no

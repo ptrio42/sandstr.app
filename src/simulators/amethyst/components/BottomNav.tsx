@@ -7,7 +7,6 @@ interface BottomNavItem {
   id: string;
   label: string;
   icon: React.ReactNode;
-  dot?: boolean;
 }
 
 // Real Amethyst bottom nav @ v1.13.1. The destination set is upstream's
@@ -26,10 +25,22 @@ const navItems: BottomNavItem[] = [
   { id: 'messages', label: 'Messages', icon: <Mail className="w-6 h-6" /> },
   { id: 'wallet', label: 'Wallet', icon: <Wallet className="w-6 h-6" /> },
   { id: 'search', label: 'Browser', icon: <Globe className="w-6 h-6" /> },
-  { id: 'notifications', label: 'Notifications', icon: <Bell className="w-6 h-6" />, dot: true },
+  { id: 'notifications', label: 'Notifications', icon: <Bell className="w-6 h-6" /> },
 ];
 
-export function BottomNav({ activeTab, onTabChange }: { activeTab: string; onTabChange: (tab: string) => void }) {
+/**
+ * Which destinations carry the unread dot. v1.13.1 lights the envelope for EVERY
+ * unread conversation, not only NIP-17/NIP-04 DMs, and Wallet and Browser never
+ * carry one — the negative half of the rule was already right, the positive half
+ * was a hardcoded `dot: true` on Notifications that never cleared (gaps ame-70).
+ */
+export function BottomNav({
+  activeTab, onTabChange, unread = {},
+}: {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  unread?: Record<string, boolean>;
+}) {
   return (
     <nav className="md-bottom-nav safe-area-bottom" data-tour="amethyst-nav">
       {navItems.map((item) => (
@@ -49,7 +60,7 @@ export function BottomNav({ activeTab, onTabChange }: { activeTab: string; onTab
           <div className="md-bottom-nav-indicator">
             <div className="relative">
               {item.icon}
-              {item.dot && (
+              {unread[item.id] && (
                 <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--md-primary)] ring-2 ring-[var(--md-background)]" />
               )}
             </div>

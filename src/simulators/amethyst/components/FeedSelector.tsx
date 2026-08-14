@@ -49,7 +49,13 @@ const GROUPS: Group[] = [
   },
 ];
 
-export function FeedSelector({ defaultFeed = 'All Follows' }: { defaultFeed?: string }) {
+export function FeedSelector({
+  defaultFeed = 'All Follows', onChange,
+}: {
+  defaultFeed?: string;
+  /** The picked feed, so the choice is not purely cosmetic (gaps ame-74). */
+  onChange?: (feed: string) => void;
+}) {
   const [selected, setSelected] = useState(defaultFeed);
   const [open, setOpen] = useState(false);
 
@@ -75,6 +81,7 @@ export function FeedSelector({ defaultFeed = 'All Follows' }: { defaultFeed?: st
             <motion.div
               role="dialog"
               aria-label="Select an option to filter the feed"
+              data-tour="amethyst-feed-filter-dialog"
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
@@ -97,6 +104,7 @@ export function FeedSelector({ defaultFeed = 'All Follows' }: { defaultFeed?: st
                         key={o.label}
                         onClick={() => {
                           setSelected(o.label);
+                          onChange?.(o.label);
                           setOpen(false);
                         }}
                         className={`w-full flex items-center gap-4 px-4 py-3 text-left ${

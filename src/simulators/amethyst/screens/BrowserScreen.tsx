@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Star } from 'lucide-react';
 import '../amethyst.theme.css';
@@ -38,17 +38,27 @@ const APPS: WebApp[] = [
 ];
 
 export function BrowserScreen() {
+  const [url, setUrl] = useState('');
+  const [favourites, setFavourites] = useState<string[]>([]);
+  const [opened, setOpened] = useState<string | null>(null);
+
   return (
     <div className="flex flex-col h-full bg-[var(--md-background)]" data-tour="amethyst-browser">
       {/* Omnibox. Upstream shows no top app bar on this screen — the address
           field IS the header, edge to edge under the status bar. */}
       <div className="px-2 pt-2 shrink-0">
-        <div
-          className="w-full rounded-lg px-4 py-4 text-[15px] text-[var(--md-on-surface-variant)]"
+        <input
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && url.trim()) setOpened(url.trim()); }}
+          placeholder="Search or enter address"
+          aria-label="Search or enter address"
+          autoCapitalize="off"
+          spellCheck={false}
+          data-tour="amethyst-browser-omnibox"
+          className="w-full rounded-lg px-4 py-4 text-[15px] text-[var(--md-on-surface)] focus:outline-none placeholder:text-[var(--md-on-surface-variant)]"
           style={{ background: 'var(--md-surface-container-high)' }}
-        >
-          Search or enter address
-        </div>
+        />
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -62,6 +72,7 @@ export function BrowserScreen() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.02 }}
+            onClick={() => setOpened(a.name)}
             className="w-full flex items-center gap-4 px-4 py-2.5 text-left"
           >
             <span
@@ -75,10 +86,61 @@ export function BrowserScreen() {
               <span className="block text-[17px] text-[var(--md-on-surface)] truncate">{a.name}</span>
               <span className="block text-sm text-[var(--md-on-surface-variant)] truncate">{a.desc}</span>
             </span>
-            <Star className="w-6 h-6 shrink-0 text-[var(--md-on-surface)]" />
+            {/* Its own button, so the star toggles the favourite instead of the
+                tap falling through to the row (gaps ame-62). */}
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                setFavourites((f) => (f.includes(a.name) ? f.filter((n) => n !== a.name) : [...f, a.name]));
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setFavourites((f) => (f.includes(a.name) ? f.filter((n) => n !== a.name) : [...f, a.name]));
+                }
+              }}
+              aria-label={favourites.includes(a.name) ? `Remove ${a.name} from favourites` : `Add ${a.name} to favourites`}
+              className="shrink-0 p-1"
+            >
+              <Star
+                className="w-6 h-6"
+                style={{ color: favourites.includes(a.name) ? 'var(--md-primary)' : 'var(--md-on-surface)' }}
+                fill={favourites.includes(a.name) ? 'currentColor' : 'none'}
+              />
+            </span>
           </motion.button>
         ))}
       </div>
+
+      {/* The built-in browser itself. Opening a real site is impossible here —
+          this reproduction makes zero remote requests and a CSP would refuse the
+          frame anyway — so the honest close is to say what would load and where
+          (gaps ame-61/ame-63). */}
+      {opened && (
+        <div className="fixed inset-0 z-[140] flex items-end" onClick={() => setOpened(null)}>
+          <div className="absolute inset-0 bg-black/60" />
+          <div
+            role="dialog"
+            aria-label="Open in the built-in browser"
+            data-tour="amethyst-browser-open"
+            className="relative w-full rounded-t-3xl px-5 pt-4 pb-5"
+            style={{ background: 'var(--md-surface-container-high)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-lg font-bold truncate text-[var(--md-on-surface)]">{opened}</p>
+            <p className="text-sm mt-2 leading-relaxed text-[var(--md-on-surface-variant)]">
+              Amethyst opens this in its own built-in browser, signed in with your key so the web app
+              never sees it.
+            </p>
+            <p className="text-xs mt-3 leading-relaxed" style={{ color: 'var(--amethyst-placeholder)' }}>
+              Simulation: nothing is loaded. This reproduction makes no network requests at all.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

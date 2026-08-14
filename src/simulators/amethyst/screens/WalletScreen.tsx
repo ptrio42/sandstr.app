@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Copy, Send, Info } from 'lucide-react';
+import { Plus, Copy, Send, Info, Wallet as WalletIcon, Link2 } from 'lucide-react';
+import { useAmethystToast } from '../toast';
 import '../amethyst.theme.css';
 
 /**
@@ -15,11 +16,23 @@ import '../amethyst.theme.css';
  * freeze entry animations and a permanent spinner would read as broken.
  */
 export function WalletScreen() {
+  const toast = useAmethystToast();
+  // `+` in the app bar and "Add NWC Connection" reach the same wallet-type
+  // chooser upstream (`WalletScreen.kt`) — gaps ame-140/ame-141.
+  const [addOpen, setAddOpen] = useState(false);
+  const [sendOpen, setSendOpen] = useState(false);
+
   return (
     <div className="flex flex-col h-full bg-[var(--md-background)]" data-tour="amethyst-wallet">
       <div className="md-app-bar md-app-bar-enhanced">
         <h1 className="flex-1 text-[22px] text-[var(--md-on-surface)] pl-2">Wallet</h1>
-        <button type="button" aria-label="Add wallet" className="md-app-bar-icon-btn">
+        <button
+          type="button"
+          onClick={() => setAddOpen(true)}
+          aria-label="Add wallet"
+          data-tour="amethyst-wallet-add"
+          className="md-app-bar-icon-btn"
+        >
           <Plus className="w-6 h-6 text-[var(--md-on-surface)]" />
         </button>
       </div>
@@ -56,6 +69,7 @@ export function WalletScreen() {
           <div className="flex items-center justify-between mt-3">
             <button
               type="button"
+              onClick={() => toast('Simulation: nothing was copied. A mock on-chain address you could paste somewhere real would be worse than none.')}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-[var(--md-on-surface)]"
               style={{ border: '1px solid var(--md-outline)' }}
             >
@@ -63,6 +77,8 @@ export function WalletScreen() {
             </button>
             <button
               type="button"
+              onClick={() => setSendOpen(true)}
+              data-tour="amethyst-wallet-send"
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-black"
               style={{ background: 'var(--bitcoin-orange)' }}
             >
@@ -80,6 +96,8 @@ export function WalletScreen() {
           <motion.button
             whileTap={{ scale: 0.96 }}
             type="button"
+            onClick={() => setAddOpen(true)}
+            data-tour="amethyst-wallet-nwc"
             className="mt-7 flex items-center gap-2 px-6 py-3.5 rounded-full font-semibold"
             style={{ background: 'var(--md-primary)', color: 'var(--md-on-primary)' }}
           >
@@ -87,6 +105,67 @@ export function WalletScreen() {
           </motion.button>
         </div>
       </div>
+
+      {/* Wallet-type chooser. The FAQ's `connect-wallet` answer walks the reader
+          through exactly these steps, so the destination has to exist. */}
+      {addOpen && (
+        <div className="fixed inset-0 z-[140] flex items-end" onClick={() => setAddOpen(false)}>
+          <div className="absolute inset-0 bg-black/60" />
+          <div
+            role="dialog"
+            aria-label="Add a wallet"
+            data-tour="amethyst-wallet-add-sheet"
+            className="relative w-full rounded-t-3xl px-5 pt-4 pb-5"
+            style={{ background: 'var(--md-surface-container-high)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-lg font-bold text-[var(--md-on-surface)]">Add a wallet</p>
+            <div className="mt-3 space-y-1">
+              {[
+                { Icon: Link2, title: 'Connect a Lightning wallet (NWC)', body: 'Scan its QR or paste a nostr+walletconnect:// URI.' },
+                { Icon: WalletIcon, title: 'Watch an on-chain address', body: 'Follow a balance without holding the key.' },
+              ].map((row) => (
+                <div key={row.title} className="flex items-start gap-3 py-2">
+                  <row.Icon className="w-5 h-5 shrink-0 mt-0.5" style={{ color: 'var(--md-primary)' }} />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[var(--md-on-surface)]">{row.title}</p>
+                    <p className="text-sm text-[var(--md-on-surface-variant)]">{row.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs mt-3 leading-relaxed" style={{ color: 'var(--amethyst-placeholder)' }}>
+              Simulation: both paths end at a real wallet connection, and this reproduction has neither
+              network nor keys. Nothing you paste here would be used.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Send. The screen map documents the button, not the destination, so this
+          is the minimum honest shape: amount, address, and a plain refusal. */}
+      {sendOpen && (
+        <div className="fixed inset-0 z-[140] flex items-end" onClick={() => setSendOpen(false)}>
+          <div className="absolute inset-0 bg-black/60" />
+          <div
+            role="dialog"
+            aria-label="Send"
+            className="relative w-full rounded-t-3xl px-5 pt-4 pb-5"
+            style={{ background: 'var(--md-surface-container-high)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-lg font-bold text-[var(--md-on-surface)]">Send</p>
+            <p className="text-sm mt-2 leading-relaxed text-[var(--md-on-surface-variant)]">
+              The real screen asks for an amount and a destination address, then signs the transaction
+              with your on-chain key.
+            </p>
+            <p className="text-xs mt-3 leading-relaxed" style={{ color: 'var(--amethyst-placeholder)' }}>
+              Simulation: this wallet holds 0 sats and no key, so there is nothing to send and no form
+              worth filling in. Reproducing one would only teach the wrong habit.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

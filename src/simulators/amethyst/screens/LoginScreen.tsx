@@ -52,10 +52,13 @@ const EyeIcon = ({ off = false, className = '' }: { off?: boolean; className?: s
 
 interface LoginScreenProps {
   onLogin: (user: MockUser) => void;
+  /** `back` with a payload lands on Sign Up rather than Login (gaps ame-04). */
+  initialMode?: 'login' | 'signup';
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, initialMode = 'login' }) => {
+  const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
+  const [notice, setNotice] = useState<string | null>(null);
   const [key, setKey] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [keyWarning, setKeyWarning] = useState(false);
@@ -105,6 +108,17 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
       <div className="min-h-full flex flex-col items-center justify-center px-5 py-6">
         <AmethystLogo className="w-[36%] max-w-[150px] shrink-0" />
 
+        {notice && (
+          <button
+            type="button"
+            onClick={() => setNotice(null)}
+            className="w-[76%] mt-3 rounded-xl px-3 py-2 text-left text-[12px] leading-snug"
+            style={{ background: 'var(--md-surface-container-high)', color: 'var(--amethyst-placeholder)' }}
+          >
+            {notice}
+          </button>
+        )}
+
         {mode === 'login' ? (
           <>
             <div className="h-10 shrink-0" />
@@ -115,6 +129,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             <div data-tour="amethyst-login-key" className={`${field} flex items-center gap-1 px-3`}>
               <button
                 type="button"
+                onClick={() => setNotice('The real app opens the camera here to scan a login QR code. This reproduction has no camera access — and would refuse a real key anyway.')}
                 aria-label="Login with QR Code"
                 className="w-11 h-11 -ml-1.5 flex items-center justify-center text-[var(--md-primary)] shrink-0"
               >
@@ -142,7 +157,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
               <p className="w-[76%] mt-2 text-[12px] leading-snug text-[var(--md-error)]">{REAL_KEY_REFUSED}</p>
             )}
 
-            <TorSettingsRow />
+            <TorSettingsRow onOpen={() => setNotice('"Adjust Tor Settings" opens the same Tor/Privacy presets you get later under Settings → Privacy Options: one switch per traffic class, plus a preset that flips them all.')} />
 
             <button type="button" onClick={handleLogin} className={filled}>
               Login
@@ -180,7 +195,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
               className={`${field} px-4`}
             />
 
-            <TorSettingsRow />
+            <TorSettingsRow onOpen={() => setNotice('"Adjust Tor Settings" opens the same Tor/Privacy presets you get later under Settings → Privacy Options: one switch per traffic class, plus a preset that flips them all.')} />
 
             <button type="button" onClick={handleSignUp} className={filled}>
               Create Account
@@ -203,13 +218,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
 };
 
 // `TorSettingsSetup` — the whole row is one clickable Text; only the second
-// half ("Tor Settings", strings connect_via_tor2) carries the primary tint.
-const TorSettingsRow = () => (
+// half ("Tor Settings", strings connect_via_tor2) carries the primary tint. It
+// really is a button upstream, which is what ame-03 was about.
+const TorSettingsRow = ({ onOpen }: { onOpen: () => void }) => (
   <>
     <div className="h-2.5 shrink-0" />
-    <p className="text-[16px] text-[var(--md-on-background)]">
+    <button type="button" onClick={onOpen} data-tour="amethyst-login-tor" className="text-[16px] text-[var(--md-on-background)]">
       Adjust <span className="text-[var(--md-primary)]">Tor Settings</span>
-    </p>
+    </button>
     <div className="h-2.5 shrink-0" />
   </>
 );
