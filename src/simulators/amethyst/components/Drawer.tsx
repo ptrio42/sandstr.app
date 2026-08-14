@@ -6,8 +6,11 @@ import {
   Store, Footprints, Code2, RadioTower, Mic, Users, MessagesSquare, Server, Hash as HashIcon,
   MapPin, Calendar, CalendarRange, LayoutGrid, AppWindow, Grid3x3, Layers, Medal,
   SatelliteDish, Waypoints, Settings as SettingsIcon, UserPlus, Trash2, QrCode, ChevronUp, ChevronDown,
+  Send,
 } from 'lucide-react';
 import { Avatar } from './Avatar';
+import type { DrawerDetailId } from '../screens/DrawerDetailScreen';
+import type { ProfileTab } from '../screens/ProfileScreen';
 import '../amethyst.theme.css';
 
 interface DrawerProps {
@@ -16,12 +19,24 @@ interface DrawerProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   onOpenSettings: () => void;
+  /** Pushes one of the "You" / "Create" / "Accounts" destinations. */
+  onOpenDetail: (detail: DrawerDetailId) => void;
+  /** Profile, but landing on a named tab — the Bookmarks row needs this. */
+  onOpenProfileTab: (tab: ProfileTab) => void;
 }
 
 type Action = 'profile' | 'bookmarks' | 'relays' | 'settings' | 'wallet' | 'home' | 'messages'
   | 'video' | 'search' | 'discover' | 'notifications' | 'close';
 
-type Item = { label: string; Icon: React.ComponentType<{ className?: string }>; action: Action; value?: string; accent?: boolean };
+type Item = {
+  label: string;
+  Icon: React.ComponentType<{ className?: string }>;
+  action: Action;
+  /** Set instead of `action` when the row pushes one of its own screens. */
+  detail?: DrawerDetailId;
+  value?: string;
+  accent?: boolean;
+};
 
 /**
  * Amethyst's account drawer @ v1.13.1. Section membership and order are upstream's
@@ -41,16 +56,16 @@ type Item = { label: string; Icon: React.ComponentType<{ className?: string }>; 
  */
 const YOU: Item[] = [
   { label: 'Profile', Icon: User, action: 'profile', accent: true },
-  { label: 'My Lists', Icon: List, action: 'close' },
+  { label: 'My Lists', Icon: List, action: 'close', detail: 'my-lists' },
   { label: 'Bookmarks', Icon: Bookmark, action: 'bookmarks' },
-  { label: 'Web Bookmarks', Icon: Globe, action: 'close' },
-  { label: 'Drafts', Icon: FileText, action: 'close' },
-  { label: 'Scheduled posts', Icon: Clock, action: 'close' },
-  { label: 'Hashtag Sets', Icon: Hash, action: 'close' },
-  { label: 'My Blossom Files', Icon: HardDrive, action: 'close' },
-  { label: 'My Emoji Packs', Icon: Smile, action: 'close' },
+  { label: 'Web Bookmarks', Icon: Globe, action: 'close', detail: 'web-bookmarks' },
+  { label: 'Drafts', Icon: FileText, action: 'close', detail: 'drafts' },
+  { label: 'Scheduled posts', Icon: Clock, action: 'close', detail: 'scheduled-posts' },
+  { label: 'Hashtag Sets', Icon: Hash, action: 'close', detail: 'hashtag-sets' },
+  { label: 'My Blossom Files', Icon: HardDrive, action: 'close', detail: 'blossom-files' },
+  { label: 'My Emoji Packs', Icon: Smile, action: 'close', detail: 'emoji-packs' },
   { label: 'Wallet', Icon: Wallet, action: 'wallet' },
-  { label: 'Remote Signer', Icon: KeyRound, action: 'close' },
+  { label: 'Remote Signer', Icon: KeyRound, action: 'close', detail: 'remote-signer' },
 ];
 
 const NAVIGATE: Item[] = [
@@ -93,19 +108,27 @@ const FEEDS: Item[] = [
   { label: 'Emojis', Icon: Smile, action: 'close' },
 ];
 
-const CREATE: Item[] = [{ label: 'HLS Upload', Icon: SatelliteDish, action: 'close' }];
+const CREATE: Item[] = [{ label: 'HLS Upload', Icon: SatelliteDish, action: 'close', detail: 'hls-upload' }];
 
 const SYSTEM: Item[] = [
   { label: 'Relays', Icon: Waypoints, action: 'relays', value: '355/1810' },
   { label: 'Settings', Icon: SettingsIcon, action: 'settings' },
 ];
 
-export function Drawer({ isOpen, onClose, onTabChange, onOpenSettings }: DrawerProps) {
-  const handle = (action: Action) => {
-    if (action === 'settings') onOpenSettings();
-    else if (action !== 'close') onTabChange(action);
+export function Drawer({
+  isOpen, onClose, onTabChange, onOpenSettings, onOpenDetail, onOpenProfileTab,
+}: DrawerProps) {
+  const handle = (item: Item) => {
+    if (item.detail) onOpenDetail(item.detail);
+    else if (item.action === 'settings') onOpenSettings();
+    // "Bookmarks" is a tab on your own profile upstream, not its own screen —
+    // landing on the profile's DEFAULT tab (Notes) put the visitor on somebody
+    // else's posts with no explanation (gaps ame-37).
+    else if (item.action === 'bookmarks') onOpenProfileTab('Bookmarks');
+    else if (item.action !== 'close') onTabChange(item.action);
     onClose();
   };
+  const [showQr, setShowQr] = useState(false);
 
   if (!isOpen) return null;
   return (
@@ -118,25 +141,36 @@ export function Drawer({ isOpen, onClose, onTabChange, onOpenSettings }: DrawerP
         data-tour="amethyst-drawer"
       >
         {/* Account header */}
-        <div className="h-28 bg-gradient-to-br from-[#3a1d6e] via-[#7b2ff7] to-[#c026d3]" />
-        <div className="px-4 -mt-8 pb-3 border-b border-[var(--md-outline-variant)]">
-          <Avatar seed="sandy" className="w-16 h-16 border-2 border-[var(--md-surface)]" />
-          <p className="font-bold text-lg text-[var(--md-on-surface)] mt-2">sandy</p>
+        <div
+          className="px-4 pb-3 border-b border-[var(--md-outline-variant)]"
+          data-tour="amethyst-drawer-header"
+        >
+          <div className="-mx-4 h-28 bg-gradient-to-br from-[#3a1d6e] via-[#7b2ff7] to-[#c026d3]" />
+          <button
+            type="button"
+            onClick={() => { onOpenProfileTab('Notes'); onClose(); }}
+            aria-label="Open your profile"
+            className="-mt-8 block text-left"
+          >
+            <Avatar seed="sandy" className="w-16 h-16 border-2 border-[var(--md-surface)]" />
+            <p className="font-bold text-lg text-[var(--md-on-surface)] mt-2">sandy</p>
+          </button>
 
-          {/* Update your status (strings.xml status_update) */}
-          <div className="mt-2 relative rounded-xl border border-[var(--md-outline)] px-3 py-2.5 flex items-center gap-2">
-            <span className="absolute -top-2 left-2 px-1 text-[11px] bg-[var(--md-surface)] text-[var(--md-on-surface-variant)]">Update your status</span>
-            <span className="flex-1 min-w-0 truncate text-sm text-[var(--md-on-surface)]">Building nostr stuff… 🧑‍💻</span>
-            <Trash2 className="w-4 h-4 text-[var(--md-on-surface-variant)] shrink-0" />
-          </div>
+          <StatusField />
 
-          <p className="mt-3 text-[15px]">
+          {/* `FollowingAndFollowerCounts` is one clickable row upstream. */}
+          <button
+            type="button"
+            onClick={() => { onOpenProfileTab('Follows'); onClose(); }}
+            data-tour="amethyst-drawer-counts"
+            className="mt-3 text-[15px] text-left"
+          >
             <span className="font-bold text-[var(--md-on-surface)]">2374</span>{' '}
             <span className="text-[var(--md-on-surface-variant)]">Following</span>
             <span className="text-[var(--md-on-surface-variant)] mx-2">·</span>
-            <span className="font-bold text-[var(--md-on-surface)]">--</span>{' '}
+            <span className="font-bold text-[var(--md-on-surface)]">318</span>{' '}
             <span className="text-[var(--md-on-surface-variant)]">Followers</span>
-          </p>
+          </button>
         </div>
 
         <Section title="You" items={YOU} onPick={handle} />
@@ -147,19 +181,112 @@ export function Drawer({ isOpen, onClose, onTabChange, onOpenSettings }: DrawerP
 
         {/* Pushed to the bottom by a weight spacer upstream */}
         <div className="mt-auto">
-          <Row item={{ label: 'Accounts', Icon: UserPlus, action: 'close' }} onPick={handle} />
-          <div className="flex items-center justify-between px-5 py-3 text-sm text-[var(--md-on-surface-variant)]">
+          <Row item={{ label: 'Accounts', Icon: UserPlus, action: 'close', detail: 'accounts' }} onPick={handle} />
+          <div
+            className="flex items-center justify-between px-5 py-3 text-sm text-[var(--md-on-surface-variant)]"
+            data-tour="amethyst-drawer-version"
+          >
             <span>v1.13.1-FDROID</span>
-            <QrCode className="w-5 h-5" />
+            <button type="button" onClick={() => setShowQr((v) => !v)} aria-label="Show your profile QR code" className="p-1">
+              <QrCode className="w-5 h-5" />
+            </button>
           </div>
+          {showQr && (
+            <p className="px-5 pb-3 text-xs leading-relaxed" style={{ color: 'var(--amethyst-placeholder)' }}>
+              Simulation: this demo account has no key, so there is no npub to encode here.
+            </p>
+          )}
         </div>
       </div>
     </>
   );
 }
 
+/**
+ * `StatusUpdateBar` → `StatusEditBar`. Upstream draws a read-only bar shaped
+ * like an unfocused OutlinedTextField (1dp outline, 4dp radius, 56dp min height,
+ * floating label punched through the border); tapping it swaps in the real text
+ * field, whose trailing slot is a Send button ONLY once the text has changed and
+ * a Delete button otherwise. We shipped the bar without the edit half.
+ */
+function StatusField() {
+  const [saved, setSaved] = useState('Building nostr stuff… 🧑‍💻');
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(saved);
+  const changed = draft !== saved;
+
+  const commit = () => {
+    setSaved(draft.trim());
+    setEditing(false);
+  };
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={() => { setDraft(saved); setEditing(true); }}
+        data-tour="amethyst-drawer-status"
+        className="mt-2 relative w-full rounded border border-[var(--md-outline)] px-4 py-3.5 min-h-[56px] flex items-center text-left"
+      >
+        <span className="absolute -top-2 left-3 px-1 text-[11px] bg-[var(--md-surface)] text-[var(--md-on-surface-variant)]">
+          Update your status
+        </span>
+        <span
+          className="flex-1 min-w-0 truncate"
+          style={{ color: saved ? 'var(--md-on-surface)' : 'var(--amethyst-placeholder)' }}
+        >
+          {saved || 'Update your status'}
+        </span>
+      </button>
+    );
+  }
+
+  return (
+    <div data-tour="amethyst-drawer-status" className="mt-2 relative">
+      <span className="absolute -top-2 left-3 px-1 text-[11px] z-10 bg-[var(--md-surface)] text-[var(--md-primary)]">
+        Update your status
+      </span>
+      <div className="flex items-center gap-1 rounded border border-[var(--md-primary)] pl-4 pr-1.5 min-h-[56px]">
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') commit();
+            if (e.key === 'Escape') setEditing(false);
+          }}
+          placeholder="Update your status"
+          aria-label="Update your status"
+          autoFocus
+          className="flex-1 min-w-0 bg-transparent text-[16px] text-[var(--md-on-surface)] focus:outline-none placeholder:text-[var(--amethyst-placeholder)]"
+        />
+        {changed ? (
+          <button
+            type="button"
+            onClick={commit}
+            aria-label="Send"
+            className="w-9 h-9 shrink-0 flex items-center justify-center"
+            style={{ color: 'var(--md-primary)' }}
+          >
+            <Send className="w-5 h-5" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => { setSaved(''); setDraft(''); setEditing(false); }}
+            aria-label="Delete status"
+            className="w-9 h-9 shrink-0 flex items-center justify-center"
+            style={{ color: 'var(--amethyst-placeholder)' }}
+          >
+            <Trash2 className="w-5 h-5" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /** Collapsible titled group — upstream's CollapsibleSection/CatalogSection. */
-function Section({ title, items, onPick }: { title: string; items: Item[]; onPick: (a: Action) => void }) {
+function Section({ title, items, onPick }: { title: string; items: Item[]; onPick: (item: Item) => void }) {
   const [open, setOpen] = useState(true);
   return (
     <div>
@@ -167,6 +294,7 @@ function Section({ title, items, onPick }: { title: string; items: Item[]; onPic
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
+        data-tour={`amethyst-drawer-section-${title.toLowerCase()}`}
         className="w-full flex items-center justify-between px-5 pt-4 pb-1 text-left"
       >
         <span className="text-sm text-[var(--md-on-surface-variant)]">{title}</span>
@@ -181,10 +309,10 @@ function Section({ title, items, onPick }: { title: string; items: Item[]; onPic
   );
 }
 
-function Row({ item, onPick }: { item: Item; onPick: (a: Action) => void }) {
+function Row({ item, onPick }: { item: Item; onPick: (item: Item) => void }) {
   return (
     <button
-      onClick={() => onPick(item.action)}
+      onClick={() => onPick(item)}
       className="w-full flex items-center gap-4 px-5 py-3 text-left hover:bg-[var(--md-surface-variant)]/50 transition-colors"
       data-tour={`amethyst-drawer-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
     >

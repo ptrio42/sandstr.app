@@ -142,7 +142,9 @@ export function SearchScreen({ onBack, onOpenThread }: SearchScreenProps) {
     const sorted = [...scoped];
     if (sort === 'popular') sorted.sort((a, b) => b.zapAmount - a.zapAmount || b.created_at - a.created_at);
     else sorted.sort((a, b) => b.created_at - a.created_at);
-    return sorted.slice(0, 12).map(toPostData);
+    // A search hit is not a follow by construction the way a Home note is, so
+    // the avatar's "Following" shield is decided per author.
+    return sorted.slice(0, 12).map((n) => toPostData(n, { following: follows.has(n.pubkey) }));
   }, [term, scope, followsOnly, sort, follows]);
 
   const Divider = () => (

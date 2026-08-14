@@ -1186,3 +1186,13 @@
   --amethyst-placeholder: color-mix(in srgb, var(--md-on-surface) 42%, transparent);
   --amethyst-gray-text: color-mix(in srgb, var(--md-on-surface) 52%, transparent);
 }
+
+/* Thread root note — the detail treatment ground truth gives the note you
+   opened: an 18sp body against the feed's default. Scoped under
+   `.amethyst-simulator` so the frozen `amethyst-v1-12` archive, which shares
+   this sheet through un-scoped selectors, is untouched (see the guard comment
+   at the top of this file). */
+.amethyst-simulator .amethyst-thread-root .md-note-body {
+  font-size: 18px;
+  line-height: 1.55;
+}

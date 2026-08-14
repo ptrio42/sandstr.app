@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, MessageCircle, Repeat, Heart, Zap, MoreVertical, Play } from 'lucide-react';
 import { AppTopBar } from '../components/AppTopBar';
@@ -21,6 +21,13 @@ const BLUE = '#3B9EFF';
 // summary, a signature weekly multi-series stats chart (dual axis: counts + sats),
 // then reactions grouped by type with avatar clusters.
 export function NotificationsScreen({ onOpenDrawer, onOpenSearch }: NotificationsScreenProps) {
+  // The period selector had a chevron and no list to open (gaps ame-26); the
+  // tail item's ⋮ was a bare svg and the item itself took no tap (gaps ame-93).
+  const [period, setPeriod] = useState('Today');
+  const [periodOpen, setPeriodOpen] = useState(false);
+  const [itemMenu, setItemMenu] = useState(false);
+  const [itemNotice, setItemNotice] = useState(false);
+
   return (
     <div className="flex flex-col h-full bg-[var(--md-background)]" data-tour="amethyst-notifications">
       <AppTopBar
@@ -32,8 +39,14 @@ export function NotificationsScreen({ onOpenDrawer, onOpenSearch }: Notification
       <div className="flex-1 overflow-y-auto">
         {/* Period + totals summary */}
         <div className="flex items-center justify-between px-4 py-3 flex-wrap gap-y-2">
-          <button className="flex items-center gap-1 font-semibold text-[var(--md-on-surface)]">
-            Today
+          <button
+            type="button"
+            onClick={() => setPeriodOpen(true)}
+            aria-haspopup="dialog"
+            data-tour="amethyst-notifications-period"
+            className="flex items-center gap-1 font-semibold text-[var(--md-on-surface)]"
+          >
+            {period}
             <ChevronDown className="w-4 h-4 text-[var(--md-on-surface-variant)]" />
           </button>
           <div className="flex items-center gap-4 text-[var(--md-on-surface)] font-semibold">
@@ -57,7 +70,12 @@ export function NotificationsScreen({ onOpenDrawer, onOpenSearch }: Notification
         </div>
 
         {/* A tail notification item (release announcement) */}
-        <div className="flex gap-3 px-4 py-4 border-t border-[var(--md-outline-variant)]">
+        <button
+          type="button"
+          onClick={() => setItemNotice(true)}
+          data-tour="amethyst-notification-item"
+          className="w-full text-left flex gap-3 px-4 py-4 border-t border-[var(--md-outline-variant)]"
+        >
           <Avatar seed="Violet Volt" className="w-11 h-11" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1 text-[var(--md-on-surface-variant)]">
@@ -65,15 +83,88 @@ export function NotificationsScreen({ onOpenDrawer, onOpenSearch }: Notification
               <Play className="w-4 h-4" />
               <span className="text-sm" style={{ color: 'var(--md-primary)' }}>#Amethyst</span>
               <span className="text-sm ml-auto">· 2d</span>
-              <MoreVertical className="w-4 h-4" />
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => { e.stopPropagation(); setItemMenu(true); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); setItemMenu(true); } }}
+                aria-label="Note options"
+                className="p-0.5"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </span>
             </div>
             <p className="mt-1 text-[var(--md-on-surface)]">
-              <span style={{ color: 'var(--md-primary)' }}>#Amethyst</span> v1.12.6: Performance Improvements
+              <span style={{ color: 'var(--md-primary)' }}>#Amethyst</span> v1.13.1: Performance Improvements
             </p>
             <p className="mt-1 text-[var(--md-on-surface-variant)] text-sm">- Moves state assignments to the main…</p>
           </div>
-        </div>
+        </button>
       </div>
+
+      {periodOpen && (
+        <div className="fixed inset-0 z-[140] flex items-center justify-center px-6" role="dialog" aria-label="Period" onClick={() => setPeriodOpen(false)}>
+          <div className="absolute inset-0 bg-black/60" />
+          <div className="relative w-full rounded-3xl py-4" style={{ background: 'var(--md-surface-container-high)' }} onClick={(e) => e.stopPropagation()}>
+            <p className="px-5 pb-2 text-lg font-bold text-[var(--md-on-surface)]">Period</p>
+            {['Today', 'This week', 'This month', 'All time'].map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => { setPeriod(p); setPeriodOpen(false); }}
+                className="w-full flex items-center gap-3 px-5 py-3 text-left"
+              >
+                <span
+                  className="w-5 h-5 shrink-0 rounded-full flex items-center justify-center"
+                  style={{ border: `2px solid ${p === period ? 'var(--md-primary)' : 'var(--md-outline)'}` }}
+                >
+                  {p === period && <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--md-primary)' }} />}
+                </span>
+                <span className="text-[16px] text-[var(--md-on-surface)]">{p}</span>
+              </button>
+            ))}
+            <p className="px-5 pt-2 text-xs leading-relaxed" style={{ color: 'var(--amethyst-placeholder)' }}>
+              The counters and the chart above are a fixed snapshot in this reproduction, so changing
+              the period relabels the row and nothing else.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {itemMenu && (
+        <div className="fixed inset-0 z-[140] flex items-end" onClick={() => setItemMenu(false)}>
+          <div className="absolute inset-0 bg-black/60" />
+          <div role="dialog" aria-label="Note options" className="relative w-full rounded-t-3xl pb-3" style={{ background: 'var(--md-surface-container-high)' }} onClick={(e) => e.stopPropagation()}>
+            {['Copy Text', 'Note ID', 'Author ID', 'Broadcast', 'Mute thread', 'Block', 'Report'].map((label) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setItemMenu(false)}
+                className="w-full px-5 py-3 text-left"
+                style={{ color: label === 'Block' || label === 'Report' ? 'var(--md-error)' : 'var(--md-on-surface)' }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {itemNotice && (
+        <div className="fixed inset-0 z-[140] flex items-end" onClick={() => setItemNotice(false)}>
+          <div className="absolute inset-0 bg-black/60" />
+          <div role="dialog" aria-label="Open note" className="relative w-full rounded-t-3xl px-5 pt-4 pb-5" style={{ background: 'var(--md-surface-container-high)' }} onClick={(e) => e.stopPropagation()}>
+            <p className="text-lg font-bold text-[var(--md-on-surface)]">#Amethyst v1.13.1</p>
+            <p className="text-sm mt-2 leading-relaxed text-[var(--md-on-surface-variant)]">
+              Tapping a notification opens the note it is about, in the thread view.
+            </p>
+            <p className="text-xs mt-3 leading-relaxed" style={{ color: 'var(--amethyst-placeholder)' }}>
+              Simulation: this announcement is not one of the mock feed notes, so it has no thread to
+              open. Tap any note in Home to see the thread view itself.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
