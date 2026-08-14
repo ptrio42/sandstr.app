@@ -619,8 +619,13 @@ function WordRow({
         style={{ background: isSelected ? 'color-mix(in srgb, var(--md-primary) 12%, transparent)' : undefined }}
       >
         {/* `Text(tag, fontWeight = Bold, modifier = Modifier.weight(1f))` — the
-            weight eats the row, so the word is start-aligned, not centred. */}
-        <span className="flex-1 min-w-0 truncate font-bold text-[var(--md-on-surface)]">{word}</span>
+            weight eats the row, so the word is start-aligned, not centred.
+            A <div>, not a <span>, on purpose: `docs/clips/capture-faq.mjs`
+            asserts the clip actually typed both words with
+            `querySelectorAll('[data-tour="amethyst-hidden-list"] div')` and an
+            EXACT textContent match, so the word needs its own div with nothing
+            else inside it. */}
+        <div className="flex-1 min-w-0 truncate font-bold text-[var(--md-on-surface)]">{word}</div>
         {selectionMode ? (
           <span
             aria-hidden
