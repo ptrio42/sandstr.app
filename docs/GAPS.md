@@ -195,8 +195,10 @@ po audycie — te cztery przeoczyły go, mimo że grep pokazuje `FaqMiniTourLaun
   Tu jest wyłącznie brakująca **funkcja i ścieżka**.
 - **Świadomie odtworzone bugi upstreamu nie są lukami** (Snort: kafelek Relays bez tła, Deck jako martwy
   kod; Wisp: wycieki M3 `#4A4458`; Coracle: login bez pola na klucz). Audytorzy dostali je jako wykluczenia.
-- **Jeden ledger** — [Wisp](gaps/wisp.md) — ma opisy wierszy po **angielsku** (81 z 90 wierszy;
-  9 domkniętych 2026-08-06 dostało polski prefiks „Zamknięte…"). Pozostałych dziewięć, w tym Keychat
+- **Dwa ledgery** mają opisy wierszy po **angielsku**: [Wisp](gaps/wisp.md) (81 z 90 wierszy;
+  9 domkniętych 2026-08-06 dostało polski prefiks „Zamknięte…") i [Amethyst](gaps/amethyst.md)
+  — cały, od przebudowy do v1.13.1, ze zdaniem zamykającym „Closed…" (zamrożony
+  [`gaps/amethyst-v1-12.md`](gaps/amethyst-v1-12.md) został po polsku). Pozostałych osiem, w tym Keychat
   i YakiHonne, jest po polsku. Kosmetyka; ID, statusy i cytaty są w tym samym formacie wszędzie.
 
 **Aktualizacja:** ledger jest snapshotem. Zamykając lukę, skreśl wiersz w `gaps/<client>.md`, popraw
