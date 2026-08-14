@@ -53,6 +53,19 @@ export interface ClientEntry {
   /** how a human actually installs it, one clause */
   installNote: string;
   /**
+   * Where the REAL client runs — which is not `platform`. `platform` says which
+   * build this shelf reproduces (YakiHonne from its iOS app, Primal from its
+   * web app); this says where a reader could actually go and use the thing.
+   * Filtering /compare on `platform` quietly hid clients that do run on the
+   * asked-for device.
+   *
+   * Every entry is read off `installNote` above, which is itself verified —
+   * so the two must be edited together, and neither is a guess. Desktop-only
+   * clients (Gossip) get an empty list rather than a fourth axis nobody filters
+   * on; their `installNote` still says where they run.
+   */
+  availableOn: ('ios' | 'android' | 'web')[];
+  /**
    * Which upstream build this reproduction was verified against — a human
    * label, not a git ref: 'v1.12.6', 'v1.2.1', or 'as of Jul 2026' when the
    * screen-map pins only a commit/date. Shown in the About surfaces and as
@@ -133,6 +146,8 @@ const MOUNTS: Record<
     repo: string;
     upstreamLicense: string;
     installNote: string;
+    /** see ClientEntry.availableOn — read off installNote, never guessed */
+    availableOn: ('ios' | 'android' | 'web')[];
     /** see ClientEntry.reproduces — version tag when the screen-map pins one, month of verification otherwise */
     reproduces?: string;
     load: Loader;
@@ -147,6 +162,7 @@ const MOUNTS: Record<
     repo: 'https://github.com/damus-io/damus',
     upstreamLicense: 'GPL-3.0',
     installNote: 'iOS App Store; Android as a direct APK from damus.io',
+    availableOn: ['ios', 'android'],
     // screen-map pins damus-io/damus@master verified 2026-07-14 — no tag, so a date label
     reproduces: 'as of Jul 2026',
     load: () => import('./simulators/damus/DamusSimulatorWithTour'),
@@ -160,6 +176,7 @@ const MOUNTS: Record<
     repo: 'https://github.com/vitorpamplona/amethyst',
     upstreamLicense: 'MIT',
     installNote: 'Google Play, Zapstore, Obtainium, or a release APK',
+    availableOn: ['android'],
     // docs/refs/amethyst/screen-map.md:3 — vitorpamplona/amethyst @ tag v1.12.6
     reproduces: 'v1.12.6',
     load: () => import('./simulators/amethyst/AmethystSimulatorWithTour'),
@@ -173,6 +190,7 @@ const MOUNTS: Record<
     repo: 'https://github.com/keychat-io/keychat-app',
     upstreamLicense: 'AGPL-3.0',
     installNote: 'iOS App Store, Google Play, or a release APK',
+    availableOn: ['ios', 'android'],
     load: () => import('./simulators/keychat/KeychatSimulatorWithTour'),
   },
   yakihonne: {
@@ -184,6 +202,7 @@ const MOUNTS: Record<
     repo: 'https://github.com/YakiHonne/web-app',
     upstreamLicense: 'MIT',
     installNote: 'Web app, no install; also on the iOS App Store and Google Play',
+    availableOn: ['web', 'ios', 'android'],
     // screen-map: YakiHonne/mobile-app@main, 11-surface pass 2026-07-14 — no tag pinned
     reproduces: 'as of Jul 2026',
     load: () => import('./simulators/yakihonne/YakiHonneSimulatorWithTour'),
@@ -201,6 +220,7 @@ const MOUNTS: Record<
     repo: 'https://github.com/v0l/snort',
     upstreamLicense: 'MIT',
     installNote: 'Web app, no install; Android wrapper on Google Play',
+    availableOn: ['web', 'android'],
     // screen-map: v0l/snort@3cc8317 (2026-07-29) + owner's 2026-07-14 recording — no tag
     reproduces: 'as of Jul 2026',
     load: () => import('./simulators/snort/SnortSimulatorWithTour'),
@@ -214,6 +234,7 @@ const MOUNTS: Record<
     repo: 'https://github.com/PrimalHQ/primal-web-app',
     upstreamLicense: 'MIT',
     installNote: 'Web app, no install; native iOS and Android apps too',
+    availableOn: ['web', 'ios', 'android'],
     // screen-map: PrimalHQ/primal-web-app@main, recon 2026-07-14 — weakest pin of the set
     reproduces: 'as of Jul 2026',
     load: () => import('./simulators/primal/PrimalWebSimulatorWithTour'),
@@ -231,6 +252,7 @@ const MOUNTS: Record<
     repo: 'https://github.com/barrydeen/wisp',
     upstreamLicense: 'MIT',
     installNote: 'Google Play, or Zapstore (zapstore.yaml ships in the repo)',
+    availableOn: ['android'],
     // screen-map: barrydeen/wisp@11ac08f = release v1.2.1 (2026-07-23)
     reproduces: 'v1.2.1',
     load: () => import('./simulators/wisp/WispSimulatorWithTour'),
@@ -254,6 +276,7 @@ const MOUNTS: Record<
     repo: 'https://github.com/nostur-com/nostur-ios-public',
     upstreamLicense: 'GPL-3.0',
     installNote: 'iOS App Store; macOS also as a direct .dmg from nostur.com',
+    availableOn: ['ios'],
     // screen-map:26 — app version 1.30.2 (Build 527) read off the reference recording
     reproduces: 'v1.30.2',
     load: () => import('./simulators/nostur/NosturSimulatorWithTour'),
@@ -274,6 +297,7 @@ const MOUNTS: Record<
     repo: 'https://github.com/coracle-social/coracle',
     upstreamLicense: 'MIT',
     installNote: 'Web app, no install; installable as a PWA',
+    availableOn: ['web'],
     // screen-map: coracle-social/coracle@efea13f (2026-08-04) + 2026-08-05 recording — no tag
     reproduces: 'as of Aug 2026',
     // Wrapped since 2026-08-06 (gaps cor-01): the wrapper carries no guided
@@ -290,6 +314,7 @@ const MOUNTS: Record<
     repo: 'https://github.com/mikedilger/gossip',
     upstreamLicense: 'MIT',
     installNote: 'Native desktop binary for macOS, Linux or Windows from GitHub Releases',
+    availableOn: [],
     load: () => import('./simulators/gossip').then((m) => ({ default: m.GossipSimulator })),
   },
 };
@@ -325,6 +350,7 @@ const nostrKitten: ClientEntry = {
   repo: 'https://github.com/ptrio42/sandstr.app',
   upstreamLicense: 'MIT',
   installNote: 'Not a real client — it only exists here',
+    availableOn: ['web'],
   className: 'h-full',
   Component: lazy(kittenLoad),
   preload: once(kittenLoad),
@@ -350,6 +376,7 @@ const branded: ClientEntry[] = Object.values(allSimulatorConfigs).map((cfg) => {
     repo: mount.repo,
     upstreamLicense: mount.upstreamLicense,
     installNote: mount.installNote,
+    availableOn: mount.availableOn,
     reproduces: mount.reproduces,
     lead: mount.status === 'ready',
     defaultTheme: mount.theme,

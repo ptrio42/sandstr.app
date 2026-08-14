@@ -46,15 +46,12 @@ const VERDICT_META: Record<Verdict, { icon: typeof Check; label: string; classNa
 /**
  * The questions are the axes' own `question` field, so a new axis cannot drift
  * out of sync with the thing it filters. `platform` is the exception: it is not
- * a capability, it is which BUILD this shelf reproduces.
+ * a capability, it is where the real client runs.
  *
- * Known limitation, stated rather than hidden: several of these clients ship on
- * more platforms than the one reproduced here (YakiHonne is reproduced from its
- * iOS app but also runs in a browser; Primal has native apps). The registry has
- * no per-client availability field yet, so this filter narrows the
- * REPRODUCTION, and every result prints the real client's own install line
- * underneath. Turning that into a proper filter needs a data field, not a
- * cleverer query.
+ * It filters `ClientEntry.availableOn`, NOT `platform`. `platform` says which
+ * build this shelf reproduces — YakiHonne from its iOS app, Primal from its web
+ * app — and filtering on it hid clients that do run on the device being asked
+ * about. `availableOn` is read off each entry's verified `installNote`.
  */
 const PLATFORM_CHOICES = [
   { id: 'any', label: 'Any' },
@@ -66,7 +63,13 @@ const PLATFORM_CHOICES = [
 type PlatformChoice = (typeof PLATFORM_CHOICES)[number]['id'];
 
 /** Axes worth asking about up front — the ones where the answers split hardest. */
-const CHOOSER_AXES: AxisId[] = ['signer', 'multi-account', 'mute-words', 'builtin-wallet'];
+const CHOOSER_AXES: AxisId[] = [
+  'signer',
+  'guest-mode',
+  'multi-account',
+  'mute-words',
+  'builtin-wallet',
+];
 
 function Segmented<T extends string>({
   value,
@@ -210,7 +213,7 @@ export default function CompareView() {
   const matches = useMemo(
     () =>
       entries.filter((c) => {
-        if (platform !== 'any' && c.platform !== platform) return false;
+        if (platform !== 'any' && !c.availableOn.includes(platform)) return false;
         // A requirement drops only an explicit `no`. `partial` survives because
         // "it does a smaller version of this" is information the reader should
         // weigh, not something to silently delete; `unknown` survives because
@@ -373,6 +376,14 @@ export default function CompareView() {
                     </span>
                   </p>
                   <p className="text-sm text-gray-700 dark:text-gray-300">{detail.detail}</p>
+                  {/* Printed whenever the FAQ answer alone does not carry the
+                      claim — otherwise the "read the full answer" link below
+                      would be pointing at something that does not say this. */}
+                  {detail.grounding && (
+                    <p className="mt-2 border-l-2 border-gray-200 pl-3 text-xs leading-relaxed text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                      {detail.grounding}
+                    </p>
+                  )}
                   <Link
                     to={`/c/${detailClient.id}?faq=${detail.source}`}
                     className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:underline dark:text-primary-400"

@@ -10,9 +10,10 @@
 
 ## The three sections
 
-1. **Chooser** — five questions (one platform, four capabilities) that narrow the set.
-2. **Capability matrix** — 9 axes × 8 clients, one glyph per cell; picking a cell prints the claim,
-   links to the FAQ answer behind it, and dates it.
+1. **Chooser** — six questions (one platform, five capabilities) that narrow the set.
+2. **Capability matrix** — 11 axes × 8 clients = 88 cells, one glyph each; picking a cell prints the
+   claim, links to the FAQ answer behind it, and dates it. Tally today: 53 `yes`, 23 `no`,
+   11 `partial`, **1 `unknown`**.
 3. **Side-by-side strip** — one part of the interface, in every client at once, switchable between
    four surfaces.
 
@@ -74,12 +75,18 @@ The note surface is the exception: fluid, laid out at the column's own width, re
   `docs/GAPS.md` counts 145 `missing` rows — so reading a verdict off the sim would ship false
   claims about someone else's product.
 - **Four verdicts, and `unknown` is load-bearing.** `yes` / `partial` / `no` / `unknown`. Where the
-  cited answer neither shows the feature nor denies it, the cell says so. Inferring absence from
-  silence is the one thing the FAQ contract forbids, and a matrix cell reads as a claim even when it
-  is a shrug. 5 of 72 cells are `unknown` today; they are the recon backlog.
+  sources neither show the feature nor deny it, the cell says so. Inferring absence from silence is
+  the one thing the FAQ contract forbids, and a matrix cell reads as a claim even when it is a shrug.
+  Exactly one cell is `unknown` today — Coracle's built-in wallet — and it names the pass that would
+  settle it.
 - **Citation per cell.** `source` names an entry id in that client's FAQ bank, rendered as a link to
   `/c/<client>?faq=<entry>`. Dev-validated at import — a renamed entry logs an error instead of
   silently linking nowhere.
+- **`grounding` when the FAQ answer does not carry the claim.** Six cells cite
+  `docs/refs/<client>/screen-map.md` directly, because the FAQ entry they link to was written to
+  answer a neighbouring question. Upgrading a verdict while still citing only the FAQ would make
+  `source` a lie — the reader clicks through and finds an answer that does not say that. The link
+  stays; the real grounding prints beside it.
 - **Date per claim.** Not stored here: `ClientEntry.reproduces` in `src/registry.tsx` ('v1.12.6',
   'as of Jul 2026'), printed beside every client. A capability claim about someone else's product
   with no version and no date decays into a false statement the moment they ship.
@@ -110,10 +117,19 @@ are brand-faithful reproductions rendered outside `/c/`.
   surface that *should* rank — a sourced, dated, disclaimered text page about a client is a
   different SEO object from a pixel-faithful clone. Flipping that is a publishing decision, not a
   prototype's to make. See "Open" in [`OUTREACH.md`](OUTREACH.md).
-- **No per-client availability field.** The chooser's platform question filters the *reproduction*
-  (`SimulatorConfig.platform`), not where the real client runs — YakiHonne is reproduced from its
-  iOS app but also runs in a browser. Fixing it properly needs a data field on `ClientEntry`, not a
-  cleverer query. Every result prints the real client's `installNote` meanwhile.
-- **9 axes is the prototype's width, not the ceiling.** The mute family carries four of them because
-  `mute` was the one FAQ topic written to enumerate kinds per client. Widening the matrix means
-  writing that kind of enumerating answer for more topics first.
+- **Widening past 11 axes needs recon, not UI.** The mute family carries three rows and sign-in
+  three because those are the FAQ topics written to *enumerate kinds* per client; the rest of the
+  bank describes one path each, which grounds a verdict for the client it was written about and
+  nothing comparative. The next axes (timed mutes, whether a mute list publishes to relays, NIP-17
+  DMs, DM request inboxes) each need a pass over the eight screen-maps first. That is the cost, and
+  it is the honest one.
+- **One `unknown` left.** Coracle's `/settings/wallet` is the only settings page the screen-map
+  lists without enumerating its fields. Resolving it means reading `coracle-social/coracle`.
+
+## Resolved
+
+- **Per-client availability** — `ClientEntry.availableOn` (`ios` / `android` / `web`), read off each
+  entry's already-verified `installNote`. The chooser filters on that, not on `platform`.
+  `platform` says which build this shelf *reproduces* — YakiHonne from its iOS app, Primal from its
+  web app — and filtering on it hid clients that do run on the device being asked about. The two
+  fields must be edited together.
