@@ -130,18 +130,6 @@ const LOOPS = [
     steps: 1,
   },
   {
-    // The one loop that types INSIDE the simulator: the point of the clip is
-    // watching the words land, not just finding the field.
-    id: 'amethyst-mute',
-    path: '/c/amethyst',
-    viewport: PHONE,
-    faq: '[aria-label="Amethyst FAQ"]',
-    query: 'too much noise',
-    entry: 'mute',
-    steps: 2,
-    typeInSim: { selector: '[data-tour="amethyst-hidden-words"] input', words: ['bip110', 'coldcard'] },
-  },
-  {
     id: 'amethyst-zap',
     path: '/c/amethyst',
     viewport: PHONE,
@@ -161,6 +149,36 @@ const SWITCHES = [
   { id: 'sw-damus-nostur', from: '/c/damus', to: 'text:Nostur', wait: '[aria-label="Nostur FAQ"]' },
   { id: 'sw-nostur-wisp', from: '/c/nostur', to: 'text:Wisp', wait: '[aria-label="Wisp FAQ"]' },
   { id: 'sw-amethyst-damus', from: '/c/amethyst', to: 'text:Damus', wait: '[aria-label="Damus FAQ"]' },
+];
+
+// Scripted shots: no FAQ mini-tour, just a list of actions. The tour overlay
+// recomputes its spotlight on every DOM mutation, and a few seconds of that
+// freezes the tab — the screencast dies with it and everything after is
+// invisible. Anything that types INTO a simulator is filmed this way instead.
+const SCRIPTS = [
+  {
+    id: 'amethyst-mute',
+    // The deep link the note itself carries: the clip proves the link works.
+    path: '/c/amethyst?faq=mute',
+    viewport: PHONE,
+    steps: [
+      { sleep: 3800 },                          // read the answer
+      { key: 'Escape' }, { sleep: 1000 },       // put the panel away
+      { click: 'text:Login' }, { sleep: 900 },
+      { click: '[data-tour="amethyst-profile-avatar"]' }, { sleep: 800 },
+      // v1.13.1 moved this: the drawer no longer lists Security Filters, it
+      // lists Settings, and the filters are a row inside it. The old path was
+      // the v1.12.6 one, now frozen as the amethyst-v1-12 reproduction.
+      { click: 'text:Settings' }, { sleep: 1000 },
+      { click: 'text:Security Filters' }, { sleep: 1000 },
+      { click: 'text:Hidden Words' }, { sleep: 900 },
+      { click: '[data-tour="amethyst-hidden-words"] input' }, { sleep: 500 },
+      { type: 'bip110' }, { sleep: 500 }, { key: 'Enter' }, { sleep: 1700 },
+      { type: 'coldcard' }, { sleep: 500 }, { key: 'Enter' }, { sleep: 2200 },
+    ],
+    // Filmed or it did not happen: both words must be on the list at the end.
+    expect: ['bip110', 'coldcard'],
+  },
 ];
 
 // Guided-tour teasers: land on ?tour=1 and let the tour drive. The tooltip is
@@ -285,15 +303,30 @@ class Page {
     return result.value;
   }
 
-  /** Poll an expression until it returns truthy. Returns the value. */
+  /**
+   * Wait for an expression to go truthy — polling INSIDE the page, not over CDP.
+   *
+   * The obvious version (evaluate every 100ms from here) shares one socket with
+   * the screencast, and a few seconds of it reliably starves the stream: frames
+   * stopped arriving mid-run while the driver carried on, so clips ended early
+   * with the last action missing and nothing looked broken. One round trip with
+   * `awaitPromise` costs the same whether the wait is 50ms or 15s.
+   */
   async until(expression, { timeout = 15000, every = 100, label = expression } = {}) {
-    const t0 = Date.now();
-    for (;;) {
-      const v = await this.eval(expression);
-      if (v) return v;
-      if (Date.now() - t0 > timeout) throw new Error(`timed out waiting for: ${label}`);
-      await sleep(every);
-    }
+    const v = await this.eval(`new Promise((resolve) => {
+      const started = Date.now();
+      const tick = () => {
+        let value = null;
+        try { value = (${expression}); } catch { value = null; }
+        if (value) return resolve(JSON.stringify({ ok: true, value }));
+        if (Date.now() - started > ${timeout}) return resolve(JSON.stringify({ ok: false }));
+        setTimeout(tick, ${every});
+      };
+      tick();
+    })`);
+    const res = JSON.parse(v);
+    if (!res.ok) throw new Error(`timed out waiting for: ${label}`);
+    return res.value;
   }
 
   /**
@@ -313,14 +346,20 @@ class Page {
     })()`);
   }
 
+  /** Same in-page wait as `until` — see the note there on why not to poll CDP. */
   async waitVisible(selector, opts = {}) {
-    const t0 = Date.now();
-    for (;;) {
-      const r = await this.visibleRect(selector);
-      if (r) return r;
-      if (Date.now() - t0 > (opts.timeout ?? 15000)) throw new Error(`no visible element: ${selector}`);
-      await sleep(100);
-    }
+    const js = selector.startsWith('text:')
+      ? `[...document.querySelectorAll('button')].filter(b => b.textContent.includes(${JSON.stringify(selector.slice(5))}))`
+      : `[...document.querySelectorAll(${JSON.stringify(selector)})]`;
+    return this.until(
+      `(() => {
+        const el = ${js}.find(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width, h: r.height };
+      })()`,
+      { timeout: opts.timeout ?? 15000, label: `no visible element: ${selector}` },
+    );
   }
 
   // A headless screenshot has no pointer, and a demo without one is unreadable.
@@ -403,7 +442,7 @@ class Page {
     }
   }
 
-  async pressKey(key, code = key, vk = { ArrowRight: 39, Enter: 13 }[key] ?? 0) {
+  async pressKey(key, code = key, vk = { ArrowRight: 39, Enter: 13, Escape: 27 }[key] ?? 0) {
     for (const type of ['rawKeyDown', 'keyUp']) {
       await this.send('Input.dispatchKeyEvent', {
         type, key, code, windowsVirtualKeyCode: vk, nativeVirtualKeyCode: vk,
@@ -657,9 +696,24 @@ async function captureLoop(page, pool, loop, baseUrl) {
     }
   }
   if (loop.typeInSim) {
-    // The tour is still up, so its ring stays around the field while the words
-    // go in. Enter is safe: TourOverlay ignores its nav keys while the event
-    // target is an input, which is exactly where we are typing.
+    // END THE TOUR FIRST. Its overlay watches document.body for mutations and
+    // recomputes the spotlight's clip-path on each one; typing mutates the DOM
+    // continuously, and the resulting churn stalls the screencast a few seconds
+    // in — the words landed in the app while the video quietly stopped, so the
+    // clip shipped showing one word of two. The ring has already done its job
+    // by this point: it pointed at the field.
+    // Fixed pauses, no waiting predicates. Both kinds of wait — polling over CDP
+    // and polling inside the page — have stalled this phase: the tab stops
+    // painting a few seconds in, the screencast dies with it, and an in-page
+    // wait then never resolves because the page's own timers are frozen too.
+    // Two Escapes on a timer are dumber and they work: the first ends the tour,
+    // the second closes the FAQ panel that ClientView deliberately reopens when
+    // a tour ends (good product behaviour, wrong for this shot — the panel lands
+    // over the simulator and eats the typing).
+    await page.pressKey('Escape');
+    await sleep(1200);
+    await page.pressKey('Escape');
+    await sleep(1200);
     const box = await page.waitVisible(loop.typeInSim.selector);
     await page.moveCursor(box.x, box.y);
     await page.clickAt(box.x, box.y);
@@ -673,14 +727,18 @@ async function captureLoop(page, pool, loop, baseUrl) {
       // frames stopped arriving mid-typing, so the clip shipped showing only
       // the first of the two. Sleep long enough for the row to render, then ask
       // once — and fail loudly if it is not there.
-      await sleep(1500);
-      const landed = await page.eval(
-        `[...document.querySelectorAll('[data-tour="amethyst-hidden-list"] div')]
-           .some(d => d.textContent.trim() === ${JSON.stringify(word)})`,
-      );
-      if (!landed) throw new Error(`typed "${word}" but it never reached the hidden-words list`);
-      await sleep(900);
+      await sleep(1600);
     }
+  }
+  if (loop.typeInSim) {
+    // One check, after the filming: every word must be on the list, or the clip
+    // is a lie. Cheap here — nothing is being recorded any more.
+    const missing = await page.eval(
+      `${JSON.stringify(loop.typeInSim.words)}.filter(w =>
+         ![...document.querySelectorAll('[data-tour="amethyst-hidden-list"] div')]
+           .some(d => d.textContent.trim() === w))`,
+    );
+    if (missing.length) throw new Error(`typed but never landed: ${missing.join(', ')}`);
   }
   await sleep(T.tail);
 
@@ -727,6 +785,51 @@ async function captureSwitch(page, pool, sw, baseUrl) {
   const manifest = await encodeRange(pool, t0, t1, dir, out);
   const secs = ((manifest.at(-1).at - manifest[0].at) / 1000).toFixed(1);
   return { id: sw.id, frames: manifest.length, secs, out };
+}
+
+// ------------------------------------------------------------- one script ----
+async function captureScript(page, pool, script, baseUrl) {
+  page.deviceW = script.viewport.w * script.viewport.dsf;
+  page.deviceH = script.viewport.h * script.viewport.dsf;
+  page.viewportW = script.viewport.w;
+  page.viewportH = script.viewport.h;
+  await page.send('Emulation.setDeviceMetricsOverride', {
+    width: script.viewport.w, height: script.viewport.h,
+    deviceScaleFactor: script.viewport.dsf, mobile: false,
+  });
+  await page.send('Page.navigate', { url: baseUrl + script.path });
+  await page.until(`document.readyState === 'complete'`, { timeout: 30000, label: 'document ready' });
+  await page.installCursor();
+  await sleep(T.afterLoad);
+
+  const dir = join(WORK, script.id);
+  await rm(dir, { recursive: true, force: true });
+  const t0 = Date.now();
+  const marks = { steps: [] };
+
+  for (const step of script.steps) {
+    marks.steps.push(Date.now() - t0);
+    if (step.sleep) await sleep(step.sleep);
+    else if (step.key) await page.pressKey(step.key);
+    else if (step.type) await page.typeText(step.type, T.perChar);
+    else if (step.click) await page.click(step.click);
+  }
+
+  const t1 = Date.now();
+  marks.end = t1 - t0;
+  if (script.expect) {
+    const missing = await page.eval(
+      `${JSON.stringify(script.expect)}.filter(w => !document.body.innerText.includes(w))`,
+    );
+    if (missing.length) throw new Error(`never appeared on screen: ${missing.join(', ')}`);
+  }
+  await sleep(250);
+  await pool.flush();
+  const out = join(WORK, `${script.id}.mp4`);
+  const manifest = await encodeRange(pool, t0, t1, dir, out, { w: page.deviceW, h: page.deviceH });
+  await writeFile(join(dir, 'marks.json'), JSON.stringify(marks, null, 1));
+  const secs = ((manifest.at(-1).at - manifest[0].at) / 1000).toFixed(1);
+  return { id: script.id, frames: manifest.length, secs, out };
 }
 
 // --------------------------------------------------------------- one tour ----
@@ -854,7 +957,8 @@ async function main() {
   const loops = wanted.length ? LOOPS.filter((l) => wanted.includes(l.id)) : LOOPS;
   const switches = wanted.length ? SWITCHES.filter((s) => wanted.includes(s.id)) : SWITCHES;
   const tours = wanted.length ? TOURS.filter((t) => wanted.includes(t.id)) : TOURS;
-  if (!loops.length && !switches.length && !tours.length) throw new Error(`no such loop: ${wanted.join(', ')}`);
+  const scripts = wanted.length ? SCRIPTS.filter((x) => wanted.includes(x.id)) : SCRIPTS;
+  if (!loops.length && !switches.length && !tours.length && !scripts.length) throw new Error(`no such loop: ${wanted.join(', ')}`);
 
   await mkdir(WORK, { recursive: true });
   const { server, port } = await serveDist();
@@ -867,6 +971,14 @@ async function main() {
       process.stdout.write(`  · ${loop.id}: "${loop.query}" `);
       const r = await withBrowser(port + 1 + i, loop, (cdp, page, pool) =>
         captureLoop(page, pool, loop, baseUrl),
+      );
+      results.push(r);
+      console.log(`→ ${r.frames} frames, ${r.secs}s`);
+    }
+    for (const [i, script] of scripts.entries()) {
+      process.stdout.write(`  · ${script.id} (scripted) `);
+      const r = await withBrowser(port + 90 + i, script, (cdp, page, pool) =>
+        captureScript(page, pool, script, baseUrl),
       );
       results.push(r);
       console.log(`→ ${r.frames} frames, ${r.secs}s`);
