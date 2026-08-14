@@ -649,7 +649,9 @@ function BottomBar({
  * upstream's `hover:bg-secondary` resolves to nothing, so hover has no fill
  * either. Labels appear only in the wide (>=1280px) state.
  */
-function Rail({
+// Exported for /compare's navigation strip, which mounts the real rail rather
+// than a lookalike. Nothing else about it changed.
+export function Rail({
   wide,
   screen,
   isAuthed,

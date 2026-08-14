@@ -13,11 +13,57 @@
 1. **Chooser** — five questions (one platform, four capabilities) that narrow the set.
 2. **Capability matrix** — 9 axes × 8 clients, one glyph per cell; picking a cell prints the claim,
    links to the FAQ answer behind it, and dates it.
-3. **Note strip** — the same mock note rendered by each client's own note card.
+3. **Side-by-side strip** — one part of the interface, in every client at once, switchable between
+   four surfaces.
 
 The strip is the part nothing else can do. Every simulator already reads `src/data/mock`, so the
 note is genuinely identical and only the chrome differs — a side-by-side that would otherwise need
 eight devices and eight accounts.
+
+## Surfaces
+
+`src/host/compare/surfaces/` — one module per surface, registered in `index.ts`, contract in
+`types.ts`. Each cell mounts **that client's own component**; a lookalike built here would compare
+our two guesses instead of their two designs.
+
+| Surface | What it mounts | Coverage |
+|---|---|---|
+| The first screen | `LoginScreen` / `WelcomeScreen` | 8/8 |
+| A note | `NoteCard` / `PostCard` / `MaterialCard` | 8/8 |
+| Writing a post | `ComposeScreen` / `ComposeBox` / `ComposeSheet` | 8/8 |
+| Getting around | `TabBar` / `BottomNav` / `BottomBar` / `LeftSidebar` / `Rail` | 7/8 |
+
+**Coracle has no navigation cell**, and the page says so in place of the tile. Its sidebar is written
+inline in `CoracleSimulator.tsx`, closed over screen, modal, auth and submenu state; extracting it is
+a refactor of a `ready` client, not the one-line `export` that Snort's `Rail` needed. Adding a
+lookalike instead would break the rule the whole page runs on.
+
+Three clients need a shape mapper on the note surface (Primal's `PNote`, YakiHonne's `YakiNoteData`,
+Amethyst's `PostData`) because their card predates the shared `MockNote` plumbing.
+
+### Sizing
+
+`ScaledFrame` renders each surface at its **natural** size and scales the whole thing down —
+390×720 for a phone, 1022×640 for a web client, which is exactly what a frameless client gets inside
+`ClientView`'s card. Letting a web layout reflow into a 350px column would not be that client's
+design at all: it would be its mobile breakpoint, and `SnortSimulator` measures its own root to
+decide which one to mount.
+
+Two consequences: a surface wider than 600px **takes the whole row** (a 1022px screen at a third of
+the grid scales to ~34%, which next to a phone at 90% reads as "this client is smaller" rather than
+"this client is wider"), and the scale is **capped at 1** so a full row never blows a client up past
+its own design size.
+
+`ScaledFrame` measures with a callback ref plus a `ResizeObserver`, not a one-shot effect — the
+cells mount inside a grid that is still settling. Its `transform: scale()` also establishes a
+containing block, so a `position: fixed` overlay inside a composer resolves against the cell instead
+of the browser window (CLAUDE.md's Keychat gotcha, solved for free).
+
+The note surface is the exception: fluid, laid out at the column's own width, read at 1:1.
+
+> **When adding a surface, import its theme sheet in `surfaces/index.ts`.** The leaf components
+> mostly do not import their own, only the simulator roots do. A missing sheet passes typecheck and
+> passes the build, and renders that client unstyled.
 
 ## Data contract
 
@@ -43,15 +89,15 @@ eight devices and eight accounts.
 Scope is the eight `ready` clients. Keychat and Gossip have no screen-map and no FAQ, so there is
 nothing to ground a claim in; the page says that rather than leaving a gap.
 
-## Note strip gotcha
+### Theme gotcha
 
 **The eight theme sheets disagree about how the theme is applied.** Damus and Coracle key off a
 class (`.damus-simulator.dark`); Amethyst and YakiHonne key off an attribute
 (`.amethyst-simulator[data-theme="dark"]`). Every simulator root sets *both*, which is why this
 never surfaced before — setting only the class rendered Amethyst light on a dark page and YakiHonne
-dark against its own light default. `CompareView` sets both, from `ClientEntry.defaultTheme`.
+dark against its own light default. Every cell sets both, from `ClientEntry.defaultTheme`.
 
-Cards render in the **client's** shipping default, not the host's theme: a strip that repainted
+Cells render in the **client's** shipping default, not the host's theme: a strip that repainted
 every card in the host theme would compare sandstr with itself, and YakiHonne's sheet has no dark
 variant at all.
 

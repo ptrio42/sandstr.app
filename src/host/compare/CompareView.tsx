@@ -29,7 +29,8 @@ import {
   type AxisId,
   type Verdict,
 } from '../../data/capabilities';
-import { NOTE_ADAPTERS } from './noteAdapters';
+import { SURFACES, type ClientSurface } from './surfaces';
+import { ScaledFrame } from './ScaledFrame';
 
 /* -------------------------------------------------------------- verdicts -- */
 
@@ -138,19 +139,29 @@ function MatrixCell({
 
 /* ------------------------------------------------------------ note strip -- */
 
-function NoteCell({ entry, adapter, note, author, users }: {
+function SurfaceCell({ entry, surface, note, author, users }: {
   entry: ClientEntry;
-  adapter: (typeof NOTE_ADAPTERS)[number];
+  surface: ClientSurface;
   note: (typeof mockNotes)[number];
   author: ReturnType<typeof getUserByPubkey>;
   users: typeof mockUsers;
 }) {
-  const { Component, rootClass } = adapter;
+  const { Component, rootClass, natural } = surface;
   // The real client's shipping default, straight off the registry — Snort is
   // the only one with none (it ships `theme: "system"`), and it opens dark.
   const theme = entry.defaultTheme ?? 'dark';
+  const content = <Component note={note} author={author!} users={users} />;
+  // A desktop surface takes the whole row. Squeezed into a third of it, a
+  // 1022px screen scales to ~34% — legible as a thumbnail, useless as a
+  // comparison, and next to a phone at 90% it reads as "this client is smaller"
+  // rather than "this client is wider".
+  const fullRow = !!natural && natural.width >= 600;
   return (
-    <figure className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+    <figure
+      className={`flex min-w-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 ${
+        fullRow ? 'sm:col-span-2 lg:col-span-3' : ''
+      }`}
+    >
       <figcaption className="flex items-baseline justify-between gap-2 border-b border-gray-100 px-3 py-2 dark:border-gray-800">
         <span className="truncate text-sm font-semibold">{entry.name}</span>
         {entry.reproduces && (
@@ -159,11 +170,20 @@ function NoteCell({ entry, adapter, note, author, users }: {
           </span>
         )}
       </figcaption>
-      {/* Class AND attribute: the eight theme sheets disagree about which one
-          carries the theme, and each simulator's own root sets both. */}
-      <div className={`${rootClass} ${theme} min-w-0 overflow-x-auto`} data-theme={theme}>
-        <Component note={note} author={author!} users={users} />
-      </div>
+
+      {natural ? (
+        // A whole screen, shown at its real proportions and scaled to the cell.
+        <ScaledFrame width={natural.width} height={natural.height} className={rootClass} theme={theme}>
+          {content}
+        </ScaledFrame>
+      ) : (
+        // A note card is designed to fill a column, and is the one surface
+        // worth reading at 1:1. Class AND attribute, same reason as above.
+        <div className={`${rootClass} ${theme} min-w-0 overflow-x-auto`} data-theme={theme}>
+          {content}
+        </div>
+      )}
+
       <Link
         to={`/c/${entry.id}`}
         className="flex items-center justify-between gap-2 border-t border-gray-100 px-3 py-2 text-xs font-medium text-primary-600 hover:bg-gray-50 dark:border-gray-800 dark:text-primary-400 dark:hover:bg-gray-800/60"
@@ -178,6 +198,7 @@ function NoteCell({ entry, adapter, note, author, users }: {
 
 export default function CompareView() {
   const [platform, setPlatform] = useState<PlatformChoice>('any');
+  const [surfaceId, setSurfaceId] = useState<string>(SURFACES[0].id);
   const [reqs, setReqs] = useState<Record<string, Requirement>>({});
   const [picked, setPicked] = useState<{ client: string; axis: AxisId } | null>(null);
 
@@ -212,6 +233,8 @@ export default function CompareView() {
     [],
   );
   const author = useMemo(() => getUserByPubkey(note.pubkey) ?? mockUsers[0], [note]);
+
+  const surface = SURFACES.find((s) => s.id === surfaceId) ?? SURFACES[0];
 
   const detail = picked ? capabilities[picked.client][picked.axis] : null;
   const detailClient = picked ? getClient(picked.client) : null;
@@ -382,15 +405,39 @@ export default function CompareView() {
         )}
       </section>
 
-      {/* ---------------------------------------------------- note strip -- */}
+      {/* -------------------------------------------------- surface strip -- */}
       <section aria-labelledby="strip-heading">
         <h2 id="strip-heading" className="mb-2 text-lg font-semibold">
-          The same post, in each of them
+          Side by side
         </h2>
         <p className="mb-4 max-w-3xl text-sm text-gray-600 dark:text-gray-400">
-          Identical note, identical author, identical numbers — everything that differs below is the
-          client&rsquo;s own design: which actions it shows, in what order, and what it colours.
+          The same part of the interface, in every client at once — each one rendered by its own
+          component, at its own proportions, in the theme it really ships with.
         </p>
+
+        <div
+          role="tablist"
+          aria-label="Which part of the interface"
+          className="mb-3 inline-flex flex-wrap gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-800"
+        >
+          {SURFACES.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              role="tab"
+              aria-selected={s.id === surfaceId}
+              onClick={() => setSurfaceId(s.id)}
+              className={
+                s.id === surfaceId
+                  ? 'rounded-md bg-white px-3 py-1 text-sm font-medium text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
+                  : 'rounded-md px-3 py-1 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+              }
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+        <p className="mb-4 max-w-3xl text-sm text-gray-600 dark:text-gray-400">{surface.blurb}</p>
 
         {/* The mandated disclaimer, in its host-wide wording. These are
             brand-faithful reproductions rendered outside /c/, so the strip
@@ -403,15 +450,15 @@ export default function CompareView() {
           </span>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {NOTE_ADAPTERS.filter((a) => matches.some((c) => c.id === a.clientId)).map((adapter) => {
-            const entry = getClient(adapter.clientId);
-            if (!entry) return null;
+        <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {matches.map((entry) => {
+            const cell = surface.byClient[entry.id];
+            if (!cell) return null;
             return (
-              <NoteCell
-                key={adapter.clientId}
+              <SurfaceCell
+                key={`${surface.id}-${entry.id}`}
                 entry={entry}
-                adapter={adapter}
+                surface={cell}
                 note={note}
                 author={author}
                 users={mockUsers}
@@ -419,6 +466,21 @@ export default function CompareView() {
             );
           })}
         </div>
+
+        {/* Absences are printed, never silently skipped — a missing tile with no
+            explanation reads as "this client does not have one". */}
+        {matches.some((c) => surface.absent?.[c.id]) && (
+          <ul className="mt-5 space-y-2">
+            {matches
+              .filter((c) => surface.absent?.[c.id])
+              .map((c) => (
+                <li key={c.id} className="text-xs text-gray-500 dark:text-gray-500">
+                  <strong className="font-medium text-gray-600 dark:text-gray-400">{c.name}</strong>{' '}
+                  — {surface.absent![c.id]}
+                </li>
+              ))}
+          </ul>
+        )}
 
         <p className="mt-6 text-xs text-gray-500 dark:text-gray-500">
           Keychat and Gossip are absent on purpose: both are early previews with no verified
