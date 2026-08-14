@@ -95,6 +95,8 @@ CAP_MAX=28
 T_OPEN=0.7                   # panel opening, sped up
 T_WAIT=2.8                   # answer read + the click that starts the demo
 T_SWITCH=2.0                 # the client-switch interstitial
+T_SHOWME=1.9                 # pointer on "Show me in the simulator", and the press
+T_TYPE=6.0                   # typing INTO the simulator, kept near real speed
 LOOPS=(
 "damus-shaka|Where is the heart?|It is a shaka.|3.0"
 "amethyst|Nobody sees my notes.|You post to relays.|3.8"
@@ -108,9 +110,9 @@ LOOPS=(
 "damus-zap|How do I tip someone?|It is called a zap.|3.0"
 "amethyst-keys|Lost my phone.|Backup Keys, in the drawer.|3.0"
 "amethyst-zap|How do I tip someone?|Zap, fourth under the note.|3.0"
-# The keyword-mute clip: the demo lands on the field and the harness types
-# into it, so the D phase carries the typing and needs the room.
-"amethyst-mute|Tired of the current thing?|Add it to Hidden Words.|6.2"
+# The keyword-mute clip: tD here covers ONLY the four ring steps — the typing
+# that follows is its own phase, timed by T_TYPE (see the split on `typing2`).
+"amethyst-mute|Tired of the current thing?|Add it to Hidden Words.|6.0"
 )
 
 for row in "${LOOPS[@]}"; do
@@ -127,9 +129,29 @@ done
 CUT_A=(damus-shaka sw-damus-nostur nostur sw-nostur-wisp wisp)
 CUT_B=(coracle amethyst sw-amethyst-damus damus-npub)
 
+# Three phases, not four: a scripted clip (capture-faq.mjs SCRIPTS) arrives on
+# its answer via a deep link, so there is no query being typed and nothing to
+# hold a `t` phase.
+#   a  the answer, straight off ?faq=<id>          — caption asks the question
+#   b  the walk to the screen (login, drawer, …)   — no caption, compressed
+#   d  the payoff: typing both words into the list — caption names the feature
+# Empty while SCRIPTS is: amethyst-mute went back to being an ordinary FAQ loop.
+SCRIPTED=""
+SCRIPT_STEP_WALK=1     # marks.steps index where the answer is dismissed
+SCRIPT_STEP_TYPE=13    # marks.steps index where the cursor lands in the field
+T_SCR_A=2.6            # seconds for the answer
+T_SCR_B=5.0            # seconds for the walk
+
 mark() { # loop key -> seconds (float)
   node -e "const m=require('$SRC/$1/marks.json');process.stdout.write(((m['$2']??0)/1000).toFixed(3))"
 }
+# Scripted clips (capture-faq.mjs SCRIPTS) have no FAQ search to film, so they
+# have no typing/question/demo marks — only a `steps` array. Feeding them through
+# the four-phase machinery divides by zero and emits an empty segment, silently.
+smark() { # loop step-index -> seconds (float)
+  node -e "const m=require('$SRC/$1/marks.json');process.stdout.write(((m.steps?.[$2] ?? m.end)/1000).toFixed(3))"
+}
+is_scripted() { case " $SCRIPTED " in *" $1 "*) return 0;; *) return 1;; esac; }
 dur() { ffprobe -v error -show_entries format=duration -of csv=p=0 "$1"; }
 
 # Render one phase of one loop into a composited 1080x1920 segment.
@@ -171,19 +193,82 @@ for row in "${LOOPS[@]}"; do
   [ -s "$in" ] || { echo "  ! missing $in — run capture-faq.mjs $id"; exit 1; }
   echo "  · ${id}"
 
+  if is_scripted "$id"; then
+    walk=$(smark "$id" "$SCRIPT_STEP_WALK"); type=$(smark "$id" "$SCRIPT_STEP_TYPE")
+    total=$(dur "$in")
+    read -r sA sB sD <<<"$(awk -v w="$walk" -v t="$type" -v e="$total" \
+      -v ta="$T_SCR_A" -v tb="$T_SCR_B" -v td="$tD" \
+      'BEGIN{printf "%.3f %.3f %.3f", w/ta, (t-w)/tb, (e-t)/td}')"
+    segment "$id" "$in" "$WORK/${id}_a.mp4" "$sA" 0      "$walk"  "$ask"  "white"   a
+    segment "$id" "$in" "$WORK/${id}_b.mp4" "$sB" "$walk" "$type" ""      "white"   b
+    segment "$id" "$in" "$WORK/${id}_d.mp4" "$sD" "$type" "$total" "$show" "$ACCENT" d
+    continue
+  fi
+
   # Four phases. `typing` is the mark where the cursor lands in the search field,
   # so everything before it (opening the panel, the pointer travelling) can be
   # compressed while the typing itself plays untouched.
   ty=$(mark "$id" typing); qm=$(mark "$id" question)
   dm=$(mark "$id" demo);   total=$(dur "$in")
-  read -r sOpen sWait sD <<<"$(awk -v t="$ty" -v q="$qm" -v d="$dm" -v e="$total" \
-    -v o="$T_OPEN" -v w="$T_WAIT" -v dd="$tD" \
-    'BEGIN{printf "%.3f %.3f %.3f", t/o, (d-q)/w, (e-d)/dd}')"
+  sm=$(mark "$id" showMe)    # pointer parked on "Show me in the simulator"
+  t2=$(mark "$id" typing2)   # 0 unless this loop types into the simulator
+  ds=$(mark "$id" dismiss)   # 0 unless the tour has to be dismissed first
 
-  segment "$id" "$in" "$WORK/${id}_a.mp4" "$sOpen" 0     "$ty"    "$ask"  "white"   a
-  segment "$id" "$in" "$WORK/${id}_t.mp4" "1.0"    "$ty"  "$qm"   "$ask"  "white"   t
-  segment "$id" "$in" "$WORK/${id}_b.mp4" "$sWait" "$qm" "$dm"    ""      "white"   b
-  segment "$id" "$in" "$WORK/${id}_d.mp4" "$sD"    "$dm" "$total" "$show" "$ACCENT" d
+  segment "$id" "$in" "$WORK/${id}_a.mp4" "$(awk -v t="$ty" -v o="$T_OPEN" 'BEGIN{printf "%.3f", t/o}')" \
+    0 "$ty" "$ask" "white" a
+  segment "$id" "$in" "$WORK/${id}_t.mp4" "1.0" "$ty" "$qm" "$ask" "white" t
+
+  # Phase B ends where the pointer reaches "Show me in the simulator", and the
+  # press itself becomes phase C at close to real speed. Rolled into one
+  # compressed phase, the click happened in two frames at 2.4x and the drawer
+  # appeared to open by itself — the viewer never saw what caused it.
+  #
+  # `showMe` is newer than most of the captures in .work/, so a loop recorded
+  # before it exists reads 0 here. Without this branch that becomes a NEGATIVE
+  # speed and a backwards -ss/-to pair, and the whole build dies on a clip that
+  # is otherwise perfectly good. Those fall back to the single compressed phase
+  # they were cut with before; re-capture the loop to get the slower press.
+  rm -f "$WORK/${id}_c.mp4"
+  if [ "$(awk -v s="$sm" -v q="$qm" 'BEGIN{print (s>q)?1:0}')" = 1 ]; then
+    segment "$id" "$in" "$WORK/${id}_b.mp4" \
+      "$(awk -v q="$qm" -v s="$sm" -v w="$T_WAIT" 'BEGIN{printf "%.3f", (s-q)/w}')" \
+      "$qm" "$sm" "" "white" b
+    segment "$id" "$in" "$WORK/${id}_c.mp4" \
+      "$(awk -v s="$sm" -v d="$dm" -v c="$T_SHOWME" 'BEGIN{printf "%.3f", (d-s)/c}')" \
+      "$sm" "$dm" "$ask" "white" b
+  else
+    echo "    (no showMe mark — re-capture $id for the slower press)"
+    segment "$id" "$in" "$WORK/${id}_b.mp4" \
+      "$(awk -v q="$qm" -v d="$dm" -v w="$T_WAIT" 'BEGIN{printf "%.3f", (d-q)/w}')" \
+      "$qm" "$dm" "" "white" b
+  fi
+
+  # Phase D, split on `typing2` when the loop keeps filming past the mini-tour.
+  #
+  # One multiplier over the whole tail is wrong for those loops: the ring steps
+  # and the typing have opposite needs. amethyst-mute records 25.6 s after the
+  # demo starts, of which 9.4 s is the two words going in — squeeze all of it
+  # into one 8 s phase and the typing plays at 3.2x, which is the one beat the
+  # clip exists to show. So the ring steps get compressed and the typing gets
+  # T_TYPE at close to the speed it was recorded. `typing2` has been written by
+  # the recorder all along and nothing ever read it.
+  rm -f "$WORK/${id}_e.mp4"
+  if [ "$(awk -v x="$t2" 'BEGIN{print (x>0)?1:0}')" = 1 ]; then
+    # D stops at `dismiss`, not at `typing2`, when the recorder had to dismiss
+    # the tour: between those two marks the FAQ panel reopens over the simulator
+    # and closes again, which on screen reads as the client blinking out. That
+    # is our scaffolding, so the cut skips straight from the last ring to the
+    # cursor already in the field.
+    dEnd="$t2"
+    [ "$(awk -v x="$ds" 'BEGIN{print (x>0)?1:0}')" = 1 ] && dEnd="$ds"
+    read -r sD sE <<<"$(awk -v d="$dm" -v x="$dEnd" -v y="$t2" -v e="$total" -v dd="$tD" -v te="$T_TYPE" \
+      'BEGIN{printf "%.3f %.3f", (x-d)/dd, (e-y)/te}')"
+    segment "$id" "$in" "$WORK/${id}_d.mp4" "$sD" "$dm" "$dEnd"  "$show" "$ACCENT" d
+    segment "$id" "$in" "$WORK/${id}_e.mp4" "$sE" "$t2" "$total" "$show" "$ACCENT" d
+  else
+    sD=$(awk -v d="$dm" -v e="$total" -v dd="$tD" 'BEGIN{printf "%.3f", (e-d)/dd}')
+    segment "$id" "$in" "$WORK/${id}_d.mp4" "$sD" "$dm" "$total" "$show" "$ACCENT" d
+  fi
 done
 
 # ---- switch interstitials ------------------------------------------------------
@@ -229,7 +314,12 @@ drawtext=fontfile='${REG}':text='${DISCLAIMER}':fontsize=26:fontcolor=${MUTED}:x
 }
 
 card "$WORK/end.mp4" 3.2 "try Nostr" "no keys, no install" "sandstr.app"
-card "$WORK/tag.mp4" 1.5 ""          ""                    "sandstr.app"
+# The single-question clips end on this one, and it used to be the lockup over a
+# bare domain — no line saying what the thing IS. A viewer arriving from a reply
+# in someone else's thread has had no other chance to find out. 2.6s, not 1.5:
+# three lines need longer than a wordless tag did. (No client count in the
+# tagline — the narrative is derived from `status` in src/registry.tsx.)
+card "$WORK/tag.mp4" 2.6 "try Nostr clients" "no keys, no install" "sandstr.app"
 
 # ---- assemble ------------------------------------------------------------------
 encode() { # list out
@@ -244,9 +334,19 @@ encode() { # list out
 listItems() { # listfile item...
   local list=$1; shift
   for item in "$@"; do
+    if is_scripted "$item"; then
+      for p in a b d; do echo "file '${item}_${p}.mp4'" >>"$list"; done
+      continue
+    fi
     case "$item" in
       sw-*) echo "file '${item}_x.mp4'" >>"$list" ;;
-      *)    for p in a t b d; do echo "file '${item}_${p}.mp4'" >>"$list"; done ;;
+      *)    for p in a t b; do echo "file '${item}_${p}.mp4'" >>"$list"; done
+            # `c` only for loops captured with a `showMe` mark, `e` only for
+            # loops that type into the simulator. Both are absent by design on
+            # older captures — see the fallback in the per-loop beats.
+            [ -s "$WORK/${item}_c.mp4" ] && echo "file '${item}_c.mp4'" >>"$list" || true
+            echo "file '${item}_d.mp4'" >>"$list"
+            [ -s "$WORK/${item}_e.mp4" ] && echo "file '${item}_e.mp4'" >>"$list" || true ;;
     esac
   done
 }
