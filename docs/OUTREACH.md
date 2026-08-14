@@ -110,8 +110,13 @@ somebody is already stuck. It requires one thing — **a linkable answer**.
 
 - `sandstr.app/c/<client>?faq=<id>` — opens the panel on that specific answer;
 - `sandstr.app/c/<client>?tour=1` — starts the guided tour at step one;
-- the address bar mirrors whichever answer is open, so every answer copies itself
-  without any "share" affordance.
+- `sandstr.app/compare?cell=<client>:<axis>` — lands on ONE capability claim with its
+  source and the build it was checked against underneath (added 2026-08-14);
+- `sandstr.app/compare?on=android&need=signer` — "here are the Android clients that
+  keep your key out of the app". `on` is ios/android/web, `need` is a comma-separated
+  list of chooser axes;
+- the address bar mirrors whichever answer, filter or cell is open, so every one of
+  them copies itself without any "share" affordance.
 
 Without those parameters a reply reads "open it, hit the question mark, search" —
 three steps at exactly the moment the asker is impatient. This was the single most
@@ -120,6 +125,26 @@ important product change that promotion forced.
 **A clip shows WHERE a thing is, not WHY it broke.** For "my zap failed" the right
 answer is the text one (the `trouble-*` entries name the stage that failed); keep the
 clip for "how do I even do this".
+
+## Next material: the zap comparison
+
+Owner's call, 2026-08-14. `/compare`'s `fast-zap` axis turned out to be the strongest
+thing on the page as a story, and it aims at the tag's **biggest** topic (zaps/wallet,
+17%) rather than at a feature announcement:
+
+> A single click in Snort spends 50 sats with no confirmation. Coracle sends 21 the
+> same way. Wisp and Nostur always open a sheet. Amethyst zaps straight away only if
+> you have exactly one amount configured — and it ships three.
+
+Why it fits the measured channel: it is a **question the reader can check on
+themselves** ("does your client spend sats on a stray click?"), not an announcement —
+and announcements are the weakest category this account has. It is also true of the
+pinned versions and every claim carries its source, so a maintainer reading it finds a
+citation rather than a swipe.
+
+Two rules from above still bind: the note names other people's brands, so it carries
+"unofficial, not affiliated"; and the teaser goes UNDER a question, not instead of it.
+The linkable form is `sandstr.app/compare?cell=snort:fast-zap`.
 
 ## What not to claim
 

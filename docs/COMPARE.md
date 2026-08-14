@@ -1,14 +1,17 @@
-# Sandstr — /compare (capability matrix + note strip)
+# Sandstr — /compare (capability matrix + side-by-side surfaces)
 
 > **What it is.** A third host surface next to the gallery and the client view. The gallery answers
 > "what is there"; the per-client FAQ answers "how do I do X in this one". Neither answers the
 > question people actually arrive with — **which client should I use** — which is 13% of `#asknostr`
 > (1932 sampled notes, [`OUTREACH.md`](OUTREACH.md)), the fourth-biggest topic on the tag.
 >
-> Built 2026-08-13 as a prototype, deliberately from data that already existed: no new recon, no new
-> source of truth.
+> Built 2026-08-13 as a prototype from data that already existed — the FAQ banks and the note cards
+> the simulators ship. Taken to full over 2026-08-13/14: four surfaces instead of one, twelve axes
+> instead of nine, and — deliberately breaking the "no new recon" constraint it started under — nine
+> cells grounded by reading screen-maps and upstream source. That constraint was what made the
+> prototype cheap; keeping it would have shipped a table with five shrugs in it.
 
-## The three sections
+## The four sections
 
 1. **Chooser** — six questions (one platform, five capabilities) that narrow the set.
 2. **Capability matrix** — 12 axes × 8 clients = 96 cells, one glyph each; picking a cell prints the
@@ -16,6 +19,8 @@
    13 `partial`, **0 `unknown`**.
 3. **Side-by-side strip** — one part of the interface, in every client at once, switchable between
    four surfaces.
+4. **Every answer, in words** — the same 96 claims grouped by capability. This is the part the
+   build prerenders, and the reason the page is worth crawling.
 
 The strip is the part nothing else can do. Every simulator already reads `src/data/mock`, so the
 note is genuinely identical and only the chrome differs — a side-by-side that would otherwise need
@@ -129,10 +134,6 @@ are brand-faithful reproductions rendered outside `/c/`.
 
 ## Open
 
-- **`robots.txt` / `sitemap.xml` untouched.** `Disallow: /c/` stands, and `/compare` is exactly the
-  surface that *should* rank — a sourced, dated, disclaimered text page about a client is a
-  different SEO object from a pixel-faithful clone. Flipping that is a publishing decision, not a
-  prototype's to make. See "Open" in [`OUTREACH.md`](OUTREACH.md).
 - **Widening past 12 axes is upstream work, not UI work.** Three of the four axes tried next —
   timed mutes, whether a mute list publishes to relays, DM request inboxes — are **not in the
   screen-maps for half the clients**, because no recording opened those screens. They are all
@@ -140,6 +141,43 @@ are brand-faithful reproductions rendered outside `/c/`.
   it that way or not at all; do not let an axis ship with four `unknown`s to look wider.
 - **The chooser asks five capability questions out of twelve axes.** Which five is a product
   judgement, not a data one — `CHOOSER_AXES` in `CompareView.tsx`.
+
+## Indexing
+
+`/compare` is the one page on this site meant to rank, and `Disallow: /c/` is untouched. The
+distinction is not a loophole: `/c/damus` is a pixel-faithful clone of someone's app and must never
+be mistaken for it, while `/compare` is sourced, dated prose about what clients do. Those are
+different objects, and `robots.txt` now says so in as many words.
+
+Three pieces, all of which have to hold together:
+
+- **`scripts/prerender.mjs` emits `dist/compare/index.html`.** A client-rendered SPA hands a crawler
+  an empty `#root`; Google runs JS on a second pass, most other crawlers never do. 110 kB of markup
+  is baked in at build time, rendered by `CompareStatic` — which shares its table and prose with the
+  live page, so the two cannot drift.
+- **Its own `<title>`, description, canonical and `og:*`.** The template hard-pins those to the
+  gallery. Shipping `/compare` with them untouched would have canonicalised it to `/` — an
+  instruction to drop the page — quietly undoing the prerender. `prerender.mjs` asserts each tag is
+  present exactly once before swapping it.
+- **`sitemap.xml` lists both.** Nothing under `/c/` is listed; asking crawlers to fetch what the
+  same site forbids is worse than silence.
+
+## Linkable state
+
+Every part of the page state lives in the query string and is read on arrival:
+`?on=ios|android|web`, `?need=<axis,axis>`, `?show=<surface>`, `?cell=<client>:<axis>`. Defaults are
+omitted — a link should carry what someone chose, not the state of a page nobody touched — and
+unknown values degrade to the unfiltered page rather than a blank one.
+
+This exists for the reply playbook in [`OUTREACH.md`](OUTREACH.md): answering someone in a thread
+needs a link that lands on the answer, not on a page they then have to operate.
+`?cell=snort:fast-zap` is one claim with its source under it.
+
+**Gotcha found by the test:** state is read once, at mount (`useState` initialiser, not an effect —
+so a shared link never paints the unfiltered page first). That means navigating from `/compare` to
+`/compare?on=android` **inside the app** is a same-document navigation and does not re-read. A cold
+load — which is what a shared link always is — works. Model the cold load when testing it; a
+same-document navigation will show you stale state and look like a bug in the feature.
 
 ## Resolved
 

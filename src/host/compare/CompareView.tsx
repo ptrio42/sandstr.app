@@ -17,9 +17,9 @@
  * else's product with no date and no source is exactly the kind of thing that
  * quietly becomes false — see the header of src/data/capabilities.ts.
  */
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, Check, HelpCircle, Info, Minus, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { ArrowRight, Info } from 'lucide-react';
 import { getClient, type ClientEntry } from '../../registry';
 import { mockNotes, mockUsers, getUserByPubkey } from '../../data/mock';
 import {
@@ -27,19 +27,15 @@ import {
   COMPARED_CLIENTS,
   capabilities,
   type AxisId,
-  type Verdict,
 } from '../../data/capabilities';
+import {
+  CapabilityTable,
+  CapabilityDetails,
+  VERDICT_META,
+  type Selection,
+} from './CapabilityTable';
 import { SURFACES, type ClientSurface } from './surfaces';
 import { ScaledFrame } from './ScaledFrame';
-
-/* -------------------------------------------------------------- verdicts -- */
-
-const VERDICT_META: Record<Verdict, { icon: typeof Check; label: string; className: string }> = {
-  yes: { icon: Check, label: 'Yes', className: 'text-emerald-600 dark:text-emerald-400' },
-  partial: { icon: Minus, label: 'Partly', className: 'text-amber-600 dark:text-amber-400' },
-  no: { icon: X, label: 'No', className: 'text-rose-600 dark:text-rose-400' },
-  unknown: { icon: HelpCircle, label: 'Not verified', className: 'text-gray-400 dark:text-gray-500' },
-};
 
 /* --------------------------------------------------------------- chooser -- */
 
@@ -108,38 +104,6 @@ const YES_NO = [
 
 type Requirement = (typeof YES_NO)[number]['id'];
 
-/* ---------------------------------------------------------------- matrix -- */
-
-function MatrixCell({
-  clientId,
-  axisId,
-  selected,
-  onSelect,
-}: {
-  clientId: string;
-  axisId: AxisId;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  const cell = capabilities[clientId][axisId];
-  const meta = VERDICT_META[cell.verdict];
-  const Icon = meta.icon;
-  return (
-    <td className="border-t border-gray-100 p-0 dark:border-gray-800">
-      <button
-        type="button"
-        onClick={onSelect}
-        aria-label={`${clientId}: ${meta.label}`}
-        className={`flex h-11 w-full items-center justify-center transition-colors ${
-          selected ? 'bg-primary-50 dark:bg-primary-500/10' : 'hover:bg-gray-50 dark:hover:bg-gray-800/60'
-        }`}
-      >
-        <Icon className={`h-4 w-4 ${meta.className}`} />
-      </button>
-    </td>
-  );
-}
-
 /* ------------------------------------------------------------ note strip -- */
 
 function SurfaceCell({ entry, surface, note, author, users }: {
@@ -199,11 +163,75 @@ function SurfaceCell({ entry, surface, note, author, users }: {
 
 /* ------------------------------------------------------------------ page -- */
 
+/**
+ * Read the whole page state out of the query string ONCE, on arrival.
+ *
+ * The point is the reply playbook in docs/OUTREACH.md: answering someone in a
+ * thread needs a link that lands on the answer, not on a page they then have to
+ * operate. `?on=android&need=signer` is "here are the Android clients that keep
+ * your key out of the app"; `?cell=snort:fast-zap` is one specific claim with
+ * its source under it. Without that, a reply reads "open it, then click these
+ * four things" at exactly the moment the asker is impatient.
+ *
+ * Unknown values are dropped rather than rejected: a link with a renamed axis
+ * should degrade to the unfiltered page, not to a blank one.
+ */
+function readUrlState(search: string) {
+  const p = new URLSearchParams(search);
+  const on = p.get('on');
+  const platform: PlatformChoice = PLATFORM_CHOICES.some((c) => c.id === on)
+    ? (on as PlatformChoice)
+    : 'any';
+
+  const reqs: Record<string, Requirement> = {};
+  for (const id of (p.get('need') ?? '').split(',')) {
+    if (CHOOSER_AXES.includes(id as AxisId)) reqs[id] = 'need';
+  }
+
+  const show = p.get('show');
+  const surfaceId = SURFACES.some((s) => s.id === show) ? show! : SURFACES[0].id;
+
+  const [client, axis] = (p.get('cell') ?? '').split(':');
+  const picked: Selection | null =
+    client && axis && capabilities[client]?.[axis as AxisId]
+      ? { client, axis: axis as AxisId }
+      : null;
+
+  return { platform, reqs, surfaceId, picked };
+}
+
 export default function CompareView() {
-  const [platform, setPlatform] = useState<PlatformChoice>('any');
-  const [surfaceId, setSurfaceId] = useState<string>(SURFACES[0].id);
-  const [reqs, setReqs] = useState<Record<string, Requirement>>({});
-  const [picked, setPicked] = useState<{ client: string; axis: AxisId } | null>(null);
+  // `useState(fn)` rather than an effect: the state is read from the address
+  // bar before the first paint, so a shared link never renders the unfiltered
+  // page for a frame first. The mirror below writes the same params back, and
+  // an effect reading them would then be reacting to its own writes.
+  const initial = useMemo(
+    () => readUrlState(typeof window === 'undefined' ? '' : window.location.search),
+    [],
+  );
+  const [platform, setPlatform] = useState<PlatformChoice>(initial.platform);
+  const [surfaceId, setSurfaceId] = useState<string>(initial.surfaceId);
+  const [reqs, setReqs] = useState<Record<string, Requirement>>(initial.reqs);
+  const [picked, setPicked] = useState<Selection | null>(initial.picked);
+
+  // Mirror it back, so every filtered view and every single claim copies itself
+  // as a link with no "share" affordance anywhere. `replace` keeps the back
+  // button meaning "the page before this one" rather than a trail of chooser
+  // clicks — the same call ClientView makes for its FAQ deep links.
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    const set = (key: string, value: string | null) =>
+      value ? next.set(key, value) : next.delete(key);
+    set('on', platform === 'any' ? null : platform);
+    const need = CHOOSER_AXES.filter((axis) => reqs[axis] === 'need');
+    set('need', need.length ? need.join(',') : null);
+    // Defaults stay out of the URL: a link should carry what someone chose, not
+    // the state of a page nobody touched.
+    set('show', surfaceId === SURFACES[0].id ? null : surfaceId);
+    set('cell', picked ? `${picked.client}:${picked.axis}` : null);
+    if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
+  }, [platform, reqs, surfaceId, picked, searchParams, setSearchParams]);
 
   const entries = useMemo(
     () => COMPARED_CLIENTS.map((id) => getClient(id)).filter((c): c is ClientEntry => !!c),
@@ -306,63 +334,7 @@ export default function CompareView() {
           </p>
         ) : (
           <>
-            <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-800">
-              <table className="w-full min-w-[640px] border-collapse text-sm">
-                <thead>
-                  <tr>
-                    <th className="sticky left-0 bg-white p-3 text-left font-medium text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                      <span className="sr-only">Capability</span>
-                    </th>
-                    {matches.map((c) => (
-                      <th key={c.id} className="p-3 align-bottom">
-                        <Link
-                          to={`/c/${c.id}`}
-                          className="flex flex-col items-center gap-1 hover:text-primary-600 dark:hover:text-primary-400"
-                        >
-                          <span
-                            className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg"
-                            style={{ backgroundColor: `${c.primaryColor}1a` }}
-                          >
-                            {c.icon ? (
-                              <img src={c.icon} alt="" width={32} height={32} className="h-full w-full object-cover" />
-                            ) : (
-                              <span aria-hidden>{c.emoji}</span>
-                            )}
-                          </span>
-                          <span className="text-xs font-semibold">{c.name}</span>
-                          {c.reproduces && (
-                            <span className="text-[10px] font-normal text-gray-400 dark:text-gray-500">
-                              {c.reproduces}
-                            </span>
-                          )}
-                        </Link>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {COMPARISON_AXES.map((axis) => (
-                    <tr key={axis.id}>
-                      <th
-                        scope="row"
-                        className="sticky left-0 border-t border-gray-100 bg-white p-3 text-left font-normal dark:border-gray-800 dark:bg-gray-950"
-                      >
-                        {axis.label}
-                      </th>
-                      {matches.map((c) => (
-                        <MatrixCell
-                          key={c.id}
-                          clientId={c.id}
-                          axisId={axis.id}
-                          selected={picked?.client === c.id && picked?.axis === axis.id}
-                          onSelect={() => setPicked({ client: c.id, axis: axis.id })}
-                        />
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <CapabilityTable clients={matches} selected={picked} onSelect={setPicked} />
 
             {/* The detail slot. A grid of glyphs is a summary; this is where the
                 actual claim, and the link that backs it, live. */}
@@ -497,6 +469,23 @@ export default function CompareView() {
           Keychat and Gossip are absent on purpose: both are early previews with no verified
           screen-map, so there is nothing to ground a claim about them in.
         </p>
+      </section>
+
+      {/* Every claim in the matrix, in words. Unfiltered on purpose: the table
+          above answers "which of these", this answers "what does X do about Y",
+          and cutting it down to the chooser's survivors would hide the very
+          comparison someone arriving from a search is here to read. It is also
+          the part the build prerenders — see CapabilityTable's header. */}
+      <section aria-labelledby="details-heading" className="mt-14 border-t border-gray-200 pt-10 dark:border-gray-800">
+        <h2 id="details-heading" className="mb-2 text-lg font-semibold">
+          Every answer, in words
+        </h2>
+        <p className="mb-8 max-w-3xl text-sm text-gray-600 dark:text-gray-400">
+          The same {COMPARISON_AXES.length * entries.length} claims the table holds, grouped by
+          capability, each one linked to the answer it came from and stamped with the build it was
+          checked against.
+        </p>
+        <CapabilityDetails clients={entries} />
       </section>
     </div>
   );

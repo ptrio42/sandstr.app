@@ -4,6 +4,12 @@
 User-agent: *
 Disallow: /c/
 
-# With no inbound links yet, this is the only active signal that the site
-# exists. It lists "/" alone, for the reason above.
+# /compare is explicitly welcome, and it is a different KIND of page: sourced,
+# dated prose about what each client can and cannot do, with every claim linked
+# to its origin. That is an ordinary comparison — the thing /c/ must not be
+# mistaken for. It carries no client's chrome and cannot be mistaken for one of
+# their apps, so the reasoning above does not reach it.
+
+# The sitemap lists both prerendered pages. Nothing else is listed, for the
+# reason above.
 Sitemap: https://sandstr.app/sitemap.xml
