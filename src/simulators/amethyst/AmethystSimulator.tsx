@@ -16,6 +16,7 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { ComposeScreen } from './screens/ComposeScreen';
 import { VideoScreen } from './screens/VideoScreen';
 import { SearchScreen } from './screens/SearchScreen';
+import { HashtagScreen } from './screens/HashtagScreen';
 import { ThreadScreen } from './screens/ThreadScreen';
 import { DrawerDetailScreen, DRAWER_DETAIL_IDS } from './screens/DrawerDetailScreen';
 import type { DrawerDetailId } from './screens/DrawerDetailScreen';
@@ -103,6 +104,13 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
   // The note a reply is aimed at, so the composer can quote it (gaps ame-77).
   const [replyTo, setReplyTo] = useState<PostData | null>(null);
   const [loginMode, setLoginMode] = useState<'login' | 'signup'>('login');
+  // The hashtag feed, pushed over the tab content the way the thread is. A
+  // `#tag` in a note body and Search's hashtag line both land here (ame-82).
+  const [hashtag, setHashtag] = useState<string | null>(null);
+  // Which sub-tab Home and Messages open on, so a command can land on
+  // "Conversations" / "New Requests" (gaps ame-07, ame-92).
+  const [homeTab, setHomeTab] = useState<'new_threads' | 'conversations'>('new_threads');
+  const [messagesTab, setMessagesTab] = useState<'known' | 'requests'>('known');
   /**
    * Bottom-bar unread dots. Visiting a tab clears its dot, so the dot means
    * something instead of being permanent decoration (gaps ame-70). Wallet and
@@ -189,6 +197,16 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
     }
     setIsDrawerOpen(false);
   }, [registerAction, openSettingsAt, pushTab]);
+
+  /** Open a specific author's profile, from wherever they were tapped. */
+  const openProfile = useCallback((user: MockUser | null) => {
+    setProfileUser(user);
+    setProfileTab('Notes');
+    setThreadPost(null);
+    setHashtag(null);
+    setActiveTab('profile');
+    registerAction('view_profile');
+  }, [registerAction]);
 
   // The app bar's magnifier — upstream `nav.nav(Route.Search)`.
   const handleOpenSearch = useCallback(() => {
@@ -290,6 +308,48 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
           }
           break;
         }
+        // `hashtag:<tag>` opens the hashtag feed; `home:<tab>` and
+        // `messages:<tab>` land on a sub-tab that used to be screen-local state
+        // (gaps ame-82, ame-07, ame-92). All three are payloads on the existing
+        // `navigate` command — the union itself is untouched.
+        if (typeof raw === 'string' && raw.startsWith('hashtag:')) {
+          const tag = raw.slice(8);
+          if (tag) {
+            setIsComposeOpen(false);
+            setIsSettingsOpen(false);
+            setIsDrawerOpen(false);
+            setDrawerDetail(null);
+            setThreadPost(null);
+            setHashtag(tag);
+          }
+          break;
+        }
+        if (typeof raw === 'string' && (raw === 'home:conversations' || raw === 'home:new-threads')) {
+          setHomeTab(raw === 'home:conversations' ? 'conversations' : 'new_threads');
+          setActiveTab('home');
+          setPushStack([]);
+          setIsComposeOpen(false);
+          setIsSettingsOpen(false);
+          setIsDrawerOpen(false);
+          setDrawerDetail(null);
+          setThreadPost(null);
+          setHashtag(null);
+          registerAction('navigate_home');
+          break;
+        }
+        if (typeof raw === 'string' && (raw === 'messages:requests' || raw === 'messages:known')) {
+          setMessagesTab(raw === 'messages:requests' ? 'requests' : 'known');
+          setActiveTab('messages');
+          setSeenTabs((sn) => ({ ...sn, messages: true }));
+          setPushStack([]);
+          setIsComposeOpen(false);
+          setIsSettingsOpen(false);
+          setIsDrawerOpen(false);
+          setDrawerDetail(null);
+          setThreadPost(null);
+          setHashtag(null);
+          break;
+        }
         if (typeof raw === 'string' && raw.startsWith('drawer:')) {
           const id = raw.slice(7) as DrawerDetailId;
           if (DRAWER_DETAIL_IDS.includes(id)) {
@@ -317,6 +377,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
           setIsSettingsOpen(false);
           setIsDrawerOpen(false);
           setThreadPost(null);
+          setHashtag(null);
         }
         break;
       }
@@ -434,19 +495,16 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       case 'home':
         return (
           <HomeScreen
-            key="home"
+            key={`home-${homeTab}`}
             newPost={newPost}
             onOpenCompose={() => { setReplyTo(null); setIsComposeOpen(true); }}
             onReplyTo={(post) => { setReplyTo(post); setIsComposeOpen(true); }}
             onOpenDrawer={() => setIsDrawerOpen(true)}
             onOpenThread={(post) => setThreadPost(post)}
             onOpenSearch={handleOpenSearch}
-            onOpenProfile={(post) => {
-              setProfileUser(post.pubkey ? getUserByPubkey(post.pubkey) ?? null : null);
-              setThreadPost(null);
-              setActiveTab('profile');
-              registerAction('view_profile');
-            }}
+            onOpenHashtag={setHashtag}
+            initialTab={homeTab}
+            onOpenProfile={(post) => openProfile(post.pubkey ? getUserByPubkey(post.pubkey) ?? null : null)}
             onLikePost={() => registerAction('like')}
           />
         );
@@ -460,6 +518,8 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
             key="search-screen"
             onBack={popTab}
             onOpenThread={(post) => setThreadPost(post)}
+            onOpenProfile={openProfile}
+            onOpenHashtag={setHashtag}
           />
         );
       case 'wallet':
@@ -493,9 +553,10 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       case 'messages':
         return (
           <MessagesScreen
-            key="messages"
+            key={`messages-${messagesTab}`}
             onOpenDrawer={() => setIsDrawerOpen(true)}
             onOpenSearch={handleOpenSearch}
+            initialTab={messagesTab}
           />
         );
       case 'profile':
@@ -609,7 +670,7 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
           in the thread view, over Settings, over a drawer detail screen, and on
           every pushed screen (Search / Discover / Shorts): `AppBottomBar`
           returns early on `nav.canPop()`. */}
-      {activeTab !== 'profile' && !PUSHED_TABS.includes(activeTab) && !isComposeOpen && !threadPost && !isSettingsOpen && !drawerDetail && (
+      {activeTab !== 'profile' && !PUSHED_TABS.includes(activeTab) && !isComposeOpen && !threadPost && !hashtag && !isSettingsOpen && !drawerDetail && (
         <BottomNav
           activeTab={activeTab}
           onTabChange={handleTabChange}
@@ -643,6 +704,15 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       )}
 
       {/* Note / thread detail overlay */}
+      {/* Hashtag feed overlay — pushed over the tab content like the thread. */}
+      {hashtag && (
+        <HashtagScreen
+          tag={hashtag}
+          onBack={() => setHashtag(null)}
+          onOpenThread={(post) => setThreadPost(post)}
+        />
+      )}
+
       {threadPost && (
         <ThreadScreen
           post={threadPost}

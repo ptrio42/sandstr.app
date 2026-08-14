@@ -65,6 +65,8 @@ interface MaterialCardProps {
   onOpenThread?: () => void;
   /** Tap the author's avatar or name to open THEIR profile (not the thread). */
   onOpenProfile?: (post: PostData) => void;
+  /** A `#tag` in the body opens that hashtag's feed (gaps ame-82). */
+  onOpenHashtag?: (tag: string) => void;
   /**
    * Start the per-reaction gallery expanded. Ground truth: the thread's root
    * note renders with `showReactionDetail = true` (gaps ame-89/ame-137).
@@ -231,6 +233,7 @@ export function MaterialCard({
   onReply,
   onOpenThread,
   onOpenProfile,
+  onOpenHashtag,
   defaultReactionDetail = false,
 }: MaterialCardProps) {
   const [isLiked, setIsLiked] = React.useState(false);
@@ -345,10 +348,10 @@ export function MaterialCard({
    * `nostr:` mention rendered as `@<hex-ish token>` instead of a name
    * (gaps ame-82).
    *
-   * Mentions resolve to the mock display name and open that author's profile.
-   * Hashtags and links stop the tap here rather than mis-navigating: neither a
-   * hashtag feed nor a web view exists in this reproduction, and this simulator
-   * never leaves the page.
+   * Mentions resolve to the mock display name and open that author's profile,
+   * and a hashtag now opens its feed (gaps ame-82). Links still stop the tap
+   * here: there is no web view in this reproduction and this simulator never
+   * leaves the page.
    */
   const renderContent = (content: string) =>
     content.split(/(#\w+|nostr:\w+|https?:\/\/[^\s]+)/g).map((token, i) => {
@@ -357,7 +360,10 @@ export function MaterialCard({
           <button
             key={i}
             type="button"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenHashtag?.(token.slice(1));
+            }}
             className="font-medium"
             style={{ color: 'var(--md-primary)' }}
           >

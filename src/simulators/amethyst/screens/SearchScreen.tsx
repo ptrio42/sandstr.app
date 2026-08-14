@@ -3,6 +3,7 @@ import { ArrowLeft, Check, Search, SlidersHorizontal, X } from 'lucide-react';
 import { Avatar } from '../components/Avatar';
 import { MaterialCard, PostData } from '../components/MaterialCard';
 import { mockNotes, mockRelays, mockUsers } from '../../../data/mock';
+import type { MockUser } from '../../../data/mock';
 import { toPostData } from '../notesToPosts';
 import '../amethyst.theme.css';
 
@@ -61,6 +62,10 @@ const SORTS: { id: Sort; label: string }[] = [
 interface SearchScreenProps {
   onBack: () => void;
   onOpenThread?: (post: PostData) => void;
+  /** A user result opens that profile (gaps ame-146). */
+  onOpenProfile?: (user: MockUser) => void;
+  /** A hashtag result opens that hashtag's feed (gaps ame-82). */
+  onOpenHashtag?: (tag: string) => void;
 }
 
 /** `ShowFollowingOrUnfollowingButton` — the trailing slot of a user result. */
@@ -83,7 +88,7 @@ function FollowPill() {
   );
 }
 
-export function SearchScreen({ onBack, onOpenThread }: SearchScreenProps) {
+export function SearchScreen({ onBack, onOpenThread, onOpenProfile, onOpenHashtag }: SearchScreenProps) {
   const [query, setQuery] = useState('');
   const [scope, setScope] = useState<Scope>('all');
   const [source, setSource] = useState<Source>('relays');
@@ -241,25 +246,34 @@ export function SearchScreen({ onBack, onOpenThread }: SearchScreenProps) {
       {/* Results. Blank until something is typed — upstream renders no result
           block at all while the field is empty. */}
       <div className="flex-1 overflow-y-auto">
-        {/* `HashtagLine`: bold, centred, `Search hashtag: #%1$s`. Upstream it
-            navigates to Route.Hashtag; there is no hashtag feed here, so this
-            is drawn as plain text rather than as a button that does nothing. */}
+        {/* `HashtagLine`: bold, centred, `Search hashtag: #%1$s`, and it really
+            navigates to Route.Hashtag now that the feed exists. */}
         {hashtags.map((tag) => (
           <div key={`#${tag}`}>
-            <p className="px-3 py-2.5 text-center font-bold text-[var(--md-on-surface)]">
+            <button
+              type="button"
+              onClick={() => onOpenHashtag?.(tag)}
+              className="w-full px-3 py-2.5 text-center font-bold text-[var(--md-on-surface)]"
+            >
               Search hashtag: #{tag}
-            </p>
+            </button>
             <Divider />
           </div>
         ))}
 
         {/* `UserCompose`: 55dp picture, name, one-line "about" in
             placeholderText, trailing Follow/Unfollow + list buttons. The row
-            itself opens the profile upstream; ProfileScreen here renders one
-            hardcoded profile, so the row is not made tappable (see ame-57). */}
+            opens that profile, as it does upstream — ProfileScreen took a
+            hardcoded subject when this screen was written and takes a `user`
+            now (gaps ame-57). */}
         {users.map((u) => (
           <div key={u.pubkey}>
-            <div className="flex items-center gap-3 px-3 py-2.5">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => onOpenProfile?.(u)}
+              onKeyDown={(e) => { if (e.key === 'Enter') onOpenProfile?.(u); }}
+              className="flex items-center gap-3 px-3 py-2.5 cursor-pointer">
               <Avatar seed={u.nip05 || u.username} className="md-avatar shrink-0" />
               <div className="flex-1 min-w-0">
                 <span className="block font-semibold text-[var(--md-on-surface)] truncate">

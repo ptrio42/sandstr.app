@@ -15,6 +15,14 @@ interface HomeScreenProps {
   onOpenThread?: (post: PostData) => void;
   /** Opens the Search screen — the app bar's magnifier (upstream `Route.Search`). */
   onOpenSearch?: () => void;
+  /** A `#tag` tapped in a note body opens that hashtag's feed (gaps ame-82). */
+  onOpenHashtag?: (tag: string) => void;
+  /**
+   * Which sub-tab to open on. The tabs really split the feed, but the state was
+   * screen-local, so no tour or FAQ step could land on "Conversations"
+   * (gaps ame-07).
+   */
+  initialTab?: 'new_threads' | 'conversations';
   /** Tap an author's avatar or name in the feed → that author's profile. */
   onOpenProfile?: (post: PostData) => void;
   /** Reply opens the composer with THIS note quoted (gaps ame-77). */
@@ -34,15 +42,30 @@ export function buildFeedPosts(): PostData[] {
   return getRecentNotes(20).map((note) => toPostData(note, { following: true }));
 }
 
-export function HomeScreen({ newPost, onOpenCompose, onOpenDrawer, onOpenThread, onOpenSearch, onOpenProfile, onReplyTo, onLikePost }: HomeScreenProps) {
+export function HomeScreen({ newPost, onOpenCompose, onOpenDrawer, onOpenThread, onOpenSearch, onOpenHashtag, onOpenProfile, onReplyTo, onLikePost, initialTab = 'new_threads' }: HomeScreenProps) {
   // Real Amethyst home has TWO switchers: the feed selector in the app bar
   // ("All Follows ▾") and the content sub-tabs below it.
-  const [activeTab, setActiveTab] = useState<'new_threads' | 'conversations'>('new_threads');
+  const [activeTab, setActiveTab] = useState<'new_threads' | 'conversations'>(initialTab);
   const [refreshing, setRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [isPulling, setIsPulling] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef(0);
+  // `DisappearingScaffold`: the top bar collapses once you are scrolling DOWN
+  // and away from the top, and comes back on the first upward scroll. The bar
+  // used to be a plain sticky element with no scroll source at all
+  // (gaps ame-64, ame-66).
+  const [barHidden, setBarHidden] = useState(false);
+  const lastScrollY = useRef(0);
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const y = e.currentTarget.scrollTop;
+    const previous = lastScrollY.current;
+    lastScrollY.current = y;
+    if (y <= 8) setBarHidden(false);
+    // A few pixels of slack so a jittery wheel does not flap the bar.
+    else if (y - previous > 6) setBarHidden(true);
+    else if (previous - y > 6) setBarHidden(false);
+  }, []);
 
   const [posts, setPosts] = useState(buildFeedPosts);
   // Publishing used to only toast: `setPosts` was never called and the screen
@@ -133,6 +156,7 @@ export function HomeScreen({ newPost, onOpenCompose, onOpenDrawer, onOpenThread,
       <AppTopBar
         onOpenDrawer={onOpenDrawer}
         onOpenSearch={onOpenSearch}
+        hidden={barHidden}
         center={<FeedSelector defaultFeed="All Follows" onChange={setFeed} />}
       />
 
@@ -190,6 +214,7 @@ export function HomeScreen({ newPost, onOpenCompose, onOpenDrawer, onOpenThread,
       <div
         ref={feedRef}
         className="flex-1 overflow-y-auto"
+        onScroll={handleScroll}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -226,6 +251,7 @@ export function HomeScreen({ newPost, onOpenCompose, onOpenDrawer, onOpenThread,
                 onReply={handleReply}
                 onOpenThread={() => onOpenThread?.(post)}
                 onOpenProfile={onOpenProfile}
+                onOpenHashtag={onOpenHashtag}
               />
             </motion.div>
           ))}

@@ -17,6 +17,13 @@ interface AppTopBarProps {
   onOpenSearch?: () => void;
   /** Center content: the feed selector on Home, the Amethyst logo on Messages, etc. */
   center: React.ReactNode;
+  /**
+   * Collapsed by a downward scroll. Upstream every feed screen sits in a
+   * `DisappearingScaffold`, which hides the 50dp bar as you scroll away from
+   * the top and brings it back on the first upward scroll (gaps ame-64/66).
+   * Screens that do not plumb a scroller simply never pass this.
+   */
+  hidden?: boolean;
 }
 
 // Amethyst's persistent top app bar. Verified against the v1.13.1-fdroid
@@ -26,9 +33,27 @@ interface AppTopBarProps {
 // The "16/16 + relay graph" we shipped through v1.12.6 came from an old promo
 // screenshot that already disagreed with that release's own source — the frozen
 // amethyst-v1-12 archive keeps it; the live version does not.
-export function AppTopBar({ onOpenDrawer, onBack, onOpenSearch, center }: AppTopBarProps) {
+export function AppTopBar({ onOpenDrawer, onBack, onOpenSearch, center, hidden = false }: AppTopBarProps) {
+  // Measured rather than hardcoded: the bar collapses by pulling its own height
+  // out of the flow, and `.md-app-bar` is a shared rule the frozen v1-12
+  // archive also uses, so its box cannot be reshaped here.
+  const barRef = React.useRef<HTMLDivElement>(null);
+  const [height, setHeight] = React.useState(0);
+  React.useLayoutEffect(() => {
+    if (barRef.current) setHeight(barRef.current.offsetHeight);
+  }, [center]);
+
   return (
-    <div className="md-app-bar md-app-bar-enhanced">
+    <div
+      ref={barRef}
+      className="md-app-bar md-app-bar-enhanced"
+      data-hidden={hidden || undefined}
+      style={{
+        transform: hidden ? 'translateY(-100%)' : 'translateY(0)',
+        marginBottom: hidden ? -height : 0,
+        transition: 'transform 200ms var(--md-easing-standard), margin-bottom 200ms var(--md-easing-standard)',
+      }}
+    >
       {/* LEFT: back arrow on a pushed screen, otherwise the account avatar that
           opens the drawer (`TopBarNavigationIcon` → ArrowBackIcon /
           LoggedInUserPictureDrawer). */}
