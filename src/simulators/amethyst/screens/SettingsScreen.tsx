@@ -1014,18 +1014,39 @@ function VanishHistoryView() {
 
 /* ---------- Relays ---------- */
 
-type Relay = { name: string; size: string; hue: number };
+/**
+ * A relay row upstream carries four stats, not one size: `RelayStatusRow.kt`
+ * draws ↓ received bytes · ↑ sent bytes · ⚠ `uptime` success rate · 🧹 spam
+ * count, each with its own icon and its own explainer dialog (gaps ame-101).
+ *
+ * Every one of those is a NETWORK fact, and this reproduction makes no network
+ * requests, so they are a labelled static snapshot — the same ruling the
+ * drawer's `355/1810` connection counter already got. Animating fake traffic
+ * would be worse than a number that admits what it is.
+ */
+type Relay = { name: string; down: string; up: string; uptime: number; spam: number; hue: number };
 
 const OUTBOX: Relay[] = [
-  { name: 'nostr.wine', size: '196 MB', hue: 300 },
-  { name: 'nostr.mom', size: '163 MB', hue: 140 },
-  { name: 'nos.lol', size: '2 MB', hue: 40 },
-  { name: 'relay.damus.io', size: '1 MB', hue: 260 },
-  { name: 'garden.zap.cooking', size: '0', hue: 90 },
+  { name: 'nostr.wine', down: '196 MB', up: '12 MB', uptime: 99, spam: 0, hue: 300 },
+  { name: 'nostr.mom', down: '163 MB', up: '9 MB', uptime: 97, spam: 2, hue: 140 },
+  { name: 'nos.lol', down: '2 MB', up: '1 MB', uptime: 92, spam: 14, hue: 40 },
+  { name: 'relay.damus.io', down: '1 MB', up: '0', uptime: 100, spam: 0, hue: 260 },
+  { name: 'garden.zap.cooking', down: '0', up: '0', uptime: 100, spam: 0, hue: 90 },
 ];
 const INBOX: Relay[] = [
-  { name: 'nostr.wine', size: '196 MB', hue: 300 },
-  { name: 'nostr.mom', size: '163 MB', hue: 140 },
+  { name: 'nostr.wine', down: '196 MB', up: '12 MB', uptime: 99, spam: 0, hue: 300 },
+  { name: 'nostr.mom', down: '163 MB', up: '9 MB', uptime: 97, spam: 2, hue: 140 },
+];
+const DM_INBOX: Relay[] = [
+  { name: 'inbox.nostr.wine', down: '4 MB', up: '2 MB', uptime: 100, spam: 0, hue: 320 },
+  { name: 'auth.nostr1.com', down: '1 MB', up: '0', uptime: 98, spam: 0, hue: 200 },
+];
+const LOCAL: Relay[] = [];
+const TRUSTED: Relay[] = [
+  { name: 'relay.damus.io', down: '1 MB', up: '0', uptime: 100, spam: 0, hue: 260 },
+];
+const BLOCKED: Relay[] = [
+  { name: 'spam.relay.example', down: '0', up: '0', uptime: 0, spam: 421, hue: 10 },
 ];
 
 /**
@@ -1054,9 +1075,13 @@ function RelaysView() {
   // own add/delete pair, so a relay added to one group does not appear in the other.
   const [outbox, setOutbox] = useState<Relay[]>(OUTBOX);
   const [inbox, setInbox] = useState<Relay[]>(INBOX);
+  const [dmInbox, setDmInbox] = useState<Relay[]>(DM_INBOX);
+  const [local, setLocal] = useState<Relay[]>(LOCAL);
+  const [trusted, setTrusted] = useState<Relay[]>(TRUSTED);
+  const [blocked, setBlocked] = useState<Relay[]>(BLOCKED);
 
   const add = (setter: React.Dispatch<React.SetStateAction<Relay[]>>) => (host: string) =>
-    setter((rs) => (rs.some((r) => r.name === host) ? rs : [...rs, { name: host, size: '0', hue: hueFor(host) }]));
+    setter((rs) => (rs.some((r) => r.name === host) ? rs : [...rs, { name: host, down: '0', up: '0', uptime: 100, spam: 0, hue: hueFor(host) }]));
   const remove = (setter: React.Dispatch<React.SetStateAction<Relay[]>>) => (host: string) =>
     setter((rs) => rs.filter((r) => r.name !== host));
 
@@ -1082,6 +1107,43 @@ function RelaysView() {
         onRemove={remove(setInbox)}
         tour="amethyst-relays-inbox"
       />
+      {/* v1.13.1's relay editor has fourteen groups, not two. These are the four
+          more a visitor recognises; the rest (KeyPackage, Private Home, Proxy,
+          Broadcast, Indexer, Search, Relay Feeds, Favorite, Connected) are named
+          in docs/gaps/amethyst.md rather than half-drawn. Explainers verbatim
+          from strings.xml. */}
+      <RelaySection
+        title="DM Inbox Relays"
+        desc="Insert between 1–3 relays to serve as your private inbox. Others will use these relays to send DMs to you. DM Inbox relays should accept any message from anyone, but only allow you to download them."
+        relays={dmInbox}
+        onAdd={add(setDmInbox)}
+        onRemove={remove(setDmInbox)}
+        tour="amethyst-relays-dm"
+      />
+      <RelaySection
+        title="Local Relays"
+        desc="List of relays that are running in this device."
+        relays={local}
+        onAdd={add(setLocal)}
+        onRemove={remove(setLocal)}
+        tour="amethyst-relays-local"
+      />
+      <RelaySection
+        title="Trusted Relays"
+        desc="Relays you trust to not need a Tor connection for"
+        relays={trusted}
+        onAdd={add(setTrusted)}
+        onRemove={remove(setTrusted)}
+        tour="amethyst-relays-trusted"
+      />
+      <RelaySection
+        title="Blocked Relays"
+        desc="Amethyst will never connect to these relays"
+        relays={blocked}
+        onAdd={add(setBlocked)}
+        onRemove={remove(setBlocked)}
+        tour="amethyst-relays-blocked"
+      />
     </div>
   );
 }
@@ -1105,8 +1167,21 @@ function RelaySection({
         {relays.map((r) => (
           <div key={r.name} className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full shrink-0" style={{ background: `linear-gradient(135deg, hsl(${r.hue} 55% 55%), hsl(${(r.hue + 40) % 360} 60% 42%))` }} />
-            <span className="flex-1 min-w-0 truncate text-[var(--md-on-surface)]">{r.name}</span>
-            <span className="text-sm text-[var(--md-on-surface-variant)] shrink-0">{r.size}</span>
+            <span className="flex-1 min-w-0">
+              <span className="block truncate text-[var(--md-on-surface)]">{r.name}</span>
+              {/* RelayStatusRow's quartet. Static by design — see the note on
+                  the Relay type. */}
+              <span
+                className="flex items-center gap-2.5 text-xs mt-0.5"
+                style={{ color: 'var(--amethyst-placeholder)' }}
+                title="Static snapshot: this reproduction makes no network requests"
+              >
+                <span aria-label={`Read from relay: ${r.down}`}>↓ {r.down}</span>
+                <span aria-label={`Write to relay: ${r.up}`}>↑ {r.up}</span>
+                <span aria-label={`Uptime: ${r.uptime}%`}>⚠ {r.uptime}%</span>
+                <span aria-label={`Spam: ${r.spam}`}>🧹 {r.spam}</span>
+              </span>
+            </span>
             {/* RelayNameAndRemoveButton's trailing 30dp Cancel IconButton,
                 contentDescription `remove` — present on every row upstream. */}
             <button
