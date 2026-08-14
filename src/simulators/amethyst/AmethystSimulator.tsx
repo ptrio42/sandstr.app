@@ -12,6 +12,7 @@ import { NotificationsScreen } from './screens/NotificationsScreen';
 import { MessagesScreen } from './screens/MessagesScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import type { ProfileTab } from './screens/ProfileScreen';
+import { PROFILE_TABS } from './screens/ProfileScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { ComposeScreen } from './screens/ComposeScreen';
 import { VideoScreen } from './screens/VideoScreen';
@@ -406,12 +407,17 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
         
       case 'viewProfile':
         if (isAuthenticated) {
-          // Optional payload: a mock pubkey opens THAT author's profile. No
-          // payload keeps the historical meaning — your own profile — so every
+          // Optional payload: a mock pubkey opens THAT author's profile, and an
+          // object may also name the tab, so a step can land on Follows or
+          // Gallery instead of always on Notes (gaps ame-49). No payload keeps
+          // the historical meaning — your own profile, Notes tab — so every
           // stored tour/FAQ command keeps working.
-          const who = typeof tourCommand.payload === 'string' ? getUserByPubkey(tourCommand.payload) : undefined;
+          const payload = tourCommand.payload;
+          const pubkey = typeof payload === 'string' ? payload : payload?.pubkey;
+          const tab = typeof payload === 'object' && payload ? payload.tab : undefined;
+          const who = typeof pubkey === 'string' ? getUserByPubkey(pubkey) : undefined;
           setProfileUser(who ?? null);
-          setProfileTab('Notes');
+          setProfileTab(PROFILE_TABS.includes(tab) ? tab : 'Notes');
           setActiveTab('profile');
           setDrawerDetail(null);
           setIsComposeOpen(false);

@@ -341,6 +341,53 @@ Jeden **przeszukiwalny korzeń** zamiast trzech osobnych celów ze szuflady.
 - **`app_settings` = „App Settings":** Privacy Options · UI Preferences · Home · Notifications ·
   Compose Settings · Profile UI · Calendar reminders · Bitcoin Explorer (OTS) · Namecoin Settings ·
   App resource usage.
+### Security Filters (`account_settings` → Security Filters)
+
+**Uwaga: to NIE jest ekran z zakładkami.** v1.12.6 miał tu trzy taby (Blocked
+Users / Spammers / Hidden Words); `SecurityFiltersScreen.kt` @ v1.13.1 to
+`Scaffold` z `TopBarWithBackButton("Security Filters")` i przewijalna `Column`
+(`padding(horizontal = 16.dp, vertical = 12.dp)`, `spacedBy(20.dp)`) z **dwiema
+kartami sekcji**. Nagranie nie otwiera tego ekranu → **[REC vs REPO] ze źródła**.
+
+**„Filtering preferences"** (`security_section_filtering_preferences`), pięć
+kafelków w tej kolejności, każdy z kafelkiem ikony, `SettingsDivider` między:
+
+1. **Show sensitive content** (`Visibility`) — „Shows a warning message when the
+   author of the post marked it as sensitive". Pod opisem **wbudowany, pełnej
+   szerokości `SingleChoiceSegmentedButtonRow`**: `WarningType.entries` = **Warn ·
+   Show · Hide**, domyślnie Warn. Nie dialog.
+2. **Filter spam** (`FilterAlt`) — przełącznik. „Hides posts from strangers that
+   were exactly the same for 5 or more times". **Wyłączenie czyści przejściowy
+   zbiór spamerów** (`Account.updateFilterSpam` → `resetTransientUsers()`) i nic
+   go nie przywraca.
+3. **Hide posts that violate community rules** (`Shield`) — przełącznik,
+   domyślnie OFF, ustawienie lokalne (nie synchronizowane). Objaśnienie o NIP-9B.
+4. **Warn on reports** (`Report`) — przełącznik. Objaśnienie **straciło** twarde
+   „5 or more": „Shows a warning message when posts or profiles have reports from
+   your follows". Pod nim `SettingsSubControlRow` **Report warning threshold**
+   ze `SettingsStepper` 1–999 (domyślnie 5), wygaszany razem z przełącznikiem.
+5. **Max hashtags per post** (`Tag`) — `SettingsStepper` 0–99, domyślnie 8;
+   wartość 0 renderuje się jako `security_unlimited` = **„∞"**.
+
+**„Blocked content"** (`security_section_blocked_content`), cztery wiersze
+nawigacyjne, każdy z pigułką licznika (`SettingsCountBadge`, przy zerze nie
+renderuje się wcale) i każdy **wpychający własny ekran**:
+**Blocked Users** (`PersonOff`) · **Spammers** (`Block`) · **Hidden Words**
+(`VisibilityOff`) · **Muted threads** (`Forum`).
+
+Trzy pierwsze ekrany dzielą `BlockListTopBar` i **long-press multi-select**: bez
+zaznaczenia pasek to tytuł + back, z zaznaczeniem — `num_selected` = „%d
+selected", przycisk zamknięcia i jedno **Unblock**; zaznaczony wiersz dostaje tło
+`primary` @12%, a poza trybem zaznaczania wiersz ma własny przycisk „Unblock"
+(`ShowUserButton`). Puste stany to wyśrodkowana tarcza 48 dp nad tekstem:
+„You haven't blocked any users yet." · „No accounts have been flagged as spam in
+this session." · „No hidden words. Add a word below to hide posts containing
+it." · „No muted threads". Ekran Hidden Words ma zadokowane u dołu pole
+`AddMuteWordTextField` (label i placeholder to ten sam string) z obrysowym
+przyciskiem **„Add"**; wiersz słowa jest **wyrównany do lewej** (`Text` z
+`weight(1f)` zjada rząd). Muted threads nie ma zaznaczania — każdy wiersz ma
+przycisk **„Unmute"**.
+
 - **`danger_zone` = „Danger Zone":** **Backup Keys** · Request to Vanish · Vanish History ·
   Reset Marmot State. Cała sekcja kodowana kolorem błędu (łososiowe etykiety, ciemnoczerwone kafelki).
   „Reset Marmot State" pyta dialogiem potwierdzenia.
@@ -355,6 +402,16 @@ Bez zmian względem v1.12.6 — patrz zamrożona screen-mapa po szczegóły (log
 50 dp / r35 dp). W smaku F-Droid **nie ma bramki regulaminu** („I accept the terms of use"), którą
 pokazuje build Play — czyli nasz brak `TermsGate` jest teraz potwierdzony źródłowo, nie tylko
 screenem.
+
+## Hashtag (`#tag` w treści notatki)
+
+**[REC vs REPO] ze źródła** (`loggedIn/hashtag/HashtagScreen.kt`); nagranie nie
+otwiera tego ekranu. `TopBarExtensibleWithBackButton`, którego slot tytułu to
+`Text("#${tag}", Modifier.weight(1f))`, a za nim `HashtagActionOptions`:
+przycisk **Follow/Unfollow** i menu `MoreVert`, którego **jedyny** wpis to
+`mute_hashtag` = „Mute hashtag" (po zamuceniu „Unmute hashtag" — i to menu jest
+jedyną drogą z powrotem). Ciało to zwykły feed notatek z tym tagiem, plus FAB
+`NewHashtagPostButton`.
 
 ## Compose
 

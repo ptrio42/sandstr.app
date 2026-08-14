@@ -37,9 +37,13 @@ import '../amethyst.theme.css';
  *    Android system back. The phone frame has no system back, so a screen
  *    without one would be a trap; the arrow uses the same `ArrowBackIcon` slot
  *    every other pushed Amethyst screen puts there.
- * 2. Source (Local/Relays) selects and lights the filter badge but cannot
- *    change results: this simulator makes no network requests, so "relays" and
- *    "local" are the same mock cache.
+ * 2. Source (Local/Relays). Upstream, "local" searches what the app already
+ *    cached and "relays" asks the network for more. With no network the second
+ *    half is impossible, so the split is mapped onto what this reproduction
+ *    genuinely has two of: "Local" searches only the notes already loaded into
+ *    the account's feed, "Relays" searches the whole sample corpus. The control
+ *    changes the result set either way, which a control that flips a badge and
+ *    nothing else would not.
  */
 
 type Scope = 'all' | 'people' | 'notes';
@@ -125,14 +129,16 @@ export function SearchScreen({ onBack, onOpenThread, onOpenProfile, onOpenHashta
 
   const users = useMemo(() => {
     if (!term || scope === 'notes') return [];
-    const hit = mockUsers.filter(
+    const localAuthors = new Set(mockNotes.slice(0, 20).map((n) => n.pubkey));
+    const pool = source === 'local' ? mockUsers.filter((u) => localAuthors.has(u.pubkey)) : mockUsers;
+    const hit = pool.filter(
       (u) =>
         u.displayName.toLowerCase().includes(term) ||
         u.username.toLowerCase().includes(term) ||
         (u.nip05 || '').toLowerCase().includes(term),
     );
     return (followsOnly ? hit.filter((u) => follows.has(u.pubkey)) : hit).slice(0, 12);
-  }, [term, scope, followsOnly, follows]);
+  }, [term, scope, followsOnly, follows, source]);
 
   // Relays are ALL-only and need more than one character (`term.length > 1`).
   const relays = useMemo(() => {
@@ -140,9 +146,13 @@ export function SearchScreen({ onBack, onOpenThread, onOpenProfile, onOpenHashta
     return mockRelays.filter((r) => r.url.toLowerCase().includes(term)).slice(0, 8);
   }, [term, scope]);
 
+  // "Local" = the slice already in the account's feed; "Relays" = the whole
+  // corpus. See the note on deviation 2 at the top of the file.
+  const corpus = useMemo(() => (source === 'local' ? mockNotes.slice(0, 20) : mockNotes), [source]);
+
   const notes = useMemo(() => {
     if (!term || scope === 'people') return [];
-    const hit = mockNotes.filter((n) => n.content.toLowerCase().includes(term));
+    const hit = corpus.filter((n) => n.content.toLowerCase().includes(term));
     const scoped = followsOnly ? hit.filter((n) => follows.has(n.pubkey)) : hit;
     const sorted = [...scoped];
     if (sort === 'popular') sorted.sort((a, b) => b.zapAmount - a.zapAmount || b.created_at - a.created_at);
@@ -150,7 +160,7 @@ export function SearchScreen({ onBack, onOpenThread, onOpenProfile, onOpenHashta
     // A search hit is not a follow by construction the way a Home note is, so
     // the avatar's "Following" shield is decided per author.
     return sorted.slice(0, 12).map((n) => toPostData(n, { following: follows.has(n.pubkey) }));
-  }, [term, scope, followsOnly, sort, follows]);
+  }, [term, scope, followsOnly, sort, follows, corpus]);
 
   const Divider = () => (
     <div className="h-px" style={{ background: 'var(--amethyst-feed-divider)' }} />

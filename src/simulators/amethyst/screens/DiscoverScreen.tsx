@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Plus } from 'lucide-react';
 import { AppTopBar } from '../components/AppTopBar';
 import { FeedSelector } from '../components/FeedSelector';
 import '../amethyst.theme.css';
@@ -58,6 +59,12 @@ interface DiscoverScreenProps {
 export function DiscoverScreen({ onBack, onOpenSearch }: DiscoverScreenProps) {
   const [tab, setTab] = useState<string>(TABS[0]);
   const [refreshing, setRefreshing] = useState(false);
+  // The FAB exists on exactly two tabs upstream: Reads gets
+  // `NewLongFormMarkdownButton` and Marketplace `NewProductButton`; the other
+  // five have none (gaps ame-148). Both open a composer this reproduction does
+  // not have, so the button says which one rather than opening the wrong screen.
+  const [composer, setComposer] = useState<string | null>(null);
+  const fab = tab === 'Reads' ? 'New Article' : tab === 'Marketplace' ? 'New Product' : null;
 
   const refresh = () => {
     setRefreshing(true);
@@ -135,6 +142,41 @@ export function DiscoverScreen({ onBack, onOpenSearch }: DiscoverScreenProps) {
           </>
         )}
       </div>
+
+      {fab && (
+        <button
+          type="button"
+          onClick={() => setComposer(fab)}
+          aria-label={fab}
+          data-tour="amethyst-discover-fab"
+          className="absolute bottom-6 right-4 z-20 w-14 h-14 rounded-full flex items-center justify-center shadow-lg"
+          style={{ background: 'var(--md-primary)', color: 'var(--md-on-primary)' }}
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+      )}
+
+      {composer && (
+        <div className="absolute inset-0 z-[70] flex items-end" onClick={() => setComposer(null)}>
+          <div className="absolute inset-0 bg-black/60" />
+          <div
+            role="dialog"
+            aria-label={composer}
+            className="relative w-full rounded-t-3xl px-5 py-5"
+            style={{ background: 'var(--md-surface-container-high)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="font-medium text-[var(--md-on-surface)]">{composer}</p>
+            <p className="text-sm mt-2 leading-relaxed text-[var(--md-on-surface-variant)]">
+              {composer === 'New Article'
+                ? 'The real client opens its long-form markdown editor here — title, summary, cover image and a markdown body published as a kind-30023 article.'
+                : 'The real client opens its classified-listing editor here — title, price, condition, location and images published as a kind-30402 listing.'}{' '}
+              This reproduction ships the one text composer the FAB on Home opens, so that editor
+              stops at this note.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

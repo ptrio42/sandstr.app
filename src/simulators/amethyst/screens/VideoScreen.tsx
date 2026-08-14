@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Plus, Video, ImagePlus, X } from 'lucide-react';
 import { AppTopBar } from '../components/AppTopBar';
 import { FeedSelector } from '../components/FeedSelector';
 import '../amethyst.theme.css';
@@ -37,6 +38,13 @@ interface VideoScreenProps {
 
 export function VideoScreen({ onBack, onOpenSearch }: VideoScreenProps) {
   const [refreshing, setRefreshing] = useState(false);
+  // `NewShortVideoButton` is a speed-dial: the FAB opens two more above it —
+  // Videocam "Record a video" and AddPhotoAlternate "Upload image" — and its own
+  // glyph flips to Close while open (gaps ame-148). Both leaves reach for the
+  // device upstream, which this reproduction refuses in place, the same way HLS
+  // Upload does (ame-113).
+  const [fabOpen, setFabOpen] = useState(false);
+  const [refusal, setRefusal] = useState<string | null>(null);
 
   const refresh = () => {
     setRefreshing(true);
@@ -78,6 +86,65 @@ export function VideoScreen({ onBack, onOpenSearch }: VideoScreenProps) {
           </>
         )}
       </div>
+
+      {/* Speed-dial FAB */}
+      <div className="absolute bottom-6 right-4 z-20 flex flex-col items-end gap-4">
+        {fabOpen && (
+          <>
+            <button
+              type="button"
+              onClick={() => { setFabOpen(false); setRefusal('camera'); }}
+              aria-label="Record a video"
+              className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg"
+              style={{ background: 'var(--md-primary)', color: 'var(--md-on-primary)' }}
+            >
+              <Video className="w-6 h-6" />
+            </button>
+            <button
+              type="button"
+              onClick={() => { setFabOpen(false); setRefusal('gallery'); }}
+              aria-label="Upload image"
+              className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg"
+              style={{ background: 'var(--md-primary)', color: 'var(--md-on-primary)' }}
+            >
+              <ImagePlus className="w-6 h-6" />
+            </button>
+          </>
+        )}
+        <button
+          type="button"
+          onClick={() => setFabOpen((v) => !v)}
+          aria-label="New Short Video"
+          aria-expanded={fabOpen}
+          data-tour="amethyst-shorts-fab"
+          className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg"
+          style={{ background: 'var(--md-primary)', color: 'var(--md-on-primary)' }}
+        >
+          {fabOpen ? <X className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
+        </button>
+      </div>
+
+      {refusal && (
+        <div className="absolute inset-0 z-[70] flex items-end" onClick={() => setRefusal(null)}>
+          <div className="absolute inset-0 bg-black/60" />
+          <div
+            role="dialog"
+            aria-label={refusal === 'camera' ? 'Record a video' : 'Upload image'}
+            className="relative w-full rounded-t-3xl px-5 py-5"
+            style={{ background: 'var(--md-surface-container-high)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="font-medium text-[var(--md-on-surface)]">
+              {refusal === 'camera' ? 'Record a video' : 'Upload image'}
+            </p>
+            <p className="text-sm mt-2 leading-relaxed text-[var(--md-on-surface-variant)]">
+              The real client opens your {refusal === 'camera' ? 'camera' : 'gallery'} here and then
+              its media composer. This reproduction never touches the device, so the picker stops at
+              this note — the same refusal the drawer's HLS Upload makes.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

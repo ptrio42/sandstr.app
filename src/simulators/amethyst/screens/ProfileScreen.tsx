@@ -121,6 +121,9 @@ const TABS = [
   'Follows', 'Followers', 'Zaps', 'Bookmarks', 'Followed Tags', 'Reports', 'Relays',
 ] as const;
 
+/** Exported so `viewProfile`'s optional `tab` payload can be validated. */
+export const PROFILE_TABS: readonly string[] = TABS;
+
 export type ProfileTab = (typeof TABS)[number];
 
 const badgeHues = [275, 45, 30, 200, 320, 160, 260];
@@ -331,7 +334,12 @@ export function ProfileScreen({ onBack, onFollowToggle, user, initialTab = 'Note
             numbers had nowhere to appear at all (gaps ame-49). */}
         <div className="md-tabs sticky top-0 z-10 bg-[var(--md-background)] mt-2 overflow-x-auto" data-tour="amethyst-profile-tabs">
           {TABS.map((t) => (
-            <button key={t} onClick={() => setActiveTab(t)} className={`md-tab whitespace-nowrap ${activeTab === t ? 'active' : ''}`}>
+            <button
+              key={t}
+              onClick={() => setActiveTab(t)}
+              data-tour={`amethyst-profile-tab-${t.toLowerCase().replace(/[^a-z]+/g, '-')}`}
+              className={`md-tab whitespace-nowrap ${activeTab === t ? 'active' : ''}`}
+            >
               {t}{tabCounts[t] !== undefined ? ` ${tabCounts[t]}` : ''}
               {activeTab === t && (
                 <motion.div layoutId="profile-tab-indicator" className="md-tab-indicator" transition={{ type: 'spring', stiffness: 500, damping: 30 }} />
