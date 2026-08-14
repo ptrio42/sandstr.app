@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { ArrowLeft, Send } from 'lucide-react';
 import { MaterialCard, PostData } from '../components/MaterialCard';
+import { mockThreads } from '../../../data/mock';
+import { toPostData } from '../notesToPosts';
 import '../amethyst.theme.css';
 
 interface ThreadScreenProps {
@@ -13,11 +15,66 @@ interface ThreadScreenProps {
 // Note / thread detail (verified vs the screen recording): the tapped note at the
 // top, its replies below (indented with a connector line), and a "reply here.."
 // composer pinned at the bottom.
-const REPLY_POOL: PostData[] = [
-  { id: 'rep1', author: { name: 'sandwich', handle: 'sandwich', avatar: '', nip05: 'sandwich', isVerified: true, following: true }, content: 'GM ☀️', timestamp: '3d', stats: { replies: 1, reposts: 0, zaps: 0, likes: 2 } },
-  { id: 'rep2', author: { name: 'sandy', handle: 'sandy.example', avatar: '', nip05: 'sandy.example', isVerified: true, following: true }, content: 'GM ☕', timestamp: '4d', stats: { replies: 0, reposts: 0, zaps: 100, likes: 1, satsZapped: 2100 } },
-  { id: 'rep3', author: { name: 'Matt', handle: 'matt', avatar: '', nip05: 'matt', isVerified: false, following: true }, content: 'GM #nostr 🦩 ☕😊🙏\n\nOff for breakfast then a swim today, gotta make the most of the good stuff.', timestamp: '4d', stats: { replies: 2, reposts: 1, zaps: 21, likes: 5, satsZapped: 4200 } },
-];
+
+/**
+ * A real conversation instead of three canned replies.
+ *
+ * What shipped was a module-scope `REPLY_POOL` of three fixtures sliced by the
+ * note's reply count, so every thread in the simulator was the same three
+ * replies and there was no nesting at all (gaps ame-135). `src/data/mock`
+ * already builds nested threads: each reply carries `['e', <root>, '', 'root']`
+ * and, when it answers another reply, `['e', <parent>, '', 'reply']` — so the
+ * parent chain is reconstructable without touching the read-only corpus.
+ *
+ * Feed notes and thread roots are separately generated, so a feed note is
+ * mapped onto a thread deterministically by its own id. The same note therefore
+ * always opens the same conversation.
+ */
+interface ReplyNode {
+  post: PostData;
+  depth: number;
+}
+
+function threadFor(postId: string): ReplyNode[] {
+  if (mockThreads.length === 0) return [];
+  let hash = 0;
+  for (let i = 0; i < postId.length; i += 1) hash = (hash * 31 + postId.charCodeAt(i)) >>> 0;
+  const thread = mockThreads[hash % mockThreads.length];
+
+  const replies = thread.notes.filter((n) => n.id !== thread.rootNoteId);
+  const parentOf = new Map<string, string>();
+  for (const n of replies) {
+    const replyTag = (n.tags || []).find((t) => t[0] === 'e' && t[3] === 'reply');
+    parentOf.set(n.id, replyTag ? replyTag[1] : thread.rootNoteId);
+  }
+
+  const depthOf = (id: string): number => {
+    let depth = 0;
+    let cur = parentOf.get(id);
+    // Three levels is all the screen tints; deeper chains flatten onto it.
+    while (cur && cur !== thread.rootNoteId && depth < 4) {
+      depth += 1;
+      cur = parentOf.get(cur);
+    }
+    return depth;
+  };
+
+  // Depth-first so a nested answer sits under the reply it answers.
+  const byParent = new Map<string, typeof replies>();
+  for (const n of replies) {
+    const parent = parentOf.get(n.id) ?? thread.rootNoteId;
+    byParent.set(parent, [...(byParent.get(parent) ?? []), n]);
+  }
+  const out: ReplyNode[] = [];
+  const walk = (parent: string) => {
+    for (const n of (byParent.get(parent) ?? []).sort((a, b) => a.created_at - b.created_at)) {
+      out.push({ post: toPostData(n), depth: depthOf(n.id) });
+      walk(n.id);
+    }
+  };
+  walk(thread.rootNoteId);
+  return out;
+}
 
 export function ThreadScreen({ post, onBack, onOpenProfile }: ThreadScreenProps) {
   const replyRef = React.useRef<HTMLInputElement>(null);
@@ -28,12 +85,13 @@ export function ThreadScreen({ post, onBack, onOpenProfile }: ThreadScreenProps)
   const [posted, setPosted] = useState<PostData[]>([]);
 
   /**
-   * How many of the canned replies this note has. It used to show all three on
-   * EVERY note, so a note whose action row read "0 replies" still opened onto
-   * three (gaps ame-135). Keyed off the note's own reply count, which is the
-   * number the card promises.
+   * The conversation, cut to the reply count the card promises so a note whose
+   * action row reads "0 replies" does not open onto a full thread.
    */
-  const replies = useMemo(() => REPLY_POOL.slice(0, Math.min(post.stats.replies, REPLY_POOL.length)), [post.stats.replies]);
+  const replies = useMemo(
+    () => threadFor(post.id).slice(0, post.stats.replies),
+    [post.id, post.stats.replies],
+  );
 
   const send = () => {
     if (!canSend) return;
@@ -74,9 +132,25 @@ export function ThreadScreen({ post, onBack, onOpenProfile }: ThreadScreenProps)
           />
         </div>
         {(replies.length > 0 || posted.length > 0) && (
-          <div className="mt-1 ml-3 pl-3 border-l-2 border-[var(--md-outline-variant)] space-y-2">
-            {[...replies, ...posted].map((r) => (
-              <MaterialCard key={r.id} post={r} onOpenProfile={onOpenProfile} onReply={() => replyRef.current?.focus()} />
+          <div className="mt-1" data-tour="amethyst-thread-replies">
+            {/* One indent step and one connector per level, with the alternating
+                per-level tint the screen map calls the zebra. Replies the
+                visitor writes land at the first level, under the root. */}
+            {[...replies, ...posted.map((p2) => ({ post: p2, depth: 0 }))].map(({ post: r, depth }) => (
+              <div
+                key={r.id}
+                style={{
+                  marginLeft: 12 + depth * 12,
+                  paddingLeft: 12,
+                  borderLeft: '2px solid var(--md-outline-variant)',
+                  background:
+                    depth % 2 === 1
+                      ? 'color-mix(in srgb, var(--md-on-surface) 4%, transparent)'
+                      : undefined,
+                }}
+              >
+                <MaterialCard post={r} onOpenProfile={onOpenProfile} onReply={() => replyRef.current?.focus()} />
+              </div>
             ))}
           </div>
         )}
