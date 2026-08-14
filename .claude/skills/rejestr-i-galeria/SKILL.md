@@ -49,7 +49,7 @@ Galeria, paleta ⌘K, rail switchera i `/c/:id` czytają tylko jego.
   nie ma klucza `sandstr-theme` (wybór gościa zawsze wygrywa).
 - Baner „SIMULATION · mock data · unofficial, not affiliated with <nazwa>" wchodzi automatycznie
   z `ClientView` — dwie formy: pigułka `Disclaimer` (desktop) i pasek `DisclaimerStrip` (telefon),
-  obie `z-[10003]` + `data-tour-keep-clear`. Nie usuwaj i nie owijaj — to twarda mitygacja z CLAUDE.md.
+  obie `z-[var(--z-disclaimer)]` + `data-tour-keep-clear`. Nie usuwaj i nie owijaj — to twarda mitygacja z CLAUDE.md.
   (Dla `kind: 'original'` drugi człon brzmi „original demo client" — steruje tym `isReal`.)
 - „Take a tour" i mobilny przycisk toura emitują `window` event `start-<id>-tour`; przycisk pojawia się
   wyłącznie przy `hasTour` (czyli `MOUNTS[<id>].tour`). Coracle ma wrapper `*SimulatorWithTour`, ale
@@ -85,6 +85,10 @@ Galeria, paleta ⌘K, rail switchera i `/c/:id` czytają tylko jego.
 2. Wpis w `MOUNTS` w `src/registry.tsx`: `frame`, `tour`, `status` (+ `statusNote` dla preview), opcjonalny
    `theme`, `homepage`/`repo`/`upstreamLicense`/`installNote` — te cztery weryfikuj na STRONIE i w REPO
    projektu, nie z pamięci; renderują się jako „Get the real X" i jako pierwsze zdanie maila o zgodę.
+   Do tego **`availableOn`** (`ios`/`android`/`web`), wyprowadzone z `installNote` i edytowane RAZEM
+   z nim. To NIE jest `platform`: `platform` mówi, którą wersję odtwarzamy (YakiHonne z apki iOS),
+   a `availableOn` — gdzie realny klient chodzi. Filtr platformy na `/compare` czyta to drugie;
+   czytanie `platform` gubiło klientów, które na pytanym urządzeniu jak najbardziej działają.
 3. Ikona 128px w `public/icons/` + `icon` w configu.
 4. Tour (opcjonalnie): `src/data/tours/<id>-tour.ts`, a w `src/data/tours/index.ts` re-eksport ORAZ wpis
    w mapie `tourConfigs` (z niej derywuje się `TourClient`; sam re-eksport nie wystarczy i nic o tym nie

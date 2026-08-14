@@ -41,7 +41,10 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
 - **`src/components/`** — `tour/` (silnik: Provider/Overlay/Tooltip + `tourStorage`), `faq/`
   (mostek `FaqMiniTourLauncher`).
 - **`src/host/`** — `Layout`, `Gallery`, `ClientView` (klient + ramka + **baner disclaimera**),
-  `CommandPalette`, `ClientSwitcher`, `FaqPanel`.
+  `CommandPalette`, `ClientSwitcher`, `FaqPanel`, oraz `compare/` — trasa `/compare`: macierz
+  możliwości + te same powierzchnie UI w ośmiu klientach obok siebie (`docs/COMPARE.md`).
+  `CapabilityTable.tsx` jest współdzielony z prerenderem (`CompareStatic` → `entry-server.tsx`),
+  więc wersja dla crawlerów nie może się rozjechać z żywą stroną.
 - Montowanie: mobilne (ios/android) w `MobilePhoneFrame`, web/desktop bez ramki. `*SimulatorWithTour`
   = **default export**; Gossip i Nostr Kitten montowane przez **named export** (patrz `registry.tsx`).
 

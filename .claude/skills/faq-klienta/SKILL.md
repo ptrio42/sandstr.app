@@ -38,6 +38,18 @@ Wpisy `Troubleshooting` (`trouble-*`) są **TEKSTOWE**: sim nie umie zainscenizo
 `showMe` tam kłamie z definicji. Protokolarną połowę odpowiedzi wkładaj w `howNostrWorks` — fakt
 o kliencie w tym polu to bug (rewizja rundy 2 złapała trzy takie).
 
+## Id wpisu jest teraz adresem, nie etykietą
+
+Od 2026-08-14 `src/data/capabilities.ts` cytuje wpisy FAQ po id (pole `source`), a `/compare`
+renderuje z tego zarówno komórki macierzy, jak i link zwrotny w panelu FAQ. Do tego adres
+`/c/<id>?faq=<entry>` chodzi po Nostrze w odpowiedziach (`docs/OUTREACH.md`).
+
+**Przemianowanie id psuje trzy rzeczy naraz** — udostepniony link, cytat w macierzy i link
+zwrotny z panelu. Kompilator tego nie złapie, bo `TopicCoverage` to `string`; łapią to dwa
+dev-only strażnicy (`getFaq` i nagłówek `capabilities.ts`), które krzyczą w konsoli. Więc:
+**nie przemianowuj id bez powodu** — a jak musisz, przejdź `capabilities.ts` w tym samym
+commicie i odpal `/compare`, żeby zobaczyć, że nic nie zniknęło.
+
 ## Bramka `showMe` — nie negocjuj jej
 
 Wolno dodać `showMe` **tylko** gdy `docs/gaps/<client>.md` nie ma na tej ścieżce statusu
