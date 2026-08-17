@@ -10,7 +10,8 @@
     "build": "vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender.mjs && node scripts/verify-headers.mjs",
     "build:client": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "og:cards": "npm run build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/og-client-cards.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",
