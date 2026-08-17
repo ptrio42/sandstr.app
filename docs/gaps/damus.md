@@ -161,8 +161,16 @@ choć symulator coś tam renderuje (layout wzięty z nagrania przy rebuildzie 20
   dałby podstawę do dam-42/43/44.
 - **Ekrany docelowe drawera:** Wallet, DamusPurpleView, Labs, LiveEvents, MuteList — §5 nazywa cele,
   nie opisuje zawartości.
-- **Sheety nazwane, ale nie opisane:** `AddRelayView`, RelayDetail, QR sheet, user-status sheet,
-  `.filter` sheet w Universe, NotificationSettings.
+- **Sheety nazwane, ale nie opisane:** `AddRelayView`, QR sheet, user-status sheet,
+  NotificationSettings.
+- **Opisane 2026-08-17** (recon `v1.17`, screen-map §6a): `.filter` sheet w Universe
+  (`RelayFilterView` + `RelayToggle`) i `RelayDetailView`. Dwa ustalenia zmieniają ocenę
+  istniejących wierszy: **dam-19 jest tym, czego ludzie szukają pod „przeglądaniem feedu
+  relaya"** — nie ma ekranu per-relay, zawęża się BIEŻĄCY feed togglami — a **dam-30
+  (RelayDetail) prowadzi do ekranu bez feedu** (metadane NIP-11, Connect/Disconnect), więc
+  jego zamknięcie nie da tej ścieżki. Toggle jest ODWROTNY do nazwy: ON = relay widoczny,
+  OFF = odfiltrowany. Warunek wstępny: relay musi być na liście, czyli ścieżka zaczyna się
+  od dam-29 (`Add relay`), nie od lejka.
 - **Zap flow** — §3 opisuje tylko przycisk. Co robi tap (domyślny zap z portfela) vs long-press (wybór
   kwoty / ZapView) nie jest odtworzone: u nas tap tylko inkrementuje licznik. Bez reconu `ZapView`
   nie da się orzec, czy to luka, czy uproszczenie zgodne z appką.

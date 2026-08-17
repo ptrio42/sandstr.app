@@ -151,6 +151,38 @@ Header chrome lives in `ContentView` toolbar; body in `SearchHomeView`. **Two vi
 
 **[REC vs REPO]** Relay indicator: current master renders **4 signal bars** (`num_bars 4`, `bar_heights [4,7,10,13]`, red→green), shown only when `signal < max`. The literal **"N/M" text** survives only as the a11y label. If the recording shows the classic "N/M" badge, use it for layout (e.g. "8/10").
 
+### 6a. `.filter` sheet — "see one relay's feed"
+
+Reconned 2026-08-17 from `v1.17` source, because the recording shows the funnel but
+never opens it. Present in **both** the recorded build (**1.11 (10)**, `38dc7b04`, version
+string visible in Settings → VERSION, frame `shots/full/t_040.jpg`) and `v1.17`, so this is
+not a version-specific surface. This is what people mean by browsing a relay's feed: there
+is no per-relay timeline screen, you narrow the CURRENT feed down to one relay.
+
+- **Opened from:** §6 trailing funnel — `Button { present_sheet(.filter) }` wrapping
+  `Image("filter")` with `.foregroundColor(.gray)`. Sits right of `SignalView`.
+  Search-timeline only. (`ContentView.swift`)
+- **Presentation:** sheet, **`.presentationDetents([.height(550)])`**,
+  `.presentationDragIndicator(.visible)`. So: a mid-height sheet with a visible grabber,
+  NOT a full screen and NOT a push.
+- **Body** (`RelayFilterView(state:timeline:)`), in order:
+  1. Instruction `Text` — verbatim **"Please choose relays from the list below to filter the current feed:"**, standard padding + **20pt top, 0 bottom**.
+  2. `List` of `RelayToggle`, one per relay, sourced from `state.nostrNetwork.ourRelayDescriptors`, **no explicit sort** — list order is whatever the pool hands back, i.e. the same order as My Relays.
+- **`RelayToggle` row**, left to right: optional relay status indicator · paid-relay badge
+  (`RelayType`) · `Toggle` whose label is the relay's **full URL**
+  (`relay_id.absoluteString`, e.g. `wss://jb55.com` — NOT the bare host used in §8 rows,
+  and no truncation logic in the component). `SwitchToggleStyle` tinted `.accentColor`.
+- **Toggle semantics are INVERTED against the name.** ON = relay is **not** filtered, i.e.
+  its notes show. OFF = relay is filtered **out**. Writing it the other way round is the
+  obvious bug here. Backed by `state.relay_filters`, keyed **per timeline**.
+- **Prerequisite:** a relay only appears here once it is in your list, so the honest
+  walkthrough starts at §8 "Add relay" — not at the funnel.
+
+**Not to be confused with `RelayDetailView`** (§8, relay row → push): that screen is NIP-11
+metadata only — description, admin, software, supported NIPs, Connect/Disconnect. It has
+**no feed and no button that opens one**. A "browse this relay" demo that lands there is
+pointing at the wrong screen.
+
 ---
 
 ## 7. Notifications
