@@ -5,6 +5,7 @@ import { ChevronDown, ChevronLeft, ExternalLink, Flag, HelpCircle, History, Info
 import MobilePhoneFrame from '../simulators/shared/components/MobilePhoneFrame';
 import { ClientGlyph, platformLabel } from './ClientGlyph';
 import { clients, getClient, versionsOf, type ClientEntry } from '../registry';
+import { shareCopy } from '../shareMeta';
 import { getFaq } from '../data/faq';
 import { showFaqInSimulator } from '../components/faq/FaqMiniTourLauncher';
 import FaqPanel from './FaqPanel';
@@ -688,6 +689,21 @@ export default function ClientView() {
     document.documentElement.classList.toggle('dark', clientTheme === 'dark');
   }, [clientTheme]);
 
+  // The tab title, from the same string the build bakes into dist/c/<id>.html
+  // (src/shareMeta.ts). Arriving directly on /c/damus already showed "Try
+  // Damus…" because that file is a real asset; walking there from the gallery
+  // is a client-side transition, which left the tab — and any bookmark or
+  // history entry taken from it — on the generic gallery title. Restored on
+  // unmount so the gallery does not inherit a client's title on the way back.
+  useEffect(() => {
+    if (!entry) return;
+    const previous = document.title;
+    document.title = shareCopy(entry).title;
+    return () => {
+      document.title = previous;
+    };
+  }, [entry]);
+
   // Keep client routes out of search indexes (robots.txt Disallow: /c/ is the
   // main lever; this covers crawlers that render JS anyway). A pixel-faithful
   // /c/damus ranking for "Damus" is the textbook confusion pattern, and that
@@ -780,6 +796,16 @@ export default function ClientView() {
     </MobilePhoneFrame>
   ) : (
     <div
+      // The frameless half of "the reproduction, without host chrome".
+      // scripts/og-client-cards.mjs clips its share-card screenshot to this
+      // rect, and waits on this element's CHILD COUNT to know the lazy() chunk
+      // has arrived — the box itself is laid out the moment the route matches,
+      // so anything keyed off its mere existence starts work on a blank page.
+      // The framed half already has a stable handle in
+      // `.mobile-phone-frame-bezel`, which MobilePhoneFrame names for the tour
+      // engine. Inert at runtime, and deliberately NOT a styling hook — the
+      // moment something renders off it, moving it stops being safe.
+      data-sandstr-stage="web"
       className={cn(
         'mx-auto h-full w-full max-w-5xl overflow-hidden overscroll-contain rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-gray-800 dark:bg-gray-950',
         // A containing block for the sims' `position: fixed` descendants, so a

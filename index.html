@@ -23,10 +23,21 @@
       relative image path. og:image itself is regenerated from
       scripts/og-image.html — see the comment in that file.
 
-      og:url and canonical are deliberately hard-pinned to the gallery rather
-      than tracking the current route: /c/ is Disallow'd in public/robots.txt on
-      purpose (a pixel-faithful /c/damus must not rank for "Damus"), so pointing
-      every deep link at "/" is the same call, expressed to crawlers.
+      THIS BLOCK IS THE GALLERY'S CARD, and also the template every client
+      route's card is stamped from: scripts/prerender.mjs copies this file to
+      dist/c/<id>.html and rewrites <title>, the description, og:url, og:title,
+      og:description, og:image and og:image:alt from shareRoutes() in
+      src/entry-server.tsx. Renaming or reformatting any of those tags fails the
+      build rather than shipping twelve cards that still say "Sandstr — try
+      Nostr clients". Everything NOT in that list (og:type, og:site_name,
+      twitter:card, the JSON-LD, the canonical below) is deliberately shared.
+
+      canonical stays hard-pinned to the gallery on every route: /c/ is
+      Disallow'd in public/robots.txt on purpose (a pixel-faithful /c/damus must
+      not rank for "Damus"), so pointing every deep link at "/" is the same
+      call, expressed to crawlers. og:url does NOT follow it — that tag is what
+      Telegram and friends make the card's title link, so a pinned og:url would
+      land every card click on the gallery instead of the client just tapped.
     -->
     <link rel="canonical" href="https://sandstr.app/" />
     <meta property="og:type" content="website" />

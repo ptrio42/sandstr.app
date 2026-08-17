@@ -436,13 +436,21 @@ const archived: ClientEntry[] = [
   },
 ];
 
+/**
+ * Every id `/c/<id>` resolves to — listed first, then the egg, then the frozen
+ * snapshots. It is the routing surface, NOT the shelf: keep reading `clients`
+ * anywhere the product SHOWS something, or the gallery grows a Nostr Kitten.
+ *
+ * Two consumers today: `getClient()` below, and the build's share-card pass
+ * (`shareRoutes()` in src/entry-server.tsx), which emits one HTML file per id.
+ * Both must see the same three lists, which is why they are joined once here
+ * rather than re-listed at each call site.
+ */
+export const routable: ClientEntry[] = [...clients, ...unlisted, ...archived];
+
 /** Routing resolves unlisted and archived clients too — that is what keeps the egg (and old links) findable. */
 export function getClient(id: string | undefined): ClientEntry | undefined {
-  return (
-    clients.find((c) => c.id === id) ??
-    unlisted.find((c) => c.id === id) ??
-    archived.find((c) => c.id === id)
-  );
+  return routable.find((c) => c.id === id);
 }
 
 /**
