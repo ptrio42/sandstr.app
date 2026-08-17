@@ -31,6 +31,7 @@ npm install
 npm run dev      # http://localhost:5173
 npm run build    # static output in dist/
 npm run preview
+npm run og:cards # regenerate the link-preview cards (needs a local Chrome; not part of build)
 ```
 
 ## How it was extracted
@@ -57,6 +58,11 @@ trademark/trade-dress risk, and the mitigation is **honesty plus consent, not ev
 - a permanent "SIMULATION · mock data · unofficial · not affiliated" banner on every client
   view (`ClientView.tsx`), with [TRADEMARKS.md](TRADEMARKS.md) and
   [THIRD-PARTY.md](THIRD-PARTY.md) recording exactly what was referenced vs. copied;
+- the same notice **burned into every link-preview card** (`public/og/<id>.png`), because a
+  shared card is the one surface that travels without the banner, the outbound link or the
+  address bar. Each card does show the reproduction — but always inside a device we draw
+  (a phone in perspective, a browser window addressed `sandstr.app/c/<id>`), never
+  full-bleed, and always surrounded by sandstr's own chrome;
 - every client view links out to the real client — the reproduction exists to send people
   *to* the teams whose work it depicts;
 - the primary mitigation is **opt-in consent from each client's maintainers**, who can have

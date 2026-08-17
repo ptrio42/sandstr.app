@@ -60,6 +60,29 @@ reproduces nobody's work. It is no longer listed in the gallery either.
   no recolouring, no redrawing. A monogram fallback already exists in
   `src/host/ClientGlyph.tsx`, so any team that prefers we not use their mark can
   be honoured immediately.
+- **Client icons and screenshots on share cards.** Since 2026-08-14 the same
+  icons are also composited into `public/og/<id>.png`, the link-preview card a
+  shared `/c/<client>` URL renders with (`scripts/og-client-cards.mjs`). Since
+  2026-08-16 each card additionally carries a **screenshot of our own
+  reproduction** of that client, captured from the built site.
+  This is the one place either travels away from the site — with no disclaimer
+  strip, no outbound link and no address bar — so the composition is the
+  mitigation and is deliberate, not decorative:
+  - the screenshot is never full-bleed. It is always mounted inside a device we
+    draw (a phone in perspective, or a browser window whose address bar reads
+    `sandstr.app/c/<id>`), which frames it as *a screen showing X* rather than
+    as X;
+  - everything around it is ours: our lockup top-left, our background, our
+    accent glow;
+  - "simulation · unofficial · mock data · not affiliated with &lt;name&gt;" is
+    burned into an amber band across the full width of every card;
+  - the pixels are of OUR reproduction, not of the real client — no upstream
+    screenshot, marketing asset or recording is used.
+
+  Honouring a removal request stays cheap: drop the icon and the generator
+  falls back to the emoji/monogram ladder it already uses for the original
+  client, and dropping the client from `src/registry.tsx` removes its route,
+  its tags and its card together.
 - **Snort domain.** The GitHub repo's `homepage` field now points at
   `phoenix.social`, which serves a byte-identical build to `snort.social` while
   the PWA manifest still reads "snort.social". We link `snort.social` as the

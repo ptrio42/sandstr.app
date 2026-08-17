@@ -77,6 +77,14 @@ Galeria, paleta ⌘K, rail switchera i `/c/:id` czytają tylko jego.
   `ClientGlyph`, który po `onError` cicho spada na `emoji`, potem na monogram z pierwszej litery —
   natomiast **karta w galerii rysuje surowy `<img>` bez `onError`** (`Gallery.tsx`, `c.icon ? <img> :
   c.emoji`), więc tam zobaczysz pustą/zepsutą grafikę. Sprawdzaj ikonę na galerii, nie na `/c/<id>`.
+  Trzecie miejsce: ta sama ikona ląduje na karcie link-preview (`public/og/<id>.png`), ale tam
+  **nie ma cichego fallbacku** — `scripts/og-client-cards.mjs` wywala się głośno, gdy ścieżka
+  z rejestru nie wskazuje pliku na dysku. To jedyny konsument, który tę literówkę złapie.
+- **Każdy wpis w rejestrze = jedna trasa = jedna karta.** Build wypuszcza `dist/c/<id>.html`
+  z `og:image` na `/og/<id>.png` dla WSZYSTKICH trzech list (`clients`, `unlisted`, `archived` —
+  `routable` w `registry.tsx`), więc nawet niewidoczny w galerii Nostr Kitten ma własną kartę.
+  Nowy wpis bez `npm run og:cards` = `og:image` na 404. Build tego nie sprawdza (nie zna dysku
+  po stronie `public/og/`), więc to jedyny krok w tym skillu, którego nie pilnuje kompilator.
 
 ## Checklist podpięcia nowego klienta
 
@@ -94,4 +102,14 @@ Galeria, paleta ⌘K, rail switchera i `/c/:id` czytają tylko jego.
 6. `docs/FIDELITY.md`, `docs/refs/<id>/screen-map.md`, `docs/gaps/<id>.md` i wiersz w `THIRD-PARTY.md`.
 7. Nazwa klienta trafia też do dropdownów w `.github/ISSUE_TEMPLATE/*.yml` — `fidelityReportUrl()` prefiluje
    pole `client` dokładnym dopasowaniem, a niedopasowanie po cichu zostawia je puste.
-8. Definition of done z CLAUDE.md: `npm run build` + realny klik po `/c/<id>` z czystą konsolą.
+8. `npm run og:cards` — karta share dla nowej trasy. Ręcznie, bo robi build i woła headless
+   Chrome; pominięte daje `og:image` na 404. Karta **fotografuje symulator**, więc przebiegu
+   wymaga też każda widoczna zmiana w kliencie, nie tylko `name`/`status`/`primaryColor`/
+   `platform`/`icon` (pigułka „Early preview" znika przy promocji na `ready`).
+   **Jeśli klient otwiera się na logowaniu — dopisz go do tabeli `ENTRY`** w
+   `scripts/og-client-cards.mjs`: lista WIDOCZNYCH etykiet do kliknięcia po kolei (krok `{ fill }`,
+   gdy przycisk jest `disabled` do czasu wypełnienia pola — tak ma Wisp). Dziewięciu z dwunastu
+   klientów tego potrzebuje; bez tego karta reklamuje ekran logowania, czyli dokładnie tarcie,
+   które produkt usuwa. Zmiana onboardingu istniejącego klienta wywali `og:cards` z nazwą kroku
+   i tekstem ekranu — to jedyny alarm, jaki dostaniesz.
+9. Definition of done z CLAUDE.md: `npm run build` + realny klik po `/c/<id>` z czystą konsolą.
