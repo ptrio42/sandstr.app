@@ -149,7 +149,34 @@ const LOOPS = [
     faq: '[aria-label="Damus FAQ"]',
     query: 'topical relays',
     entry: 'relay-feed',
-    steps: 4,
+    // TWO rings, not four. The rings show WHERE the address goes; the tail below
+    // then adds the relay for real and narrows the feed to it. Ringing the funnel
+    // and a toggle as steps 3-4 filmed the right controls with the wrong relay:
+    // nothing was ever added, and the switch that went off belonged to
+    // relay.damus.io rather than to the address the clip had just pointed at.
+    steps: 2,
+    afterTour: [
+      { click: '[data-tour="damus-add-relay-field"] input' }, { sleep: 400 },
+      // NOT one of the seeded twelve — `addRelay` refuses duplicates, and a
+      // silently-rejected add would film a relay that was already there.
+      { type: 'wss://relay.nostr.wine' }, { sleep: 500 },
+      { key: 'Enter' }, { sleep: 1900 },          // the row lands in My Relays
+      // Back out of Relays first. Confirming the sheet pops it by itself, but the
+      // Relays screen replaces the bottom edge with its own chrome — there is no
+      // tab bar to aim at until we leave it.
+      { click: '[data-tour="damus-relays"] button' }, { sleep: 1300 },
+      // The tab bar labels its buttons with the tab id, not a display name.
+      { click: '[aria-label="search"]' }, { sleep: 1500 },
+      { click: '[data-tour="damus-search-filter"]' }, { sleep: 1500 },
+      // Everything off except the one just added — this is the beat the clip is
+      // for, and the only state in which "read one relay" is true on screen.
+      { toggleOthers: { container: '[data-tour="damus-relay-filter"]', keep: 'wss://relay.nostr.wine', gap: 150 } },
+      // End ON the relay we added, switch still on, everything above it dark.
+      { reveal: { container: '[data-tour="damus-relay-filter"]', text: 'wss://relay.nostr.wine' } },
+      { sleep: 2800 },
+    ],
+    // Filmed or it did not happen: the added relay has to be on screen at the end.
+    expect: ['wss://relay.nostr.wine'],
   },
   {
     // The keyword-mute clip, and the one loop that keeps filming after the
@@ -728,6 +755,72 @@ async function encodeRange(pool, t0, t1, dir, out) {
   return shot;
 }
 
+/**
+ * The scripted-step runner, shared by SCRIPTS and by a loop's `afterTour` tail.
+ *
+ * Step kinds: `{sleep}` `{key}` `{type}` `{click}` and `{toggleOthers}`.
+ *
+ * `toggleOthers: { container, keep }` clicks every `[role="switch"]` inside
+ * `container` whose row does NOT contain the `keep` text, one at a time with the
+ * cursor travelling to each. It exists because "read one relay" is only true on
+ * screen once the others are off, and doing that with a list of nth-clicks would
+ * hard-code a relay count that the previous step just changed by adding one.
+ */
+async function runSteps(page, steps, onStep) {
+  for (const step of steps) {
+    onStep?.(Date.now());
+    if (step.sleep) await sleep(step.sleep);
+    else if (step.key) await page.pressKey(step.key);
+    else if (step.type) await page.typeText(step.type, T.perChar);
+    else if (step.click) await page.click(step.click);
+    else if (step.reveal) {
+      // Scroll the row carrying this text into view and park the pointer beside
+      // it. The assertion at the end of a loop reads `innerText`, which is happy
+      // with a row scrolled out of the sheet — the added relay ended up below the
+      // fold on the final hold and the clip closed on somebody else's switch.
+      const box = await page.eval(`(() => {
+        const row = [...document.querySelectorAll(${JSON.stringify(`${step.reveal.container} [role="switch"]`)})]
+          .map(sw => sw.closest('div'))
+          .find(r => r && r.textContent.includes(${JSON.stringify(step.reveal.text)}));
+        if (!row) return null;
+        row.scrollIntoView({ block: 'center' });
+        const r = row.getBoundingClientRect();
+        return JSON.stringify({ x: r.x + r.width - 30, y: r.y + r.height / 2 });
+      })()`);
+      if (!box) throw new Error(`reveal found no row for: ${step.reveal.text}`);
+      await sleep(320);
+      const { x, y } = JSON.parse(box);
+      await page.moveCursor(x, y, { settle: 380 });
+    }
+    else if (step.toggleOthers) {
+      const { container, keep } = step.toggleOthers;
+      const n = await page.eval(
+        `document.querySelectorAll(${JSON.stringify(`${container} [role="switch"]`)}).length`,
+      );
+      for (let i = 0; i < n; i++) {
+        // Re-resolve every pass: the list scrolls under the pointer as rows are
+        // brought into view, so an index captured up front goes stale.
+        const box = await page.eval(`(() => {
+          const rows = [...document.querySelectorAll(${JSON.stringify(`${container} [role="switch"]`)})];
+          const sw = rows[${i}];
+          if (!sw) return null;
+          const row = sw.closest('div');
+          if (row && row.textContent.includes(${JSON.stringify(keep)})) return 'skip';
+          if (sw.getAttribute('aria-checked') === 'false') return 'skip';
+          sw.scrollIntoView({ block: 'nearest' });
+          const r = sw.getBoundingClientRect();
+          return JSON.stringify({ x: r.x + r.width / 2, y: r.y + r.height / 2 });
+        })()`);
+        if (!box || box === 'skip') continue;
+        const { x, y } = JSON.parse(box);
+        await page.moveCursor(x, y, { settle: 200 });
+        await page.clickAt(x, y);
+        await sleep(step.toggleOthers.gap ?? 220);
+      }
+    }
+  }
+}
+
 function run(cmd, args) {
   return new Promise((resolve, reject) => {
     const p = spawn(cmd, args, { stdio: ['ignore', 'inherit', 'inherit'] });
@@ -910,6 +1003,32 @@ async function captureLoop(page, pool, loop, baseUrl) {
     );
     if (missing.length) throw new Error(`typed but never landed: ${missing.join(', ')}`);
   }
+
+  if (loop.afterTour) {
+    // The mini-tour points; the tail DOES. A ring on "Add relay" followed by a
+    // teleport to a filter that then narrows a DIFFERENT relay is two halves
+    // with no thread between them — the viewer never sees the relay arrive, and
+    // the one being switched off is not the one that was just added. So the tail
+    // types the address for real, watches the row appear, walks to the tab, opens
+    // the sheet and turns the others off.
+    //
+    // End the tour first, same as typeInSim: its overlay recomputes the spotlight
+    // on every DOM mutation, and the tail mutates continuously. Second Escape
+    // closes the FAQ panel ClientView reopens when a tour ends.
+    marks.dismiss = Date.now() - t0;
+    await page.pressKey('Escape');
+    await sleep(1200);
+    await page.pressKey('Escape');
+    await sleep(1200);
+    marks.typing2 = Date.now() - t0;
+    await runSteps(page, loop.afterTour);
+  }
+  if (loop.expect) {
+    const missing = await page.eval(
+      `${JSON.stringify(loop.expect)}.filter(t => !document.body.innerText.includes(t))`,
+    );
+    if (missing.length) throw new Error(`never appeared on screen: ${missing.join(', ')}`);
+  }
   await sleep(T.tail);
 
   const t1 = Date.now();
@@ -983,13 +1102,7 @@ async function captureScript(page, pool, script, baseUrl) {
   const t0 = Date.now();
   const marks = { steps: [] };
 
-  for (const step of script.steps) {
-    marks.steps.push(Date.now() - t0);
-    if (step.sleep) await sleep(step.sleep);
-    else if (step.key) await page.pressKey(step.key);
-    else if (step.type) await page.typeText(step.type, T.perChar);
-    else if (step.click) await page.click(step.click);
-  }
+  await runSteps(page, script.steps, (at) => marks.steps.push(at - t0));
 
   const t1 = Date.now();
   marks.end = t1 - t0;

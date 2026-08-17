@@ -63,9 +63,16 @@ export const RelayFilterSheet: React.FC<Props> = ({ relays, isShown, onToggle, o
               data-tour={i === 0 ? 'damus-relay-toggle' : undefined}
               className="flex items-center gap-3 px-4 py-3 border-b border-[var(--damus-separator)]"
             >
-              {/* Status dot, then the paid badge — RelayToggle's leading order. */}
+              {/*
+                Status dot, then the paid badge — RelayToggle's leading order.
+                Literal hexes, not tokens: there is no `--damus-success`, and the
+                first version used one, so every "online" dot rendered with an
+                invalid colour and vanished. These are the §1 dark values, the
+                same ones `.damus-pill.online` / `.error` carry.
+              */}
               <span
-                className={`w-2 h-2 rounded-full shrink-0 ${r.isOnline ? 'bg-[var(--damus-success)]' : 'bg-[var(--damus-danger)]'}`}
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{ background: r.isOnline ? '#03BF64' : '#F8206E' }}
               />
               {r.isPaid && <BitcoinBadge className="w-4 h-4 shrink-0" />}
 
