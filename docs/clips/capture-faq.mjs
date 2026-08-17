@@ -170,10 +170,12 @@ const LOOPS = [
       { click: '[data-tour="damus-search-filter"]' }, { sleep: 1500 },
       // Everything off except the one just added — this is the beat the clip is
       // for, and the only state in which "read one relay" is true on screen.
-      { toggleOthers: { container: '[data-tour="damus-relay-filter"]', keep: 'wss://relay.nostr.wine', gap: 150 } },
+      { toggleOthers: { container: '[data-tour="damus-relay-filter"]', keep: 'wss://relay.nostr.wine', gap: 90 } },
       // End ON the relay we added, switch still on, everything above it dark.
+      // 4.4s, not 2.8: this phase is compressed ~2.2x, and the closing hold is
+      // the one frame the whole clip is arguing for.
       { reveal: { container: '[data-tour="damus-relay-filter"]', text: 'wss://relay.nostr.wine' } },
-      { sleep: 2800 },
+      { sleep: 4400 },
     ],
     // Filmed or it did not happen: the added relay has to be on screen at the end.
     expect: ['wss://relay.nostr.wine'],
@@ -813,7 +815,10 @@ async function runSteps(page, steps, onStep) {
         })()`);
         if (!box || box === 'skip') continue;
         const { x, y } = JSON.parse(box);
-        await page.moveCursor(x, y, { settle: 200 });
+        // Short settle on purpose: twelve of these is the longest and most
+        // repetitive stretch in the clip, so every 100ms here is 100ms the cut
+        // has to squeeze out of the beats that matter.
+        await page.moveCursor(x, y, { settle: 120 });
         await page.clickAt(x, y);
         await sleep(step.toggleOthers.gap ?? 220);
       }

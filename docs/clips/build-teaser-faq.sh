@@ -42,6 +42,14 @@ mkdir -p "$OUT" "$WORK"
 BOLD="/System/Library/Fonts/Supplemental/Arial Bold.ttf"
 REG="/System/Library/Fonts/Supplemental/Arial.ttf"
 
+# Optional loop filter: `build-teaser-faq.sh damus-relay-feed` re-cuts that one
+# clip and skips the cuts, the hero and the tour. A full run re-encodes twelve
+# clips plus two long cuts and costs ~10 minutes, which is a brutal price for
+# iterating on one caption or one phase length — and iterating is most of the
+# work. With no argument everything builds, exactly as before.
+ONLY="${1:-}"
+wanted() { [ -z "$ONLY" ] || [ "$1" = "$ONLY" ]; }
+
 # ---- frame layout (1080x1920) — same constants as build-teaser.sh ------------
 CANW=1080; CANH=1920
 CARDW=860; CARDH=1550; CARDX=110; CARDY=200; CARDR=40
@@ -115,7 +123,10 @@ LOOPS=(
 "amethyst-mute|Tired of the current thing?|Add it to Hidden Words.|6.0"
 # Four ring steps again (Add relay, the field, the funnel, the switch), so tD
 # matches amethyst-mute rather than the one-ring loops above.
-"damus-relay-feed|Too much in your feed?|Read one relay only.|6.0"
+# tE 11.0, not the default 6: the tail here is ~25s (type the address, confirm,
+# back out, switch tab, open the sheet, then twelve switches). At 6s it played
+# at 4.1x and the beat the clip exists for was a blur.
+"damus-relay-feed|Too much in your feed?|Read one relay only.|6.0|11.0"
 )
 
 for row in "${LOOPS[@]}"; do
@@ -191,7 +202,13 @@ segment() { # id in out speed ss to caption color phase
 
 # ---- per-loop beats ----------------------------------------------------------
 for row in "${LOOPS[@]}"; do
-  IFS='|' read -r id ask show tD <<<"$row"
+  # Optional 5th field: seconds for the `e` phase (typing INTO the simulator).
+  # It has to be per-clip. amethyst-mute records ~9s of typing and damus-relay-feed
+  # ~25s — one global figure either crawls the short one or makes the long one
+  # unreadable at 4x, which is the exact bug T_TYPE was added to fix.
+  IFS='|' read -r id ask show tD tE <<<"$row"
+  wanted "$id" || continue
+  tE="${tE:-$T_TYPE}"
   in="$SRC/${id}.mp4"
   [ -s "$in" ] || { echo "  ! missing $in — run capture-faq.mjs $id"; exit 1; }
   echo "  · ${id}"
@@ -264,7 +281,7 @@ for row in "${LOOPS[@]}"; do
     # cursor already in the field.
     dEnd="$t2"
     [ "$(awk -v x="$ds" 'BEGIN{print (x>0)?1:0}')" = 1 ] && dEnd="$ds"
-    read -r sD sE <<<"$(awk -v d="$dm" -v x="$dEnd" -v y="$t2" -v e="$total" -v dd="$tD" -v te="$T_TYPE" \
+    read -r sD sE <<<"$(awk -v d="$dm" -v x="$dEnd" -v y="$t2" -v e="$total" -v dd="$tD" -v te="$tE" \
       'BEGIN{printf "%.3f %.3f", (x-d)/dd, (e-y)/te}')"
     segment "$id" "$in" "$WORK/${id}_d.mp4" "$sD" "$dm" "$dEnd"  "$show" "$ACCENT" d
     segment "$id" "$in" "$WORK/${id}_e.mp4" "$sE" "$t2" "$total" "$show" "$ACCENT" d
@@ -279,6 +296,7 @@ done
 # whole thing on its own, and a line of text here would be the fourth voice in a
 # frame that already has the client, the ring and the footer.
 for sw in sw-damus-nostur sw-nostur-wisp sw-amethyst-damus; do
+  wanted "$sw" || continue
   in="$SRC/${sw}.mp4"
   [ -s "$in" ] || { echo "  ! missing $in — run capture-faq.mjs $sw"; exit 1; }
   echo "  · ${sw}"
@@ -291,7 +309,7 @@ done
 # Four steps, no caption at all: the post above the video carries the words, and
 # the tour card in frame already says "1 / 10". Speed is modest — the card is
 # there to be READ, which is the whole claim being made.
-if [ -s "$SRC/tour-wisp.mp4" ]; then
+if [ -s "$SRC/tour-wisp.mp4" ] && wanted tour-wisp; then
   echo "  · tour-wisp"
   ttotal=$(dur "$SRC/tour-wisp.mp4")
   tcut=$(node -e "const m=require('$SRC/tour-wisp/marks.json');process.stdout.write(((m.steps[4] ?? m.end)/1000).toFixed(3))")
@@ -364,13 +382,16 @@ cut() { # name intro1 intro2 item...
   encode "$WORK/cut_${name}.txt" "$OUT/sandstr-faq-${name}.mp4"
 }
 
-cut a "Every client" "is different." "${CUT_A[@]}"
-cut b "It is not the app." "It is Nostr." "${CUT_B[@]}"
+if [ -z "$ONLY" ]; then
+  cut a "Every client" "is different." "${CUT_A[@]}"
+  cut b "It is not the app." "It is Nostr." "${CUT_B[@]}"
+fi
 
 # One clip per question — this is what actually gets posted into a thread where
 # somebody asked that exact thing.
 for row in "${LOOPS[@]}"; do
   IFS='|' read -r id _ <<<"$row"
+  wanted "$id" || continue
   : >"$WORK/one_${id}.txt"
   listItems "$WORK/one_${id}.txt" "$id"
   echo "file 'tag.mp4'" >>"$WORK/one_${id}.txt"
@@ -379,6 +400,7 @@ done
 
 # Hero loop for the landing page: no captions — the page has words. The
 # disclaimer stays, because it is not decoration.
+if [ -z "$ONLY" ]; then
 IFS='|' read -r hid _ _ hD <<<"${LOOPS[0]}"
 hty=$(mark "$hid" typing); hq=$(mark "$hid" question)
 hd=$(mark "$hid" demo);    ht=$(dur "$SRC/${hid}.mp4")
@@ -391,7 +413,8 @@ segment "$hid" "$SRC/${hid}.mp4" "$WORK/hero_b.mp4" "$sWait" "$hq"  "$hd"  "" wh
 segment "$hid" "$SRC/${hid}.mp4" "$WORK/hero_d.mp4" "$sD"    "$hd"  "$ht"  "" white d
 printf "file 'hero_a.mp4'\nfile 'hero_t.mp4'\nfile 'hero_b.mp4'\nfile 'hero_d.mp4'\n" >"$WORK/hero.txt"
 encode "$WORK/hero.txt" "$OUT/sandstr-faq-hero.mp4"
+fi
 
-if [ -s "$WORK/tour_wisp.txt" ]; then encode "$WORK/tour_wisp.txt" "$OUT/sandstr-tour-wisp.mp4"; fi
+if [ -s "$WORK/tour_wisp.txt" ] && wanted tour-wisp; then encode "$WORK/tour_wisp.txt" "$OUT/sandstr-tour-wisp.mp4"; fi
 
-ls -lh "$OUT" | grep -E "faq|tour"
+if [ -n "$ONLY" ]; then ls -lh "$OUT" | grep -E "$ONLY"; else ls -lh "$OUT" | grep -E "faq|tour"; fi
