@@ -47,7 +47,7 @@
 | dam-18 | Side menu → Merch | §5 | partial | Przygaszony wiersz + toast zamiast zewnętrznego linku do `store.damus.io`. Arguable: świadome (brak sieci), ale ścieżki nie da się pokazać | `screens/SideMenu.tsx:31` → `DamusSimulator.tsx:91` | none | S |
 | dam-19 | Universe → funnel (filter) → `.filter` sheet | §6, §6a | ok | Lejek jest `<button>`; arkusz `RelayFilterSheet` = detent 68% (550/812), uchwyt, napis dosłowny, toggle per relay z PEŁNYM URL-em, ON = relay widoczny. Stan w `relayState.ts` ponad oba ekrany, więc relay dodany w dam-29 pojawia się tutaj. FAQ `relay-feed` kroki 3–4 | `screens/SearchScreen.tsx:37-47` · `components/RelayFilterSheet.tsx` · `relayState.ts` | none | — |
 | dam-20 | Universe / Notifications / DMs → relay signal ("7/13") | §6, §7 | dead | `<span>` bez handlera; §6/§7 linkują sygnał do RelayConfig. Na Home ten sam wskaźnik JEST przyciskiem otwierającym Relays | `screens/SearchScreen.tsx:32` · `screens/NotificationsScreen.tsx:36` · `screens/DMScreen.tsx:29` | blocks-showme | S |
-| dam-21 | Universe → empty state | §6 | partial | Mamy "Trending hashtags" + "Suggested"; §6 ma sekcję **Follow Packs** i globalny feed **"All recent notes"** — brak ścieżki do przeglądania globalnych notatek | `screens/SearchScreen.tsx:53-63` | blocks-showme | M |
+| dam-21 | Universe → empty state | §6 | partial | Globalny feed **"All recent notes"** JEST (2026-08-17) i respektuje filtr relayów z dam-19 — notatki dostają relay deterministycznie po hashu id (`relayState.relayForNote`), a licznik "N of M" w nagłówku sekcji pokazuje zawężenie. Nadal brak sekcji **Follow Packs**, stąd wciąż `partial` | `screens/SearchScreen.tsx:90-119` · `relayState.ts` | none | S |
 | dam-22 | Universe → pigułki `#tag` / `Search word` / trending | §6 | dead | Wszystkie pigułki to `<span>` — klik nie uruchamia wyszukiwania ani nie otwiera hashtagu | `screens/SearchScreen.tsx:49,50,58` | breaks-showme | S |
 | dam-23 | Universe → Follow pill (stany) | §6 | partial | Tylko Follow/Unfollow (etykiety i wypełnienie zgodne z §6); brak "Follow Back" i przejściowych "Following…"/"Unfollowing…". Oba miejsca startują w stanie **już-obserwowany** (`followed[…] ?? true`, `following = !isMe`), więc `showMe` FAQ `follow` — tytuł „Follow", treść o wypełnionej pigułce Follow — podświetla obrysowe **"Unfollow"** | `screens/SearchScreen.tsx:67,82` · `screens/ProfileScreen.tsx:22,59` | breaks-showme | S |
 | dam-24 | Notifications → gear (notification settings) | §7 | dead | Goła `GearIcon`, brak handlera i ekranu ustawień powiadomień. FAQ `notifications` krok 3 wskazuje ten gear | `screens/NotificationsScreen.tsx:37` | breaks-showme | M |
@@ -105,7 +105,8 @@
 | `damus-add-relay-button` | `screens/RelaysScreen.tsx:40` | Relays → „Add relay" (FAQ `relay-feed` krok 1) |
 | `damus-add-relay` | `components/AddRelaySheet.tsx:27` | Root arkusza Add relay — **nie celuj w niego**, jest wielkości ekranu i overlay go nie podświetli |
 | `damus-add-relay-field` | `components/AddRelaySheet.tsx:52` | Pole adresu w arkuszu (FAQ `relay-feed` krok 2) |
-| `damus-search-filter` | `screens/SearchScreen.tsx:44` | Universe → lejek (FAQ `relay-feed` krok 3) |
+| `damus-search-filter` | `screens/SearchScreen.tsx:44` | Universe → lejek (FAQ `relay-feed` krok 4) |
+| `damus-universe-feed` | `screens/SearchScreen.tsx:91` | Universe → sekcja "All recent notes" (globalny feed po filtrze) |
 | `damus-relay-filter` | `components/RelayFilterSheet.tsx:24` | Root arkusza filtra — jak wyżej, **nie celuj** |
 | `damus-relay-toggle` | `components/RelayFilterSheet.tsx:66` (bramka `i === 0`) | Pierwszy wiersz z togglem (FAQ `relay-feed` krok 4) |
 | `damus-settings` | `screens/SettingsScreen.tsx:55` | Root ekranu Settings |
