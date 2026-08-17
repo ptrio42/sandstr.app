@@ -399,6 +399,16 @@ export const damusFaq: ClientFaq = {
       note: 'The switch reads the way round you would hope and the opposite of the word "filter": ON means that relay is shown, OFF means its notes are hidden. There is no per-relay screen in Damus — nothing opens "this relay\'s timeline". Tapping a relay row on the Relays screen opens its details (description, software, supported NIPs), not its notes. The filter is remembered per feed, so the Universe one does not touch your Home timeline.',
       showMe: [
         {
+          // The drawer step is not decoration: without it the demo opened on the
+          // Relays screen with no explanation of how anybody gets there, and
+          // "profile picture -> Relays" is the half of step 1 people are missing.
+          target: '[data-tour="damus-menu-relays"]',
+          title: 'Relays, in the side menu',
+          content: 'Tap your profile picture to open the drawer. "Relays" is the seventh row.',
+          position: 'right',
+          commands: openDrawer,
+        },
+        {
           target: '[data-tour="damus-add-relay-button"]',
           title: 'Add the relay first',
           content: 'A relay only shows up in the filter once it is on your list. This is the button beside the "My Relays" title.',

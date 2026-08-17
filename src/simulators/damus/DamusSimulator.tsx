@@ -171,7 +171,16 @@ export const DamusSimulator: React.FC<DamusSimulatorProps> = ({ className = '', 
       case 'dms':
         return <DMScreen {...common} />;
       case 'search':
-        return <SearchScreen {...common} onOpenRelayFilter={() => push({ type: 'relayFilter' })} />;
+        return (
+          <SearchScreen
+            {...common}
+            onOpenRelayFilter={() => push({ type: 'relayFilter' })}
+            notes={mockNotes}
+            feedNotes={relayState.visibleNotes('search', mockNotes)}
+            onOpenThread={openThread}
+            onReply={openCompose}
+          />
+        );
       case 'notifications':
         return <NotificationsScreen {...common} notes={mockNotes} onOpenThread={openThread} onReply={openCompose} />;
     }

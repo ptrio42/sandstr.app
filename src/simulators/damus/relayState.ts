@@ -15,8 +15,16 @@ import type { MockRelay } from '../../data/mock';
  * See `docs/refs/damus/screen-map.md` §6a for what upstream actually does.
  */
 
-/** My Relays is the first 12 of the mock pool — what RelaysScreen showed before. */
-const SEEDED = mockRelays.slice(0, 12);
+/**
+ * My Relays is FIVE relays, not twelve.
+ *
+ * Not a fidelity call — the length of somebody's relay list is their own, and
+ * five is as true as thirteen. It is a legibility call: the `.filter` sheet lists
+ * one row per relay, and at twelve rows "leave one on" is twelve taps and a
+ * scrolling list nobody can read on a phone-sized card. At five the whole list
+ * fits on screen at once and the state the sheet is in is legible in one look.
+ */
+const SEEDED = mockRelays.slice(0, 5);
 
 /**
  * Which timeline a filter belongs to. Upstream keys `relay_filters` per timeline;
@@ -41,6 +49,17 @@ export interface RelayState {
   /** True when this relay's notes are SHOWN, i.e. the toggle is on. */
   isShown: (timeline: FilterTimeline, url: string) => boolean;
   toggleRelay: (timeline: FilterTimeline, url: string) => void;
+  /**
+   * Which relay carried a note, by note id.
+   *
+   * Mock notes have no relay field, so the sheet could set a filter that changed
+   * nothing on screen — a demo of a switch with no consequence. Assigning each
+   * note a relay from the CURRENT list, deterministically by id, is what makes
+   * the Universe feed actually shrink when a switch goes off.
+   */
+  relayForNote: (noteId: string) => string;
+  /** The notes a timeline should show, given its filter. */
+  visibleNotes: <T extends { id: string }>(timeline: FilterTimeline, notes: T[]) => T[];
 }
 
 export function useRelayState(): RelayState {
@@ -89,8 +108,23 @@ export function useRelayState(): RelayState {
     });
   }, []);
 
+  // Stable hash over the note id, so a note keeps its relay across renders and
+  // across a filter change. Anything random here would reshuffle the feed on
+  // every toggle and the shrinking would read as noise rather than as a filter.
+  const relayForNote = useCallback((noteId: string) => {
+    let h = 0;
+    for (let i = 0; i < noteId.length; i++) h = (h * 31 + noteId.charCodeAt(i)) | 0;
+    return relays[Math.abs(h) % relays.length]?.url ?? relays[0]?.url ?? '';
+  }, [relays]);
+
+  const visibleNotes = useCallback(
+    <T extends { id: string }>(timeline: FilterTimeline, notes: T[]) =>
+      notes.filter((n) => isShown(timeline, relayForNote(n.id))),
+    [isShown, relayForNote],
+  );
+
   return useMemo(
-    () => ({ relays, addRelay, filteredOut, isShown, toggleRelay }),
-    [relays, addRelay, filteredOut, isShown, toggleRelay],
+    () => ({ relays, addRelay, filteredOut, isShown, toggleRelay, relayForNote, visibleNotes }),
+    [relays, addRelay, filteredOut, isShown, toggleRelay, relayForNote, visibleNotes],
   );
 }
