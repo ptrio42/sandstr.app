@@ -154,31 +154,50 @@ const LOOPS = [
     // and a toggle as steps 3-4 filmed the right controls with the wrong relay:
     // nothing was ever added, and the switch that went off belonged to
     // relay.damus.io rather than to the address the clip had just pointed at.
-    steps: 2,
+    // THREE rings: the drawer row, the Add relay button, then the address field.
+    // Two started on the Relays screen with no account of how you got there,
+    // which is exactly the half of step 1 people ask about.
+    steps: 3,
+    holdLast: 1100,
     afterTour: [
       { click: '[data-tour="damus-add-relay-field"] input' }, { sleep: 400 },
-      // NOT one of the seeded twelve — `addRelay` refuses duplicates, and a
-      // silently-rejected add would film a relay that was already there.
-      { type: 'wss://relay.nostr.wine' }, { sleep: 500 },
+      // A thematic relay, not one of the big public ones. The clip's argument is
+      // "read Nostr like a newspaper — pick a section", and `relay.nostr.wine`
+      // reads as infrastructure rather than as a section. Also NOT one of the
+      // seeded five: addRelay refuses duplicates, so a silently rejected add
+      // would film a row that was already on the list.
+      { type: 'wss://gardening.relay.town' }, { sleep: 500 },
+      // Everything up to here plays at 1.0x — see the `typed` split in the build.
+      { mark: 'typed' },
       { key: 'Enter' }, { sleep: 1900 },          // the row lands in My Relays
       // Back out of Relays first. Confirming the sheet pops it by itself, but the
       // Relays screen replaces the bottom edge with its own chrome — there is no
       // tab bar to aim at until we leave it.
       { click: '[data-tour="damus-relays"] button' }, { sleep: 1300 },
       // The tab bar labels its buttons with the tab id, not a display name.
-      { click: '[aria-label="search"]' }, { sleep: 1500 },
+      { click: '[aria-label="search"]' }, { sleep: 1600 },
       { click: '[data-tour="damus-search-filter"]' }, { sleep: 1500 },
       // Everything off except the one just added — this is the beat the clip is
       // for, and the only state in which "read one relay" is true on screen.
-      { toggleOthers: { container: '[data-tour="damus-relay-filter"]', keep: 'wss://relay.nostr.wine', gap: 90 } },
-      // End ON the relay we added, switch still on, everything above it dark.
-      // 4.4s, not 2.8: this phase is compressed ~2.2x, and the closing hold is
-      // the one frame the whole clip is arguing for.
-      { reveal: { container: '[data-tour="damus-relay-filter"]', text: 'wss://relay.nostr.wine' } },
-      { sleep: 4400 },
+      { toggleOthers: { container: '[data-tour="damus-relay-filter"]', keep: 'wss://gardening.relay.town', gap: 120 } },
+      { reveal: { container: '[data-tour="damus-relay-filter"]', text: 'wss://gardening.relay.town' } },
+      { sleep: 1500 },
+      // CLOSE THE SHEET AND SHOW THE FEED. Ending on a settings sheet leaves the
+      // whole point unproven — the viewer never sees that the feed behind it
+      // actually changed. The counter in the section header ("N of M") is the
+      // evidence, and it only exists because the filter really narrows the pool.
+      // y=110 of a 775pt viewport: the sheet is a 68% bottom detent, so anything
+      // above ~250 is scrim. Aiming at the scrim's own centre hits the panel.
+      { clickAt: { x: 215, y: 110 } }, { sleep: 3400 },
     ],
-    // Filmed or it did not happen: the added relay has to be on screen at the end.
-    expect: ['wss://relay.nostr.wine'],
+    // The clip ends on the FEED, so the relay's own name is no longer on screen —
+    // real Damus does not label a feed with the relay carrying it, and adding
+    // such a label would be our invention. The relay is asserted mid-flow
+    // instead: `reveal` throws if that row is not in the sheet.
+    //
+    // UPPERCASE on purpose — the header is styled `uppercase` and Chrome's
+    // innerText reports text as RENDERED, so the source spelling never matches.
+    expect: ['ALL RECENT NOTES'],
   },
   {
     // The keyword-mute clip, and the one loop that keeps filming after the
@@ -548,6 +567,31 @@ class Page {
    * opacity rather than display:none on purpose — the overlay measures and
    * positions the tooltip, and removing it from layout moves the spotlight.
    */
+  /**
+   * Hide the HOST's FAQ panel for the camera, from the demo onwards.
+   *
+   * Once "Show me in the simulator" has been pressed the panel is no longer part
+   * of the walkthrough — but ClientView deliberately slides it back when a mini
+   * tour ends, and a tour can end whenever it likes: mid-hold, after the
+   * harness's Escape loop has already confirmed a closed panel, at the exact
+   * frame a phase boundary lands on. Chasing it with marks and trims cost an
+   * afternoon and still left a 1.4s flash of FAQ across the client.
+   *
+   * Same justification as `hideTourChrome`: our own chrome, hidden so the shot is
+   * of the client. Applied only after the demo starts, so the press itself — the
+   * beat that shows WHERE the demo came from — still has the panel in frame.
+   */
+  async hideHostPanel() {
+    await this.eval(`(() => {
+      if (document.getElementById('__cap_hide_panel')) return true;
+      const s = document.createElement('style');
+      s.id = '__cap_hide_panel';
+      s.textContent = '[data-sandstr-modal]{opacity:0 !important;pointer-events:none !important;}';
+      document.head.appendChild(s);
+      return true;
+    })()`);
+  }
+
   async hideTourChrome() {
     await this.eval(`(() => {
       if (document.getElementById('__cap_hide_tour')) return true;
@@ -768,13 +812,27 @@ async function encodeRange(pool, t0, t1, dir, out) {
  * screen once the others are off, and doing that with a list of nth-clicks would
  * hard-code a relay count that the previous step just changed by adding one.
  */
-async function runSteps(page, steps, onStep) {
+async function runSteps(page, steps, onStep, marks, t0) {
   for (const step of steps) {
     onStep?.(Date.now());
-    if (step.sleep) await sleep(step.sleep);
+    // `{ mark: 'name' }` stamps a phase boundary from inside a step list, so the
+    // cut can give one beat its own speed. Used for `typed`: the address being
+    // entered is the one thing in the tail a viewer has to READ, and at the
+    // tail's overall 1.95x it went by in 1.4s for 25 characters.
+    if (step.mark) { if (marks) marks[step.mark] = Date.now() - t0; }
+    else if (step.sleep) await sleep(step.sleep);
     else if (step.key) await page.pressKey(step.key);
     else if (step.type) await page.typeText(step.type, T.perChar);
     else if (step.click) await page.click(step.click);
+    else if (step.clickAt) {
+      // Explicit viewport coordinates, for targets whose BOX is not where you can
+      // actually hit them. A sheet scrim is `absolute inset-0`, so `click()` aims
+      // at the centre of the screen — which is the sheet panel sitting on top of
+      // it. The dismiss never fired and the clip ended on the sheet it was meant
+      // to close.
+      await page.moveCursor(step.clickAt.x, step.clickAt.y, { settle: 300 });
+      await page.clickAt(step.clickAt.x, step.clickAt.y);
+    }
     else if (step.reveal) {
       // Scroll the row carrying this text into view and park the pointer beside
       // it. The assertion at the end of a loop reads `innerText`, which is happy
@@ -910,6 +968,10 @@ async function captureLoop(page, pool, loop, baseUrl) {
   await page.clickAt(smFresh.x, smFresh.y);
   await sleep(T.afterShowMe);
   marks.demo = Date.now() - t0;
+  // From here on the panel is scaffolding, not subject — see hideHostPanel. Only
+  // for loops with a tail: the plain loops end while the tour is still up and
+  // never reach the reopen.
+  if (loop.afterTour) await page.hideHostPanel();
 
   for (let step = 1; step <= loop.steps; step++) {
     // A mini-tour needs ~1-1.5s to mount its screen, and until it does the
@@ -944,7 +1006,19 @@ async function captureLoop(page, pool, loop, baseUrl) {
     const cx = Math.min(r.x + r.w + 16, page.viewportW - 14);
     const cy = Math.min(r.y + r.h + 16, page.viewportH - 14);
     await page.moveCursor(cx, cy, { settle: 420 });
-    await sleep(step === loop.steps ? T.holdLastStep : T.holdStep);
+    // A mini-tour can END BY ITSELF here, and when it does ClientView reopens the
+    // FAQ panel over the client — a flash the cut cannot remove, because it lands
+    // INSIDE the ring phase rather than in the stretch between `dismiss` and
+    // `typing2`. Shortening the hold was not enough: on damus-relay-feed the
+    // panel came back ~2s before the mark either way.
+    //
+    // So for a loop with a tail, phase D ends the instant the last ring settles.
+    // `dismiss` is stamped HERE, before the hold, and everything after — the
+    // hold, the self-ending tour, the reopened panel, the two Escapes — falls
+    // into the stretch the cut drops. The last frame of D is the settled ring,
+    // which is the frame that phase wanted anyway.
+    if (step === loop.steps && loop.afterTour) marks.dismiss = Date.now() - t0;
+    await sleep(step === loop.steps ? (loop.holdLast ?? T.holdLastStep) : T.holdStep);
     if (step < loop.steps) {
       const before = await page.eval(`JSON.stringify(document.querySelector('.tour-spotlight')?.getBoundingClientRect())`);
       // Keyboard, not the Next button: that button is inside the tooltip we just
@@ -1020,13 +1094,37 @@ async function captureLoop(page, pool, loop, baseUrl) {
     // End the tour first, same as typeInSim: its overlay recomputes the spotlight
     // on every DOM mutation, and the tail mutates continuously. Second Escape
     // closes the FAQ panel ClientView reopens when a tour ends.
-    marks.dismiss = Date.now() - t0;
-    await page.pressKey('Escape');
-    await sleep(1200);
-    await page.pressKey('Escape');
-    await sleep(1200);
+    // `dismiss` is already stamped — the ring loop does it the moment the last
+    // ring settles, so this whole clean-up sits inside the dropped stretch.
+    marks.dismiss ??= Date.now() - t0;
+    // Escape until the host panel is ACTUALLY gone, not a fixed two presses.
+    //
+    // Two was a guess that held only while the tour ended before the harness got
+    // here. When the tour self-ends AFTER the second Escape, ClientView reopens
+    // the FAQ panel and nothing closes it again — so the tail began with the
+    // panel over the client, and no amount of cutting phase D could hide it,
+    // because the flash was at the START of phase E. Verified: the panel was
+    // still up 2s into the tail.
+    for (let i = 0; i < 4; i++) {
+      await page.pressKey('Escape');
+      await sleep(900);
+      const open = await page.eval(`!!document.querySelector('[data-sandstr-modal], .tour-overlay')`);
+      if (!open) break;
+      if (i === 3) throw new Error('FAQ panel / tour would not close before the tail');
+    }
+    // Run the FIRST tail step, THEN stamp `typing2`.
+    //
+    // Anything earlier is a promise rather than a fact: the tour can self-end
+    // after the Escape loop has already confirmed a closed panel, and ClientView
+    // slides the FAQ back over the client at exactly the moment phase E begins.
+    // Trimming the end of D did not help, because the flash was on the other side
+    // of the join. The first step is a click INTO the simulator — it can only
+    // succeed with the panel gone, so stamping after it means the cut swallows
+    // every last frame of the clean-up, however late the tour gets around to it.
+    const [firstStep, ...restSteps] = loop.afterTour;
+    await runSteps(page, [firstStep], undefined, marks, t0);
     marks.typing2 = Date.now() - t0;
-    await runSteps(page, loop.afterTour);
+    await runSteps(page, restSteps, undefined, marks, t0);
   }
   if (loop.expect) {
     const missing = await page.eval(

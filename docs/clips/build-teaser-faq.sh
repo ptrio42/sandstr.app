@@ -121,12 +121,12 @@ LOOPS=(
 # The keyword-mute clip: tD here covers ONLY the four ring steps — the typing
 # that follows is its own phase, timed by T_TYPE (see the split on `typing2`).
 "amethyst-mute|Tired of the current thing?|Add it to Hidden Words.|6.0"
-# Four ring steps again (Add relay, the field, the funnel, the switch), so tD
-# matches amethyst-mute rather than the one-ring loops above.
-# tE 11.0, not the default 6: the tail here is ~25s (type the address, confirm,
-# back out, switch tab, open the sheet, then twelve switches). At 6s it played
-# at 4.1x and the beat the clip exists for was a blur.
-"damus-relay-feed|Too much in your feed?|Read one relay only.|6.0|11.0"
+# The newspaper framing: a relay is a section, not a server. "Read one relay
+# only" described the mechanism; this describes the reason anybody would want to.
+# tE 11.0, not the default 6: the tail is the whole walkthrough (type the address,
+# confirm, back out, switch tab, open the sheet, switch the others off, close it
+# and look at the feed). At 6s it played at 4x and the payoff was a blur.
+"damus-relay-feed|Read Nostr like a paper?|One relay, one section.|6.0|11.0"
 )
 
 for row in "${LOOPS[@]}"; do
@@ -280,11 +280,30 @@ for row in "${LOOPS[@]}"; do
     # is our scaffolding, so the cut skips straight from the last ring to the
     # cursor already in the field.
     dEnd="$t2"
-    [ "$(awk -v x="$ds" 'BEGIN{print (x>0)?1:0}')" = 1 ] && dEnd="$ds"
-    read -r sD sE <<<"$(awk -v d="$dm" -v x="$dEnd" -v y="$t2" -v e="$total" -v dd="$tD" -v te="$tE" \
-      'BEGIN{printf "%.3f %.3f", (x-d)/dd, (e-y)/te}')"
-    segment "$id" "$in" "$WORK/${id}_d.mp4" "$sD" "$dm" "$dEnd"  "$show" "$ACCENT" d
-    segment "$id" "$in" "$WORK/${id}_e.mp4" "$sE" "$t2" "$total" "$show" "$ACCENT" d
+    # Trim 0.6s off the end of D as well. `dismiss` is stamped the instant the
+    # last ring settles, but a mini-tour that self-ends right there lets
+    # ClientView slide the FAQ panel back over the client within a few frames —
+    # and those frames are the last ones of D, so they survive the cut. Half a
+    # second of the settled ring is worth more than a panel wiping the screen.
+    [ "$(awk -v x="$ds" 'BEGIN{print (x>0)?1:0}')" = 1 ] \
+      && dEnd="$(awk -v x="$ds" 'BEGIN{printf "%.3f", (x-0.6>0)?x-0.6:x}')"
+    sD="$(awk -v d="$dm" -v x="$dEnd" -v dd="$tD" 'BEGIN{printf "%.3f", (x-d)/dd}')"
+    segment "$id" "$in" "$WORK/${id}_d.mp4" "$sD" "$dm" "$dEnd" "$show" "$ACCENT" d
+
+    # `typed` splits the tail so the address being ENTERED plays at 1.0x, the way
+    # the FAQ query does in phase `t`. Without it the tail's single multiplier put
+    # 25 characters on screen in 1.4s — the one thing in this stretch a viewer has
+    # to read, unreadable. Everything after it is mechanical and compresses fine.
+    ty2=$(mark "$id" typed)
+    rm -f "$WORK/${id}_f.mp4"
+    if [ "$(awk -v x="$ty2" -v y="$t2" 'BEGIN{print (x>y)?1:0}')" = 1 ]; then
+      sF="$(awk -v x="$ty2" -v e="$total" -v te="$tE" 'BEGIN{printf "%.3f", (e-x)/te}')"
+      segment "$id" "$in" "$WORK/${id}_e.mp4" "1.0" "$t2"   "$ty2"   "$show" "$ACCENT" d
+      segment "$id" "$in" "$WORK/${id}_f.mp4" "$sF" "$ty2"  "$total" "$show" "$ACCENT" d
+    else
+      sE="$(awk -v y="$t2" -v e="$total" -v te="$tE" 'BEGIN{printf "%.3f", (e-y)/te}')"
+      segment "$id" "$in" "$WORK/${id}_e.mp4" "$sE" "$t2" "$total" "$show" "$ACCENT" d
+    fi
   else
     sD=$(awk -v d="$dm" -v e="$total" -v dd="$tD" 'BEGIN{printf "%.3f", (e-d)/dd}')
     segment "$id" "$in" "$WORK/${id}_d.mp4" "$sD" "$dm" "$total" "$show" "$ACCENT" d
@@ -342,6 +361,24 @@ card "$WORK/end.mp4" 3.2 "try Nostr" "no keys, no install" "sandstr.app"
 # tagline — the narrative is derived from `status` in src/registry.tsx.)
 card "$WORK/tag.mp4" 2.6 "try Nostr clients" "no keys, no install" "sandstr.app"
 
+# Per-client tag card: a single-question clip gets posted into a thread about
+# THAT client, so "try Nostr clients" makes the viewer do the mapping themselves.
+# "try Damus" is the same sentence with the work already done. Derived from the
+# loop id rather than listed per row, so every clip gets one for free.
+client_name() { # loop-id -> display name
+  case "$1" in
+    damus-*|damus)         echo "Damus" ;;
+    amethyst-*|amethyst)   echo "Amethyst" ;;
+    primal-*|primal)       echo "Primal" ;;
+    nostur-*|nostur)       echo "Nostur" ;;
+    yakihonne-*|yakihonne) echo "YakiHonne" ;;
+    snort-*|snort)         echo "Snort" ;;
+    wisp-*|wisp)           echo "Wisp" ;;
+    coracle-*|coracle)     echo "Coracle" ;;
+    *)                     echo "" ;;
+  esac
+}
+
 # ---- assemble ------------------------------------------------------------------
 encode() { # list out
   ffmpeg -v error -y -f concat -safe 0 -i "$1" \
@@ -367,7 +404,8 @@ listItems() { # listfile item...
             # older captures — see the fallback in the per-loop beats.
             [ -s "$WORK/${item}_c.mp4" ] && echo "file '${item}_c.mp4'" >>"$list" || true
             echo "file '${item}_d.mp4'" >>"$list"
-            [ -s "$WORK/${item}_e.mp4" ] && echo "file '${item}_e.mp4'" >>"$list" || true ;;
+            [ -s "$WORK/${item}_e.mp4" ] && echo "file '${item}_e.mp4'" >>"$list" || true
+            [ -s "$WORK/${item}_f.mp4" ] && echo "file '${item}_f.mp4'" >>"$list" || true ;;
     esac
   done
 }
@@ -394,7 +432,13 @@ for row in "${LOOPS[@]}"; do
   wanted "$id" || continue
   : >"$WORK/one_${id}.txt"
   listItems "$WORK/one_${id}.txt" "$id"
-  echo "file 'tag.mp4'" >>"$WORK/one_${id}.txt"
+  cn="$(client_name "$id")"
+  if [ -n "$cn" ]; then
+    card "$WORK/tag_${id}.mp4" 2.6 "try ${cn}" "no keys, no install" "sandstr.app"
+    echo "file 'tag_${id}.mp4'" >>"$WORK/one_${id}.txt"
+  else
+    echo "file 'tag.mp4'" >>"$WORK/one_${id}.txt"
+  fi
   encode "$WORK/one_${id}.txt" "$OUT/sandstr-faq-${id}.mp4"
 done
 
