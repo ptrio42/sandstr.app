@@ -9,12 +9,13 @@ interface Props {
   users: MockUser[];
   onOpenDrawer: () => void;
   onViewProfile: (u: MockUser) => void;
+  onOpenRelayFilter: () => void;
 }
 
 const TRENDING = ['#nostr', '#bitcoin', '#zapathon', '#PenisButter', '#coffeechain', '#grownostr', '#photography', '#plebchain'];
 
 // Damus "Universe" — search + discovery. Header shows "Universe 🛸" + relay count + filter.
-export const SearchScreen: React.FC<Props> = ({ currentUser, users, onOpenDrawer, onViewProfile }) => {
+export const SearchScreen: React.FC<Props> = ({ currentUser, users, onOpenDrawer, onViewProfile, onOpenRelayFilter }) => {
   const [q, setQ] = useState('');
   const me = currentUser?.username || 'sandy';
   const [followed, setFollowed] = useState<Record<string, boolean>>({});
@@ -30,7 +31,20 @@ export const SearchScreen: React.FC<Props> = ({ currentUser, users, onOpenDrawer
           <button onClick={onOpenDrawer}><Avatar seed={me} className="w-9 h-9" /></button>
           <div className="flex-1 text-center font-bold text-[17px] text-[var(--damus-text)]">Universe <span className="align-middle">🛸</span></div>
           <span className="text-[14px] text-[var(--damus-text-secondary)]">7/13</span>
-          <FilterIcon className="w-6 h-6 text-[var(--damus-text)]" />
+          {/*
+            A real button, not a bare glyph. This is the ONLY route to a
+            single-relay feed in Damus — there is no per-relay timeline screen —
+            and it sat here as an undecorated icon with no handler (gap dam-19).
+            Screen-map §6a.
+          */}
+          <button
+            type="button"
+            onClick={onOpenRelayFilter}
+            aria-label="Filter feed by relay"
+            data-tour="damus-search-filter"
+          >
+            <FilterIcon className="w-6 h-6 text-[var(--damus-text)]" />
+          </button>
         </div>
 
         <div className="flex items-center gap-3 px-4 pb-3">
