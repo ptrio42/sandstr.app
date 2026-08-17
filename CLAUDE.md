@@ -12,7 +12,11 @@ jest derywowana z osi `status` w `src/registry.tsx`; nie wpisuj takich liczb na 
 
 Stack: **Vite 6 + React 19 + TypeScript SPA**, React Router 7, Tailwind 3, framer-motion, lucide-react.
 **Zero backendu, sieci, auth, realnej krypto** — mock data, fejkowe klucze, symulowane interakcje liczone
-w przeglądarce. Deploy = statyczne pliki.
+w przeglądarce. **Deploy = `git push` na main** — Cloudflare Workers Builds (integracja GitHub) buduje
+i wdraża samo; lokalny `wrangler deploy` NIE zadziała (brak logowania, tylko `CLOUDFLARE_API_TOKEN` by
+pomógł). Weryfikacja wdrożenia: porównaj hash chunka z `dist/assets/` z tym serwowanym na
+`sandstr.app/assets/…` albo grepni marker treści — hash samego `index-*.js` to za mało, bo zmiany
+w symulatorze siedzą w lazy chunkach.
 
 ## Komendy
 
