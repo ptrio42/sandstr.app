@@ -89,7 +89,16 @@ export const SearchScreen: React.FC<Props> = ({ currentUser, users, onOpenDrawer
       */}
       {!q && (
         <div data-tour="damus-universe-feed">
-          <div className="flex items-baseline justify-between px-4 pt-4 pb-1">
+          {/*
+            The HEADER gets its own anchor because the section wrapper above is
+            taller than the screen and the tour overlay refuses targets that
+            size (docs/TOURS.md). The header row is also the honest target: the
+            "N of M" counter on it IS the evidence the filter narrowed the feed.
+          */}
+          <div
+            data-tour="damus-universe-feed-header"
+            className="flex items-baseline justify-between px-4 pt-4 pb-1"
+          >
             <div className="text-[13px] font-semibold text-[var(--damus-text-secondary)] uppercase tracking-wide">
               All recent notes
             </div>

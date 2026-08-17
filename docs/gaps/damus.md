@@ -106,7 +106,8 @@
 | `damus-add-relay` | `components/AddRelaySheet.tsx:27` | Root arkusza Add relay — **nie celuj w niego**, jest wielkości ekranu i overlay go nie podświetli |
 | `damus-add-relay-field` | `components/AddRelaySheet.tsx:52` | Pole adresu w arkuszu (FAQ `relay-feed` krok 2) |
 | `damus-search-filter` | `screens/SearchScreen.tsx:44` | Universe → lejek (FAQ `relay-feed` krok 4) |
-| `damus-universe-feed` | `screens/SearchScreen.tsx:91` | Universe → sekcja "All recent notes" (globalny feed po filtrze) |
+| `damus-universe-feed` | `screens/SearchScreen.tsx:91` | Universe → sekcja "All recent notes" (globalny feed po filtrze). **Nie celuj w nią tourem** — wyższa niż ekran |
+| `damus-universe-feed-header` | `screens/SearchScreen.tsx:99` | Nagłówek sekcji z licznikiem "N of M" (FAQ `relay-feed` krok 6 — finał na feedzie) |
 | `damus-relay-filter` | `components/RelayFilterSheet.tsx:24` | Root arkusza filtra — jak wyżej, **nie celuj** |
 | `damus-relay-toggle` | `components/RelayFilterSheet.tsx:66` (bramka `i === 0`) | Pierwszy wiersz z togglem (FAQ `relay-feed` krok 4) |
 | `damus-settings` | `screens/SettingsScreen.tsx:55` | Root ekranu Settings |

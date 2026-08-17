@@ -438,6 +438,20 @@ export const damusFaq: ClientFaq = {
           position: 'top',
           commands: cmd({ type: 'navigate', payload: 'relayFilter' }),
         },
+        {
+          // The payoff the demo used to skip: the tour ended on the switch, the
+          // clip ended on the feed, and the two told different stories. Ringing
+          // the header, not the section — the section is screen-sized and the
+          // overlay refuses it; the header carries the "N of M" counter, which
+          // is the actual evidence the filter narrowed anything.
+          target: '[data-tour="damus-universe-feed-header"]',
+          title: 'The feed, narrowed',
+          content: 'Back on Universe, "All recent notes" now counts only what your switched-on relays carry.',
+          position: 'bottom',
+          // `navigate search` clears the overlay stack, so this one command also
+          // closes the filter sheet the previous step opened.
+          commands: cmd({ type: 'navigate', payload: 'search' }),
+        },
       ],
     },
 
