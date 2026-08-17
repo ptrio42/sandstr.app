@@ -139,6 +139,19 @@ const LOOPS = [
     steps: 1,
   },
   {
+    // "Read one relay" — four ring steps because the answer names four screens
+    // and the first one is a prerequisite: the relay has to be on your list
+    // before the filter can list it. `topical relays` is the query because that
+    // is what people call this; the term is nowhere in Damus itself.
+    id: 'damus-relay-feed',
+    path: '/c/damus',
+    viewport: PHONE,
+    faq: '[aria-label="Damus FAQ"]',
+    query: 'topical relays',
+    entry: 'relay-feed',
+    steps: 4,
+  },
+  {
     // The keyword-mute clip, and the one loop that keeps filming after the
     // mini-tour ends: the ring lands on the field, then the words get typed
     // into it. It goes through the FAQ like every other loop — search, answer,

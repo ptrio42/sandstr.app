@@ -374,6 +374,64 @@ export const damusFaq: ClientFaq = {
 
     // -------------------------------------------------------------- Relays --
     {
+      // §6/§6a Universe funnel + `.filter` sheet, §8 Add relay
+      id: 'relay-feed',
+      category: 'Relays',
+      question: 'How do I read the notes from just one relay?',
+      // "topical relays" is NOT what upstream calls this — the term appears
+      // nowhere in damus-io/damus — but it is what people call it when they ask,
+      // and an alias is the user's vocabulary, not a claim the answer makes.
+      searchAliases: [
+        'topical relays',
+        'browse a relay',
+        'see one relay',
+        'relay feed',
+        'notes from a specific relay',
+        'filter my feed',
+      ],
+      answer: [
+        'The relay has to be on your list first: profile picture → "Relays" → "Add relay", type the address and confirm.',
+        'Go to the Universe tab (the magnifying glass).',
+        'Tap the funnel in the top bar, right of the relay count.',
+        'The sheet lists every relay you have. Leave ONE switch on and turn the rest off — the feed behind it now shows only that relay.',
+        'Turn the switches back on to widen it again. An all-on sheet is the same as no filter.',
+      ],
+      note: 'The switch reads the way round you would hope and the opposite of the word "filter": ON means that relay is shown, OFF means its notes are hidden. There is no per-relay screen in Damus — nothing opens "this relay\'s timeline". Tapping a relay row on the Relays screen opens its details (description, software, supported NIPs), not its notes. The filter is remembered per feed, so the Universe one does not touch your Home timeline.',
+      showMe: [
+        {
+          target: '[data-tour="damus-add-relay-button"]',
+          title: 'Add the relay first',
+          content: 'A relay only shows up in the filter once it is on your list. This is the button beside the "My Relays" title.',
+          position: 'bottom',
+          commands: cmd({ type: 'login' }, { type: 'navigate', payload: 'relays' }),
+        },
+        {
+          // The field, not the sheet root — that root is screen-sized and the
+          // overlay will not spotlight it.
+          target: '[data-tour="damus-add-relay-field"]',
+          title: 'wss://some.relay.com',
+          content: 'Paste or type the address, then confirm with the pink button.',
+          position: 'top',
+          commands: cmd({ type: 'navigate', payload: 'addRelay' }),
+        },
+        {
+          target: '[data-tour="damus-search-filter"]',
+          title: 'The funnel, in Universe',
+          content: 'This is the only way into a single-relay feed. It sits right of the relay count, and only on this tab.',
+          position: 'bottom',
+          commands: cmd({ type: 'navigate', payload: 'search' }),
+        },
+        {
+          target: '[data-tour="damus-relay-toggle"]',
+          title: 'One on, the rest off',
+          content: 'Every relay you have, one switch each. On = shown. Leave one on and the feed behind this sheet is that relay alone.',
+          position: 'top',
+          commands: cmd({ type: 'navigate', payload: 'relayFilter' }),
+        },
+      ],
+    },
+
+    {
       // §5 Side menu (row 7), §8 Relays screen
       id: 'manage-relays',
       category: 'Relays',

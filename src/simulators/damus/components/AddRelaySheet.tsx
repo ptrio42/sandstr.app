@@ -47,7 +47,16 @@ export const AddRelaySheet: React.FC<Props> = ({ onAdd, onClose }) => {
         <div className="h-px mx-4 bg-[var(--damus-separator)]" />
 
         <div className="px-4 pt-5">
-          <div className="flex items-center gap-3 px-3 h-[52px] rounded-xl bg-[var(--damus-bg-tertiary)]">
+          {/*
+            Anchored on the FIELD, not on the sheet root: the root is
+            `absolute inset-0` and the tour overlay refuses to spotlight a target
+            the size of the screen (docs/TOURS.md). Pointing a step at
+            `damus-add-relay` produced a step with no ring at all.
+          */}
+          <div
+            data-tour="damus-add-relay-field"
+            className="flex items-center gap-3 px-3 h-[52px] rounded-xl bg-[var(--damus-bg-tertiary)]"
+          >
             {/* The leading glyph is a paste affordance, not a search icon. */}
             <CopyIcon className="w-5 h-5 shrink-0 text-[var(--damus-text)]" />
             <input

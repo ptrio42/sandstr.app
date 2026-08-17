@@ -7,10 +7,16 @@
 
 | missing | dead | partial | unreachable | unanchored | ok |
 |---|---|---|---|---|---|
-| 10 | 23 | 10 | 2 | 6 | 8 |
+| 10 | 21 | 10 | 2 | 6 | 10 |
 
-**Top 3 do zrobienia:** dam-13 · dam-42 · dam-29 (+dam-28)
-(zaraz za nimi: dam-37 „DM conversation" — cała druga zakładka kończy się na liście.)
+**Top 3 do zrobienia:** dam-13 · dam-42 · dam-37 (+dam-28)
+
+> **Przetasowanie 2026-08-17.** dam-19 i dam-29 zeszły do `ok` (23 → 21 `dead`,
+> 8 → 10 `ok`), więc dam-29 wypada z Top 3 i awansuje dam-37 („DM conversation" —
+> cała druga zakładka kończy się na liście). **dam-28 zostaje otwarty i jest teraz
+> bardziej widoczny:** relay można DODAĆ i odfiltrować, ale nie da się go usunąć,
+> bo `Edit` wciąż nie ma handlera — asymetria, której przedtem nie było widać, bo
+> dodawanie też nie działało.
 
 > **Przetasowanie 2026-08-08.** dam-39 wypadł z Top 3: był tam dlatego, że główny tour podświetlał
 > ten martwy przycisk, a nie dlatego, że sam brak handlera boli. Tour już w niego nie celuje, więc
@@ -39,7 +45,7 @@
 | dam-16 | Side menu → header (awatar + nazwa) → Profile | §5 | dead | W realnej apce cały `TopProfile` to NavigationLink do profilu; u nas zwykły `<div>` — profil tylko przez wiersz "Profile". FAQ `side-menu` krok 3 wprost każe stuknąć w nagłówek, a spotlight kroku 2 obejmuje cały drawer razem z nim | `screens/SideMenu.tsx:40-50` · `src/data/faq/damus.ts:204,215` | breaks-showme | S |
 | dam-17 | Side menu → Logout → confirm alert | §5 | missing | Wylogowanie jest natychmiastowe; brak destrukcyjnego potwierdzenia, mimo że sesja jest "z privkey". FAQ `logout` krok 3 | `DamusSimulator.tsx:71,90` | blocks-showme | S |
 | dam-18 | Side menu → Merch | §5 | partial | Przygaszony wiersz + toast zamiast zewnętrznego linku do `store.damus.io`. Arguable: świadome (brak sieci), ale ścieżki nie da się pokazać | `screens/SideMenu.tsx:31` → `DamusSimulator.tsx:91` | none | S |
-| dam-19 | Universe → funnel (filter) | §6 | dead | Goła `FilterIcon` w headerze — nie `<button>`, brak handlera i brak `.filter` sheeta | `screens/SearchScreen.tsx:33` | blocks-showme | M |
+| dam-19 | Universe → funnel (filter) → `.filter` sheet | §6, §6a | ok | Lejek jest `<button>`; arkusz `RelayFilterSheet` = detent 68% (550/812), uchwyt, napis dosłowny, toggle per relay z PEŁNYM URL-em, ON = relay widoczny. Stan w `relayState.ts` ponad oba ekrany, więc relay dodany w dam-29 pojawia się tutaj. FAQ `relay-feed` kroki 3–4 | `screens/SearchScreen.tsx:37-47` · `components/RelayFilterSheet.tsx` · `relayState.ts` | none | — |
 | dam-20 | Universe / Notifications / DMs → relay signal ("7/13") | §6, §7 | dead | `<span>` bez handlera; §6/§7 linkują sygnał do RelayConfig. Na Home ten sam wskaźnik JEST przyciskiem otwierającym Relays | `screens/SearchScreen.tsx:32` · `screens/NotificationsScreen.tsx:36` · `screens/DMScreen.tsx:29` | blocks-showme | S |
 | dam-21 | Universe → empty state | §6 | partial | Mamy "Trending hashtags" + "Suggested"; §6 ma sekcję **Follow Packs** i globalny feed **"All recent notes"** — brak ścieżki do przeglądania globalnych notatek | `screens/SearchScreen.tsx:53-63` | blocks-showme | M |
 | dam-22 | Universe → pigułki `#tag` / `Search word` / trending | §6 | dead | Wszystkie pigułki to `<span>` — klik nie uruchamia wyszukiwania ani nie otwiera hashtagu | `screens/SearchScreen.tsx:49,50,58` | breaks-showme | S |
@@ -48,10 +54,10 @@
 | dam-25 | Notifications → trusted-network filter | §7 | dead | Ikona bez handlera; podtytuł zahardkodowany na "All", więc stanu "Trusted Network" nie da się pokazać. Dodatkowo użyty `PersonCheckIcon`, który §7 wprost wyklucza (ma być network/shield) | `screens/NotificationsScreen.tsx:34,38` | breaks-showme | M |
 | dam-26 | Notifications → zakładka Mentions | §7 | partial | Filtruje tylko `zaps`; Mentions renderuje dokładnie tę samą listę co All | `screens/NotificationsScreen.tsx:24` | breaks-showme | S |
 | dam-27 | Notifications → zgrupowany wiersz (reakcje / reposty / zapy) | §7 | missing | Każdy wiersz to zwykły `NoteCard`; brak lewej kolumny ikon, rzędu awatarów reagujących, podsumowania "Alice & N others" i sumy msat | `screens/NotificationsScreen.tsx:55-64` | blocks-showme | M |
-| dam-28 | Side menu → Relays → Edit / Done | §8 | dead | `<button>Edit</button>` bez `onClick`; brak trybu edycji i czerwonych minusów, czyli brak ścieżki usuwania relaya. FAQ `manage-relays` krok 3 | `screens/RelaysScreen.tsx:26` | breaks-showme | M |
-| dam-29 | Side menu → Relays → Add relay | §8 | dead | `<button>` bez `onClick`; brak `AddRelayView` sheeta, czyli brak ścieżki dodania relaya. FAQ `manage-relays` krok 2 | `screens/RelaysScreen.tsx:32` | breaks-showme | M |
-| dam-30 | Relays → tap relay → RelayDetail | §8 | dead | Wiersz to `<div>` z chevronem i bez handlera — chevron obiecuje push, którego nie ma | `screens/RelaysScreen.tsx:43,55` | blocks-showme | M |
-| dam-31 | Relays → segment "Recommended" | §8 | partial | Segment przełącza i skraca listę (12→8), ale wielki tytuł zostaje "My Relays", wiersze dalej mają status pill + chevron zamiast kapsuły "Add"/"Added", a Edit zostaje w nagłówku (§8: tylko na My Relays) | `screens/RelaysScreen.tsx:19,26,31,54` | breaks-showme | S |
+| dam-28 | Side menu → Relays → Edit / Done | §8 | dead | `<button>Edit</button>` bez `onClick`; brak trybu edycji i czerwonych minusów, czyli brak ścieżki usuwania relaya. FAQ `manage-relays` krok 3 | `screens/RelaysScreen.tsx:37` | breaks-showme | M |
+| dam-29 | Side menu → Relays → Add relay | §8 | ok | `AddRelaySheet` odtworzony z nagrania (`shots/full/t_034.jpg`): detent 37% (300pt), uchwyt, wyśrodkowane „Add relay", dywizor, pole z ikoną wklejania i placeholderem `wss://some.relay.com`, CTA w gradiencie różowym. Dodany relay ląduje w My Relays I w arkuszu filtra. FAQ `relay-feed` kroki 1–2 | `screens/RelaysScreen.tsx:37-44` · `components/AddRelaySheet.tsx` | none | — |
+| dam-30 | Relays → tap relay → RelayDetail | §8 | dead | Wiersz to `<div>` z chevronem i bez handlera — chevron obiecuje push, którego nie ma | `screens/RelaysScreen.tsx:57,71` | blocks-showme | M |
+| dam-31 | Relays → segment "Recommended" | §8 | partial | Segment przełącza i skraca listę (12→8), ale wielki tytuł zostaje "My Relays", wiersze dalej mają status pill + chevron zamiast kapsuły "Add"/"Added", a Edit zostaje w nagłówku (§8: tylko na My Relays) | `screens/RelaysScreen.tsx:30,37,42,54` | breaks-showme | S |
 | dam-32 | Compose → pasek załączników (foto / aparat / wideo / …) | §9 | dead | Pięć gołych SVG bez `<button>` i bez handlerów. §9 oznacza wnętrze sheeta jako [REC vs REPO], więc zakres jest miękki — ale kontrolki są martwe | `screens/ComposeScreen.tsx:78-84` | blocks-showme | M |
 | dam-33 | Note → Thread → rząd akcji noty głównej | §3 | dead | Pięć ikon rozwiniętej noty to gołe SVG, nie przyciski — w wątku nie da się zrobić repost/shaka/zap (reply tylko przez dolny pasek) | `screens/ThreadScreen.tsx:55-61` | breaks-showme | S |
 | dam-34 | Note → Thread (ekran) | — | unreachable | Pushowany wyłącznie kliknięciem noty; żadna komenda toura go nie montuje, brak też `data-tour` na ekranie | `DamusSimulator.tsx:28,61` · `screens/ThreadScreen.tsx:26` | blocks-showme | S |
@@ -69,7 +75,7 @@
 | dam-46 | Bottom nav → 4 zakładki | §2 | unanchored | Brak `data-tour`; FAQ celuje w `.damus-tab[aria-label="…"]` (działa, ale wisi na klasie Tailwind + aria) | `components/TabBar.tsx:33-38` | none | S |
 | dam-47 | Home → awatar w lewym górnym rogu | §4 | unanchored | Brak `data-tour`; FAQ `side-menu` krok 1 celuje w `[aria-label="Open menu"]` | `screens/HomeScreen.tsx:35` | none | S |
 | dam-48 | Universe → pole Search | §6 | unanchored | Brak `data-tour`; FAQ `search` krok 2 celuje w `.damus-search` | `screens/SearchScreen.tsx:39` | none | S |
-| dam-49 | Relays → segmented control | §8 | unanchored | Brak `data-tour`; FAQ `manage-relays` krok 3 celuje w `.damus-segment` | `screens/RelaysScreen.tsx:65` | none | S |
+| dam-49 | Relays → segmented control | §8 | unanchored | Brak `data-tour`; FAQ `manage-relays` krok 3 celuje w `.damus-segment` | `screens/RelaysScreen.tsx:81` | none | S |
 | dam-50 | Home → note → pojedyncze akcje (reply/repost/shaka/zap) | §3 | unanchored | Kotwica jest tylko na całym rzędzie (`damus-interactions`); FAQ celuje w `.damus-action.is-*` | `components/NoteCard.tsx:119,122,125,128` | none | S |
 | dam-51 | Bottom nav — 4 zakładki + osobny FAB (bez środkowej zakładki compose) | §2 | ok | Kolejność Home/DMs/Search/Notifications, FAB gradientowy poza paskiem, kropka na dzwonku obecna (jej stan → dam-59) | `components/TabBar.tsx:16-21,25` | none | — |
 | dam-52 | Home → note → rząd akcji: kolejność i kolory | §3 | ok | reply→repost→shaka→zap→share; aktywne: purple / green / gradient-like / bitcoin; licznik ukryty przy 0 | `components/NoteCard.tsx:118-133` · `damus.theme.css:179-183` | none | — |
@@ -96,6 +102,12 @@
 | `damus-npub` | `screens/SideMenu.tsx:51` | Pigułka npub w drawerze (martwa — dam-13) |
 | `damus-menu-profile` … `-wallet` `-purple` `-muted` `-relays` `-bookmarks` `-merch` `-settings` `-logout` | `screens/SideMenu.tsx:62` (template literal) | 9 wierszy drawera; brak `-labs` i `-live`, bo wierszy nie ma (dam-09) |
 | `damus-relays` | `screens/RelaysScreen.tsx:22` | Root ekranu Relays |
+| `damus-add-relay-button` | `screens/RelaysScreen.tsx:40` | Relays → „Add relay" (FAQ `relay-feed` krok 1) |
+| `damus-add-relay` | `components/AddRelaySheet.tsx:27` | Root arkusza Add relay — **nie celuj w niego**, jest wielkości ekranu i overlay go nie podświetli |
+| `damus-add-relay-field` | `components/AddRelaySheet.tsx:52` | Pole adresu w arkuszu (FAQ `relay-feed` krok 2) |
+| `damus-search-filter` | `screens/SearchScreen.tsx:44` | Universe → lejek (FAQ `relay-feed` krok 3) |
+| `damus-relay-filter` | `components/RelayFilterSheet.tsx:24` | Root arkusza filtra — jak wyżej, **nie celuj** |
+| `damus-relay-toggle` | `components/RelayFilterSheet.tsx:66` (bramka `i === 0`) | Pierwszy wiersz z togglem (FAQ `relay-feed` krok 4) |
 | `damus-settings` | `screens/SettingsScreen.tsx:55` | Root ekranu Settings |
 | `damus-settings-account` | `screens/SettingsScreen.tsx:71` (prop `tour` → `:25`) | Settings → grupa „Account" |
 | `damus-settings-keys` | `screens/SettingsScreen.tsx:72` (prop `tour` → `:47`) | Settings → wiersz „Keys" (sam wiersz nadal martwy — dam-42) |

@@ -52,7 +52,7 @@
 
 | Klient | Status | Luki | `missing` | `dead` | `partial` | `unreachable` | `unanchored` | `ok` | Kotwice | Mostek FAQ |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|:--:|
-| [Damus](gaps/damus.md) | ready | 51 | 10 | 23 | 10 | 2 | 6 | 8 | 28 | ✅ |
+| [Damus](gaps/damus.md) | ready | 49 | 10 | 21 | 10 | 2 | 6 | 10 | 34 | ✅ |
 | [Amethyst](gaps/amethyst.md) | ready | 10 | 3 | 2 | 5 | 0 | 0 | 133 | 215 | ✅ |
 | [Primal](gaps/primal.md) | ready | 50 | 17 | 17 | 12 | 1 | 3 | 14 | 18 | ✅ |
 | [YakiHonne](gaps/yakihonne.md) | ready | 76 | 27 | 30 | 13 | 4 | 2 | 20 | 27 | ✅ |

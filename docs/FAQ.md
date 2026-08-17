@@ -17,18 +17,20 @@
 
 | Klient | Wpisy | Mini-toury | Uwagi |
 |---|---:|---:|---|
-| Damus | 28 | 18 | pierwszy, prototyp całej mechaniki |
-| Amethyst | 27 | 13 | odblokowany drawer + sekcje Settings |
+| Damus | 29 | 19 | pierwszy, prototyp całej mechaniki; +`relay-feed` (2026-08-17) |
+| Amethyst | 27 | 16 | odblokowany drawer + sekcje Settings |
 | Primal | 28 | 16 | pierwszy klient webowy (bez ramki) |
 | Nostur | 31 | 21 | miał najlepsze kotwice i zero demonstracji |
 | YakiHonne | 30 | 14 | 8 nowych komend; najwięcej luk w simie |
 | Snort | 27 | 15 | dwa realne bugi symulatora przy okazji |
 | Wisp | 27 | 16 | 5 odblokowań, o które prosił ledger |
 | Coracle | 32 | 20 | **pierwszy klient bez wrappera** — zbudowany od zera |
-| **Razem** | **230** | **133** | +64 wpisy w rundzie 2 (8 × 8) |
+| **Razem** | **231** | **137** | +64 wpisy w rundzie 2 (8 × 8) |
 
-**Liczby w tabeli to snapshot drzewa roboczego z 2026-08-11** — nie aktualizują się same, więc przed
-cytowaniem ich gdziekolwiek indziej przelicz:
+**Liczby w tabeli to snapshot drzewa roboczego z 2026-08-17** — nie aktualizują się same, więc przed
+cytowaniem ich gdziekolwiek indziej przelicz. Przeliczone tego dnia od zera: doszedł `relay-feed`
+w Damusie (28/18 → 29/19), a **Amethyst miał 16 mini-tourów, nie 13** — trzy doszły przy przebudowie
+do v1.13.1 i nikt nie ruszył tej tabeli, więc suma stała na 133 zamiast 137.
 
 ```bash
 for f in src/data/faq/{amethyst,coracle,damus,nostur,primal,snort,wisp,yakihonne}.ts; do
@@ -263,3 +265,7 @@ lepszy zwrot niż nadawanie.
 przestarzałych postach. Statyczne, indeksowalne strony `/faq/<client>` z linkiem „try it in the
 simulator" mogłyby być głównym kanałem pozyskania ruchu. Wymaga świadomego wyjątku od `Disallow: /c/`
 w `robots.txt` i przypiętego canonicala — dziś oba celowo blokują indeksowanie tras klientów.
+
+**Wciąż otwarte, mimo pozorów** (2026-08-14): `robots.txt` ma już dwa wyjątki, ale wyłącznie dla
+`Twitterbot` i `facebookexternalhit`, czyli rendererów kart link-preview — żaden z nich nie karmi
+indeksu. Canonical dalej jest przypięty do galerii na każdej trasie. Ta decyzja stoi tam, gdzie stała.

@@ -113,6 +113,9 @@ LOOPS=(
 # The keyword-mute clip: tD here covers ONLY the four ring steps — the typing
 # that follows is its own phase, timed by T_TYPE (see the split on `typing2`).
 "amethyst-mute|Tired of the current thing?|Add it to Hidden Words.|6.0"
+# Four ring steps again (Add relay, the field, the funnel, the switch), so tD
+# matches amethyst-mute rather than the one-ring loops above.
+"damus-relay-feed|Too much in your feed?|Read one relay only.|6.0"
 )
 
 for row in "${LOOPS[@]}"; do
