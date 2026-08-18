@@ -141,15 +141,48 @@ async function extract(response: Response, finalUrl: string) {
   };
 }
 
-async function unfurl(request: Request): Promise<Response> {
+async function unfurl(request: Request, env: Env): Promise<Response> {
   if (request.method !== 'GET') return json({ error: 'GET only' }, 405);
 
   const raw = new URL(request.url).searchParams.get('url') || '';
+  const selfHost = new URL(request.url).host;
+
+  /**
+   * A link to sandstr itself is read from our OWN assets, never fetched.
+   *
+   * `fetch('https://sandstr.app/…')` from the Worker that SERVES sandstr.app is
+   * a request to ourselves: Cloudflare answers it with 522 (origin timed out),
+   * so pasting a sandstr link — the single most likely thing to paste here —
+   * was the one case guaranteed to fail. The assets binding already holds the
+   * prerendered share cards (`dist/c/<id>.html`, built by scripts/prerender.mjs
+   * with the og:* tags this endpoint is looking for), so this path is both
+   * correct and faster, and it makes no outbound request at all.
+   */
   let target: URL;
+  let sameOrigin = false;
   try {
-    target = safeTarget(raw);
+    const parsed = new URL(raw);
+    sameOrigin = parsed.host === selfHost;
+    if (sameOrigin) {
+      // No SSRF surface here: this can only ever read our own static files.
+      // Hence no host rules — which is also what makes it work on localhost.
+      if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') throw new Error('http(s) only');
+      target = parsed;
+    } else {
+      target = safeTarget(raw);
+    }
   } catch (e) {
     return json({ error: (e as Error).message }, 400);
+  }
+
+  if (sameOrigin) {
+    const asset = await env.ASSETS.fetch(new Request(target.toString(), { headers: { accept: 'text/html' } }));
+    if (!asset.ok) return json({ error: `that page returned ${asset.status}`, reason: 'upstream', status: asset.status }, 502);
+    const own = await extract(asset, target.toString());
+    if (!own.title && !own.description && !own.image) {
+      return json({ error: 'no preview data on that page', reason: 'no-og' }, 404);
+    }
+    return json(own, 200, CACHE_SECONDS);
   }
 
   let upstream: Response;
@@ -193,7 +226,7 @@ async function unfurl(request: Request): Promise<Response> {
 
   const card = await extract(upstream, upstream.url || target.toString());
   if (!card.title && !card.description && !card.image) {
-    return json({ error: 'no preview data on that page' }, 404);
+    return json({ error: 'no preview data on that page', reason: 'no-og' }, 404);
   }
   return json(card, 200, CACHE_SECONDS);
 }
@@ -201,7 +234,7 @@ async function unfurl(request: Request): Promise<Response> {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-    if (url.pathname === '/api/unfurl') return unfurl(request);
+    if (url.pathname === '/api/unfurl') return unfurl(request, env);
     // Everything else is the static site, served by the assets binding so that
     // `not_found_handling` (the SPA fallback) and public/_headers still apply.
     return env.ASSETS.fetch(request);
