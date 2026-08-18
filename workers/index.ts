@@ -29,7 +29,7 @@ interface Env {
 }
 
 const MAX_BYTES = 512 * 1024;
-const TIMEOUT_MS = 5000;
+const TIMEOUT_MS = 8000;
 const CACHE_SECONDS = 3600;
 
 /** Hostnames we refuse outright. IP literals are rejected separately. */
@@ -158,13 +158,20 @@ async function unfurl(request: Request): Promise<Response> {
       redirect: 'follow',
       signal: AbortSignal.timeout(TIMEOUT_MS),
       headers: {
-        // Identify honestly. A site that does not want this can block on it.
-        'user-agent': 'sandstr-link-preview/1.0 (+https://sandstr.app)',
-        accept: 'text/html,application/xhtml+xml',
+        // Still identifies itself — a site that does not want this can block on
+        // the token. The `Mozilla/5.0 (compatible; …)` shape is the convention
+        // every crawler uses (Googlebot, bingbot) and many WAFs match on it;
+        // without it this was refused by hosts that are happy to serve bots.
+        'user-agent': 'Mozilla/5.0 (compatible; sandstr-link-preview/1.0; +https://sandstr.app)',
+        accept: 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
+        'accept-language': 'en;q=0.9,*;q=0.5',
       },
     });
-  } catch {
-    return json({ error: 'could not reach that page' }, 502);
+  } catch (e) {
+    // Say WHICH failure it was. A bare 502 made every cause look identical in
+    // the logs — timeout, DNS and TLS are three different problems.
+    const reason = (e as Error)?.name === 'TimeoutError' ? 'timeout' : 'unreachable';
+    return json({ error: 'could not reach that page', reason }, 502);
   }
 
   // A redirect chain can end somewhere the first check would have refused.
@@ -174,9 +181,15 @@ async function unfurl(request: Request): Promise<Response> {
     return json({ error: 'redirected somewhere not allowed' }, 400);
   }
 
-  if (!upstream.ok) return json({ error: `that page returned ${upstream.status}` }, 502);
+  // Pass the upstream status through as data, so a 403 from a WAF is
+  // distinguishable from a 500 on the site itself without reading our logs.
+  if (!upstream.ok) {
+    return json({ error: `that page returned ${upstream.status}`, reason: 'upstream', status: upstream.status }, 502);
+  }
   const type = upstream.headers.get('content-type') || '';
-  if (!/^text\/html|^application\/xhtml/i.test(type)) return json({ error: 'not an HTML page' }, 415);
+  if (!/^text\/html|^application\/xhtml/i.test(type)) {
+    return json({ error: 'not an HTML page', reason: 'content-type', contentType: type.slice(0, 60) }, 415);
+  }
 
   const card = await extract(upstream, upstream.url || target.toString());
   if (!card.title && !card.description && !card.image) {
