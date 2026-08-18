@@ -117,6 +117,8 @@ function YakiNoteCell({ note, author }: SurfacePreviewProps) {
         zap: !!author.lightningAddress,
         timeAgo: timeAgo(note.created_at),
         content: note.content,
+        // A pasted note carries these; a curated mock one does not.
+        images: note.images?.length ? note.images : undefined,
         reactions: note.likes,
         replies: note.replies,
         reposts: note.reposts,
@@ -137,6 +139,14 @@ function PrimalNoteCell({ note, author }: SurfacePreviewProps) {
         time: timeAgo(note.created_at),
         verified: !!author.nip05,
         body: note.content,
+        media: note.images?.[0],
+        link: note.linkPreview
+          ? {
+              title: note.linkPreview.title || note.linkPreview.siteName,
+              desc: note.linkPreview.description.slice(0, 140),
+              url: note.linkPreview.url,
+            }
+          : undefined,
         reply: note.replies,
         zap: short(note.zapAmount),
         like: note.likes,
@@ -160,6 +170,7 @@ function AmethystNoteCell({ note, author }: SurfacePreviewProps) {
         },
         content: note.content,
         timestamp: timeAgo(note.created_at),
+        images: note.images?.length ? note.images : undefined,
         stats: {
           replies: note.replies,
           reposts: note.reposts,

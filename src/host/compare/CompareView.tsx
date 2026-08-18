@@ -21,7 +21,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Info } from 'lucide-react';
 import { getClient, type ClientEntry } from '../../registry';
-import { mockNotes, mockUsers, getUserByPubkey } from '../../data/mock';
+import { mockNotes, mockUsers, getUserByPubkey, activePreviewNote } from '../../data/mock';
 import {
   COMPARISON_AXES,
   COMPARED_CLIENTS,
@@ -257,12 +257,21 @@ export default function CompareView() {
   // One note, shared by every cell — that identity IS the comparison. Picked
   // for shape, not at random: enough text to wrap, a hashtag, no attachment
   // (media would compare our placeholder renderers, not their designs).
+  // A note the visitor pasted into "Preview your note" wins outright: comparing
+  // eight clients on YOUR post is the whole reason to have both features, and
+  // the preview slot is `mockNotes[0]` (src/data/mock/previewNote.ts). The
+  // curated pick below is the fallback — chosen for shape, not at random.
+  const previewed = activePreviewNote();
   const note = useMemo(
     () =>
+      (previewed ? mockNotes[0] : null) ??
       mockNotes.find(
         (n) => !n.images?.length && !n.isRepost && n.content.length > 90 && n.content.length < 220,
-      ) ?? mockNotes[0],
-    [],
+      ) ??
+      mockNotes[0],
+    // `previewed` is in the deps on purpose: the note object is mutated in
+    // place, so without it this memo would hand back the pre-edit content.
+    [previewed],
   );
   const author = useMemo(() => getUserByPubkey(note.pubkey) ?? mockUsers[0], [note]);
 
