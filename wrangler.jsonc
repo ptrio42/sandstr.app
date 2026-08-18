@@ -7,8 +7,23 @@
   "name": "sandstr-app",
   "compatibility_date": "2026-08-05",
 
+  // The Worker entry. Until "Preview your note" needed link-preview cards this
+  // project had NO server code at all and this file carried only `assets` — see
+  // the header of workers/index.ts for why that changed and what the endpoint is
+  // allowed to do. Everything that is not /api/* is still served straight from
+  // the assets binding, so the SPA fallback and public/_headers are unchanged.
+  "main": "./workers/index.ts",
+
   "assets": {
     "directory": "./dist",
+
+    // Bound so the Worker can hand non-API requests back to the static site.
+    "binding": "ASSETS",
+
+    // WITHOUT this, `not_found_handling` below answers /api/unfurl with
+    // index.html before the Worker ever runs: assets are matched first by
+    // default, and the SPA fallback matches everything.
+    "run_worker_first": ["/api/*"],
 
     // The SPA fallback. This replaces the `/*  /index.html  200` rule that
     // public/_redirects used to carry: on Workers assets that rule is rejected

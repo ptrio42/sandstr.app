@@ -4,6 +4,7 @@ import { useParentTheme } from '../shared/hooks/useParentTheme';
 import { TourContext } from '../../components/tour';
 
 import { TabBar, type YakiTab } from './components/TabBar';
+import { useScreenSync } from '../shared/screenSync';
 import { Drawer, type DrawerDest } from './components/Drawer';
 import { FeedSourceSheet, type FeedSource } from './components/FeedSelector';
 import { ZapIcon } from './components/icons';
@@ -87,6 +88,16 @@ export function YakiHonneSimulator({ className = '', tourCommand, onCommandHandl
   // "Create account" wizard. "Continue as a guest" skips straight to the feed.
   const [authRoute, setAuthRoute] = useState<'welcome' | 'signin' | 'signup'>('welcome');
   const [tab, setTab] = useState<YakiTab>('home');
+
+  // Keep your place across a client switch (shared/screenSync.ts).
+  useScreenSync<YakiTab>({
+    map: { feed: 'home', messages: 'dms', notifications: 'notifications' },
+    current: authed ? tab : null,
+    onRestore: (screen) => {
+      setAuthed(true);
+      setTab(screen);
+    },
+  });
   const [source, setSource] = useState<FeedSource>('recent');
   const [sourceSheetOpen, setSourceSheetOpen] = useState(false);
   const [overlays, setOverlays] = useState<Overlay[]>([]);

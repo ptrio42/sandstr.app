@@ -11,10 +11,17 @@ reprodukcją realnego klienta.
 jest derywowana z osi `status` w `src/registry.tsx`; nie wpisuj takich liczb na sztywno.
 
 Stack: **Vite 6 + React 19 + TypeScript SPA**, React Router 7, Tailwind 3, framer-motion, lucide-react.
-**Zero backendu, sieci, auth, realnej krypto** — mock data, fejkowe klucze, symulowane interakcje liczone
-w przeglądarce. **Deploy = `git push` na main** — Cloudflare Workers Builds (integracja GitHub) buduje
+**Bez auth i bez realnej krypto** — mock data, fejkowe klucze, symulowane interakcje liczone
+w przeglądarce. **Jeden wyjątek od „zero backendu": `workers/index.ts`** — endpoint `/api/unfurl`
+pobiera tagi OG cudzej strony, żeby „Preview your note" mógł pokazać kartę podglądu linku (przeglądarka
+sama nie może, CORS). Endpoint jest wąski i pilnowany przed SSRF (https, bez literałów IP, tylko
+text/html, 512 kB, 5 s); poza `/api/*` wszystko idzie prosto z assetów, więc SPA fallback i `_headers`
+są nietknięte. **Nie dokładaj do niego funkcji** bez dobrego powodu — to jedyna powierzchnia serwerowa
+w projekcie. `connect-src` zostaje `'self'`. **Deploy = `git push` na main** — Cloudflare Workers Builds (integracja GitHub) buduje
 i wdraża samo; lokalny `wrangler deploy` NIE zadziała (brak logowania, tylko `CLOUDFLARE_API_TOKEN` by
-pomógł). Weryfikacja wdrożenia: porównaj hash chunka z `dist/assets/` z tym serwowanym na
+pomógł). Po wdrożeniu sprawdź TAKŻE endpoint: `curl -s 'https://sandstr.app/api/unfurl?url=https%3A%2F%2Fnostr.com'`
+musi zwrócić JSON — `<!doctype html>` znaczy, że `run_worker_first` nie zadziałało.
+Weryfikacja części klienckiej: porównaj hash chunka z `dist/assets/` z tym serwowanym na
 `sandstr.app/assets/…` albo grepni marker treści — hash samego `index-*.js` to za mało, bo zmiany
 w symulatorze siedzą w lazy chunkach.
 
@@ -62,8 +69,13 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
   `shared/` zmienia wszystkie naraz.
 - **Interfejs komend toura jest nietykalny** (`tourCommand` / `onCommandHandled` / `className` + `switch`
   komend) — inaczej psują się toury i mini-toury FAQ.
-- **Bez nowych zależności npm** (są: react, react-dom, react-router-dom, framer-motion, lucide-react,
-  clsx, tailwind-merge). Bez realnej krypto i sieci — to symulacja.
+- **Bez nowych zależności RUNTIME** (są: react, react-dom, react-router-dom, framer-motion,
+  lucide-react, clsx, tailwind-merge) — nic z tego nie dochodzi do bundla. Narzędzia buildowe
+  w `devDependencies` to osobna sprawa: **`wrangler` jest PRZYPIĘTY dokładną wersją** (`4.118.0`,
+  bez `^`), bo Workers Builds użyłby własnej, a `assets.run_worker_first` w `wrangler.jsonc`
+  starsza wersja po cichu zignoruje — wtedy `/api/unfurl` odda `index.html` i karty linków
+  przestaną działać bez żadnego błędu deployu. Podnosząc tę wersję, przetestuj endpoint
+  (`wrangler dev` + curl) ZANIM zmergujesz. Bez realnej krypto i sieci — to symulacja.
 - **Baner disclaimera MUSI zostać** na każdym widoku klienta (`Disclaimer` / `DisclaimerStrip`
   w `src/host/ClientView.tsx`, tekst „Simulation · mock data · unofficial, not affiliated with
   &lt;nazwa&gt;") — #1 lekka mitygacja ryzyka znaku towarowego. Nie usuwaj i nie skracaj.

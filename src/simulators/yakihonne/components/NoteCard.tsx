@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MENTION_SPLIT_RE, MENTION_TOKEN_RE, resolveMention } from '../../../data/mock';
 import { Avatar } from './Avatar';
 import {
   HeartIcon, CommentIcon, RepostIcon, QuoteIcon, ZapIcon, TranslateIcon,
@@ -14,9 +15,19 @@ function abbrev(n: number): string {
 }
 
 // hashtags (blue pill + external-link), urls (blue), @mentions (orange)
+// `nostr:` references (NIP-21) resolve to a name before the rest of the
+// tokenising runs — see src/data/mock/mentions.ts.
 function renderContent(text: string): React.ReactNode {
-  const parts = text.split(/(\s+)/);
-  return parts.map((tok, i) => {
+  return text.split(MENTION_SPLIT_RE).map((chunk, ci) => {
+    if (MENTION_TOKEN_RE.test(chunk)) {
+      const mention = resolveMention(chunk);
+      return (
+        <span key={`m${ci}`} className="text-[var(--yh-orange)]">
+          {mention.kind === 'profile' ? `@${mention.label}` : mention.label}
+        </span>
+      );
+    }
+    return chunk.split(/(\s+)/).map((tok, i) => {
     if (/^#[\p{L}\p{N}_]+$/u.test(tok)) {
       return (
         <span key={i} className="yakihonne-hashtag">
@@ -27,6 +38,7 @@ function renderContent(text: string): React.ReactNode {
     if (/^https?:\/\/\S+/.test(tok)) return <span key={i} className="text-[var(--yh-link)]">{tok}</span>;
     if (/^@[\w.]+$/.test(tok)) return <span key={i} className="text-[var(--yh-orange)]">{tok}</span>;
     return <React.Fragment key={i}>{tok}</React.Fragment>;
+    });
   });
 }
 

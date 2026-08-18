@@ -1,4 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
+import { useScreenSync } from '../shared/screenSync';
 import type { MockNote, MockUser } from '../../data/mock';
 import { useParentTheme } from '../shared/hooks/useParentTheme';
 import { TourContext } from '../../components/tour';
@@ -83,6 +84,21 @@ export function WispSimulator({ className = '', tourCommand, onCommandHandled }:
     },
     [registerAction],
   );
+
+
+  // Keep your place across a client switch (shared/screenSync.ts). Wallet is Wisp's own
+  // tab with no shared intent, so it is simply not in the map.
+  useScreenSync<WispTab>({
+    map: { feed: 'home', search: 'search', messages: 'messages', notifications: 'notifications' },
+    current: isAuthenticated ? activeTab : null,
+    onRestore: (screen) => {
+      // BOTH pieces of state, via handleLogin: this screen is gated on
+      // `!isAuthenticated || !currentUser`, and setting only the flag left the
+      // login screen up with the restore silently doing nothing.
+      handleLogin(DEMO_USER);
+      setActiveTab(screen);
+    },
+  });
 
   const openThread = useCallback((note: MockNote) => setThreadNote(note), []);
   const openProfile = useCallback(

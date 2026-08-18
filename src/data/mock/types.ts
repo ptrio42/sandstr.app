@@ -55,6 +55,15 @@ export interface MockUser {
   badges?: string[];
 }
 
+/** What `/api/unfurl` returns for a link, and what a preview card renders. */
+export interface LinkPreview {
+  url: string;
+  title: string;
+  description: string;
+  image: string;
+  siteName: string;
+}
+
 // Mock Note/Post (Kind 1)
 export interface MockNote {
   id: string;
@@ -76,6 +85,12 @@ export interface MockNote {
   mentions?: string[];      // Mentioned user pubkeys
   hashtags?: string[];      // Extracted hashtags
   links?: string[];         // URLs in content
+  /**
+   * Link preview card ("Preview your note" only). Real clients unfurl a
+   * non-media link into a card; mock notes never carry one, because resolving it
+   * needs a network request — see workers/index.ts and previewNote.ts.
+   */
+  linkPreview?: LinkPreview;
   category: ContentCategory;
   community?: string;       // Community/forum the note was posted in
   isLive?: boolean;         // Whether the post is from a live stream

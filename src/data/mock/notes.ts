@@ -7,6 +7,7 @@ import type { MockNote } from './types';
 import { EventKind, ContentCategory } from './types';
 import { generateHex, generateRealisticTimestamp, generateSig, generateEngagement, createTags, getSampleImages, extractHashtags, extractMentions, extractUrls } from './utils';
 import { mockUsers, getRandomUsers } from './users';
+import { registerPreviewSlot } from './previewNote';
 
 // Content templates for different categories
 const contentTemplates: Record<ContentCategory, string[]> = {
@@ -518,6 +519,12 @@ Simple and effective.`,
 
 // Generate the notes
 export const mockNotes: MockNote[] = generateAllNotes();
+
+// "Paste your note, see it in every client": the newest note doubles as the
+// slot a visitor's own text borrows. Claimed here, while this chunk is still
+// initialising, so a stored message is already on the card before any simulator
+// renders — see previewNote.ts for why it overwrites rather than prepends.
+registerPreviewSlot(mockNotes[0]);
 
 // Export filtered notes
 export const notesByCategory: Record<ContentCategory, MockNote[]> = {

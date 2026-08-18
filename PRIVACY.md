@@ -4,14 +4,37 @@ sandstr is a static, fully client-side site. There is no backend, no database,
 no analytics, no cookies, and no account system. Nothing you type or click is
 transmitted anywhere — there is no server of ours to transmit it to.
 
-**One honest caveat:** the two simulators marked *Early preview* — Keychat and
-Gossip — still load placeholder avatars from a third-party image service
-(DiceBear; 12 hotlinked URLs, 9 in Keychat and 3 in Gossip), which — like any
-image request — exposes your IP address to that service. Every other simulator
-makes **zero** external requests, including all eight reference-verified ones
+**Two honest caveats.**
+
+*First:* the two simulators marked *Early preview* — Keychat and Gossip — still
+load placeholder avatars from a third-party image service (DiceBear; 12
+hotlinked URLs, 9 in Keychat and 3 in Gossip), which — like any image request —
+exposes your IP address to that service. Every other simulator makes **zero**
+external requests on its own, including all eight reference-verified ones
 (Damus, Amethyst, YakiHonne, Snort, Primal, Wisp, Nostur, Coracle). Removing
 the last hotlinks is tracked work; until it lands, this file won't pretend
 otherwise.
+
+*Second:* **"Preview your note" can cause a request on your behalf.** If the note
+you paste contains a link to an image, the client reproduction renders it, which
+means your browser fetches it from whatever host the link names — and that host
+sees your IP address and the fact that a browser asked. This only ever happens
+for a URL *you* pasted, and only for images: the site's policy leaves
+`connect-src` and `media-src` at `'self'`, so nothing else can be loaded from
+outside. An image you attach from your own disk is different — it is turned into
+a `data:` URL inside the page and never leaves your browser at all. If you would
+rather make no outside request, attach the file instead of linking to it.
+
+The same feature also renders **link preview cards**. Here the fetch is made by
+sandstr's own server-side endpoint (`/api/unfurl`), not by your browser — the
+linked site sees a request from Cloudflare's network identifying itself as
+`sandstr-link-preview/1.0`, and it does **not** see your IP address. What your
+browser does load directly is the card's *image*, if the page advertises one, so
+that host does see your IP. The endpoint accepts https URLs only, refuses
+addresses that are not public hostnames, reads at most 512 kB of HTML, and
+returns only the title, description, image URL and site name — never the page
+itself. Nothing about your note is stored on the server; the request carries only
+the URL you pasted.
 
 ## What stays in your browser
 

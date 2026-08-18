@@ -11,6 +11,7 @@ import { OnboardingTour } from './components/OnboardingTour';
 import { useParentTheme } from '../shared/hooks/useParentTheme';
 import type { MockNote, MockUser } from '../../data/mock';
 import { mockNotes, mockUsers, getUserByPubkey } from '../../data/mock';
+import { useScreenSync } from '../shared/screenSync';
 
 export type GossipView = 'feed' | 'thread' | 'people' | 'relays' | 'settings';
 
@@ -39,6 +40,14 @@ export const GossipSimulator: React.FC = () => {
   const navigateTo = useCallback((view: GossipView) => {
     setState(prev => ({ ...prev, currentView: view }));
   }, []);
+
+  // Keep your place across a client switch (shared/screenSync.ts). Gossip opens
+  // on its feed with no wall to skip, so this only restores the view.
+  useScreenSync<GossipView>({
+    map: { feed: 'feed', relays: 'relays', profile: 'people', settings: 'settings' },
+    current: state.currentView,
+    onRestore: navigateTo,
+  });
 
   const openThread = useCallback((note: MockNote) => {
     setState(prev => ({

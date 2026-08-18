@@ -21,6 +21,7 @@ import { BookmarksScreen } from './screens/BookmarksScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { SideMenu, type MenuDest } from './screens/SideMenu';
 import { TabBar, type DamusTab } from './components/TabBar';
+import { useScreenSync } from '../shared/screenSync';
 
 export type DamusScreen =
   | 'login' | 'home' | 'profile' | 'compose' | 'settings'
@@ -81,6 +82,18 @@ export const DamusSimulator: React.FC<DamusSimulatorProps> = ({ className = '', 
   }, []);
 
   const logout = () => { setAuthed(false); setCurrentUser(null); setOverlays([]); setDrawerOpen(false); };
+
+  // Keep your place across a client switch (shared/screenSync.ts). Profile,
+  // settings and relays are overlays here rather than tabs, so they are left out
+  // of the map and fall back to the feed.
+  useScreenSync<DamusTab>({
+    map: { feed: 'home', messages: 'dms', search: 'search', notifications: 'notifications' },
+    current: authed ? tab : null,
+    onRestore: (screen) => {
+      login(mockUsers[0]);
+      setTab(screen);
+    },
+  });
 
   // Transient "not in this demo" toast (same mechanic the Amethyst sim uses for
   // out-of-scope taps: message + auto-dismiss).

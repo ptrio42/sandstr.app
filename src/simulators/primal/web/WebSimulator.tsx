@@ -12,6 +12,7 @@ import { BookmarksScreen } from './screens/BookmarksScreen';
 import { ReadsScreen } from './screens/ReadsScreen';
 import { ThreadScreen } from './screens/ThreadScreen';
 import { LoginScreen } from './screens/LoginScreen';
+import { useScreenSync } from '../../shared/screenSync';
 import { PlaceholderScreen } from './screens/PlaceholderScreen';
 import type { PNote } from './data';
 import './primal-web.theme.css';
@@ -54,6 +55,25 @@ export function PrimalWebSimulator({ className = '', tourCommand, onCommandHandl
   const [exploreTab, setExploreTab] = useState<{ tab: string; n: number } | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
+
+  // Keep your place across a client switch (shared/screenSync.ts). Reads, downloads and
+  // premium are Primal's own and stay out of the shared vocabulary.
+  useScreenSync<TabId>({
+    map: {
+      feed: 'home',
+      search: 'explore',
+      messages: 'messages',
+      bookmarks: 'bookmarks',
+      notifications: 'notifications',
+      settings: 'settings',
+      profile: 'profile',
+    },
+    current: authenticated ? activeTab : null,
+    onRestore: (screen) => {
+      setAuthenticated(true);
+      setActiveTab(screen);
+    },
+  });
   const [thread, setThread] = useState<PNote | null>(null);
   const [posted, setPosted] = useState(false);
   const [toast, setToast] = useState<string | null>(null);

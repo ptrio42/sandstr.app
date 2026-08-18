@@ -9,7 +9,7 @@ import {
 import { Avatar } from './Avatar';
 import { useAmethystToast } from '../toast';
 import { useSecurity } from '../securityState';
-import { getUserByPubkey } from '../../../data/mock';
+import { getUserByPubkey, resolveMention } from '../../../data/mock';
 import '../amethyst.theme.css';
 
 interface PostAuthor {
@@ -118,11 +118,14 @@ const MARKER_CITIES = ['Lisbon', 'Riga', 'Tbilisi', 'Nairobi'];
  * notes carry opaque tokens, so we map them onto the mock roster deterministically
  * — the point is that a reader sees a NAME, which is what the client shows.
  */
-const MENTION_NAMES = ['Nostrich Nina', 'Kit Kobayashi', 'Maple Dev', 'CodeWiz', 'Violet Volt', 'Karrot'];
 function mentionName(token: string): string {
-  let h = 0;
-  for (let i = 0; i < token.length; i++) h = (h * 31 + token.charCodeAt(i)) >>> 0;
-  return MENTION_NAMES[h % MENTION_NAMES.length];
+  // Deliberately NOT a hash into a name list any more: that invented a person
+  // for whatever token it was handed, so a visitor pasting a real `nostr:npub1…`
+  // saw a stranger's name presented as fact. resolveMention() returns a mock
+  // identity only when the reference IS one, and a shortened npub otherwise —
+  // which is what a client with no cached metadata shows.
+  const mention = resolveMention(token.startsWith('nostr:') ? token : `nostr:${token}`);
+  return mention.label;
 }
 
 /**

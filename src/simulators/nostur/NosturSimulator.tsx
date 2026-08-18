@@ -8,6 +8,7 @@ import { Sidebar } from './components/Sidebar';
 import { ZapSheet } from './components/ZapSheet';
 import { Switch } from './components/Chrome';
 import { WelcomeScreen } from './screens/WelcomeScreen';
+import { useScreenSync } from '../shared/screenSync';
 import { FeedScreen } from './screens/FeedScreen';
 import { ThreadScreen } from './screens/ThreadScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
@@ -70,6 +71,23 @@ export function NosturSimulator({
 
   const [authenticated, setAuthenticated] = useState(false);
   const [tab, setTab] = useState<NosturTab>('home');
+
+  // Keep your place across a client switch (shared/screenSync.ts). A screen this
+  // client has no tab for falls back to the feed.
+  useScreenSync<NosturTab>({
+    map: {
+      feed: 'home',
+      bookmarks: 'bookmarks',
+      search: 'search',
+      notifications: 'notifications',
+      messages: 'messages',
+    },
+    current: authenticated ? tab : null,
+    onRestore: (screen) => {
+      setAuthenticated(true);
+      setTab(screen);
+    },
+  });
   const [feed, setFeed] = useState<NosturFeed>('Following');
   const [overlays, setOverlays] = useState<Overlay[]>([]);
   const [drawer, setDrawer] = useState(false);

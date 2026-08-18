@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ChevronDown, ChevronLeft, ExternalLink, Flag, HelpCircle, History, Info, Monitor, Moon, Play, Sun } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ExternalLink, Flag, HelpCircle, History, Info, Monitor, Moon, PenLine, Play, RotateCcw, Sun } from 'lucide-react';
 import MobilePhoneFrame from '../simulators/shared/components/MobilePhoneFrame';
 import { ClientGlyph, platformLabel } from './ClientGlyph';
 import { clients, getClient, versionsOf, type ClientEntry } from '../registry';
@@ -9,6 +9,24 @@ import { shareCopy } from '../shareMeta';
 import { getFaq } from '../data/faq';
 import { showFaqInSimulator } from '../components/faq/FaqMiniTourLauncher';
 import FaqPanel from './FaqPanel';
+import PreviewNoteSheet from './PreviewNoteSheet';
+import {
+  clearScreenIntent,
+  readScreenIntent,
+  SCREEN_LABELS,
+  type ScreenIntent,
+} from '../simulators/shared/screenSync';
+import { fetchLinkPreview } from './unfurl';
+import {
+  linkCandidate,
+  activePreviewLink,
+  writePreviewLink,
+  readPreviewNote,
+  writePreviewNote,
+  normalizePreviewText,
+  activePreviewImage,
+  writePreviewImage,
+} from '../data/mock/previewNote';
 import { useMediaQuery, MOBILE_QUERY } from './useMediaQuery';
 import { useTheme } from './useTheme';
 import { fidelityReportUrl } from './contribute';
@@ -243,10 +261,20 @@ function ContextPanel({
   entry,
   real,
   onOpenFaq,
+  onPreviewNote,
+  previewLabel,
+  previewActive,
+  onResetScreen,
+  resetTitle,
 }: {
   entry: ClientEntry;
   real: boolean;
   onOpenFaq?: () => void;
+  onPreviewNote?: () => void;
+  previewLabel?: string;
+  previewActive?: boolean;
+  onResetScreen?: () => void;
+  resetTitle?: string;
 }) {
   return (
     <aside className="hidden h-full w-[290px] shrink-0 flex-col justify-center gap-5 py-2 lg:flex">
@@ -280,8 +308,30 @@ function ContextPanel({
         </div>
       )}
 
-      {(entry.hasTour || onOpenFaq) && (
+      {(entry.hasTour || onOpenFaq || onPreviewNote || onResetScreen) && (
         <div className="flex flex-wrap gap-2">
+          {onResetScreen && (
+            <button
+              type="button"
+              onClick={onResetScreen}
+              title={resetTitle}
+              className="inline-flex w-fit items-center gap-1.5 rounded-full border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              <RotateCcw className="h-3.5 w-3.5" /> Start screen
+            </button>
+          )}
+          {onPreviewNote && (
+            <button
+              type="button"
+              onClick={onPreviewNote}
+              className={cn(
+                'inline-flex w-fit items-center gap-1.5 rounded-full border border-primary-300 px-3 py-1.5 text-xs font-medium text-primary-700 transition-colors hover:bg-primary-100 dark:border-primary-500/40 dark:text-primary-300 dark:hover:bg-primary-500/20',
+                previewActive ? 'bg-primary-100 dark:bg-primary-500/20' : 'bg-primary-50 dark:bg-primary-500/10',
+              )}
+            >
+              <PenLine className="h-3.5 w-3.5" /> {previewLabel}
+            </button>
+          )}
           {entry.hasTour && (
             <button
               type="button"
@@ -561,10 +611,40 @@ export default function ClientView() {
   const [faqCurrentId, setFaqCurrentId] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // "Preview your own note". The text itself lives in the mock module (it has
+  // already overwritten the top note by the time a simulator renders); what the
+  // host keeps is the copy the dialog edits, plus a nonce. The nonce is in the
+  // stage's `key`: the mutation happens on an object React knows nothing about,
+  // so an already-mounted simulator has to be remounted to show a new message.
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewText, setPreviewText] = useState(() => {
+    // Deep link `/c/<client>?note=<text>` — the shareable half of the feature.
+    // Resolved in the initialiser and not in an effect on purpose: an effect
+    // runs after the first render, which is a race against the lazy chunk that
+    // this one cannot afford to lose. Writing here is idempotent, and
+    // StrictMode is off in this app (main.tsx).
+    if (typeof window === 'undefined') return '';
+    const fromUrl = normalizePreviewText(new URLSearchParams(window.location.search).get('note'));
+    return fromUrl ? writePreviewNote(fromUrl) : readPreviewNote();
+  });
+  const [mountNonce, setMountNonce] = useState(0);
+
+  // Where the visitor was, in the shared vocabulary every simulator maps to its
+  // own screen names. Held here only to label and gate the reset control — the
+  // simulators read the stored value themselves on mount.
+  const [screenIntent, setScreenIntent] = useState<ScreenIntent | null>(() => readScreenIntent());
+  useEffect(() => {
+    const onScreen = (e: Event) => setScreenIntent((e as CustomEvent<ScreenIntent | null>).detail ?? null);
+    window.addEventListener('sandstr-screen', onScreen);
+    return () => window.removeEventListener('sandstr-screen', onScreen);
+  }, []);
+  const [previewImage, setPreviewImage] = useState(() => activePreviewImage());
+
   // The switcher can change client while the sheet is open — it describes a
   // specific reproduction, so it must not survive into the next one.
   useEffect(() => {
     setAboutOpen(false);
+    setPreviewOpen(false);
     setFaqOpen(false);
     setFaqFocusId(null);
     setFaqResumeId(null);
@@ -745,6 +825,58 @@ export default function ClientView() {
   // mounting a sim whose own media queries have deleted its navigation.
   const gated = isMobile && !frame;
 
+  // "Preview your own note" borrows the top note of the shared mock feed, so it
+  // is offered wherever a note feed exists. Keychat is a messenger — it has no
+  // feed for a pasted message to land in — and a gated client isn't mounted at
+  // all. Everything else here reads the same `mockNotes`, including the two
+  // clients that keep their own arrays (YakiHonne, Primal web).
+  const canPreviewNote = entry.id !== 'keychat' && !gated;
+  const previewLabel = previewText ? 'Your note is on the feed' : 'Preview your note';
+  const previewActive = !!previewText || !!previewImage;
+
+  // Attaching an image re-applies immediately (the dialog stays open, so the
+  // remount is the visitor's own "Show it"), which is why this only records the
+  // new value rather than bumping the nonce.
+  const pickPreviewImage = (dataUrl: string | null) => setPreviewImage(writePreviewImage(dataUrl));
+
+  // "Take me back to how this client opens." Clearing the intent is not enough
+  // on its own: the simulator is already mounted and restored, so it has to be
+  // remounted to fall back to its real starting screen.
+  const resetToStartScreen = () => {
+    clearScreenIntent();
+    setScreenIntent(null);
+    setMountNonce((n) => n + 1);
+  };
+
+  /**
+   * Fetch the card for the note's first non-media link, if we do not already
+   * have it. Deliberately AFTER the note is already on screen: the card is a
+   * bonus that arrives a moment later, not something the visitor waits for.
+   */
+  const refreshLinkCard = async (text: string) => {
+    const candidate = linkCandidate(text);
+    if (!candidate) {
+      if (activePreviewLink()) writePreviewLink(null);
+      return;
+    }
+    if (activePreviewLink()?.url === candidate) return;
+    const card = await fetchLinkPreview(candidate);
+    writePreviewLink(card);
+    // Only remount when there is something new to show — a failed unfurl (dev
+    // server, offline, a site with no OG tags) must not flicker the client.
+    if (card) setMountNonce((n) => n + 1);
+  };
+
+  const applyPreview = (text: string) => {
+    setPreviewText(writePreviewNote(text));
+    setPreviewImage(activePreviewImage());
+    void refreshLinkCard(text);
+    // Remount the simulator so the mutated note is actually rendered, and land
+    // the visitor back on the client instead of behind a dialog.
+    setMountNonce((n) => n + 1);
+    setPreviewOpen(false);
+  };
+
   // The mounted simulator cross-fades in place on every switch; the frame/card
   // chrome around it stays put so it reads as "same device, new app".
   // Enter-only keyed fade — the sim stays in normal flow (its own scroll/status-bar
@@ -760,7 +892,9 @@ export default function ClientView() {
   // permanent version of that bug.
   const swap = (children: ReactNode) => (
     <motion.div
-      key={entry.id}
+      // The nonce remounts the simulator when the pasted note changes: the mock
+      // note is mutated in place, which is invisible to React's own bookkeeping.
+      key={`${entry.id}:${mountNonce}`}
       className="h-full w-full"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -865,6 +999,29 @@ export default function ClientView() {
               <HelpCircle className="h-4 w-4" />
             </button>
           )}
+          {screenIntent && (
+            <button
+              type="button"
+              aria-label="Back to this client's start screen"
+              onClick={resetToStartScreen}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </button>
+          )}
+          {canPreviewNote && (
+            <button
+              type="button"
+              aria-label={previewLabel}
+              onClick={() => setPreviewOpen(true)}
+              className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-lg text-primary-600 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-500/10',
+                previewActive && 'bg-primary-50 dark:bg-primary-500/10',
+              )}
+            >
+              <PenLine className="h-4 w-4" />
+            </button>
+          )}
           <button
             type="button"
             onClick={toggle}
@@ -935,6 +1092,28 @@ export default function ClientView() {
             <HelpCircle className="h-3.5 w-3.5" /> How do I…?
           </button>
         )}
+        {canPreviewNote && (
+          <button
+            type="button"
+            onClick={() => setPreviewOpen(true)}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-full border border-primary-300 px-2.5 py-1 text-xs font-medium text-primary-700 transition-colors hover:bg-primary-100 dark:border-primary-500/40 dark:text-primary-300 dark:hover:bg-primary-500/20',
+              previewActive ? 'bg-primary-100 dark:bg-primary-500/20' : 'bg-primary-50 dark:bg-primary-500/10',
+            )}
+          >
+            <PenLine className="h-3.5 w-3.5" /> {previewLabel}
+          </button>
+        )}
+        {screenIntent && (
+          <button
+            type="button"
+            onClick={resetToStartScreen}
+            title={`You are on ${SCREEN_LABELS[screenIntent]} — switching clients keeps you here`}
+            className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            <RotateCcw className="h-3.5 w-3.5" /> Start screen
+          </button>
+        )}
         {isReal && <Handoff entry={entry} compact />}
         {/* The frameless clients have no ContextPanel, so this row is their ONLY
             desktop home for the report link — hence it lives here and not just
@@ -969,11 +1148,30 @@ export default function ClientView() {
             entry={entry}
             real={isReal}
             onOpenFaq={faq ? () => setFaqOpen(true) : undefined}
+            onPreviewNote={canPreviewNote ? () => setPreviewOpen(true) : undefined}
+            previewLabel={previewLabel}
+            previewActive={previewActive}
+            onResetScreen={screenIntent ? resetToStartScreen : undefined}
+            resetTitle={
+              screenIntent
+                ? `You are on ${SCREEN_LABELS[screenIntent]} — switching clients keeps you here`
+                : undefined
+            }
           />
         )}
       </div>
 
       {aboutOpen && <AboutSheet entry={entry} real={isReal} onClose={() => setAboutOpen(false)} />}
+      {previewOpen && (
+        <PreviewNoteSheet
+          clientName={entry.name}
+          initialText={previewText}
+          initialImage={previewImage}
+          onApply={applyPreview}
+          onPickImage={pickPreviewImage}
+          onClose={() => setPreviewOpen(false)}
+        />
+      )}
       {faq && (
         <FaqPanel
           clientName={entry.name}

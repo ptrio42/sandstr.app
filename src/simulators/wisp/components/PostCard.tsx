@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import {
   Repeat2,
   Reply,
@@ -9,6 +9,7 @@ import {
   Bitcoin,
 } from 'lucide-react';
 import type { MockNote, MockUser } from '../../../data/mock';
+import { MENTION_SPLIT_RE, MENTION_TOKEN_RE, resolveMention } from '../../../data/mock';
 import { WispAvatar } from './Avatar';
 import { ActionBar } from './ActionBar';
 import {
@@ -55,10 +56,18 @@ const OVERFLOW_ITEMS = [
 
 /** Render content with orange (accent) hashtags/mentions/links — no underline. */
 export function RichText({ text }: { text: string }) {
-  const parts = text.split(/(#[\p{L}\p{N}_]+|@[\p{L}\p{N}_]+|https?:\/\/\S+)/u);
   return (
     <>
-      {parts.map((p, i) =>
+      {text.split(MENTION_SPLIT_RE).flatMap((chunk, ci) => {
+        if (MENTION_TOKEN_RE.test(chunk)) {
+          const mention = resolveMention(chunk);
+          return [
+            <span key={`m${ci}`} style={{ color: 'var(--wisp-accent)' }}>
+              {mention.kind === 'profile' ? `@${mention.label}` : mention.label}
+            </span>,
+          ];
+        }
+        return chunk.split(/(#[\p{L}\p{N}_]+|@[\p{L}\p{N}_]+|https?:\/\/\S+)/u).map((p, i) =>
         /^(#|@|https?:)/.test(p) ? (
           <span key={i} style={{ color: 'var(--wisp-accent)' }}>
             {p.replace(/^https?:\/\//, '')}
@@ -66,7 +75,8 @@ export function RichText({ text }: { text: string }) {
         ) : (
           <React.Fragment key={i}>{p}</React.Fragment>
         ),
-      )}
+        );
+      })}
     </>
   );
 }
@@ -118,6 +128,10 @@ function MediaBlock({ note }: { note: MockNote }) {
   );
 }
 
+/** 500dp; dp maps to CSS px at the density this frame emulates. */
+const CLAMP_PX = 500;
+const FADE = 'linear-gradient(180deg, black calc(100% - 48px), transparent 100%)';
+
 export function PostCard({
   note,
   author,
@@ -136,7 +150,27 @@ export function PostCard({
 
   const status = statusFor(author);
   const pow = powBitsFor(note);
-  const isLong = !note.images?.length && note.content.length > 420;
+
+  /**
+   * Upstream clamps by HEIGHT, not by character count (screen-map §Feed card 4:
+   * "Text-only posts clamp at 500dp with bottom fade + centered Show more/Show
+   * less in primary. Media never clamps."). A character threshold was the wrong
+   * unit — the same 420 characters is two screens of one-word lines or four
+   * lines of prose. dp maps to CSS px at this density, so the cut is measured
+   * on the rendered paragraph instead.
+   */
+  const bodyRef = useRef<HTMLParagraphElement>(null);
+  const [overflows, setOverflows] = useState(false);
+  const hasMedia = !!note.images?.length;
+  useLayoutEffect(() => {
+    const el = bodyRef.current;
+    if (!el || hasMedia) {
+      setOverflows(false);
+      return;
+    }
+    setOverflows(el.scrollHeight > CLAMP_PX + 1);
+  }, [note.content, hasMedia]);
+  const isLong = overflows;
   const isReply = Boolean(note.tags?.some((t) => t[0] === 'e')) && !note.isRepost;
 
   if (quoted) {
@@ -254,9 +288,19 @@ export function PostCard({
         {/* Content */}
         <div className="mt-1.5">
           <p
-            className={`whitespace-pre-wrap text-[15px] leading-[1.47] ${
-              isLong && !expanded ? 'line-clamp-[10]' : ''
-            }`}
+            ref={bodyRef}
+            className="whitespace-pre-wrap text-[15px] leading-[1.47]"
+            style={
+              isLong && !expanded
+                ? {
+                    maxHeight: CLAMP_PX,
+                    overflow: 'hidden',
+                    // The "bottom fade" the screen-map calls for.
+                    maskImage: FADE,
+                    WebkitMaskImage: FADE,
+                  }
+                : undefined
+            }
           >
             <RichText text={note.content} />
           </p>

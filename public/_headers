@@ -34,13 +34,21 @@
   # against a future regression. Same reasoning for form-action (no <form> in
   # the tree) and frame-src (no <iframe>).
   #
-  # img-src carries one hotlink origin, down from two: 12 DiceBear URLs still
-  # live in the two Early preview simulators (Keychat 9, Gossip 3), the top
-  # cross-cutting task in CLAUDE.md. Unsplash is at zero across src/ — the mock
-  # data now ships local `data:` SVGs — so its origin came out of the line
-  # below. When the last twelve go, DiceBear follows and the policy collapses
-  # into a true `default-src 'self'` — which is the moment the "runs behind a
-  # hostile or absent network" claim becomes checkable rather than aspirational.
+  # img-src is the one broad directive here, and it is broad on purpose: the
+  # "Preview your note" feature renders an image the VISITOR's own note links
+  # to, and a pasted note can name any host. `https:` (not a list of origins) is
+  # what makes that work; an image the visitor attaches from disk arrives as a
+  # `data:` URL instead and needs nothing.
+  #
+  # The cost is stated in PRIVACY.md rather than hidden: loading such an image
+  # exposes the visitor's IP to that host. It does NOT widen anything else —
+  # connect-src, script-src and media-src stay 'self', so a URL in a note can
+  # fetch a picture and nothing more.
+  #
+  # Separately, 12 DiceBear URLs still live in the two Early preview simulators
+  # (Keychat 9, Gossip 3) — the top cross-cutting task in CLAUDE.md. They are
+  # now covered by `https:` like everything else, so removing them no longer
+  # collapses this policy on its own.
   #
   # style-src needs 'unsafe-inline' for style ATTRIBUTES: the prerendered
   # gallery ships 11 of them and framer-motion writes more at runtime.
@@ -51,7 +59,7 @@
   # the prerendered gallery on /c/* before first paint). scripts/verify-headers.mjs
   # recomputes it from the built HTML and fails the build if the two drift, so
   # this string can never go stale in silence.
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-qD9nls13n7ZCQmhw8X/YYLZkvwG4A+HM9Xx5NICl96U='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://api.dicebear.com; font-src 'self'; connect-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-qD9nls13n7ZCQmhw8X/YYLZkvwG4A+HM9Xx5NICl96U='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
 
 /assets/*
   # Vite content-hashes every filename under here, so the bytes at a given URL

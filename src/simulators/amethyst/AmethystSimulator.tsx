@@ -25,7 +25,8 @@ import type { PostData } from './components/MaterialCard';
 import { useParentTheme } from '../shared/hooks/useParentTheme';
 import './amethyst.theme.css';
 import type { MockUser } from '../../data/mock';
-import { generateAvatarGradient, getUserByPubkey } from '../../data/mock';
+import { generateAvatarGradient, getUserByPubkey, mockUsers } from '../../data/mock';
+import { useScreenSync } from '../shared/screenSync';
 import { TourContext } from '../../components/tour';
 import { AmethystToastContext } from './toast';
 import { AmethystSecurityContext, useSecurityState } from './securityState';
@@ -242,6 +243,24 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
     registerAction('post');
     showToast('Post published successfully! 🎉', 'success');
   }, [showToast, registerAction]);
+
+  // Keep your place across a client switch (shared/screenSync.ts). Relays and
+  // bookmarks live inside the drawer here, not as tabs, so they fall back to the
+  // feed rather than being mapped to something adjacent.
+  useScreenSync<TabId>({
+    map: {
+      feed: 'home',
+      search: 'search-screen',
+      notifications: 'notifications',
+      messages: 'messages',
+      profile: 'profile',
+    },
+    current: isAuthenticated ? activeTab : null,
+    onRestore: (screen) => {
+      handleLogin(mockUsers[0]);
+      setActiveTab(screen);
+    },
+  });
 
   // Handle login
   const handleLogin = useCallback((user: MockUser) => {

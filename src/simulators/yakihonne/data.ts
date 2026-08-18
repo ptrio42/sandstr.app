@@ -3,7 +3,7 @@
  * Modeled on the reference recording (docs/refs/yakihonne). All media are inline
  * `data:` SVG placeholders (getSampleImages) → zero remote requests, CSP-safe.
  */
-import { getSampleImages } from '../../data/mock';
+import { getSampleImages, registerPreviewTarget } from '../../data/mock';
 
 export interface YakiNoteData {
   id: string;
@@ -202,3 +202,25 @@ export const homeNotes: YakiNoteData[] = [
   },
 ];
 
+
+/**
+ * "Preview your own note" (src/data/mock/previewNote.ts). This client curates
+ * its own feed instead of reading `mockNotes`, so the top card is registered as
+ * a landing spot by hand — one call, no change to how the feed renders.
+ */
+const pristineHomeNote = { content: homeNotes[0].content, images: homeNotes[0].images };
+registerPreviewTarget({
+  // NOTE: `YakiNoteData` has no link-card field, so a pasted note's link
+  // preview is not shown here yet — the card exists in Coracle, Nostur and
+  // Primal web (see src/data/mock/previewNote.ts).
+  apply: (text, media) => {
+    homeNotes[0].content = text;
+    // The mock cover illustrated somebody else's post, so it never survives —
+    // the card shows the visitor's own image, or none.
+    homeNotes[0].images = media.length > 0 ? media : undefined;
+  },
+  reset: () => {
+    homeNotes[0].content = pristineHomeNote.content;
+    homeNotes[0].images = pristineHomeNote.images;
+  },
+});

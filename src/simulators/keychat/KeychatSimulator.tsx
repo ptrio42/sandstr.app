@@ -6,6 +6,7 @@
 import React, { useState, useCallback, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { LoginScreen } from './screens/LoginScreen';
+import { useScreenSync } from '../shared/screenSync';
 import { ChatListScreen } from './screens/ChatListScreen';
 import { ChatRoomScreen } from './screens/ChatRoomScreen';
 import { WalletScreen } from './screens/WalletScreen';
@@ -14,6 +15,7 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { BottomNav } from './components/BottomNav';
 import { useParentTheme } from '../shared/hooks/useParentTheme';
 import type { MockUser } from '../../data/mock';
+import { mockUsers } from '../../data/mock';
 import { TourContext } from '../../components/tour';
 import './keychat.theme.css';
 
@@ -136,14 +138,26 @@ export function KeychatSimulator({ className = '', tourCommand, onCommandHandled
 
   // Handle login - SIMPLIFIED
   const handleLogin = useCallback((user: MockUser) => {
-    console.log('=== LOGIN HANDLER CALLED ===');
-    console.log('User:', user);
     setCurrentUser(user);
     setIsAuthenticated(true);
-    console.log('isAuthenticated set to TRUE');
     showToast(`Welcome to Keychat! 🔐`, 'success');
     registerAction('login');
   }, [showToast]);
+
+  // Keep your place across a client switch (shared/screenSync.ts). Keychat has no
+  // feed — it is a messenger — so the feed intent lands on its chat list, which
+  // is the equivalent "home".
+  useScreenSync<TabId>({
+    map: { feed: 'chats', messages: 'chats', settings: 'settings' },
+    current: isAuthenticated ? activeTab : null,
+    onRestore: (screen) => {
+      // Via handleLogin, not setCurrentUser: Keychat gates on a SEPARATE
+      // `isAuthenticated` flag, so setting the user alone left the login screen
+      // up with the restore silently doing nothing.
+      handleLogin(mockUsers[0]);
+      setActiveTab(screen);
+    },
+  });
 
   // Handle back from chat
   const handleBackFromChat = useCallback(() => {

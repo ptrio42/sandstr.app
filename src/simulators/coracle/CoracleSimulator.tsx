@@ -30,6 +30,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import './coracle.theme.css';
 import { TourContext } from '../../components/tour';
 import { useParentTheme } from '../shared/hooks/useParentTheme';
+import { useScreenSync } from '../shared/screenSync';
 import type { MockNote, MockRelay, MockUser } from '../../data/mock';
 import { Avatar } from './components/Avatar';
 import { Icon } from './components/Icon';
@@ -118,6 +119,23 @@ export const CoracleSimulator: React.FC<CoracleSimulatorProps> = ({
 
   const [currentUser, setCurrentUser] = useState<MockUser | null>(null);
   const [screen, setScreen] = useState<CoracleScreen>('feeds');
+
+  // Keep your place across a client switch (shared/screenSync.ts). Coracle opens
+  // straight onto its feed — there is no wall to skip — so this only restores
+  // the screen. Groups, lists and invite are Coracle's own and stay out of the
+  // shared vocabulary.
+  useScreenSync<CoracleScreen>({
+    map: {
+      feed: 'feeds',
+      relays: 'relays',
+      notifications: 'notifications',
+      messages: 'messages',
+      profile: 'profile',
+      settings: 'settings',
+    },
+    current: screen,
+    onRestore: setScreen,
+  });
   const [settingsPage, setSettingsPage] = useState<SettingsPage>('app');
   const [modals, setModals] = useState<CoracleModal[]>([]);
   const [submenu, setSubmenu] = useState<'settings' | 'account' | null>(null);

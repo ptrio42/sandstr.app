@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { MockNote, MockUser } from '../../../data/mock';
+import { MENTION_SPLIT_RE, MENTION_TOKEN_RE, resolveMention } from '../../../data/mock';
 import { Avatar } from './Avatar';
 import {
   ReplyIcon, RepostIcon, ShakaIcon, ZapIcon, ShareIcon, EllipsisIcon, PersonCheckIcon, RepostIcon as RepIcon,
@@ -20,13 +21,27 @@ export function Nip05Check({ className = 'w-[15px] h-[15px]' }: { className?: st
 }
 
 // Render note text with Damus-magenta links / #hashtags / @mentions.
+// `nostr:` references (NIP-21) are resolved to a name before the rest of the
+// tokenising runs — a raw `nostr:npub1…` on a card is a reproduction bug, not a
+// faithful detail (see src/data/mock/mentions.ts).
+
 export function renderContent(text: string): React.ReactNode {
-  const parts = text.split(/(\s+)/);
-  return parts.map((tok, i) => {
+  const parts = text.split(MENTION_SPLIT_RE);
+  return parts.map((chunk, ci) => {
+    if (MENTION_TOKEN_RE.test(chunk)) {
+      const mention = resolveMention(chunk);
+      return (
+        <span key={`m${ci}`} className="text-[var(--damus-purple)]">
+          {mention.kind === 'profile' ? `@${mention.label}` : mention.label}
+        </span>
+      );
+    }
+    return chunk.split(/(\s+)/).map((tok, i) => {
     if (/^https?:\/\/\S+/.test(tok)) return <span key={i} className="text-[var(--damus-purple)]">{tok}</span>;
     if (/^#[\wÀ-￿]+$/.test(tok)) return <span key={i} className="text-[var(--damus-purple)]">{tok}</span>;
     if (/^@[\w.]+$/.test(tok)) return <span key={i} className="text-[var(--damus-purple)]">{tok}</span>;
     return <React.Fragment key={i}>{tok}</React.Fragment>;
+    });
   });
 }
 

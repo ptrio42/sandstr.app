@@ -1,4 +1,5 @@
 import React from 'react';
+import { MENTION_SPLIT_RE, MENTION_TOKEN_RE, resolveMention } from '../../../../data/mock';
 
 /** Filled blue Primal verified badge (nip05). */
 export function VerifiedBadge({ size = 16 }: { size?: number }) {
@@ -27,16 +28,26 @@ export function NoteBody({ text }: { text: string }) {
             </div>
           );
         }
-        const parts = line.split(/(@[\p{L}\p{N}_.]+|https?:\/\/\S+)/u);
         return (
           <div key={li} style={{ minHeight: line === '' ? '0.7em' : undefined }}>
-            {parts.map((p, pi) =>
-              /^(@|https?:\/\/)/.test(p) ? (
-                <span key={pi} className="primal-mention">{p}</span>
-              ) : (
-                <React.Fragment key={pi}>{p}</React.Fragment>
-              )
-            )}
+            {line.split(MENTION_SPLIT_RE).flatMap((chunk, ci) => {
+              // `nostr:` references (NIP-21) — see src/data/mock/mentions.ts.
+              if (MENTION_TOKEN_RE.test(chunk)) {
+                const mention = resolveMention(chunk);
+                return [
+                  <span key={`m${ci}`} className="primal-mention">
+                    {mention.kind === 'profile' ? `@${mention.label}` : mention.label}
+                  </span>,
+                ];
+              }
+              return chunk.split(/(@[\p{L}\p{N}_.]+|https?:\/\/\S+)/u).map((p, pi) =>
+                /^(@|https?:\/\/)/.test(p) ? (
+                  <span key={pi} className="primal-mention">{p}</span>
+                ) : (
+                  <React.Fragment key={pi}>{p}</React.Fragment>
+                )
+              );
+            })}
           </div>
         );
       })}

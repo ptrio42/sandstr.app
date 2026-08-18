@@ -17,11 +17,18 @@ import { noteImages } from '../snortUtils';
  * `getSampleImages` per note id, since that helper walks a module-level counter
  * and would otherwise hand back a different picture on every re-render). Zero
  * network requests, so this survives strict CSP and offline.
+ *
+ * `sources` is the one exception: the "Preview your note" feature puts the
+ * VISITOR's own picture on a card, and generating a sample there would show
+ * them somebody else's image and call it their note. Mock notes never pass it,
+ * so the feed is unchanged.
  */
 
 interface MediaEmbedProps {
   noteId: string;
   count?: number;
+  /** Render exactly these URLs instead of deterministic samples. */
+  sources?: string[];
 }
 
 /** Column spans per image count, mirroring upstream's hard-coded map. */
@@ -34,9 +41,9 @@ const SPANS: Record<number, string[]> = {
   6: ['col-span-2', 'col-span-2', 'col-span-2', 'col-span-2', 'col-span-2', 'col-span-2'],
 };
 
-export const MediaEmbed: React.FC<MediaEmbedProps> = ({ noteId, count = 1 }) => {
+export const MediaEmbed: React.FC<MediaEmbedProps> = ({ noteId, count = 1, sources }) => {
   const n = Math.min(Math.max(count, 1), 6);
-  const images = noteImages(noteId, n);
+  const images = sources && sources.length > 0 ? sources.slice(0, n) : noteImages(noteId, n);
 
   if (n === 1) {
     return (

@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import type { MockNote, MockUser } from '../../../data/mock';
+import { isPreviewNote, MENTION_SPLIT_RE, MENTION_TOKEN_RE, resolveMention } from '../../../data/mock';
 import { Avatar } from './Avatar';
 import { Icon } from './Icon';
 import { CodeBlock } from './CodeBlock';
@@ -213,7 +214,13 @@ export function NoteCard({
 
           {note.images && note.images.length > 0 && (
             <div className="mt-3">
-              <MediaEmbed noteId={note.id} count={note.images.length} />
+              <MediaEmbed
+                noteId={note.id}
+                count={note.images.length}
+                // Only a pasted note carries its own picture; mock notes keep
+                // the deterministic samples MediaEmbed generates.
+                sources={isPreviewNote(note.id) ? note.images : undefined}
+              />
             </div>
           )}
 
@@ -358,8 +365,18 @@ export function NoteText({ content }: { content: string }) {
 }
 
 /** Splits on hashtags, @mentions and URLs, colouring each `--snort-highlight`. */
+/** `nostr:` references (NIP-21) resolve to a name — see src/data/mock/mentions.ts. */
 function linkify(text: string): React.ReactNode[] {
-  return text.split(/(\s)/).map((part, i) => {
+  return text.split(MENTION_SPLIT_RE).flatMap((chunk, ci) => {
+    if (MENTION_TOKEN_RE.test(chunk)) {
+      const mention = resolveMention(chunk);
+      return [
+        <span key={`m${ci}`} className="snort-link">
+          {mention.kind === 'profile' ? `@${mention.label}` : mention.label}
+        </span>,
+      ];
+    }
+    return chunk.split(/(\s)/).map((part, i) => {
     if (/^#[\w-]+$/.test(part) || /^@[\w.-]+$/.test(part) || /^https?:\/\/\S+$/.test(part)) {
       return (
         <span key={i} className="snort-link">
@@ -368,6 +385,7 @@ function linkify(text: string): React.ReactNode[] {
       );
     }
     return <React.Fragment key={i}>{part}</React.Fragment>;
+    });
   });
 }
 

@@ -2,6 +2,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import './snort.theme.css';
 import { TourContext } from '../../components/tour';
 import { useParentTheme } from '../shared/hooks/useParentTheme';
+import { useScreenSync } from '../shared/screenSync';
 import type { MockNote, MockThread, MockUser } from '../../data/mock';
 import { Avatar } from './components/Avatar';
 import { Icon, type IconName } from './components/Icon';
@@ -122,6 +123,29 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
   });
 
   const isAuthed = currentUser !== null;
+
+  // Keep your place across a client switch (shared/screenSync.ts). Bookmarks are a
+  // profile tab here rather than a screen, so they fall back to the feed.
+  useScreenSync<SnortScreen>({
+    map: {
+      feed: 'timeline',
+      search: 'search',
+      notifications: 'notifications',
+      messages: 'messages',
+      profile: 'profile',
+      settings: 'settings',
+      relays: 'relays',
+    },
+    current: isAuthed && screen !== 'login' ? screen : null,
+    // The mock users arrive in an effect; restoring before then would set a
+    // screen with nobody signed in, i.e. the sign-in wall with extra steps.
+    ready: mock.users.length > 0,
+    onRestore: (target) => {
+      const user = mock.users[0];
+      if (user) handleLogin(user);
+      setScreen(target);
+    },
+  });
 
   /**
    * ---- Container width gates (see the header comment) ----
