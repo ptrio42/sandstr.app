@@ -867,6 +867,20 @@ export default function ClientView() {
     if (card) setMountNonce((n) => n + 1);
   };
 
+  /**
+   * The same fetch, for the paths that do not go through the dialog: a shared
+   * `?note=` link, and a reload that restores the note from sessionStorage.
+   * Without this the card only ever appeared for the person who typed the note,
+   * never for the person they sent it to.
+   */
+  useEffect(() => {
+    if (!previewText) return;
+    void refreshLinkCard(previewText);
+    // Deliberately keyed on the text alone: refreshLinkCard is a no-op when the
+    // stored card already matches, so a re-run costs nothing.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewText]);
+
   const applyPreview = (text: string) => {
     setPreviewText(writePreviewNote(text));
     setPreviewImage(activePreviewImage());

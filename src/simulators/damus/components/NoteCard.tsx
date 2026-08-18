@@ -132,6 +132,35 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         </div>
       )}
 
+      {/* Link preview card for a pasted note. Mock notes never carry one —
+          unfurling needs the network (workers/index.ts). Layout is OUR reading
+          of this client's surface, not something docs/refs states: the
+          screen-map does not cover link cards. */}
+      {note.linkPreview && (
+        <a
+          href={note.linkPreview.url}
+          target="_blank"
+          rel="noreferrer noopener"
+          onClick={(e) => e.stopPropagation()}
+          className="mt-2.5 block overflow-hidden rounded-2xl border border-[var(--damus-border)] no-underline"
+        >
+          {note.linkPreview.image && (
+            <img src={note.linkPreview.image} alt="" loading="lazy" className="w-full max-h-56 object-cover" />
+          )}
+          <div className="px-3 py-2">
+            <div className="text-[13px] text-[var(--damus-secondary)]">{note.linkPreview.siteName}</div>
+            <div className="text-[15px] font-semibold leading-snug">
+              {note.linkPreview.title || note.linkPreview.url}
+            </div>
+            {note.linkPreview.description && (
+              <div className="mt-0.5 line-clamp-2 text-[14px] text-[var(--damus-secondary)]">
+                {note.linkPreview.description}
+              </div>
+            )}
+          </div>
+        </a>
+      )}
+
       {/* action row — full width */}
       <div className="flex items-center justify-between mt-2.5 pr-1" data-tour="damus-interactions">
         <button onClick={stop(onReply)} className="damus-action is-reply">

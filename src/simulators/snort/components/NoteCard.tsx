@@ -224,6 +224,33 @@ export function NoteCard({
             </div>
           )}
 
+          {/* Link preview card for a pasted note. Mock notes never carry one —
+          unfurling needs the network (workers/index.ts). Layout is OUR reading
+          of this client's surface, not something docs/refs states: the
+          screen-map does not cover link cards. */}
+          {note.linkPreview && (
+            <a
+              href={note.linkPreview.url}
+              target="_blank"
+              rel="noreferrer noopener"
+              onClick={stop}
+              className="mt-3 block overflow-hidden no-underline"
+              style={{ border: '1px solid var(--snort-border)' }}
+            >
+              {note.linkPreview.image && (
+                <img src={note.linkPreview.image} alt="" loading="lazy" className="w-full object-cover" style={{ maxHeight: '20rem' }} />
+              )}
+              <div className="px-3 py-2">
+                <div className="font-medium">{note.linkPreview.title || note.linkPreview.url}</div>
+                {note.linkPreview.description && (
+                  <div className="text-sm" style={{ color: 'var(--snort-text-secondary)' }}>
+                    {note.linkPreview.description}
+                  </div>
+                )}
+              </div>
+            </a>
+          )}
+
           {/* ---- Quote embed (§4.3) ----
               The ONLY rounded box anywhere on the note surface. Upstream renders
               the referenced event nested with `showFooter:false, truncate:true`;

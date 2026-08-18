@@ -39,6 +39,7 @@ export function toPostData(note: MockNote, opts: { following?: boolean } = {}): 
     },
     isRepost: note.isRepost,
     images: note.images,
+    linkPreview: note.linkPreview,
     hashtags: note.hashtags,
     community: note.community,
     isLive: note.isLive,

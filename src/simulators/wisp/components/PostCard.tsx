@@ -318,6 +318,33 @@ export function PostCard({
             </button>
           )}
           <MediaBlock note={note} />
+
+          {/* Link preview card for a pasted note (mock notes never carry one —
+              unfurling needs the network). Layout is OUR reading of this
+              client's surface; the screen-map does not cover link cards. */}
+          {note.linkPreview && (
+            <a
+              href={note.linkPreview.url}
+              target="_blank"
+              rel="noreferrer noopener"
+              onClick={(e) => e.stopPropagation()}
+              className="mt-2 block overflow-hidden rounded-2xl no-underline"
+              style={{ border: '1px solid var(--wisp-divider)' }}
+            >
+              {note.linkPreview.image && (
+                <img src={note.linkPreview.image} alt="" loading="lazy" className="max-h-64 w-full object-cover" />
+              )}
+              <div className="px-3 py-2">
+                <div className="text-[15px] font-medium leading-snug">
+                  {note.linkPreview.title || note.linkPreview.url}
+                </div>
+                {note.linkPreview.description && (
+                  <div className="mt-0.5 line-clamp-2 text-[13px] opacity-70">{note.linkPreview.description}</div>
+                )}
+                <div className="mt-1 text-[12px] opacity-60">{note.linkPreview.siteName}</div>
+              </div>
+            </a>
+          )}
         </div>
 
         {/* Top-zapper banner */}

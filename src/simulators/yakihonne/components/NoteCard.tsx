@@ -97,6 +97,33 @@ export const NoteCard: React.FC<Props> = ({ note, onOpenThread, onViewProfile, o
             </div>
           )}
 
+          {/* Link preview card for a pasted note (mock notes never carry one —
+              unfurling needs the network). Layout is OUR reading of this
+              client's surface; the screen-map does not cover link cards. */}
+          {note.linkPreview && (
+            <a
+              href={note.linkPreview.url}
+              target="_blank"
+              rel="noreferrer noopener"
+              onClick={(e) => e.stopPropagation()}
+              className="mt-2.5 block overflow-hidden rounded-2xl border border-[var(--yh-divider)] no-underline"
+            >
+              {note.linkPreview.image && (
+                <img src={note.linkPreview.image} alt="" loading="lazy" className="w-full max-h-64 object-cover" />
+              )}
+              <div className="px-3.5 py-3">
+                <div className="text-[15px] font-semibold leading-snug">
+                  {note.linkPreview.title || note.linkPreview.url}
+                </div>
+                {note.linkPreview.description && (
+                  <div className="mt-1 line-clamp-2 text-[13px] text-[var(--yh-text-2)]">
+                    {note.linkPreview.description}
+                  </div>
+                )}
+              </div>
+            </a>
+          )}
+
           {/* embedded / quoted event */}
           {note.quoted && (
             <div className="mt-2.5 rounded-2xl border border-[var(--yh-border)] bg-[var(--yh-surface)] px-3.5 py-3">

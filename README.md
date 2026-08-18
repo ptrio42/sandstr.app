@@ -18,8 +18,8 @@ one — that is the whole point of the shelf.
 clients and compare how each one wraps, truncates and links it. The text stays in the browser tab
 (sessionStorage) and is never published. Length, wrapping, truncation, hashtags, links and an
 attached image are rendered the way each reproduction does it, `nostr:` references resolve to a name
-(or a shortened npub when nobody here knows them), and a link is unfurled into a preview card in
-Coracle, Nostur and Primal web via the `/api/unfurl` Worker (`workers/index.ts`). Long-form markdown
+(or a shortened npub when nobody here knows them), and a link is unfurled into a preview card — in every client with a feed — via
+the `/api/unfurl` Worker (`workers/index.ts`). Long-form markdown
 is not rendered, and truncation is approximate outside Snort — see `src/data/mock/previewNote.ts`. An image you
 attach from disk becomes a `data:` URL and stays in the tab; an image the note *links to* is
 fetched by your browser from that host ([PRIVACY.md](PRIVACY.md)).

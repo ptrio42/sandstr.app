@@ -10,6 +10,7 @@ import { Avatar } from './Avatar';
 import { useAmethystToast } from '../toast';
 import { useSecurity } from '../securityState';
 import { getUserByPubkey, resolveMention } from '../../../data/mock';
+import type { LinkPreview } from '../../../data/mock';
 import '../amethyst.theme.css';
 
 interface PostAuthor {
@@ -44,6 +45,7 @@ export interface PostData {
   timestamp: string;
   stats: PostStats;
   images?: string[];
+  linkPreview?: LinkPreview;
   hashtags?: string[];
   community?: string;
   isLive?: boolean;
@@ -582,6 +584,31 @@ export function MaterialCard({
             </div>
           ))}
         </div>
+      )}
+
+      {/* Link preview card for a pasted note (mock notes never carry one —
+          unfurling needs the network). Layout is OUR reading of this
+          client's surface; the screen-map does not cover link cards. */}
+      {post.linkPreview && (
+        <a
+          href={post.linkPreview.url}
+          target="_blank"
+          rel="noreferrer noopener"
+          onClick={(e) => e.stopPropagation()}
+          className="mx-4 mb-3 block overflow-hidden rounded-lg no-underline"
+          style={{ border: '1px solid var(--md-outline-variant)' }}
+        >
+          {post.linkPreview.image && (
+            <img src={post.linkPreview.image} alt="" loading="lazy" className="aspect-video w-full object-cover" />
+          )}
+          <div className="px-3 py-2">
+            <div className="text-sm font-medium leading-snug">{post.linkPreview.title || post.linkPreview.url}</div>
+            {post.linkPreview.description && (
+              <div className="mt-0.5 line-clamp-2 text-xs opacity-70">{post.linkPreview.description}</div>
+            )}
+            <div className="mt-1 text-xs opacity-60">{post.linkPreview.siteName}</div>
+          </div>
+        </a>
       )}
 
       {/* Action Buttons.
