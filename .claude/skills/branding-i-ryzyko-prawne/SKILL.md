@@ -40,7 +40,7 @@ owned-IP-first, Kitten nie jest front doorem. Sprawdź każdy ich zarzut, zanim 
   (`ClientView.tsx:32` vs `:60`). Wersja wypalana w klipach to jeszcze inny string
   („SIMULATION · unofficial · mock data · not affiliated", `docs/clips/build-teaser-faq.sh:52`) —
   nie „ujednolicaj" ich w jeden, bo cytujesz wtedy tekst, którego nigdzie nie ma.
-- Obowiązkowe atrybuty obu: `z-[10003]` (nad backdropem toura na 9999) **oraz**
+- Obowiązkowe atrybuty obu: `z-[var(--z-disclaimer)]` (skala warstw hosta stoi w `:root` w `src/index.css`: rail 3000 < tour-backdrop 9000 < tour-card 9200 < disclaimer 9400 < host-modal 9600; gola liczba `z-[...]` w `src/host/` jest zakazana) (nad backdropem toura) **oraz**
   `data-tour-keep-clear`. Bez pierwszego tour przyciemniał baner do nieczytelności; bez drugiego
   karta toura kładła się na nim. Na formie telefonowej **nigdy `truncate`** — przy 320px ucinało
   tekst do „…not affiliated wit…", a na telefonie ten pasek jest jedyną rzeczą odróżniającą stronę
@@ -54,9 +54,22 @@ owned-IP-first, Kitten nie jest front doorem. Sprawdź każdy ich zarzut, zanim 
 - **„Sandstr" to nazwa finalna** (2026-07-28). Domena produkcyjna **`sandstr.app`** (2026-08-03).
   `sandstr.com` jest zajęta przez niezwiązany fintech („SAND", najem krótkoterminowy, Wix, od
   2025-08) — inna branża, brak kolizji, ale i brak szans na drop. **Nie planuj `.com`.**
-- W `index.html`: `canonical` = `https://sandstr.app/` **na każdej trasie** — to ta sama decyzja
-  co `Disallow: /c/` w `public/robots.txt`: pixel-wierny `/c/damus` nie może rankować na „Damus".
-  `public/sitemap.xml` z tego samego powodu ma jeden URL i celowo nie ma `<lastmod>`.
+- **Indeksowalne są DWIE strony: `/` i `/compare`** (od 2026-08-14). `Disallow: /c/` stoi
+  niezmieniony — i to nie jest furtka, tylko rozróżnienie rodzaju: `/c/damus` to pikselowo wierny
+  klon cudzej apki i nie wolno go z nią pomylić, a `/compare` to ocytowana i datowana proza o tym,
+  co klienci potrafią. `public/robots.txt` mówi to wprost, `public/sitemap.xml` ma dwa URL-e
+  i celowo nie ma `<lastmod>`.
+- W `index.html` `canonical`/`og:url` dalej wskazują galerię, ale to już tylko SZABLON.
+  `scripts/prerender.mjs` nadpisuje `title`, `description`, `canonical` i `og:*` **per strona**
+  i asertuje, że każdy z tych tagów występuje dokładnie raz, zanim go podmieni. Zostawienie ich
+  nietkniętych skanonikalizowałoby `/compare` do `/` — czyli instrukcja „porzuć tę stronę".
+  `og:image` = `https://sandstr.app/og.png` (1200×630, z `scripts/og-image.html`) jest wspólny.
+- **Obie strony są prerenderowane** (`dist/index.html`, `dist/compare/index.html`) — SPA oddaje
+  crawlerowi puste `#root`, a poza Google prawie nikt nie dorenderowuje JS. `/compare` renderuje
+  `CompareStatic`, który współdzieli tabelę i prozę z żywym widokiem, więc nie może się rozjechać.
+- **Strona indeksowalna musi mieć dozwolone wyjście.** Prerenderowane `/compare` nie ma `Layoutu`,
+  więc nie ma nagłówka ani stopki, a wszystkie pozostałe linki celują pod `/c/` — czyli w `Disallow`.
+  Bez `BackToShelf` crawler lądował w ślepym zaułku. Sprawdzaj to przy każdej nowej trasie.
 - **Karty share są per klient od 2026-08-14, `og:url` NIE jest już przypięty do galerii.**
   `scripts/prerender.mjs` kopiuje `index.html` do `dist/c/<id>.html` i nadpisuje `<title>`,
   `description`, `og:url`, `og:title`, `og:description`, `og:image`, `og:image:alt` z
@@ -135,10 +148,13 @@ i ciągła) plus zweryfikowane tokeny.
 
 ## Checklist przed „można to pokazać"
 
-1. Widok klienta renderuje baner z `data-tour-keep-clear` i `z-[10003]`.
+1. Widok klienta renderuje baner z `data-tour-keep-clear` i `z-[var(--z-disclaimer)]`
+   (goła liczba `z-[…]` w `src/host/` jest zakazana — patrz `CLAUDE.md`).
 2. Klient ma wiersz w `THIRD-PARTY.md` i działający link wyjściowy w `src/registry.tsx`.
-3. Nic nowego nie trafiło do JSON-LD, `sitemap.xml` ani poza `Disallow: /c/` (wyjątki dla
-   Twitterbota i facebookexternalhit to renderery kart — nie dopisuj tam indeksera).
+3. Nic nowego nie trafiło do JSON-LD. Do `sitemap.xml` trafia tylko strona, która jest
+   prerenderowana, ma własny `canonical` i ma dozwolony link wyjściowy — dziś `/` i `/compare`.
+   Reprodukcje zostają pod `Disallow: /c/` (wyjątki dla Twitterbota i facebookexternalhit to
+   renderery kart — nie dopisuj tam indeksera).
 4. Nowy albo przemianowany klient: `npm run og:cards`, bo inaczej jego `og:image` wskazuje na
    404 i share pokazuje kartę bez obrazka.
 5. Żadna mock-tożsamość nie wskazuje na realnego człowieka ani identyfikator płatności.

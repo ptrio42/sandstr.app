@@ -53,7 +53,10 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
 - **`src/components/`** — `tour/` (silnik: Provider/Overlay/Tooltip + `tourStorage`), `faq/`
   (mostek `FaqMiniTourLauncher`).
 - **`src/host/`** — `Layout`, `Gallery`, `ClientView` (klient + ramka + **baner disclaimera**),
-  `CommandPalette`, `ClientSwitcher`, `FaqPanel`.
+  `CommandPalette`, `ClientSwitcher`, `FaqPanel`, oraz `compare/` — trasa `/compare`: macierz
+  możliwości + te same powierzchnie UI w ośmiu klientach obok siebie (`docs/COMPARE.md`).
+  `CapabilityTable.tsx` jest współdzielony z prerenderem (`CompareStatic` → `entry-server.tsx`),
+  więc wersja dla crawlerów nie może się rozjechać z żywą stroną.
 - **`src/shareMeta.ts`** — tytuł i opis trasy `/c/<id>`, jedno źródło dla karty share
   (build, przez `shareRoutes()` w `src/entry-server.tsx` → `dist/c/<id>.html`) i dla
   `document.title` w `ClientView`. Obrazki kart: `public/og/<id>.png` z `npm run og:cards`.
@@ -186,6 +189,9 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
   ZANIM przebudujesz symulator do nowej wersji realnego klienta — freeze idzie PRZED przebudową.
 - `docs/FAQ.md` — stan wdrożenia FAQ (230 wpisów, 133 mini-toury, 8 klientów); kontrakt autorski
   w `src/data/faq/README.md`.
+- `docs/COMPARE.md` — `/compare`: macierz możliwości (9 osi × 8 klientów) + ten sam post w ośmiu
+  klientach. Czytaj ZANIM dotkniesz `src/data/capabilities.ts` — werdykt bez cytatu i bez wersji
+  jest twierdzeniem o cudzym produkcie, a `unknown` jest pełnoprawną wartością, nie brakiem.
 - `docs/OUTREACH.md` — jak promować to na Nostrze: zmierzone formy, które działają na
   koncie właściciela, realne tematy pytań z `#asknostr`, playbook odpowiadania i lista
   rzeczy, których nie wolno twierdzić. Czytaj ZANIM zaczniesz robić materiał promocyjny.

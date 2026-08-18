@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ChevronDown, HelpCircle, Play, Search, X } from 'lucide-react';
+import { ArrowRight, ChevronDown, HelpCircle, Play, Search, X } from 'lucide-react';
 import type { ClientFaq, FaqEntry } from '../data/faq';
+import { COMPARED_CLIENTS, COMPARISON_AXES, capabilities } from '../data/capabilities';
 import { cn } from '../utils/cn';
 
 interface Props {
@@ -291,6 +293,30 @@ export default function FaqPanel({ clientName, faq, open, initialEntryId, onClos
                           {e.note}
                         </p>
                       )}
+                      {/* The way out of "how does THIS one do it" and into "how
+                          do the others". The matrix cites FAQ entries by id, so
+                          the mapping already exists in reverse — no new data,
+                          and a renamed entry simply stops offering the link
+                          instead of pointing somewhere wrong.
+
+                          This is also the ONLY route to /compare from a client
+                          view: Layout's footer is deliberately not rendered on
+                          /c/:id. */}
+                      {(() => {
+                        const axis = COMPARISON_AXES.find(
+                          (a) => capabilities[faq.clientId]?.[a.id]?.source === e.id,
+                        );
+                        if (!axis) return null;
+                        return (
+                          <Link
+                            to={`/compare?cell=${faq.clientId}:${axis.id}`}
+                            className="mt-2.5 flex items-center gap-1.5 text-xs font-medium text-primary-600 hover:underline dark:text-primary-400"
+                          >
+                            How the other {COMPARED_CLIENTS.length - 1} clients do this
+                            <ArrowRight className="h-3.5 w-3.5 shrink-0" />
+                          </Link>
+                        );
+                      })()}
                       {e.showMe && e.showMe.length > 0 && (
                         <button
                           type="button"

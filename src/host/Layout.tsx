@@ -55,6 +55,22 @@ export default function Layout() {
       {!onClient && (
         <footer className="border-t border-gray-200 py-8 text-center text-xs text-gray-400 dark:border-gray-800">
           <p>Sandstr — interactive simulations for learning. Not affiliated with any client. Mock data only.</p>
+          {/* The one internal link down here, and the only route to /compare
+              from anywhere other than the gallery's hero. It matters twice: a
+              reader who scrolled past the shelf without picking anything still
+              gets the "which one" step, and an indexable page reached by a
+              single link from a single page is a page crawlers barely believe
+              in. Not rendered on /c/:id — this whole footer is not (see above)
+              — so the client views get their route from the FAQ panel instead. */}
+          <p className="mt-2">
+            Not sure which client?{' '}
+            <Link
+              to="/compare"
+              className="underline text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              Compare what each one can do
+            </Link>
+          </p>
           <p className="mt-2">
             New to Nostr?{' '}
             <a

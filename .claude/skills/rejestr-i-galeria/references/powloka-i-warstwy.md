@@ -47,17 +47,21 @@ Karta klientów bez ramki celowo ma `[transform:translateZ(0)]` — tam containi
 
 ## Kontrakt z-index (od dołu)
 
-| warstwa | wartość | gdzie |
-| --- | --- | --- |
-| wnętrze sima | do ~2000 | przecieka do ROOT stacking context — bezel i karta nie tworzą własnego |
-| rail switchera | `z-[3000]` | `ClientSwitcher` |
-| paleta ⌘K, mobilny sheet switchera | `z-[8000]` | `CommandPalette`, `ClientSwitcher` |
-| backdrop/spotlight toura | `9999` | `src/components/tour/tour.css:13` |
-| karta toura | `10002` | `tour.css:105` |
-| disclaimer hosta | `z-[10003]` | `Disclaimer` + `DisclaimerStrip` |
-| mobilny AboutSheet | `z-[10004]` | `ClientView` |
+**Jedyne źródło prawdy to `:root` w `src/index.css`.** W `src/host/` i `src/components/tour/` nie
+wolno napisać gołej liczby `z-[…]` — czytasz zmienną. Tabela niżej jest odczytem tego bloku, nie
+drugą listą do utrzymywania; jak się rozjedzie, wygrywa `index.css`.
 
-Disclaimer celowo bije kartę toura — nie wolno go zasłonić. Sam z-index to jednak tylko rozstrzygnięcie
+| warstwa | token | wartość | gdzie |
+| --- | --- | --- | --- |
+| wnętrze sima | — | do ~2000 | przecieka do ROOT stacking context — bezel i karta nie tworzą własnego |
+| rail switchera | `--z-host-rail` | 3000 | `ClientSwitcher` |
+| backdrop/spotlight toura | `--z-tour-backdrop` | 9000 | `tour.css:13` |
+| karta toura | `--z-tour-card` | 9200 | `tour.css:107` |
+| disclaimer hosta | `--z-disclaimer` | 9400 | `Disclaimer` + `DisclaimerStrip` |
+| dialogi hosta: FAQ, ⌘K, About, menu wersji, mobilny sheet switchera | `--z-host-modal` | 9600 | `FaqPanel`, `CommandPalette`, `ClientView`, `ClientSwitcher` |
+
+Disclaimer celowo bije kartę toura — nie wolno go zasłonić — ale **przegrywa z dialogami, które
+użytkownik sam otworzył**: wyniesienie go ponad wszystko wstawiało chip w środek otwartego panelu FAQ. Sam z-index to jednak tylko rozstrzygnięcie
 pikseli: nakładaniu zapobiega `data-tour-keep-clear`, które silnik toura traktuje jako przeszkodę przy
 liczeniu pozycji karty. Każde nowe chrome hosta, które ma zostać widoczne w trakcie toura, deklaruje się
 tym atrybutem.

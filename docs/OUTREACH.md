@@ -110,8 +110,13 @@ somebody is already stuck. It requires one thing — **a linkable answer**.
 
 - `sandstr.app/c/<client>?faq=<id>` — opens the panel on that specific answer;
 - `sandstr.app/c/<client>?tour=1` — starts the guided tour at step one;
-- the address bar mirrors whichever answer is open, so every answer copies itself
-  without any "share" affordance.
+- `sandstr.app/compare?cell=<client>:<axis>` — lands on ONE capability claim with its
+  source and the build it was checked against underneath (added 2026-08-14);
+- `sandstr.app/compare?on=android&need=signer` — "here are the Android clients that
+  keep your key out of the app". `on` is ios/android/web, `need` is a comma-separated
+  list of chooser axes;
+- the address bar mirrors whichever answer, filter or cell is open, so every one of
+  them copies itself without any "share" affordance.
 
 Without those parameters a reply reads "open it, hit the question mark, search" —
 three steps at exactly the moment the asker is impatient. This was the single most
@@ -158,6 +163,42 @@ was posting. Search is untouched: neither crawler feeds an index.
 **A clip shows WHERE a thing is, not WHY it broke.** For "my zap failed" the right
 answer is the text one (the `trouble-*` entries name the stage that failed); keep the
 clip for "how do I even do this".
+
+## Next material: the zap comparison
+
+Owner's call, 2026-08-14, and the framing matters: this is **flavour, not a warning**.
+An earlier draft led with "a stray click in Snort spends sats", which is true and is
+also mildly patronising to a feed of people who have used Nostr for years. The
+interesting thing is not that one client is risky — it is that eight teams looked at
+the same gesture and disagreed about literally every part of it.
+
+What the matrix and the FAQ banks already hold (`/compare`, axis `fast-zap`, plus each
+client's `zap` entry):
+
+| | |
+|---|---|
+| **Where the bolt sits** | 2nd in Primal and Coracle (before the heart), 4th in Damus, Amethyst, Wisp and Nostur, last in Snort and YakiHonne |
+| **What it looks like** | a lightning bolt everywhere except Wisp, which draws **₿** unless you switch it to fiat |
+| **What one tap does** | Snort sends 50 sats and Coracle 21, with no sheet; Wisp and Nostur always open one; YakiHonne makes it a setting; Amethyst zaps straight away only if you have exactly one amount configured, and ships three |
+| **The default** | three of them default to **21** (YakiHonne, Nostur, Coracle); Snort picked 50. Amethyst's and Wisp's preset rows also start at 21 — but 21 is a bitcoin convention, so read it as a shared idiom, not as eight teams converging by accident |
+| **The number beside it** | a total of **sats** in six of them, not a count of zaps (Amethyst, Primal, YakiHonne, Wisp, Nostur, Coracle) — Nostur even writes "sats" after it. Damus and Snort do not say |
+| **One-offs** | Coracle has a "Platform zap split" deciding how much of each zap goes to its developer (ships at 0); YakiHonne's "Invoice" makes a QR someone else pays — zapping backwards; Wisp lets you keep a custom amount as your own preset |
+
+Why it fits the measured channel: it aims at the tag's **biggest** topic (zaps/wallet,
+17%), it is a question the reader can answer about their own client rather than an
+announcement — announcements are the weakest category this account has — and it is
+about design taste, which is what a room of long-time users actually enjoys arguing
+about.
+
+It also comes with its own picture, which is rare: `/compare?show=note` renders the
+same post in all eight, so the action rows sit side by side and the reader can count
+the positions themselves. The claim and the evidence are one link.
+
+The linkable forms: `sandstr.app/compare?cell=snort:fast-zap` for the single claim,
+`sandstr.app/compare?show=note` for the row-by-row picture.
+
+Two rules from above still bind: the note names other people's brands, so it carries
+"unofficial, not affiliated"; and a teaser goes UNDER a question, not instead of it.
 
 ## What not to claim
 

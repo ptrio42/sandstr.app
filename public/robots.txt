@@ -4,6 +4,15 @@
 User-agent: *
 Disallow: /c/
 
+# /compare is explicitly welcome, and it is a different KIND of page: sourced,
+# dated prose about what each client can and cannot do, with every claim linked
+# to its origin. That is an ordinary comparison — the thing /c/ must not be
+# mistaken for. It carries no client's chrome and cannot be mistaken for one of
+# their apps, so the reasoning above does not reach it.
+
+# The sitemap lists the prerendered pages. Nothing else is listed, for the
+# reason above.
+
 # Card renderers are NOT indexers, and the rule above was silently costing us
 # every /c/ link preview on X: Twitterbot implements the robots.txt spec and
 # renders no card at all when the URL is disallowed, which is why X's own
@@ -23,6 +32,4 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-# With no inbound links yet, this is the only active signal that the site
-# exists. It lists "/" alone, for the reason above.
 Sitemap: https://sandstr.app/sitemap.xml

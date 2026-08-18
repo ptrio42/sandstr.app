@@ -90,6 +90,23 @@ realny klient jest prostszy (Snort nie ma kolorowania składni — usunięcie hi
   screen-mapy + fidelity passu**; `lead` jest DERYWOWANE, nie ustawiaj ręcznie; `preview` nie udawaj
   skończonym.
 
+## Komponenty, które montuje `/compare`
+
+`/compare` pokazuje cztery powierzchnie ośmiu klientów obok siebie i montuje **prawdziwe
+komponenty danego klienta**, nie podróbki (`docs/COMPARE.md`). Dwie konsekwencje przy
+przebudowie symulatora:
+
+- **Nie odbieraj eksportu.** Wciągnięte są `NoteCard`/`PostCard`/`MaterialCard`,
+  `LoginScreen`/`WelcomeScreen`, `Compose*` oraz nawigacja (`TabBar`, `BottomNav`,
+  `BottomBar`, `LeftSidebar`, Snortowy `Rail`, Coracle’owy `Sidebar`). Zmiana propsów jest OK
+  — typecheck wskaże adapter w `src/host/compare/surfaces/`. Schowanie komponentu z powrotem
+  do środka symulatora nie jest.
+- **Motyw niosą KLASA i `data-theme` naraz.** Arkusze się nie zgadzają: Damus i Coracle
+  kluczują na klasie (`.damus-simulator.dark`), Amethyst i YakiHonne na atrybucie
+  (`.amethyst-simulator[data-theme="dark"]`). Root każdego symulatora ustawia jedno i drugie,
+  więc nigdy to nie wypłynęło — dopóki `/compare` nie ustawiło samej klasy i Amethyst wyszedł
+  jasny na ciemnej stronie. Przebudowujesz root: ustaw oba.
+
 ## Checklist fidelity pass (zanim powiesz „gotowe")
 
 1. `npm run build` przechodzi — **pokaż output**. Build NIE jest bramką typów → osobno `npm run typecheck`.

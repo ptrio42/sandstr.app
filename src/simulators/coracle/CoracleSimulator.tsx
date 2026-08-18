@@ -36,6 +36,7 @@ import type { MockNote, MockRelay, MockUser } from '../../data/mock';
 import { Avatar } from './components/Avatar';
 import { Icon } from './components/Icon';
 import { FeedSelector } from './components/FeedSelector';
+import { Sidebar } from './components/Sidebar';
 import { FeedsScreen } from './screens/FeedsScreen';
 import { LoginScreen, RemoteSignerScreen } from './screens/LoginScreen';
 import { OnboardingScreen, type OnboardingStage } from './screens/OnboardingScreen';
@@ -64,7 +65,7 @@ export type CoracleScreen =
   | 'invite';
 
 /** Modals stack over whatever screen is beneath them, as upstream's do. */
-type CoracleModal =
+export type CoracleModal =
   | { type: 'login' }
   | { type: 'bunker' }
   | { type: 'signup' }
@@ -98,14 +99,6 @@ interface CoracleSimulatorProps {
 }
 
 /** `MenuDesktop.svelte:88-123`, verbatim labels and order. */
-const NAV: { screen: CoracleScreen; label: string; modal?: CoracleModal['type'] }[] = [
-  { screen: 'feeds', label: 'Feeds' },
-  { screen: 'relays', label: 'Relays' },
-  { screen: 'notifications', label: 'Notifications' },
-  { screen: 'messages', label: 'Messages' },
-  { screen: 'groups', label: 'Groups', modal: 'groups' },
-  { screen: 'lists', label: 'Lists', modal: 'lists' },
-];
 
 export const CoracleSimulator: React.FC<CoracleSimulatorProps> = ({
   tourCommand,
@@ -618,40 +611,6 @@ export const CoracleSimulator: React.FC<CoracleSimulatorProps> = ({
     }
   })();
 
-  const navItem = (item: (typeof NAV)[number]) => {
-    const active = screen === item.screen && !topModal;
-    const disabled = !isAuthed && item.screen !== 'feeds';
-    return (
-      <button
-        key={item.screen}
-        type="button"
-        className={`co-nav-item co-staatliches ${active ? 'is-active' : ''}`}
-        style={disabled ? { opacity: 0.5, cursor: 'default' } : undefined}
-        data-tour={`coracle-nav-${item.screen}`}
-        onClick={() => {
-          if (disabled) {
-            openModal({ type: 'login' });
-            return;
-          }
-          if (item.modal) {
-            setSubmenu(null);
-            openModal({ type: item.modal } as CoracleModal);
-          } else {
-            navigateTo(item.screen);
-          }
-        }}
-      >
-        {/* The unread dot is anchored to the LABEL, not to the full-width row —
-            upstream's `-right-2.5` is relative to the text (MenuDesktop:107).
-            Anchoring it to the button put it out in the page. */}
-        <span style={{ position: 'relative', display: 'inline-block' }}>
-          {item.label}
-          {item.screen === 'notifications' && isAuthed && <span className="co-nav-dot" />}
-        </span>
-        {active && <span className="co-nav-underline" />}
-      </button>
-    );
-  };
 
   return (
     <div
@@ -661,219 +620,32 @@ export const CoracleSimulator: React.FC<CoracleSimulatorProps> = ({
     >
       <div className="co-layout">
         {/* ---------------- sidebar ---------------- */}
-        <aside className="co-sidebar">
-          {/*
-           * The wordmark. The real one is an <img> of Jon Staab's artwork
-           * (`/images/wordmark-dark.png`); shipping someone's mark inside an
-           * unofficial reproduction is exactly what the consent strategy is
-           * meant to avoid, so the word is set in the display face beside a
-           * neutral glyph — the same call made for Snort's nostrich.
-           */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '1rem 1.5rem',
-            }}
-          >
-            <svg width="30" height="30" viewBox="0 0 48 48" aria-hidden="true">
-              <g fill="none" stroke="var(--co-accent)" strokeWidth="5" strokeLinecap="round">
-                <path d="M38 14A17 17 0 1 0 40 30" />
-                <path d="M31 20a9 9 0 1 0 1 9" />
-              </g>
-            </svg>
-            <span className="co-staatliches" style={{ fontSize: '1.75rem', letterSpacing: '0.06em' }}>
-              Coracle
-            </span>
-          </div>
-
-          <nav style={{ display: 'flex', flexDirection: 'column', paddingTop: '0.5rem' }}>
-            {NAV.map(navItem)}
-          </nav>
-
-          <div style={{ marginTop: 'auto', position: 'relative' }}>
-            {/* `absolute` at `bottom: 4.5rem` (MenuDesktopSecondary.svelte:14):
-                the submenu OVERLAYS the footer, it does not push it. Letting it
-                push clipped the account row out of the card. */}
-            {submenu && (
-              <div
-                style={{
-                  position: 'absolute',
-                  bottom: '4.5rem',
-                  left: 0,
-                  right: 0,
-                  zIndex: 10,
-                  overflow: 'hidden',
-                  borderTopLeftRadius: '0.75rem',
-                  borderTopRightRadius: '0.75rem',
-                  background: 'var(--co-neutral-800)',
-                }}
-              >
-                {(submenu === 'settings'
-                  ? ([
-                      ['palette', 'Toggle Theme'],
-                      ['database', 'Database'],
-                      ['wallet', 'Wallet'],
-                      ['cog', 'App Settings'],
-                      ['volume-xmark', 'Content Settings'],
-                    ] as const)
-                  : ([
-                      ['user-circle', 'Profile'],
-                      ['key', 'Keys'],
-                      ['paper-plane', 'Create Invite'],
-                      ['right-left', 'Switch Account'],
-                      ['right-to-bracket', 'Log Out'],
-                    ] as const)
-                ).map(([icon, label]) => (
-                  <button
-                    key={label}
-                    type="button"
-                    className="co-staatliches"
-                    style={{
-                      display: 'flex',
-                      width: '100%',
-                      alignItems: 'center',
-                      gap: '1rem',
-                      padding: '0.75rem 0.75rem 0.75rem 2rem',
-                      background: 'transparent',
-                      border: 'none',
-                      color: 'inherit',
-                      cursor: 'pointer',
-                      fontSize: '1.0625rem',
-                    }}
-                    onClick={() => {
-                      setSubmenu(null);
-                      if (label === 'Toggle Theme') {
-                        showToast('Use the theme switch in the Sandstr header.');
-                      } else if (label === 'Database') {
-                        setSettingsPage('data');
-                        navigateTo('settings');
-                      } else if (label === 'Wallet') {
-                        setSettingsPage('wallet');
-                        navigateTo('settings');
-                      } else if (label === 'App Settings') {
-                        setSettingsPage('app');
-                        navigateTo('settings');
-                      } else if (label === 'Content Settings') {
-                        setSettingsPage('content');
-                        navigateTo('settings');
-                      } else if (label === 'Keys') {
-                        setSettingsPage('keys');
-                        navigateTo('settings');
-                      } else if (label === 'Profile') {
-                        // Your own profile is the PAGE route (`/people/:entity`),
-                        // not a modal — recording frame p_186 shows it with no
-                        // scrim and no nav item active. Avatars in the feed do
-                        // open the modal (p_087's sibling frames), which is why
-                        // `viewProfile` is not reused here.
-                        if (currentUser) {
-                          setProfileUser(currentUser);
-                          navigateTo('profile');
-                        }
-                      } else if (label === 'Create Invite') {
-                        navigateTo('invite');
-                      } else if (label === 'Log Out') {
-                        setCurrentUser(null);
-                        setScreen('feeds');
-                        setFollowing(new Set());
-                      } else {
-                        showToast('Multiple accounts are outside this reproduction.');
-                      }
-                    }}
-                  >
-                    <Icon name={icon} size={15} />
-                    {label}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <button
-              type="button"
-              className="co-staatliches"
-              style={{
-                display: 'block',
-                width: '100%',
-                padding: '0.5rem 2rem',
-                textAlign: 'left',
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--co-tinted-400)',
-                cursor: 'pointer',
-                fontSize: '1.0625rem',
-              }}
-              onClick={() => setSubmenu((s) => (s === 'settings' ? null : 'settings'))}
-            >
-              Settings
-            </button>
-            <div
-              className="co-staatliches"
-              style={{
-                display: 'flex',
-                gap: '0.5rem',
-                padding: '0 2rem 0.75rem',
-                color: 'var(--co-tinted-500)',
-                fontSize: '0.9375rem',
-              }}
-            >
-              <span>About</span>
-              <span>/</span>
-              <span>Terms</span>
-              <span>/</span>
-              <span>Privacy</span>
-            </div>
-
-            {/* Publish HUD — hourglass / cloud-up / warning. The warning goes
-                accent when non-zero, zeros are tinted-500. */}
-            <button
-              type="button"
-              className="co-hud"
-              onClick={() => showToast('The publish queue is outside this reproduction.')}
-            >
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--co-tinted-500)' }}>
-                <Icon name="hourglass" size={14} /> 0
-              </span>
-              <span
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  color: isAuthed ? 'inherit' : 'var(--co-tinted-500)',
-                }}
-              >
-                <Icon name="cloud-arrow-up" size={14} /> {isAuthed ? 7 : 0}
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--co-tinted-500)' }}>
-                <Icon name="triangle-exclamation" size={14} /> 0
-              </span>
-            </button>
-
-            {isAuthed && currentUser ? (
-              <button
-                type="button"
-                className="co-account-row"
-                onClick={() => setSubmenu((s) => (s === 'account' ? null : 'account'))}
-              >
-                <Avatar seed={currentUser.pubkey} size={40} />
-                <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  @{currentUser.username}
-                </span>
-              </button>
-            ) : (
-              <div style={{ padding: '1rem 1.5rem' }}>
-                <button
-                  type="button"
-                  className="co-btn co-btn-accent"
-                  style={{ width: '100%' }}
-                  onClick={() => openModal({ type: 'login' })}
-                >
-                  Log In
-                </button>
-              </div>
-            )}
-          </div>
-        </aside>
+        <Sidebar
+          screen={screen}
+          modalOpen={!!topModal}
+          isAuthed={isAuthed}
+          currentUser={currentUser}
+          submenu={submenu}
+          onSubmenu={setSubmenu}
+          onNavigate={navigateTo}
+          onOpenModal={(type) => openModal({ type } as CoracleModal)}
+          onOpenSettings={(page) => {
+            setSettingsPage(page);
+            navigateTo('settings');
+          }}
+          onViewOwnProfile={() => {
+            if (currentUser) {
+              setProfileUser(currentUser);
+              navigateTo('profile');
+            }
+          }}
+          onLogout={() => {
+            setCurrentUser(null);
+            setScreen('feeds');
+            setFollowing(new Set());
+          }}
+          onToast={showToast}
+        />
 
         {/* ---------------- page ---------------- */}
         <div className="co-page">
