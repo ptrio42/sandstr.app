@@ -3,7 +3,7 @@
  *   a) writes `dist/c/<id>.html` — one real file per client route, carrying
  *      that client's own share tags (title, og:*), and
  *   b) bakes the gallery's markup into `dist/index.html`, and
- *   c) writes `dist/compare/index.html` — the capability matrix in words.
+ *   c) writes `dist/compare.html` — the capability matrix in words.
  *
  * Runs as the third stage of `npm run build`:
  *   1. `vite build`                      -> dist/ (client bundle, empty #root)
@@ -12,7 +12,7 @@
  *
  * Two pages, because two are indexable:
  *   /         -> dist/index.html          the gallery
- *   /compare  -> dist/compare/index.html  the capability matrix in words
+ *   /compare  -> dist/compare.html          the capability matrix in words
  *
  * `/c/*` is Disallow'd in public/robots.txt on purpose — a pixel-faithful
  * /c/damus must not rank for "Damus" — so it is not prerendered and not listed
@@ -62,8 +62,14 @@ import { fileURLToPath } from 'node:url';
 const ssrEntry = new URL('../dist-ssr/entry-server.js', import.meta.url);
 const ssrDir = new URL('../dist-ssr/', import.meta.url);
 const htmlPath = new URL('../dist/index.html', import.meta.url);
-const compareDir = new URL('../dist/compare/', import.meta.url);
-const comparePath = new URL('../dist/compare/index.html', import.meta.url);
+// `compare.html`, NOT `compare/index.html` — the same Cloudflare rule the client
+// cards already learned: with `html_handling: auto-trailing-slash` a folder
+// index makes /compare answer 307 to /compare/, so the canonical URL, the one
+// in sitemap.xml and the one people paste all redirect. A flat file serves
+// /compare with a 200 and it is /compare/ that redirects back.
+// Measured against production, not read from docs: before this change
+// `curl -sI https://sandstr.app/compare` returned 307.
+const comparePath = new URL('../dist/compare.html', import.meta.url);
 
 const SITE = 'https://sandstr.app';
 const routeDir = new URL('../dist/c/', import.meta.url);
@@ -291,7 +297,6 @@ const compareHtml = page({
     'Signers, multiple accounts, muting words and hashtags, built-in wallets, one-tap zaps: what real Nostr clients can and cannot do, every claim sourced and dated.',
   minLength: 2000,
 });
-mkdirSync(compareDir, { recursive: true });
 writeFileSync(comparePath, compareHtml, 'utf8');
 
 rmSync(ssrDir, { recursive: true, force: true });
@@ -299,5 +304,5 @@ rmSync(ssrDir, { recursive: true, force: true });
 const kb = (n) => (Buffer.byteLength(n, 'utf8') / 1024).toFixed(1);
 console.log(
   `prerender: ${kb(galleryMarkup)} kB into dist/index.html, ` +
-    `${kb(compareMarkup)} kB into dist/compare/index.html`,
+    `${kb(compareMarkup)} kB into dist/compare.html`,
 );

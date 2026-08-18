@@ -151,7 +151,10 @@ different objects, and `robots.txt` now says so in as many words.
 
 Three pieces, all of which have to hold together:
 
-- **`scripts/prerender.mjs` emits `dist/compare/index.html`.** A client-rendered SPA hands a crawler
+- **`scripts/prerender.mjs` emits `dist/compare.html`** — flat, NOT `compare/index.html`.
+  (Cloudflare's `html_handling: auto-trailing-slash` makes a folder index answer `/compare` with a
+  307 to `/compare/`, i.e. it redirects the canonical URL, the sitemap entry and the URL people
+  paste. Measured on production, which briefly shipped the folder form.) A client-rendered SPA hands a crawler
   an empty `#root`; Google runs JS on a second pass, most other crawlers never do. 110 kB of markup
   is baked in at build time, rendered by `CompareStatic` — which shares its table and prose with the
   live page, so the two cannot drift.
