@@ -22,9 +22,12 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { readdirSync } from 'node:fs';
 
-const htmlPath = new URL('../dist/index.html', import.meta.url);
-const headersPath = new URL('../dist/_headers', import.meta.url);
+const distDir = new URL('../dist/', import.meta.url);
+const htmlPath = new URL('index.html', distDir);
+const routeDir = new URL('c/', distDir);
+const headersPath = new URL('_headers', distDir);
 
 // Script types the browser parses as data, not code.
 const DATA_BLOCK_TYPES = new Set(['application/ld+json', 'application/json', 'text/plain']);
@@ -40,7 +43,17 @@ for (const p of [htmlPath, headersPath]) {
   }
 }
 
-const html = readFileSync(htmlPath, 'utf8');
+// Every HTML file the build emits, not just index.html: since prerender.mjs
+// started writing dist/c/<id>.html, twelve more documents carry the same inline
+// guard, and a hash that covers only one of them ships eleven pages whose
+// script the browser silently refuses to run.
+const htmlFiles = [htmlPath];
+if (existsSync(routeDir)) {
+  for (const name of readdirSync(routeDir).sort()) {
+    if (name.endsWith('.html')) htmlFiles.push(new URL(name, routeDir));
+  }
+}
+
 const headers = readFileSync(headersPath, 'utf8');
 
 // One CSP line, or the file has been restructured in a way this check no longer
@@ -64,37 +77,46 @@ if (/script-src[^;]*'unsafe-inline'/.test(csp)) {
 
 const declaredHashes = new Set(csp.match(/'sha256-[A-Za-z0-9+/=]+'/g) ?? []);
 
-// Inline scripts only: the `src=` variants are covered by 'self'.
-const inlineScripts = [...html.matchAll(/<script(?![^>]*\bsrc=)([^>]*)>([\s\S]*?)<\/script>/g)];
-if (inlineScripts.length === 0) {
-  fail('no inline <script> found in dist/index.html — the deep-link guard is gone');
-}
-
 const missing = [];
 let checked = 0;
 
-for (const [, rawAttrs, body] of inlineScripts) {
-  const type = (rawAttrs.match(/\btype\s*=\s*["']?([^"'\s>]+)/i)?.[1] ?? '').toLowerCase();
-  if (DATA_BLOCK_TYPES.has(type)) continue;
+for (const file of htmlFiles) {
+  const rel = fileURLToPath(file).split('/dist/')[1] ?? fileURLToPath(file);
+  const html = readFileSync(file, 'utf8');
 
-  checked += 1;
-  const hash = `'sha256-${createHash('sha256').update(body, 'utf8').digest('base64')}'`;
-  if (!declaredHashes.has(hash)) {
-    missing.push({ type: type || '(classic)', hash, preview: body.trim().slice(0, 60) });
+  // Inline scripts only: the `src=` variants are covered by 'self'.
+  const inlineScripts = [...html.matchAll(/<script(?![^>]*\bsrc=)([^>]*)>([\s\S]*?)<\/script>/g)];
+  if (inlineScripts.length === 0) {
+    fail(`no inline <script> found in dist/${rel} — the deep-link guard is gone`);
   }
-}
 
-if (checked === 0) {
-  fail('every inline <script> in dist/index.html is a data block — the deep-link guard is gone');
+  let checkedHere = 0;
+  for (const [, rawAttrs, body] of inlineScripts) {
+    const type = (rawAttrs.match(/\btype\s*=\s*["']?([^"'\s>]+)/i)?.[1] ?? '').toLowerCase();
+    if (DATA_BLOCK_TYPES.has(type)) continue;
+
+    checkedHere += 1;
+    const hash = `'sha256-${createHash('sha256').update(body, 'utf8').digest('base64')}'`;
+    if (!declaredHashes.has(hash)) {
+      missing.push({ file: rel, type: type || '(classic)', hash, preview: body.trim().slice(0, 60) });
+    }
+  }
+
+  if (checkedHere === 0) {
+    fail(`every inline <script> in dist/${rel} is a data block — the deep-link guard is gone`);
+  }
+  checked += checkedHere;
 }
 
 if (missing.length > 0) {
   for (const m of missing) {
-    console.error(`verify-headers: inline script ${m.type} is not allowed by the CSP`);
+    console.error(`verify-headers: inline script ${m.type} in dist/${m.file} is not allowed by the CSP`);
     console.error(`  starts with: ${JSON.stringify(m.preview)}`);
     console.error(`  add this to script-src in public/_headers: ${m.hash}`);
   }
   fail(`${missing.length} inline script(s) would be blocked in production`);
 }
 
-console.log(`verify-headers: CSP covers ${checked} inline script(s); frame-ancestors present`);
+console.log(
+  `verify-headers: CSP covers ${checked} inline script(s) across ${htmlFiles.length} HTML file(s); frame-ancestors present`,
+);

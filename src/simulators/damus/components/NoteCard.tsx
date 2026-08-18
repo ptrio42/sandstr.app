@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { MockNote, MockUser } from '../../../data/mock';
+import { MENTION_SPLIT_RE, MENTION_TOKEN_RE, resolveMention } from '../../../data/mock';
 import { Avatar } from './Avatar';
 import {
   ReplyIcon, RepostIcon, ShakaIcon, ZapIcon, ShareIcon, EllipsisIcon, PersonCheckIcon, RepostIcon as RepIcon,
@@ -20,13 +21,27 @@ export function Nip05Check({ className = 'w-[15px] h-[15px]' }: { className?: st
 }
 
 // Render note text with Damus-magenta links / #hashtags / @mentions.
+// `nostr:` references (NIP-21) are resolved to a name before the rest of the
+// tokenising runs — a raw `nostr:npub1…` on a card is a reproduction bug, not a
+// faithful detail (see src/data/mock/mentions.ts).
+
 export function renderContent(text: string): React.ReactNode {
-  const parts = text.split(/(\s+)/);
-  return parts.map((tok, i) => {
+  const parts = text.split(MENTION_SPLIT_RE);
+  return parts.map((chunk, ci) => {
+    if (MENTION_TOKEN_RE.test(chunk)) {
+      const mention = resolveMention(chunk);
+      return (
+        <span key={`m${ci}`} className="text-[var(--damus-purple)]">
+          {mention.kind === 'profile' ? `@${mention.label}` : mention.label}
+        </span>
+      );
+    }
+    return chunk.split(/(\s+)/).map((tok, i) => {
     if (/^https?:\/\/\S+/.test(tok)) return <span key={i} className="text-[var(--damus-purple)]">{tok}</span>;
     if (/^#[\wÀ-￿]+$/.test(tok)) return <span key={i} className="text-[var(--damus-purple)]">{tok}</span>;
     if (/^@[\w.]+$/.test(tok)) return <span key={i} className="text-[var(--damus-purple)]">{tok}</span>;
     return <React.Fragment key={i}>{tok}</React.Fragment>;
+    });
   });
 }
 
@@ -115,6 +130,35 @@ export const NoteCard: React.FC<NoteCardProps> = ({
             <img key={i} src={img} alt="" className={`w-full object-cover ${note.images!.length === 1 ? 'max-h-80' : 'h-40'}`} />
           ))}
         </div>
+      )}
+
+      {/* Link preview card for a pasted note. Mock notes never carry one —
+          unfurling needs the network (workers/index.ts). Layout is OUR reading
+          of this client's surface, not something docs/refs states: the
+          screen-map does not cover link cards. */}
+      {note.linkPreview && (
+        <a
+          href={note.linkPreview.url}
+          target="_blank"
+          rel="noreferrer noopener"
+          onClick={(e) => e.stopPropagation()}
+          className="mt-2.5 block overflow-hidden rounded-2xl border border-[var(--damus-border)] no-underline"
+        >
+          {note.linkPreview.image && (
+            <img src={note.linkPreview.image} alt="" loading="lazy" className="w-full max-h-56 object-cover" />
+          )}
+          <div className="px-3 py-2">
+            <div className="text-[13px] text-[var(--damus-secondary)]">{note.linkPreview.siteName}</div>
+            <div className="text-[15px] font-semibold leading-snug">
+              {note.linkPreview.title || note.linkPreview.url}
+            </div>
+            {note.linkPreview.description && (
+              <div className="mt-0.5 line-clamp-2 text-[14px] text-[var(--damus-secondary)]">
+                {note.linkPreview.description}
+              </div>
+            )}
+          </div>
+        </a>
       )}
 
       {/* action row — full width */}

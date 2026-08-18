@@ -60,6 +60,39 @@ export {
   recommendedPaidRelays 
 } from './relays';
 
+// "Paste your note, see it in every client". The host reaches this through a
+// dynamic import so the landing bundle keeps none of the mock data.
+export {
+  PREVIEW_STORAGE_KEY,
+  PREVIEW_IMAGE_STORAGE_KEY,
+  PREVIEW_MAX_CHARS,
+  normalizePreviewText,
+  registerPreviewTarget,
+  applyPreviewNote,
+  activePreviewNote,
+  activePreviewImage,
+  isPreviewNote,
+  readPreviewNote,
+  writePreviewNote,
+  readPreviewImage,
+  writePreviewImage,
+  linkCandidate,
+  activePreviewLink,
+  readPreviewLink,
+  writePreviewLink,
+  PREVIEW_LINK_STORAGE_KEY,
+} from './previewNote';
+
+// `nostr:` references in note text (NIP-21) — see mentions.ts.
+export {
+  MENTION_SPLIT_RE,
+  MENTION_TOKEN_RE,
+  resolveMention,
+  isProfileMention,
+  type Mention,
+  type MentionKind,
+} from './mentions';
+
 // Re-export with alternative names for convenience
 export { mockUsers as users } from './users';
 export { mockNotes as notes } from './notes';

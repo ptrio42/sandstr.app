@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MENTION_SPLIT_RE, MENTION_TOKEN_RE, resolveMention } from '../../../data/mock';
 import { Avatar } from './Avatar';
 import {
   HeartIcon, CommentIcon, RepostIcon, QuoteIcon, ZapIcon, TranslateIcon,
@@ -14,9 +15,19 @@ function abbrev(n: number): string {
 }
 
 // hashtags (blue pill + external-link), urls (blue), @mentions (orange)
+// `nostr:` references (NIP-21) resolve to a name before the rest of the
+// tokenising runs — see src/data/mock/mentions.ts.
 function renderContent(text: string): React.ReactNode {
-  const parts = text.split(/(\s+)/);
-  return parts.map((tok, i) => {
+  return text.split(MENTION_SPLIT_RE).map((chunk, ci) => {
+    if (MENTION_TOKEN_RE.test(chunk)) {
+      const mention = resolveMention(chunk);
+      return (
+        <span key={`m${ci}`} className="text-[var(--yh-orange)]">
+          {mention.kind === 'profile' ? `@${mention.label}` : mention.label}
+        </span>
+      );
+    }
+    return chunk.split(/(\s+)/).map((tok, i) => {
     if (/^#[\p{L}\p{N}_]+$/u.test(tok)) {
       return (
         <span key={i} className="yakihonne-hashtag">
@@ -27,6 +38,7 @@ function renderContent(text: string): React.ReactNode {
     if (/^https?:\/\/\S+/.test(tok)) return <span key={i} className="text-[var(--yh-link)]">{tok}</span>;
     if (/^@[\w.]+$/.test(tok)) return <span key={i} className="text-[var(--yh-orange)]">{tok}</span>;
     return <React.Fragment key={i}>{tok}</React.Fragment>;
+    });
   });
 }
 
@@ -83,6 +95,33 @@ export const NoteCard: React.FC<Props> = ({ note, onOpenThread, onViewProfile, o
             <div className="mt-2.5 rounded-2xl overflow-hidden border border-[var(--yh-divider)]">
               <img src={note.images[0]} alt="" className="w-full max-h-80 object-cover" />
             </div>
+          )}
+
+          {/* Link preview card for a pasted note (mock notes never carry one —
+              unfurling needs the network). Layout is OUR reading of this
+              client's surface; the screen-map does not cover link cards. */}
+          {note.linkPreview && (
+            <a
+              href={note.linkPreview.url}
+              target="_blank"
+              rel="noreferrer noopener"
+              onClick={(e) => e.stopPropagation()}
+              className="mt-2.5 block overflow-hidden rounded-2xl border border-[var(--yh-divider)] no-underline"
+            >
+              {note.linkPreview.image && (
+                <img src={note.linkPreview.image} alt="" loading="lazy" className="w-full max-h-64 object-cover" />
+              )}
+              <div className="px-3.5 py-3">
+                <div className="text-[15px] font-semibold leading-snug">
+                  {note.linkPreview.title || note.linkPreview.url}
+                </div>
+                {note.linkPreview.description && (
+                  <div className="mt-1 line-clamp-2 text-[13px] text-[var(--yh-text-2)]">
+                    {note.linkPreview.description}
+                  </div>
+                )}
+              </div>
+            </a>
           )}
 
           {/* embedded / quoted event */}

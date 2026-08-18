@@ -18,7 +18,8 @@ export function ComposeScreen({
   account: MockUser;
   replyTo: { note: MockNote; author: MockUser } | null;
   onClose: () => void;
-  onPost: () => void;
+  /** Carries the composed text so the host can preview it (composeBridge.ts). */
+  onPost: (text: string) => void;
 }) {
   const [text, setText] = useState('');
 
@@ -37,7 +38,7 @@ export function ComposeScreen({
         <span className="flex-1" />
         <button
           type="button"
-          onClick={onPost}
+          onClick={() => onPost(text)}
           aria-label="Send"
           data-tour="nostur-send"
           style={{ color: 'var(--nostur-accent)', opacity: text.trim() ? 1 : 0.4 }}

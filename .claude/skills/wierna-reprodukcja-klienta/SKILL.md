@@ -119,7 +119,16 @@ przebudowie symulatora:
    `<div>`, więc `<p className="flex items-center">` z awatarem to niepoprawny HTML.
 5. Overlaye (compose/thread/drawer/settings) renderuj w stanie **KOŃCOWYM** — podgląd zamraża framer ORAZ
    CSS `@keyframes` na klatce 0, więc animacja wejścia jest i zablokowana, i nieweryfikowalna.
-6. Zmiany izolowane do katalogu symulatora; screen-map i labelowane PNG zacommitowane. Surowe wideo
+6. **`npm run og:cards`** — karta link-preview `/c/<id>` **FOTOGRAFUJE ten symulator**
+   (`public/og/<id>.png`, generator `scripts/og-client-cards.mjs`). Każda widoczna zmiana, którą
+   właśnie zrobiłeś, jest w niej nieaktualna, dopóki nie przepuścisz generatora — a to jedyny obrazek
+   produktu, który podróżuje po cudzych feedach. Dotyczy też zmiany `primaryColor`: karta bierze
+   z niego poświatę i kolor linii „try it in your browser". **Jeśli ruszałeś onboarding/logowanie
+   klienta** (albo etykiety jego przycisków wejścia), zaktualizuj tabelę `ENTRY` w generatorze —
+   dziewięciu z dwunastu klientów otwiera się na ścianie logowania i generator przeklikuje wejście
+   po WIDOCZNYCH etykietach, żeby karta nie reklamowała formularza logowania. Zmiana etykiety wywali
+   `og:cards` z nazwą kroku i tekstem ekranu; to jedyny alarm.
+7. Zmiany izolowane do katalogu symulatora; screen-map i labelowane PNG zacommitowane. Surowe wideo
    i dumpy klatek ignoruje `docs/refs/.gitignore`: `*.mp4/*.mov/*.webm/*.mkv` + katalogi `frames/`,
    `sheets/`, `full/` — **contact sheet leżący luzem jako `sheet_*.jpg` NIE jest ignorowany**, wrzuć go
    do `sheets/`.

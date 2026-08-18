@@ -17,8 +17,19 @@ export function generateHex(length: number = 64): string {
 }
 
 // Generate npub from hex pubkey (simplified)
+/**
+ * Bech32 (BIP-173, which NIP-19 uses) excludes `1`, `b`, `i` and `o` from its
+ * charset, so a hex tail made these strings not-quite-npubs. That was invisible
+ * until note text started being PARSED for `nostr:` references — a mention of a
+ * mock identity failed to match, so it rendered as raw text (see mentions.ts).
+ */
+const BECH32_CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
 export function generateNpub(): string {
-  return `npub1${generateHex(32)}`;
+  let tail = '';
+  for (let i = 0; i < 58; i++) {
+    tail += BECH32_CHARSET[Math.floor(Math.random() * BECH32_CHARSET.length)];
+  }
+  return `npub1${tail}`;
 }
 
 // Generate random timestamp within range

@@ -80,6 +80,32 @@
 
 **Do zrobienia (druga fala, słabsza wierność / stare stuby):** Keychat, Gossip. Tokeny + killery każdego są niżej w tym pliku; korekty kolorów w `[[client-fidelity-ground-truth]]`. (Primal-MOBILE nadal stary stub — zrobiony tylko web.)
 
+**PRZEBUDOWANE 2026-08-13 — Amethyst do v1.13.1-fdroid.** Nagranie użytkownika (570 s, 285 klatek)
++ `vitorpamplona/amethyst` @ tag v1.13.1. Największa zmiana tokenów: v1.13.1 **odfiolecił neutralną
+rampę** (`surfaceVariant` `#1D1A22` → `#1E1E1E`, `onSurface` → `#E6E6E6`, `outline` → `#909090`)
+i wprowadził wybieralny akcent (domyślny Purple bez zmian, `#BB86FC`), a `onPrimary` w dark jest
+teraz **czarny** (wybór przez kontrast) — dlatego glif FAB-a zmienił kolor z białego na czarny.
+Kontenery liczone formułą `lerp(primary, Black, 0.58)` w **Oklab** → `#36244C`; zgodność
+potwierdzona próbką piksela pigułki nawigacji z nagrania (`#34224B`).
+**Dogrywka: jasny motyw (2026-08-13).** Przebudowa objęła najpierw sam dark (bo to szipująca
+domyślka); light dociągnięty osobno do `lightColors(AccentColorType.PURPLE)`: akcent `#6200EE`
+(Purple500), neutralne `#FDFDFD`/`#1C1C1C`/`#FAFAFA`/`#484848`, `outline` `#767676`, pełna rampa
+kontenerów (`#DEDEDE` … `#EBEBEB`). Light **odwraca oba lerpy**: `accentContainer` =
+`lerp(primary, White, 0.85)` = `#E2E2FF`, `onAccentContainer` = `lerp(primary, Black, **0.40**)` =
+`#2D0077`. Ta sama implementacja Oklaba odtwarza udokumentowane wartości dark (`#36244C`/`#F4EDFF`)
+co do bajtu — tak zostały sprawdzone. Tabela obu motywów: screen-mapa Amethysta, §Motyw i tokeny.
+**Trzy błędy ery v1.12.6 skorygowane** (szczegóły w ramce na górze screen-mapy): licznika relayów
+nigdy nie było w app barze, 5. slot akcji to Share a nie „stats", a pasek LIVE jest warunkowym
+rzędem bąbli, nie stałym paskiem. Archiwum `amethyst-v1-12` zachowuje starą (błędną) postać —
+to snapshot tego, co szipowaliśmy, nie errata.
+
+**ZAMROŻONE 2026-08-13 — Amethyst v1.12.6 → archiwum `amethyst-v1-12`.** Pierwszy realny freeze
+wg `docs/VERSIONS.md`, wykonany przed przebudową żywego symulatora do v1.13.1-fdroid. Snapshot:
+`src/simulators/amethyst-v1-12/` (wpis w liście `archived` w `src/registry.tsx`, trasa
+`/c/amethyst-v1-12`), zamrożone dokumenty: `docs/refs/amethyst-v1-12/screen-map.md` +
+`docs/gaps/amethyst-v1-12.md`. Tokeny marki Amethysta niżej w tym pliku opisują wersję ŻYWĄ;
+archiwum nosi własną kopię arkusza (`amethyst-v1-12.theme.css`) i własną klasę rootową.
+
 **USUNIĘTE 2026-08-05 — Olas.** Upstream `pablof7z/olas` bez pushu od 2025-07 (a `olas-nmp` to nielicencjonowany, niedokończony rewrite), więc nie ma stabilnego ground truth do odwzorowania, a nasza wersja była generycznym klonem Instagrama ze Stories/Follow Requests, których Nostr nie ma. Wypadły: `src/simulators/olas/`, `olas-tour.ts`, `public/icons/olas.svg`, wpisy w rejestrze/configs/typach oraz sekcja tokenów w tym pliku. Historia jest w gicie — gdyby upstream ożył, wracamy przez normalny proces reference-first, nie przez `git revert`.
 
 **Start następnej sesji (agent robiący kolejny symulator):**

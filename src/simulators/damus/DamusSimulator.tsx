@@ -14,15 +14,22 @@ import { ComposeScreen } from './screens/ComposeScreen';
 import { ThreadScreen } from './screens/ThreadScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { RelaysScreen } from './screens/RelaysScreen';
+import { AddRelaySheet } from './components/AddRelaySheet';
+import { RelayFilterSheet } from './components/RelayFilterSheet';
+import { useRelayState } from './relayState';
 import { BookmarksScreen } from './screens/BookmarksScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { SideMenu, type MenuDest } from './screens/SideMenu';
 import { TabBar, type DamusTab } from './components/TabBar';
+import { useScreenSync } from '../shared/screenSync';
+import { publishComposedNote } from '../shared/composeBridge';
 
 export type DamusScreen =
   | 'login' | 'home' | 'profile' | 'compose' | 'settings'
   // navigate-payload additions for FAQ mini-tours:
-  | 'relays' | 'dms' | 'search' | 'notifications' | 'drawer';
+  | 'relays' | 'dms' | 'search' | 'notifications' | 'drawer'
+  // The two relay surfaces the "read one relay" walkthrough needs to land on.
+  | 'addRelay' | 'relayFilter';
 
 export interface DamusSimulatorCommand {
   type: 'login' | 'logout' | 'navigate' | 'compose' | 'post' | 'viewProfile' | 'viewUser' | 'back';
@@ -40,8 +47,13 @@ type Overlay =
   | { type: 'thread'; note: MockNote }
   | { type: 'profile'; user: MockUser }
   | { type: 'relays' }
+  | { type: 'addRelay' }
+  | { type: 'relayFilter' }
   | { type: 'bookmarks' }
   | { type: 'settings' };
+
+/** Overlays that sit OVER their parent instead of replacing it. */
+const SHEET_OVERLAYS = new Set<Overlay['type']>(['addRelay', 'relayFilter']);
 
 export const DamusSimulator: React.FC<DamusSimulatorProps> = ({ className = '', tourCommand, onCommandHandled }) => {
   const parentTheme = useParentTheme();
@@ -53,6 +65,8 @@ export const DamusSimulator: React.FC<DamusSimulatorProps> = ({ className = '', 
   const [tab, setTab] = useState<DamusTab>('home');
   const [overlays, setOverlays] = useState<Overlay[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Above both relay screens on purpose — see relayState.ts.
+  const relayState = useRelayState();
 
   const push = useCallback((o: Overlay) => setOverlays((s) => [...s, o]), []);
   const pop = useCallback(() => setOverlays((s) => s.slice(0, -1)), []);
@@ -69,6 +83,18 @@ export const DamusSimulator: React.FC<DamusSimulatorProps> = ({ className = '', 
   }, []);
 
   const logout = () => { setAuthed(false); setCurrentUser(null); setOverlays([]); setDrawerOpen(false); };
+
+  // Keep your place across a client switch (shared/screenSync.ts). Profile,
+  // settings and relays are overlays here rather than tabs, so they are left out
+  // of the map and fall back to the feed.
+  useScreenSync<DamusTab>({
+    map: { feed: 'home', messages: 'dms', search: 'search', notifications: 'notifications' },
+    current: authed ? tab : null,
+    onRestore: (screen) => {
+      login(mockUsers[0]);
+      setTab(screen);
+    },
+  });
 
   // Transient "not in this demo" toast (same mechanic the Amethyst sim uses for
   // out-of-scope taps: message + auto-dismiss).
@@ -110,6 +136,11 @@ export const DamusSimulator: React.FC<DamusSimulatorProps> = ({ className = '', 
         else if (s === 'profile' && currentUser) { setDrawerOpen(false); setOverlays([{ type: 'profile', user: currentUser }]); }
         else if (s === 'settings') { setDrawerOpen(false); setOverlays([{ type: 'settings' }]); }
         else if (s === 'relays') { setDrawerOpen(false); setOverlays([{ type: 'relays' }]); }
+        // Both relay sheets are stacked ON their parent, not swapped for it: the
+        // ring is meant to sit on a sheet control while the screen behind stays
+        // recognisable, and popping one has to reveal what opened it.
+        else if (s === 'addRelay') { setDrawerOpen(false); setOverlays([{ type: 'relays' }, { type: 'addRelay' }]); }
+        else if (s === 'relayFilter') { setDrawerOpen(false); setTab('search'); setOverlays([{ type: 'relayFilter' }]); }
         else if (s === 'dms') goTab('dms');
         else if (s === 'search') goTab('search');
         else if (s === 'notifications') goTab('notifications');
@@ -154,7 +185,16 @@ export const DamusSimulator: React.FC<DamusSimulatorProps> = ({ className = '', 
       case 'dms':
         return <DMScreen {...common} />;
       case 'search':
-        return <SearchScreen {...common} />;
+        return (
+          <SearchScreen
+            {...common}
+            onOpenRelayFilter={() => push({ type: 'relayFilter' })}
+            notes={mockNotes}
+            feedNotes={relayState.visibleNotes('search', mockNotes)}
+            onOpenThread={openThread}
+            onReply={openCompose}
+          />
+        );
       case 'notifications':
         return <NotificationsScreen {...common} notes={mockNotes} onOpenThread={openThread} onReply={openCompose} />;
     }
@@ -164,7 +204,10 @@ export const DamusSimulator: React.FC<DamusSimulatorProps> = ({ className = '', 
   // Thread / profile / bookmarks are STACK PUSHES in real Damus — the tab bar and FAB
   // stay mounted (recording: bookmarks + pushed views keep the bottom bar). Compose is
   // a sheet; relays/settings replace the bottom edge with their own chrome.
-  const topKeepsTabBar = !top || top.type === 'thread' || top.type === 'profile' || top.type === 'bookmarks';
+  // `relayFilter` keeps it: a SwiftUI sheet is a partial cover, so the Universe
+  // tab bar stays mounted behind the scrim rather than vanishing under it.
+  const topKeepsTabBar = !top || top.type === 'thread' || top.type === 'profile'
+    || top.type === 'bookmarks' || top.type === 'relayFilter';
   const showTabBar = authed && topKeepsTabBar && !drawerOpen;
 
   return (
@@ -175,11 +218,22 @@ export const DamusSimulator: React.FC<DamusSimulatorProps> = ({ className = '', 
         <>
           <div className="damus-content">{renderTab()}</div>
 
-          {overlays.map((o, i) => (
-            <React.Fragment key={i}>
-              {i === overlays.length - 1 && renderOverlay(o)}
-            </React.Fragment>
-          ))}
+          {/*
+            The top overlay renders, plus the one under it when the top is a
+            SHEET. A sheet is a partial cover: "Add relay" over a blank screen
+            would be a lie, and popping it has to reveal the Relays list that
+            opened it. Full-screen pushes still render alone.
+          */}
+          {overlays.map((o, i) => {
+            const isTop = i === overlays.length - 1;
+            const topIsSheet = top ? SHEET_OVERLAYS.has(top.type) : false;
+            const isUnderSheet = topIsSheet && i === overlays.length - 2;
+            return (
+              <React.Fragment key={i}>
+                {(isTop || isUnderSheet) && renderOverlay(o)}
+              </React.Fragment>
+            );
+          })}
 
           {drawerOpen && (
             <SideMenu currentUser={currentUser} onClose={() => setDrawerOpen(false)} onNav={handleMenu} />
@@ -206,13 +260,44 @@ export const DamusSimulator: React.FC<DamusSimulatorProps> = ({ className = '', 
     };
     switch (o.type) {
       case 'compose':
-        return <ComposeScreen currentUser={currentUser} users={mockUsers} replyTo={o.replyTo} onPost={() => { registerAction('post'); pop(); }} onCancel={pop} />;
+        return <ComposeScreen currentUser={currentUser} users={mockUsers} replyTo={o.replyTo} onPost={(content) => {
+          registerAction('post');
+          // The host turns this into the previewed note (composeBridge.ts).
+          publishComposedNote(content);
+          pop();
+        }} onCancel={pop} />;
       case 'thread':
         return <ThreadScreen note={o.note} currentUser={currentUser} {...noteFeedProps} onBack={pop} />;
       case 'profile':
         return <ProfileScreen user={o.user} currentUser={currentUser} {...noteFeedProps} onBack={pop} />;
       case 'relays':
-        return <RelaysScreen onBack={pop} />;
+        return (
+          <RelaysScreen
+            relays={relayState.relays}
+            onBack={pop}
+            onAddRelay={() => push({ type: 'addRelay' })}
+          />
+        );
+      case 'addRelay':
+        return (
+          <AddRelaySheet
+            onAdd={(url) => {
+              const added = relayState.addRelay(url);
+              if (added) showToast(`Added ${added.url}`);
+              return !!added;
+            }}
+            onClose={pop}
+          />
+        );
+      case 'relayFilter':
+        return (
+          <RelayFilterSheet
+            relays={relayState.relays}
+            isShown={(url) => relayState.isShown('search', url)}
+            onToggle={(url) => relayState.toggleRelay('search', url)}
+            onClose={pop}
+          />
+        );
       case 'bookmarks':
         return <BookmarksScreen {...noteFeedProps} onBack={pop} />;
       case 'settings':

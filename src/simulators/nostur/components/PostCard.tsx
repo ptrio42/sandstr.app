@@ -5,17 +5,28 @@ import { Avatar } from './Avatar';
 import { ActionBar } from './ActionBar';
 import { FollowLink } from './Chrome';
 import { ago, canZap, mediaFor, reposterFor, userByPubkey } from '../nosturData';
+import { MENTION_SPLIT_RE, MENTION_TOKEN_RE, resolveMention } from '../../../data/mock';
 
 const CLAMP_CHARS = 320;
 
 /** ContentRenderer passes accentColor: theme.accent — links/mentions/hashtags
  *  are accent with NO underline. Rendered as spans; the sim has no navigation
  *  targets for them and a bare <a href> inside a card would swallow the tap. */
+// `nostr:` references (NIP-21) resolve to a name before the rest of the
+// tokenising runs — see src/data/mock/mentions.ts.
 function RichText({ text }: { text: string }) {
-  const parts = text.split(/(\s+)/);
   return (
     <>
-      {parts.map((p, i) => {
+      {text.split(MENTION_SPLIT_RE).map((chunk, ci) => {
+        if (MENTION_TOKEN_RE.test(chunk)) {
+          const mention = resolveMention(chunk);
+          return (
+            <span key={`m${ci}`} className="nostur-mention">
+              {mention.kind === 'profile' ? `@${mention.label}` : mention.label}
+            </span>
+          );
+        }
+        return chunk.split(/(\s+)/).map((p, i) => {
         if (/^[#@][\wÀ-ɏ-]+$/.test(p)) {
           return (
             <span key={i} className={p[0] === '#' ? 'nostur-hashtag' : 'nostur-mention'}>
@@ -31,6 +42,7 @@ function RichText({ text }: { text: string }) {
           );
         }
         return <React.Fragment key={i}>{p}</React.Fragment>;
+        });
       })}
     </>
   );
@@ -176,7 +188,37 @@ export function PostCard(props: PostCardProps) {
         ))}
 
       {/* 6. link preview */}
-      {link && !images.length && (
+      {/* An unfurled card when we have one (a pasted note only — mock notes carry
+          no `linkPreview`, since unfurling needs the network). Otherwise the
+          existing placeholder row, which is what a client shows before the
+          preview resolves. */}
+      {note.linkPreview && !images.length && (
+        <a
+          href={note.linkPreview.url}
+          target="_blank"
+          rel="noreferrer noopener"
+          onClick={(e) => e.stopPropagation()}
+          className="mt-2 block overflow-hidden rounded-xl no-underline"
+          style={{ background: 'var(--nostur-bg)' }}
+        >
+          {note.linkPreview.image && (
+            <img src={note.linkPreview.image} alt="" loading="lazy" className="nostur-post-media" />
+          )}
+          <div className="px-4 py-3">
+            <div className="text-[15px] font-semibold">{note.linkPreview.title || note.linkPreview.siteName}</div>
+            {note.linkPreview.description && (
+              <div className="mt-0.5 line-clamp-2 text-[14px]" style={{ color: 'var(--nostur-secondary)' }}>
+                {note.linkPreview.description}
+              </div>
+            )}
+            <div className="mt-1 text-[13px]" style={{ color: 'var(--nostur-secondary)' }}>
+              {note.linkPreview.siteName}
+            </div>
+          </div>
+        </a>
+      )}
+
+      {link && !note.linkPreview && !images.length && (
         <div
           className="mt-2 flex items-center gap-3 rounded-xl px-4 py-5"
           style={{ background: 'var(--nostur-bg)' }}

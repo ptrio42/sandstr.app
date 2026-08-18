@@ -42,6 +42,14 @@ mkdir -p "$OUT" "$WORK"
 BOLD="/System/Library/Fonts/Supplemental/Arial Bold.ttf"
 REG="/System/Library/Fonts/Supplemental/Arial.ttf"
 
+# Optional loop filter: `build-teaser-faq.sh damus-relay-feed` re-cuts that one
+# clip and skips the cuts, the hero and the tour. A full run re-encodes twelve
+# clips plus two long cuts and costs ~10 minutes, which is a brutal price for
+# iterating on one caption or one phase length — and iterating is most of the
+# work. With no argument everything builds, exactly as before.
+ONLY="${1:-}"
+wanted() { [ -z "$ONLY" ] || [ "$1" = "$ONLY" ]; }
+
 # ---- frame layout (1080x1920) — same constants as build-teaser.sh ------------
 CANW=1080; CANH=1920
 CARDW=860; CARDH=1550; CARDX=110; CARDY=200; CARDR=40
@@ -95,6 +103,8 @@ CAP_MAX=28
 T_OPEN=0.7                   # panel opening, sped up
 T_WAIT=2.8                   # answer read + the click that starts the demo
 T_SWITCH=2.0                 # the client-switch interstitial
+T_SHOWME=1.9                 # pointer on "Show me in the simulator", and the press
+T_TYPE=6.0                   # typing INTO the simulator, kept near real speed
 LOOPS=(
 "damus-shaka|Where is the heart?|It is a shaka.|3.0"
 "amethyst|Nobody sees my notes.|You post to relays.|3.8"
@@ -108,9 +118,15 @@ LOOPS=(
 "damus-zap|How do I tip someone?|It is called a zap.|3.0"
 "amethyst-keys|Lost my phone.|Backup Keys, in the drawer.|3.0"
 "amethyst-zap|How do I tip someone?|Zap, fourth under the note.|3.0"
-# The keyword-mute clip: the demo lands on the field and the harness types
-# into it, so the D phase carries the typing and needs the room.
-"amethyst-mute|Tired of the current thing?|Add it to Hidden Words.|6.2"
+# The keyword-mute clip: tD here covers ONLY the four ring steps — the typing
+# that follows is its own phase, timed by T_TYPE (see the split on `typing2`).
+"amethyst-mute|Tired of the current thing?|Add it to Hidden Words.|6.0"
+# The newspaper framing: a relay is a section, not a server. "Read one relay
+# only" described the mechanism; this describes the reason anybody would want to.
+# tE 11.0, not the default 6: the tail is the whole walkthrough (type the address,
+# confirm, back out, switch tab, open the sheet, switch the others off, close it
+# and look at the feed). At 6s it played at 4x and the payoff was a blur.
+"damus-relay-feed|Read Nostr like a paper?|One relay, one section.|6.0|11.0"
 )
 
 for row in "${LOOPS[@]}"; do
@@ -127,9 +143,29 @@ done
 CUT_A=(damus-shaka sw-damus-nostur nostur sw-nostur-wisp wisp)
 CUT_B=(coracle amethyst sw-amethyst-damus damus-npub)
 
+# Three phases, not four: a scripted clip (capture-faq.mjs SCRIPTS) arrives on
+# its answer via a deep link, so there is no query being typed and nothing to
+# hold a `t` phase.
+#   a  the answer, straight off ?faq=<id>          — caption asks the question
+#   b  the walk to the screen (login, drawer, …)   — no caption, compressed
+#   d  the payoff: typing both words into the list — caption names the feature
+# Empty while SCRIPTS is: amethyst-mute went back to being an ordinary FAQ loop.
+SCRIPTED=""
+SCRIPT_STEP_WALK=1     # marks.steps index where the answer is dismissed
+SCRIPT_STEP_TYPE=13    # marks.steps index where the cursor lands in the field
+T_SCR_A=2.6            # seconds for the answer
+T_SCR_B=5.0            # seconds for the walk
+
 mark() { # loop key -> seconds (float)
   node -e "const m=require('$SRC/$1/marks.json');process.stdout.write(((m['$2']??0)/1000).toFixed(3))"
 }
+# Scripted clips (capture-faq.mjs SCRIPTS) have no FAQ search to film, so they
+# have no typing/question/demo marks — only a `steps` array. Feeding them through
+# the four-phase machinery divides by zero and emits an empty segment, silently.
+smark() { # loop step-index -> seconds (float)
+  node -e "const m=require('$SRC/$1/marks.json');process.stdout.write(((m.steps?.[$2] ?? m.end)/1000).toFixed(3))"
+}
+is_scripted() { case " $SCRIPTED " in *" $1 "*) return 0;; *) return 1;; esac; }
 dur() { ffprobe -v error -show_entries format=duration -of csv=p=0 "$1"; }
 
 # Render one phase of one loop into a composited 1080x1920 segment.
@@ -166,24 +202,112 @@ segment() { # id in out speed ss to caption color phase
 
 # ---- per-loop beats ----------------------------------------------------------
 for row in "${LOOPS[@]}"; do
-  IFS='|' read -r id ask show tD <<<"$row"
+  # Optional 5th field: seconds for the `e` phase (typing INTO the simulator).
+  # It has to be per-clip. amethyst-mute records ~9s of typing and damus-relay-feed
+  # ~25s — one global figure either crawls the short one or makes the long one
+  # unreadable at 4x, which is the exact bug T_TYPE was added to fix.
+  IFS='|' read -r id ask show tD tE <<<"$row"
+  wanted "$id" || continue
+  tE="${tE:-$T_TYPE}"
   in="$SRC/${id}.mp4"
   [ -s "$in" ] || { echo "  ! missing $in — run capture-faq.mjs $id"; exit 1; }
   echo "  · ${id}"
+
+  if is_scripted "$id"; then
+    walk=$(smark "$id" "$SCRIPT_STEP_WALK"); type=$(smark "$id" "$SCRIPT_STEP_TYPE")
+    total=$(dur "$in")
+    read -r sA sB sD <<<"$(awk -v w="$walk" -v t="$type" -v e="$total" \
+      -v ta="$T_SCR_A" -v tb="$T_SCR_B" -v td="$tD" \
+      'BEGIN{printf "%.3f %.3f %.3f", w/ta, (t-w)/tb, (e-t)/td}')"
+    segment "$id" "$in" "$WORK/${id}_a.mp4" "$sA" 0      "$walk"  "$ask"  "white"   a
+    segment "$id" "$in" "$WORK/${id}_b.mp4" "$sB" "$walk" "$type" ""      "white"   b
+    segment "$id" "$in" "$WORK/${id}_d.mp4" "$sD" "$type" "$total" "$show" "$ACCENT" d
+    continue
+  fi
 
   # Four phases. `typing` is the mark where the cursor lands in the search field,
   # so everything before it (opening the panel, the pointer travelling) can be
   # compressed while the typing itself plays untouched.
   ty=$(mark "$id" typing); qm=$(mark "$id" question)
   dm=$(mark "$id" demo);   total=$(dur "$in")
-  read -r sOpen sWait sD <<<"$(awk -v t="$ty" -v q="$qm" -v d="$dm" -v e="$total" \
-    -v o="$T_OPEN" -v w="$T_WAIT" -v dd="$tD" \
-    'BEGIN{printf "%.3f %.3f %.3f", t/o, (d-q)/w, (e-d)/dd}')"
+  sm=$(mark "$id" showMe)    # pointer parked on "Show me in the simulator"
+  t2=$(mark "$id" typing2)   # 0 unless this loop types into the simulator
+  ds=$(mark "$id" dismiss)   # 0 unless the tour has to be dismissed first
 
-  segment "$id" "$in" "$WORK/${id}_a.mp4" "$sOpen" 0     "$ty"    "$ask"  "white"   a
-  segment "$id" "$in" "$WORK/${id}_t.mp4" "1.0"    "$ty"  "$qm"   "$ask"  "white"   t
-  segment "$id" "$in" "$WORK/${id}_b.mp4" "$sWait" "$qm" "$dm"    ""      "white"   b
-  segment "$id" "$in" "$WORK/${id}_d.mp4" "$sD"    "$dm" "$total" "$show" "$ACCENT" d
+  segment "$id" "$in" "$WORK/${id}_a.mp4" "$(awk -v t="$ty" -v o="$T_OPEN" 'BEGIN{printf "%.3f", t/o}')" \
+    0 "$ty" "$ask" "white" a
+  segment "$id" "$in" "$WORK/${id}_t.mp4" "1.0" "$ty" "$qm" "$ask" "white" t
+
+  # Phase B ends where the pointer reaches "Show me in the simulator", and the
+  # press itself becomes phase C at close to real speed. Rolled into one
+  # compressed phase, the click happened in two frames at 2.4x and the drawer
+  # appeared to open by itself — the viewer never saw what caused it.
+  #
+  # `showMe` is newer than most of the captures in .work/, so a loop recorded
+  # before it exists reads 0 here. Without this branch that becomes a NEGATIVE
+  # speed and a backwards -ss/-to pair, and the whole build dies on a clip that
+  # is otherwise perfectly good. Those fall back to the single compressed phase
+  # they were cut with before; re-capture the loop to get the slower press.
+  rm -f "$WORK/${id}_c.mp4"
+  if [ "$(awk -v s="$sm" -v q="$qm" 'BEGIN{print (s>q)?1:0}')" = 1 ]; then
+    segment "$id" "$in" "$WORK/${id}_b.mp4" \
+      "$(awk -v q="$qm" -v s="$sm" -v w="$T_WAIT" 'BEGIN{printf "%.3f", (s-q)/w}')" \
+      "$qm" "$sm" "" "white" b
+    segment "$id" "$in" "$WORK/${id}_c.mp4" \
+      "$(awk -v s="$sm" -v d="$dm" -v c="$T_SHOWME" 'BEGIN{printf "%.3f", (d-s)/c}')" \
+      "$sm" "$dm" "$ask" "white" b
+  else
+    echo "    (no showMe mark — re-capture $id for the slower press)"
+    segment "$id" "$in" "$WORK/${id}_b.mp4" \
+      "$(awk -v q="$qm" -v d="$dm" -v w="$T_WAIT" 'BEGIN{printf "%.3f", (d-q)/w}')" \
+      "$qm" "$dm" "" "white" b
+  fi
+
+  # Phase D, split on `typing2` when the loop keeps filming past the mini-tour.
+  #
+  # One multiplier over the whole tail is wrong for those loops: the ring steps
+  # and the typing have opposite needs. amethyst-mute records 25.6 s after the
+  # demo starts, of which 9.4 s is the two words going in — squeeze all of it
+  # into one 8 s phase and the typing plays at 3.2x, which is the one beat the
+  # clip exists to show. So the ring steps get compressed and the typing gets
+  # T_TYPE at close to the speed it was recorded. `typing2` has been written by
+  # the recorder all along and nothing ever read it.
+  rm -f "$WORK/${id}_e.mp4"
+  if [ "$(awk -v x="$t2" 'BEGIN{print (x>0)?1:0}')" = 1 ]; then
+    # D stops at `dismiss`, not at `typing2`, when the recorder had to dismiss
+    # the tour: between those two marks the FAQ panel reopens over the simulator
+    # and closes again, which on screen reads as the client blinking out. That
+    # is our scaffolding, so the cut skips straight from the last ring to the
+    # cursor already in the field.
+    dEnd="$t2"
+    # Trim 0.6s off the end of D as well. `dismiss` is stamped the instant the
+    # last ring settles, but a mini-tour that self-ends right there lets
+    # ClientView slide the FAQ panel back over the client within a few frames —
+    # and those frames are the last ones of D, so they survive the cut. Half a
+    # second of the settled ring is worth more than a panel wiping the screen.
+    [ "$(awk -v x="$ds" 'BEGIN{print (x>0)?1:0}')" = 1 ] \
+      && dEnd="$(awk -v x="$ds" 'BEGIN{printf "%.3f", (x-0.6>0)?x-0.6:x}')"
+    sD="$(awk -v d="$dm" -v x="$dEnd" -v dd="$tD" 'BEGIN{printf "%.3f", (x-d)/dd}')"
+    segment "$id" "$in" "$WORK/${id}_d.mp4" "$sD" "$dm" "$dEnd" "$show" "$ACCENT" d
+
+    # `typed` splits the tail so the address being ENTERED plays at 1.0x, the way
+    # the FAQ query does in phase `t`. Without it the tail's single multiplier put
+    # 25 characters on screen in 1.4s — the one thing in this stretch a viewer has
+    # to read, unreadable. Everything after it is mechanical and compresses fine.
+    ty2=$(mark "$id" typed)
+    rm -f "$WORK/${id}_f.mp4"
+    if [ "$(awk -v x="$ty2" -v y="$t2" 'BEGIN{print (x>y)?1:0}')" = 1 ]; then
+      sF="$(awk -v x="$ty2" -v e="$total" -v te="$tE" 'BEGIN{printf "%.3f", (e-x)/te}')"
+      segment "$id" "$in" "$WORK/${id}_e.mp4" "1.0" "$t2"   "$ty2"   "$show" "$ACCENT" d
+      segment "$id" "$in" "$WORK/${id}_f.mp4" "$sF" "$ty2"  "$total" "$show" "$ACCENT" d
+    else
+      sE="$(awk -v y="$t2" -v e="$total" -v te="$tE" 'BEGIN{printf "%.3f", (e-y)/te}')"
+      segment "$id" "$in" "$WORK/${id}_e.mp4" "$sE" "$t2" "$total" "$show" "$ACCENT" d
+    fi
+  else
+    sD=$(awk -v d="$dm" -v e="$total" -v dd="$tD" 'BEGIN{printf "%.3f", (e-d)/dd}')
+    segment "$id" "$in" "$WORK/${id}_d.mp4" "$sD" "$dm" "$total" "$show" "$ACCENT" d
+  fi
 done
 
 # ---- switch interstitials ------------------------------------------------------
@@ -191,6 +315,7 @@ done
 # whole thing on its own, and a line of text here would be the fourth voice in a
 # frame that already has the client, the ring and the footer.
 for sw in sw-damus-nostur sw-nostur-wisp sw-amethyst-damus; do
+  wanted "$sw" || continue
   in="$SRC/${sw}.mp4"
   [ -s "$in" ] || { echo "  ! missing $in — run capture-faq.mjs $sw"; exit 1; }
   echo "  · ${sw}"
@@ -203,7 +328,7 @@ done
 # Four steps, no caption at all: the post above the video carries the words, and
 # the tour card in frame already says "1 / 10". Speed is modest — the card is
 # there to be READ, which is the whole claim being made.
-if [ -s "$SRC/tour-wisp.mp4" ]; then
+if [ -s "$SRC/tour-wisp.mp4" ] && wanted tour-wisp; then
   echo "  · tour-wisp"
   ttotal=$(dur "$SRC/tour-wisp.mp4")
   tcut=$(node -e "const m=require('$SRC/tour-wisp/marks.json');process.stdout.write(((m.steps[4] ?? m.end)/1000).toFixed(3))")
@@ -229,7 +354,30 @@ drawtext=fontfile='${REG}':text='${DISCLAIMER}':fontsize=26:fontcolor=${MUTED}:x
 }
 
 card "$WORK/end.mp4" 3.2 "try Nostr" "no keys, no install" "sandstr.app"
-card "$WORK/tag.mp4" 1.5 ""          ""                    "sandstr.app"
+# The single-question clips end on this one, and it used to be the lockup over a
+# bare domain — no line saying what the thing IS. A viewer arriving from a reply
+# in someone else's thread has had no other chance to find out. 2.6s, not 1.5:
+# three lines need longer than a wordless tag did. (No client count in the
+# tagline — the narrative is derived from `status` in src/registry.tsx.)
+card "$WORK/tag.mp4" 2.6 "try Nostr clients" "no keys, no install" "sandstr.app"
+
+# Per-client tag card: a single-question clip gets posted into a thread about
+# THAT client, so "try Nostr clients" makes the viewer do the mapping themselves.
+# "try Damus" is the same sentence with the work already done. Derived from the
+# loop id rather than listed per row, so every clip gets one for free.
+client_name() { # loop-id -> display name
+  case "$1" in
+    damus-*|damus)         echo "Damus" ;;
+    amethyst-*|amethyst)   echo "Amethyst" ;;
+    primal-*|primal)       echo "Primal" ;;
+    nostur-*|nostur)       echo "Nostur" ;;
+    yakihonne-*|yakihonne) echo "YakiHonne" ;;
+    snort-*|snort)         echo "Snort" ;;
+    wisp-*|wisp)           echo "Wisp" ;;
+    coracle-*|coracle)     echo "Coracle" ;;
+    *)                     echo "" ;;
+  esac
+}
 
 # ---- assemble ------------------------------------------------------------------
 encode() { # list out
@@ -244,9 +392,20 @@ encode() { # list out
 listItems() { # listfile item...
   local list=$1; shift
   for item in "$@"; do
+    if is_scripted "$item"; then
+      for p in a b d; do echo "file '${item}_${p}.mp4'" >>"$list"; done
+      continue
+    fi
     case "$item" in
       sw-*) echo "file '${item}_x.mp4'" >>"$list" ;;
-      *)    for p in a t b d; do echo "file '${item}_${p}.mp4'" >>"$list"; done ;;
+      *)    for p in a t b; do echo "file '${item}_${p}.mp4'" >>"$list"; done
+            # `c` only for loops captured with a `showMe` mark, `e` only for
+            # loops that type into the simulator. Both are absent by design on
+            # older captures — see the fallback in the per-loop beats.
+            [ -s "$WORK/${item}_c.mp4" ] && echo "file '${item}_c.mp4'" >>"$list" || true
+            echo "file '${item}_d.mp4'" >>"$list"
+            [ -s "$WORK/${item}_e.mp4" ] && echo "file '${item}_e.mp4'" >>"$list" || true
+            [ -s "$WORK/${item}_f.mp4" ] && echo "file '${item}_f.mp4'" >>"$list" || true ;;
     esac
   done
 }
@@ -261,21 +420,31 @@ cut() { # name intro1 intro2 item...
   encode "$WORK/cut_${name}.txt" "$OUT/sandstr-faq-${name}.mp4"
 }
 
-cut a "Every client" "is different." "${CUT_A[@]}"
-cut b "It is not the app." "It is Nostr." "${CUT_B[@]}"
+if [ -z "$ONLY" ]; then
+  cut a "Every client" "is different." "${CUT_A[@]}"
+  cut b "It is not the app." "It is Nostr." "${CUT_B[@]}"
+fi
 
 # One clip per question — this is what actually gets posted into a thread where
 # somebody asked that exact thing.
 for row in "${LOOPS[@]}"; do
   IFS='|' read -r id _ <<<"$row"
+  wanted "$id" || continue
   : >"$WORK/one_${id}.txt"
   listItems "$WORK/one_${id}.txt" "$id"
-  echo "file 'tag.mp4'" >>"$WORK/one_${id}.txt"
+  cn="$(client_name "$id")"
+  if [ -n "$cn" ]; then
+    card "$WORK/tag_${id}.mp4" 2.6 "try ${cn}" "no keys, no install" "sandstr.app"
+    echo "file 'tag_${id}.mp4'" >>"$WORK/one_${id}.txt"
+  else
+    echo "file 'tag.mp4'" >>"$WORK/one_${id}.txt"
+  fi
   encode "$WORK/one_${id}.txt" "$OUT/sandstr-faq-${id}.mp4"
 done
 
 # Hero loop for the landing page: no captions — the page has words. The
 # disclaimer stays, because it is not decoration.
+if [ -z "$ONLY" ]; then
 IFS='|' read -r hid _ _ hD <<<"${LOOPS[0]}"
 hty=$(mark "$hid" typing); hq=$(mark "$hid" question)
 hd=$(mark "$hid" demo);    ht=$(dur "$SRC/${hid}.mp4")
@@ -288,7 +457,8 @@ segment "$hid" "$SRC/${hid}.mp4" "$WORK/hero_b.mp4" "$sWait" "$hq"  "$hd"  "" wh
 segment "$hid" "$SRC/${hid}.mp4" "$WORK/hero_d.mp4" "$sD"    "$hd"  "$ht"  "" white d
 printf "file 'hero_a.mp4'\nfile 'hero_t.mp4'\nfile 'hero_b.mp4'\nfile 'hero_d.mp4'\n" >"$WORK/hero.txt"
 encode "$WORK/hero.txt" "$OUT/sandstr-faq-hero.mp4"
+fi
 
-if [ -s "$WORK/tour_wisp.txt" ]; then encode "$WORK/tour_wisp.txt" "$OUT/sandstr-tour-wisp.mp4"; fi
+if [ -s "$WORK/tour_wisp.txt" ] && wanted tour-wisp; then encode "$WORK/tour_wisp.txt" "$OUT/sandstr-tour-wisp.mp4"; fi
 
-ls -lh "$OUT" | grep -E "faq|tour"
+if [ -n "$ONLY" ]; then ls -lh "$OUT" | grep -E "$ONLY"; else ls -lh "$OUT" | grep -E "faq|tour"; fi

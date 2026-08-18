@@ -18,7 +18,9 @@ export { Drawer } from './components/Drawer';
 // Screens
 export { LoginScreen } from './screens/LoginScreen';
 export { HomeScreen } from './screens/HomeScreen';
-export { SearchScreen } from './screens/SearchScreen';
+export { BrowserScreen } from './screens/BrowserScreen';
+export { DiscoverScreen } from './screens/DiscoverScreen';
+export { WalletScreen } from './screens/WalletScreen';
 export { NotificationsScreen } from './screens/NotificationsScreen';
 export { MessagesScreen } from './screens/MessagesScreen';
 export { ProfileScreen } from './screens/ProfileScreen';

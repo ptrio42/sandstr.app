@@ -6,7 +6,7 @@
  * The real Nostur hotlinks profile pictures, banners and media; we do not.
  */
 
-import { mockUsers, mockNotes, mockRelays, getSampleImages } from '../../data/mock';
+import { mockUsers, mockNotes, mockRelays, getSampleImages, isPreviewNote } from '../../data/mock';
 import type { MockNote, MockUser } from '../../data/mock';
 import type { AuthoredNote } from './types';
 
@@ -89,6 +89,9 @@ export function fiatForSats(sats: number): string {
 const mediaCache = new Map<string, string[]>();
 export function mediaFor(note: MockNote): string[] {
   if (!note.images || note.images.length === 0) return [];
+  // A pasted note's picture is the point of "Preview your note" — render it as
+  // given, and never cache it, because the visitor can swap it at any time.
+  if (isPreviewNote(note.id)) return note.images;
   let cached = mediaCache.get(note.id);
   if (!cached) {
     cached = note.images.every((u) => u.startsWith('data:'))

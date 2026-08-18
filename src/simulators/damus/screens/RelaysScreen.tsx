@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
 import { mockRelays } from '../../../data/mock';
+import type { MockRelay } from '../../../data/mock';
 import { ChevronLeft, ChevronRight, PlusIcon, BitcoinBadge } from '../components/icons';
 
 interface Props {
+  /**
+   * My Relays, owned by `relayState` instead of read straight from the mock
+   * pool: a relay added here has to appear in the Universe `.filter` sheet, and
+   * a screen-local slice of `mockRelays` could never show that.
+   */
+  relays: MockRelay[];
   onBack: () => void;
+  onAddRelay: () => void;
 }
 
 type Status = 'online' | 'connecting' | 'error';
@@ -14,9 +22,12 @@ function statusFor(isOnline: boolean, i: number): Status {
   return 'online';
 }
 
-export const RelaysScreen: React.FC<Props> = ({ onBack }) => {
+export const RelaysScreen: React.FC<Props> = ({ relays: mine, onBack, onAddRelay }) => {
   const [seg, setSeg] = useState<'mine' | 'recommended'>('mine');
-  const relays = mockRelays.slice(0, seg === 'mine' ? 12 : 8);
+  // "Recommended" is still a static slice of the pool — it is a catalogue of
+  // relays you have NOT added, so it does not come from My Relays (dam-31 covers
+  // what is still wrong with that segment).
+  const relays = seg === 'mine' ? mine : mockRelays.slice(0, 8);
 
   return (
     <div className="absolute inset-0 z-[52] flex flex-col bg-[var(--damus-bg)]" data-tour="damus-relays">
@@ -29,7 +40,12 @@ export const RelaysScreen: React.FC<Props> = ({ onBack }) => {
       <div className="flex-1 overflow-y-auto">
         <div className="flex items-end justify-between px-4 pt-2 pb-1">
           <h1 className="text-[34px] font-extrabold text-[var(--damus-text)] leading-none">My&nbsp;Relays</h1>
-          <button className="flex items-center gap-1 px-3 py-2 rounded-lg bg-[var(--damus-bg-tertiary)] text-[15px] text-[var(--damus-text)]">
+          <button
+            type="button"
+            onClick={onAddRelay}
+            data-tour="damus-add-relay-button"
+            className="flex items-center gap-1 px-3 py-2 rounded-lg bg-[var(--damus-bg-tertiary)] text-[15px] text-[var(--damus-text)]"
+          >
             <PlusIcon className="w-4 h-4" /> Add relay
           </button>
         </div>

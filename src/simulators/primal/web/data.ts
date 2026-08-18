@@ -9,6 +9,7 @@
  * All media = local data: URIs (getSampleImages); avatars = robohash <Avatar seed>.
  */
 import { getSampleImages } from '../../../data/mock/utils';
+import { registerPreviewTarget } from '../../../data/mock/previewNote';
 
 export interface PNote {
   id: string;
@@ -297,3 +298,29 @@ export const settingsMenu = [
 ];
 
 export const appVersion = '3.0.119';
+
+/**
+ * "Preview your own note" (src/data/mock/previewNote.ts). Primal web curates
+ * its own feed instead of reading `mockNotes`, so the top card is registered as
+ * a landing spot by hand. `media` is a single image here, so only the first one
+ * a pasted note carries is shown.
+ */
+const pristineTopNote = { body: feedNotes[0].body, media: feedNotes[0].media, link: feedNotes[0].link };
+registerPreviewTarget({
+  apply: (text, media, link) => {
+    feedNotes[0].body = text;
+    // PNote's own card shape; the unfurled description is trimmed the way the
+    // curated mock ones are.
+    feedNotes[0].link = link
+      ? { title: link.title || link.siteName, desc: link.description.slice(0, 140), url: link.url }
+      : undefined;
+    // The mock image illustrated somebody else's post, so it never survives —
+    // the card shows the visitor's own image, or none.
+    feedNotes[0].media = media[0];
+  },
+  reset: () => {
+    feedNotes[0].body = pristineTopNote.body;
+    feedNotes[0].media = pristineTopNote.media;
+    feedNotes[0].link = pristineTopNote.link;
+  },
+});

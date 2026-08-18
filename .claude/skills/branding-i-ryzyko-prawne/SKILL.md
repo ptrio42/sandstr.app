@@ -1,6 +1,6 @@
 ---
 name: branding-i-ryzyko-prawne
-description: 'Decyzje wokół marki i ryzyka prawnego sandstr: nazwa, domena, disclaimer, znak towarowy, zgoda zespołów klientów, licencje i atrybucja, og/canonical/robots. Użyj gdy: "czy możemy to pokazać", "napisz do twórców", "domena", "disclaimer", "znak towarowy", "licencja", "og:image", "SEO", "robots" — albo gdy dotykasz index.html, public/robots.txt, public/sitemap.xml, public/_headers, TRADEMARKS.md, THIRD-PARTY.md, LICENSE, PRIVACY.md, src/host/brand/ lub pól homepage/repo/upstreamLicense w src/registry.tsx.'
+description: 'Decyzje wokół marki i ryzyka prawnego sandstr: nazwa, domena, disclaimer, znak towarowy, zgoda zespołów klientów, licencje i atrybucja, og/canonical/robots, karty link-preview. Użyj gdy: "czy możemy to pokazać", "napisz do twórców", "domena", "disclaimer", "znak towarowy", "licencja", "og:image", "karta share", "link preview", "SEO", "robots" — albo gdy dotykasz index.html, public/robots.txt, public/sitemap.xml, public/_headers, public/og/, scripts/og-image.html, scripts/og-client-cards.mjs, src/shareMeta.ts, TRADEMARKS.md, THIRD-PARTY.md, LICENSE, PRIVACY.md, src/host/brand/ lub pól homepage/repo/upstreamLicense w src/registry.tsx.'
 ---
 
 # Branding i ryzyko prawne
@@ -70,6 +70,34 @@ owned-IP-first, Kitten nie jest front doorem. Sprawdź każdy ich zarzut, zanim 
 - **Strona indeksowalna musi mieć dozwolone wyjście.** Prerenderowane `/compare` nie ma `Layoutu`,
   więc nie ma nagłówka ani stopki, a wszystkie pozostałe linki celują pod `/c/` — czyli w `Disallow`.
   Bez `BackToShelf` crawler lądował w ślepym zaułku. Sprawdzaj to przy każdej nowej trasie.
+- **Karty share są per klient od 2026-08-14, `og:url` NIE jest już przypięty do galerii.**
+  `scripts/prerender.mjs` kopiuje `index.html` do `dist/c/<id>.html` i nadpisuje `<title>`,
+  `description`, `og:url`, `og:title`, `og:description`, `og:image`, `og:image:alt` z
+  `shareRoutes()` (`src/entry-server.tsx`); teksty stoją w `src/shareMeta.ts` i czyta je też
+  `ClientView` dla `document.title`. Reszta tagów (`og:type`, `og:site_name`, `twitter:card`,
+  JSON-LD, canonical) jest wspólna. Plik nazywa się `<id>.html`, **nie** `<id>/index.html` —
+  przy `html_handling: auto-trailing-slash` folder-index robi 307 z `/c/damus` na `/c/damus/`
+  i psuje dokładnie ten URL, który ludzie wklejają. Zmiana nazwy któregokolwiek z tych tagów
+  **wywala build**, zamiast wypuścić dwanaście kart reklamujących galerię.
+- Obrazki: `public/og/<id>.png`, generator `scripts/og-client-cards.mjs` (`npm run og:cards`,
+  ręcznie — nie w `npm run build`, bo robi build i woła headless Chrome). Karta **pokazuje
+  reprodukcję**, ale NIGDY pełnoekranowo: zrzut zawsze siedzi w rysowanym przez nas urządzeniu —
+  telefon w perspektywie dla mobile, okno przeglądarki z paskiem `sandstr.app/c/<id>` dla web
+  i desktop. To jest cała różnica prawna: urządzenie czyta się jako „ekran POKAZUJĄCY X",
+  pełne kadrowanie jako „to JEST X". Reszta kadru jest nasza (lockup, tło, poświata akcentu),
+  a piksele są z NASZEJ reprodukcji — żadnych materiałów upstreamu. To jedyna powierzchnia,
+  która podróżuje bez banera, bez linku wyjściowego i bez paska adresu, więc mitygacja jest
+  wypalona w obrazek:
+  amber pas „SIMULATION · UNOFFICIAL · MOCK DATA · NOT AFFILIATED WITH &lt;NAZWA&gt;" plus pigułka
+  na kartach `preview` i archiwalnych. Nowa pozycja w `THIRD-PARTY.md` („Client icons on share
+  cards") to zapisuje; ścieżka wycofania znaku maintainera = usuń ikonę, generator schodzi na
+  emoji/monogram.
+- `public/robots.txt` ma dwa wyjątki: `Twitterbot` i `facebookexternalhit`. To **renderery kart,
+  nie indeksery** — X sam dokumentuje, że Twitterbot implementuje spec robots.txt i przy
+  `Disallow` nie pokazuje karty w ogóle, więc `Disallow: /c/` po cichu kasował każdy podgląd
+  deep linku na X. Nazwana grupa user-agenta **zastępuje** grupę `*`, więc te dwie linijki to
+  całość polityki, którą widzą. Discord/Telegram/Slack nie czytają tego pliku — nie dopisuj ich.
+  Decyzja „`/c/` poza indeksem" stoi nienaruszona.
 - Blok JSON-LD w `index.html` opisuje **wyłącznie sandstr**. Nie dodawaj reprodukowanych klientów
   do structured data (to dokładnie ta konfuzja tożsamości, której unika reszta strategii) i nie
   wymyślaj `aggregateRating`.
@@ -125,6 +153,9 @@ i ciągła) plus zweryfikowane tokeny.
 2. Klient ma wiersz w `THIRD-PARTY.md` i działający link wyjściowy w `src/registry.tsx`.
 3. Nic nowego nie trafiło do JSON-LD. Do `sitemap.xml` trafia tylko strona, która jest
    prerenderowana, ma własny `canonical` i ma dozwolony link wyjściowy — dziś `/` i `/compare`.
-   Reprodukcje zostają pod `Disallow: /c/`.
-4. Żadna mock-tożsamość nie wskazuje na realnego człowieka ani identyfikator płatności.
-5. Nic nie poszło na zewnątrz bez decyzji właściciela.
+   Reprodukcje zostają pod `Disallow: /c/` (wyjątki dla Twitterbota i facebookexternalhit to
+   renderery kart — nie dopisuj tam indeksera).
+4. Nowy albo przemianowany klient: `npm run og:cards`, bo inaczej jego `og:image` wskazuje na
+   404 i share pokazuje kartę bez obrazka.
+5. Żadna mock-tożsamość nie wskazuje na realnego człowieka ani identyfikator płatności.
+6. Nic nie poszło na zewnątrz bez decyzji właściciela.

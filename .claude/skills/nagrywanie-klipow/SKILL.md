@@ -72,6 +72,13 @@ naraz (równoległe instancje przeciw jednemu Vite dawały puste pliki) i wymusz
    w ukrytym tooltipie (ukrywanym `opacity`; `display:none` przesunęłoby spotlight).
 8. **Klatki są capowane do 1600 px na dłuższym boku** — bez capa desktopowy kadr to ~5 MP/klatkę
    i stream głodnieje (jeden przebieg Coracle: 24 klatki i cisza przed właściwym betem).
+9. **`--screenshot` zapisuje plik i NIE kończy procesu** (zmierzone na Chrome 151, 2026-08-14;
+   `--virtual-time-budget` nie pomaga, a `--headless=old`, które kończyło, wypadło w Chrome 132).
+   Dotyczy „starszej generacji" opisanej wyżej i każdego nowego skryptu, który sięgnie po ten flag:
+   pętla na `execFileSync` robi PIERWSZY shot i wisi na drugim, co wygląda jak wolny render.
+   Czekaj na **plik** (poll, aż rozmiar przestanie rosnąć), potem ubij **grupę procesów** — sam pid
+   zostawia kilkanaście helperów. Wzorzec działa w `scripts/og-client-cards.mjs`. Przy więcej niż
+   kilku ujęciach i tak wygrywa CDP (lekcje 1–8); `--screenshot` zostaw statycznym stronom.
 
 ## Checklist
 

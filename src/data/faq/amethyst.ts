@@ -27,6 +27,11 @@ type Step = FaqShowMeStep;
 
 const goHome = cmd({ type: 'login' }, { type: 'navigate', payload: 'home' });
 const openDrawer = cmd({ type: 'login' }, { type: 'openDrawer' });
+// v1.13.1 moved Security Filters, Media Servers and Backup Keys out of the
+// drawer and into the searchable Settings root, so their mini-tours open
+// Settings instead of the drawer. `openSettings` with no payload lands on the
+// root list (see AmethystSimulator's command switch).
+const openSettingsRoot = cmd({ type: 'login' }, { type: 'openSettings' });
 
 const actionRowStep = (target: string, title: string, content: string): Step => ({
   target,
@@ -95,7 +100,7 @@ export const amethystFaq: ClientFaq = {
         'The account drawer opens: your banner, status line, following and follower counts, and the main menu.',
         'Tap "Profile" — the first menu row.',
       ],
-      note: 'The drawer is Amethyst\'s control center — Relays, Bookmarks, Drafts, Media Servers, Security Filters, Backup Keys and all preferences live there, not in the bottom bar.',
+      note: 'The drawer is Amethyst\'s control center and its map of the whole app: a "You" section (Profile, Bookmarks, Drafts, Wallet, Remote Signer…), "Navigate" for the destinations that are not in the bottom bar, 28 feed types under "Feeds", and "System" with Relays and Settings at the bottom.',
       showMe: [
         {
           target: '[data-tour="amethyst-profile-avatar"]',
@@ -108,7 +113,7 @@ export const amethystFaq: ClientFaq = {
           target: '[data-tour="amethyst-drawer"]',
           title: 'The account drawer',
           content:
-            'Profile sits at the top; below it live Relays, Media Servers, Security Filters, Backup Keys and every preference screen.',
+            'Profile sits at the top of the "You" section; scroll down for Navigate, 28 feed types, and System with Relays and Settings.',
           position: 'right',
           commands: cmd({ type: 'openDrawer' }),
         },
@@ -150,7 +155,7 @@ export const amethystFaq: ClientFaq = {
       category: 'Posting',
       question: 'How do I reply to a note?',
       answer: [
-        'Tap the speech bubble — first of the five actions under every note (reply, boost, heart, zap, stats).',
+        'Tap the speech bubble — first of the five actions under every note (reply, boost, heart, zap, share).',
         'Or open the note and write in the "reply here.." box at the bottom of the thread.',
         'Tap "Post".',
       ],
@@ -158,7 +163,7 @@ export const amethystFaq: ClientFaq = {
         actionRowStep(
           '[data-tour="amethyst-actions"]',
           'The action row',
-          'Every note carries this five-slot footer: Reply, Boost, Like, Zap, and a stats indicator.',
+          'Every note carries the same footer: a chevron that expands who reacted, then Reply, Boost, Like, Zap and Share. Counts appear only when there are any.',
         ),
         {
           target: '.action-btn-reply',
@@ -243,11 +248,21 @@ export const amethystFaq: ClientFaq = {
       category: 'Finding things',
       question: "How do I search — there's no Search tab?",
       answer: [
-        'Amethyst has no Search tab: the five bottom icons are Home, Messages, Shorts, Discover and Notifications.',
-        'Look in the top app bar instead — recent builds put the magnifier (Search) in the right-hand slot.',
-        'The globe tab is Discover — content discovery, not search.',
+        'Amethyst has no Search tab: the five bottom icons are Home, Messages, Wallet, Browser and Notifications.',
+        'Search is the magnifier in the top-right of the app bar, on every main screen.',
+        'The globe tab is the Browser — a built-in web browser with a directory of Nostr web apps, not a search screen.',
       ],
-      note: 'The right app-bar slot varies by version: our reference build shows the relay indicator there, while newer source ships the magnifier.',
+      note: 'Shorts and Discover used to hold two of the bottom slots; v1.13.1 replaced them with Wallet and Browser, and both moved into the account drawer under "Navigate".',
+      showMe: [
+        {
+          target: '[data-tour="amethyst-topbar-search"]',
+          title: 'Search lives in the app bar',
+          // Descriptive — the sim's magnifier is display-only.
+          content: 'The magnifier in the top-right is the only search entry point; the bottom bar has no Search tab at all.',
+          position: 'bottom',
+          commands: goHome,
+        },
+      ],
     },
     {
       // §Messages
@@ -332,15 +347,15 @@ export const amethystFaq: ClientFaq = {
       // §Home — treść (rząd LIVE); §Live activity
       id: 'live-bar',
       category: 'Finding things',
-      question: 'What is the "LIVE" bar at the top of my Home feed?',
+      question: 'Sometimes a row of round bubbles appears above my Home feed — what is that?',
       answer: [
-        'That bar is a live-stream bubble: someone you follow is streaming right now — it shows the stream title with a LIVE badge and viewer/zap counts.',
-        'Tap it to open the stream view with its live chat bubbles.',
-        'Type in "reply here.." and tap Post to join the chat.',
+        'Those are live bubbles: a horizontal strip of currently-live things — a NIP-53 live stream someone you follow started, an ephemeral chat room, or a "live near you" location bubble.',
+        'Tap one to open it: a stream view with its live chat, or the chat room itself.',
+        'The strip only exists while something is live — most of the time your feed starts straight at the first note.',
       ],
-      note: 'It is a single bubble that scrolls with the feed, not a stories carousel — Amethyst has no stories.',
-      // Text-only: the sim's LIVE bubble is inert and the stream view does not
-      // exist (gaps ame-08/ame-09).
+      note: 'It is a scrolling row of bubbles, not a stories carousel — Amethyst has no stories, and nothing is pinned there permanently.',
+      // Text-only: the strip is conditional upstream and the reference recording
+      // never shows one, so the simulator does not render it (gaps ame-08/ame-09).
     },
 
     // -------------------------------------------------------------- Relays --
@@ -365,10 +380,10 @@ export const amethystFaq: ClientFaq = {
       answer: [
         'Tap your profile picture in the top-left to open the account drawer.',
         'Tap "Relays".',
-        'The screen groups your Public Outbox and Public Inbox relays, each row with its own stats.',
-        'Tap "Add a Relay" to add one.',
+        'The screen groups your Public Outbox and Public Inbox relays, each row with its own stats and an ✕ to remove it.',
+        'To add one, type the address into the "Add a Relay" field under the group and tap "Add" — each group has its own field.',
       ],
-      note: 'The grey counter in the top bar (e.g. "16/16") is your relay indicator — it lives on every main screen. Newer versions split the relay editor by purpose (outbox model): DM Inbox, Search, Local, Blocked and more, each with its own "Add a Relay" field.',
+      note: 'Your connected/total relay counter is the coloured number on the drawer\'s "Relays" row (e.g. "355/1810") — there is no relay indicator in the app bar. The relay editor is split by purpose (outbox model): Outbox, Inbox, Local, Trusted, Favorite and Blocked, each with its own "Add a Relay" field.',
       showMe: [
         {
           target: '[data-tour="amethyst-drawer-relays"]',
@@ -384,11 +399,19 @@ export const amethystFaq: ClientFaq = {
           // one group also lets the caption stop generalising over both.
           target: '[data-tour="amethyst-relays-outbox"]',
           title: 'Your relays',
-          // Descriptive — the sim's "Add a Relay" button is display-only
-          // (gaps ame-42).
           content:
-            'Public Outbox/Home Relays: the ones your posts are written to, each with its stored size, and "Add a Relay" under the list. Public Inbox Relays follow below.',
+            'Public Outbox/Home Relays: the ones your posts are written to, each with its stored size and an ✕ to drop it. Public Inbox Relays follow below.',
           position: 'bottom',
+          commands: cmd({ type: 'openSettings', payload: 'relays' }),
+        },
+        {
+          // Live since 2026-08-13 (gaps ame-42): the field really adds a row to
+          // this group, and the ✕ on any row really removes it.
+          target: '[data-tour="amethyst-relay-add"]',
+          title: 'Add a Relay',
+          content:
+            'Type a relay address here and tap "Add" — it joins the group above. Try it: the row appears at the bottom of the list.',
+          position: 'top',
           commands: cmd({ type: 'openSettings', payload: 'relays' }),
         },
       ],
@@ -396,8 +419,9 @@ export const amethystFaq: ClientFaq = {
 
     // ------------------------------------------------------ Account & keys --
     {
-      // §Account drawer — location only; screen internals need upstream
-      // grounding (recording never opens Backup Keys).
+      // §Settings — Danger Zone. Screen internals come from upstream
+      // `AccountBackupScreen.kt` (the recording never opens Backup Keys), and
+      // the simulator reproduces them as of 2026-08-13 — gaps ame-35.
       id: 'backup-keys',
       category: 'Account & keys',
       question: 'Where do I back up my private key (nsec)?',
@@ -419,18 +443,29 @@ export const amethystFaq: ClientFaq = {
       ],
       answer: [
         'Tap your profile picture in the top-left to open the account drawer.',
-        'Tap "Backup Keys".',
+        'Scroll to the bottom and tap "Settings".',
+        'Scroll to the red "Danger Zone" section and tap "Backup Keys".',
         'Copy your private key from there — a password manager is a good place. It can also show the key as a QR code.',
       ],
-      note: 'Your nsec IS your account — if you lose it no one can recover it. Newer versions moved this into Settings → "Danger Zone" → Backup Keys: copying prompts for your fingerprint and can also produce a password-encrypted ncryptsec copy.',
+      note: 'Your nsec IS your account — if you lose it no one can recover it. Copying prompts for your fingerprint and can also produce a password-encrypted ncryptsec copy. This row used to sit directly in the account drawer; v1.13.1 moved it into Settings → Danger Zone.',
       showMe: [
         {
-          target: '[data-tour="amethyst-drawer-backup-keys"]',
+          target: '[data-tour="amethyst-settings-backup-keys"]',
           title: 'Backup Keys',
-          // Descriptive — the sim's row is display-only (gaps ame-35).
-          content: 'Your nsec lives here, in the account drawer — the single most important row in the app.',
-          position: 'right',
-          commands: openDrawer,
+          content: 'Your nsec lives here, at the bottom of Settings in the red Danger Zone — the single most important row in the app. Tap it.',
+          position: 'top',
+          commands: openSettingsRoot,
+        },
+        {
+          // The screen itself, live since 2026-08-13 (gaps ame-35). It carries
+          // the real safety-tips copy and the real controls; the one thing it
+          // does NOT carry is a key — see the note in SettingsScreen.tsx.
+          target: '[data-tour="amethyst-backup-copy"]',
+          title: 'Copy my secret key',
+          content:
+            'This purple button is the whole backup. Under it, a password field turns the same key into an encrypted ncryptsec1 copy. (Here it hands you a placeholder — a demo account has no key.)',
+          position: 'bottom',
+          commands: cmd({ type: 'login' }, { type: 'openSettings', payload: 'backup-keys' }),
         },
       ],
     },
@@ -452,29 +487,49 @@ export const amethystFaq: ClientFaq = {
       ],
       answer: [
         'To block a person: long-press their note, tap "Block", then confirm with the red "Block" button in the "Block & Hide User" dialog — or open their profile, tap the ⋮ menu and pick "Block & Hide User".',
-        'To mute a word or phrase: tap your profile picture to open the account drawer, tap "Security Filters", open "Hidden Words" and type it into "Hide new word or sentence".',
+        'To mute a word or phrase: open the account drawer, tap "Settings", tap "Security Filters", open "Hidden Words" and type it into "Hide new word or sentence".',
         'To mute a thread: long-press any note in it and tap "Mute thread" — the same menu then offers "Unmute thread", and Security Filters lists them under "Muted threads".',
         'To mute a hashtag: tap the #tag to open its feed, then tap ⋮ beside Follow in the top bar and pick "Mute hashtag" — that menu is also the only way to unmute it.',
-        'To manage the lists: account drawer → "Security Filters" → the "Blocked Users", "Spammers" and "Hidden Words" tabs, each row with an "Unblock" button.',
+        'To manage the lists: account drawer → Settings → "Security Filters" → the "Blocked content" card, which opens "Blocked Users", "Spammers", "Hidden Words" or "Muted threads" as its own screen, each row with an "Unblock" button.',
       ],
-      note: 'Amethyst says "Block" only about people; words, threads and hashtags are "muted" — and nothing can be muted for a limited time, every entry stays until you remove it. Blocking hides that account inside your app and adds it to your mute list encrypted, so their notes stay visible to everyone else; "Spammers" fills itself from the "Filter spam" toggle above the tabs and resets when the app restarts. Newer versions replace the tabs with a list of screens — Blocked Users, Spammers, Hidden Words and "Muted threads" — reached from Settings, and add "Mute hashtag", the one kind that never gets a list. Relays are blocked separately, in the "Blocked Relays" section of the relay editor.',
+      note: 'Amethyst says "Block" only about people; words, threads and hashtags are "muted" — and nothing can be muted for a limited time, every entry stays until you remove it. Blocking hides that account inside your app and adds it to your mute list encrypted, so their notes stay visible to everyone else; "Spammers" fills itself from the "Filter spam" toggle and empties the moment you switch that toggle off. v1.13.1 has no tabs here: Security Filters is two cards — "Filtering preferences" and "Blocked content" — and the four lists (Blocked Users, Spammers, Hidden Words, Muted threads) are screens of their own, each with a count beside it. A hashtag is the one kind that never gets a list; you unmute it from the same ⋮ menu on its feed. Relays are blocked separately, in the "Blocked Relays" section of the relay editor.',
+      // Four steps, one per screen the answer names. Each step still ARRIVES by
+      // command rather than by clicking its way there — the queue takes at most
+      // two commands a step, so a mini-tour cannot drive a four-screen walk. But
+      // the ring should stop on every screen the reader is told to pass through:
+      // with the drawer and the Security Filters screen missing, the demo jumped
+      // from the Settings row to the docked field and skipped both, which read
+      // as the tour being broken rather than as it being brief.
       showMe: [
         {
-          target: '[data-tour="amethyst-drawer-security-filters"]',
-          title: 'Security Filters',
-          content: 'Everything you have blocked, muted or hidden is managed from this drawer row.',
-          position: 'right',
+          target: '[data-tour="amethyst-drawer-settings"]',
+          title: 'Settings',
+          content: 'Open the account drawer with your profile picture. "Settings" is under System, near the bottom.',
+          position: 'top',
           commands: openDrawer,
+        },
+        {
+          target: '[data-tour="amethyst-settings-security-filters"]',
+          title: 'Security Filters',
+          content: 'Everything you have blocked, muted or hidden is managed from this row, under Account Settings.',
+          position: 'bottom',
+          commands: openSettingsRoot,
+        },
+        {
+          target: '[data-tour="amethyst-security-hidden-row"]',
+          title: 'Hidden Words',
+          content: 'The "Blocked content" card opens four lists, each as its own screen. This is the one for words and phrases.',
+          position: 'bottom',
+          commands: cmd({ type: 'openSettings', payload: 'security' }),
         },
         {
           // The field, not the screen root: `amethyst-settings` is the whole
           // scrolling screen and the overlay refuses to spotlight a target that
-          // size. `security-hidden` is the same section with the Hidden Words
-          // tab preselected.
+          // size. `security-hidden` opens the Hidden Words screen itself.
           target: '[data-tour="amethyst-hidden-words"]',
           title: 'Hide new word or sentence',
           content:
-            'Under the Hidden Words tab, docked at the bottom: type a word here and posts containing it stop showing up.',
+            'Docked at the bottom of that screen: type a word here and posts containing it stop showing up.',
           position: 'top',
           commands: cmd({ type: 'openSettings', payload: 'security-hidden' }),
         },
@@ -482,10 +537,10 @@ export const amethystFaq: ClientFaq = {
     },
 
     {
-      // Upstream (vitorpamplona/amethyst, main, checked 2026-08-06):
-      // DrawerContent.kt "Accounts" row → AccountSwitchBottomSheet with a
-      // per-account logout icon + confirmation dialog. The recording-era
-      // drawer has no such row, so this entry is TEXT-ONLY.
+      // Upstream (vitorpamplona/amethyst @ v1.13.1): DrawerContent.kt "Accounts"
+      // row → AccountSwitchBottomSheet (`account_switch_*`) with a per-account
+      // logout icon and a confirmation dialog. Live in the sim since
+      // 2026-08-13 — gaps ame-112.
       id: 'logout',
       category: 'Account & keys',
       question: 'How do I log out of Amethyst?',
@@ -495,6 +550,23 @@ export const amethystFaq: ClientFaq = {
         'In the account sheet, tap the logout icon on your account\'s row and confirm.',
       ],
       note: 'The dialog warns you: logging out deletes all local data on this phone. Back up your nsec first — without it the account is gone for good.',
+      showMe: [
+        {
+          target: '[data-tour="amethyst-drawer-accounts"]',
+          title: 'Accounts',
+          content: 'The very bottom row of the drawer, under the whole menu — that is where every account on this phone is listed.',
+          position: 'top',
+          commands: openDrawer,
+        },
+        {
+          target: '[data-tour="amethyst-accounts-logout"]',
+          title: 'Log out',
+          content:
+            'Each account row carries this icon. Tapping it asks you to confirm — and the confirmation is where Amethyst warns you that logging out wipes the local data.',
+          position: 'bottom',
+          commands: cmd({ type: 'login' }, { type: 'navigate', payload: 'drawer:accounts' }),
+        },
+      ],
     },
 
     // ------------------------------------------------------------ Advanced --
@@ -506,18 +578,27 @@ export const amethystFaq: ClientFaq = {
       question: 'How do I change where my photos and videos get uploaded (media servers)?',
       answer: [
         'For a single upload: attach the image or video in the composer — the upload dialog has a "File Server" dropdown to pick where this file goes.',
-        'For your permanent list: tap your profile picture to open the account drawer, then tap "Media Servers".',
+        'For your permanent list: open the account drawer, tap "Settings", then "Media Servers" under Account Settings.',
         'There you reorder upload priority (row #1 is "Primary"), pick from recommended servers, or paste your own server address.',
       ],
-      note: 'Newer versions are Blossom-first: the add field says "Add a Blossom Server" and uploads try each server from the top down (with optional mirroring to all).',
+      note: 'Amethyst is Blossom-first here: the add field says "Add a Blossom Server" and uploads try each server from the top down (with optional mirroring to all). This row moved out of the account drawer into Settings in v1.13.1.',
       showMe: [
         {
-          target: '[data-tour="amethyst-drawer-media-servers"]',
+          target: '[data-tour="amethyst-settings-media-servers"]',
           title: 'Media Servers',
-          // Descriptive — the sim's row is display-only (gaps ame-33).
-          content: 'Your upload servers are picked here — media from the composer goes to the selected server.',
-          position: 'right',
-          commands: openDrawer,
+          content: 'Your upload servers are picked here, under Settings → Account Settings. Tap it.',
+          position: 'bottom',
+          commands: openSettingsRoot,
+        },
+        {
+          // Live since 2026-08-13 (gaps ame-33): the priority list really
+          // reorders by removal, and both add paths really add.
+          target: '[data-tour="amethyst-media-servers"]',
+          title: 'Upload priority',
+          content:
+            'Row #1 is "Primary" and uploads try each server from the top down. Below the list: the recommended servers, and a field for your own. The two switches above decide whether every upload gets mirrored to the rest and whether the server may re-encode it.',
+          position: 'bottom',
+          commands: cmd({ type: 'login' }, { type: 'openSettings', payload: 'media-servers' }),
         },
       ],
     },
@@ -525,7 +606,7 @@ export const amethystFaq: ClientFaq = {
       // Upstream: DrawerSections.kt (Wallet in the "You" section),
       // WalletScreen.kt ("Add NWC Connection", wallet-type chooser, paste
       // nostr+walletconnect:// URI, per-wallet Set as Default/Rename).
-      // The recording-era drawer has no Wallet row — TEXT-ONLY.
+      // Live in the sim since 2026-08-13 — gaps ame-140/ame-141.
       id: 'connect-wallet',
       category: 'Advanced',
       question: 'How do I connect a Lightning wallet (for zaps)?',
@@ -536,6 +617,15 @@ export const amethystFaq: ClientFaq = {
         'You can attach several wallets — set one as the default for zaps.',
       ],
       note: 'Quick Zap amounts and zap privacy live separately, under Settings → Zaps.',
+      showMe: [
+        {
+          target: '[data-tour="amethyst-wallet-nwc"]',
+          title: 'Add NWC Connection',
+          content: 'The Wallet tab opens on the on-chain card and an empty NWC list. This lavender pill is where a Lightning wallet gets attached — tap it.',
+          position: 'top',
+          commands: cmd({ type: 'login' }, { type: 'navigate', payload: 'wallet' }),
+        },
+      ],
     },
     {
       // Upstream: exists=false — strings.xml (all 5126 lines) has no

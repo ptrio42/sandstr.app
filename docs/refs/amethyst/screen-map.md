@@ -1,170 +1,440 @@
 # Amethyst — screen map (ground truth)
 
-**Źródła:** kod `vitorpamplona/amethyst` @ tag **v1.12.6** (Kotlin/Compose, MD3) + oficjalny screenshot
-`docs/screenshots/home.png` → [`shots/home.png`](shots/home.png). Każdy wpis: co widać (screen) + czym jest (kod).
-**Dogrywka 2026-08-05:** dwa brakujące ekrany logged-off od użytkownika — [`shots/login.png`](shots/login.png)
-i [`shots/signup.png`](shots/signup.png) — zweryfikowane razem z `main` (`LoginScreen.kt`, `SignUpScreen.kt`,
-`KeyTextField.kt`, `res/values/strings.xml`, `res/drawable/amethyst.xml`). Patrz sekcja „Login / Sign up".
+**Źródła:** nagranie użytkownika z realnej **v1.13.1-fdroid** (2026-08-13, 1080×2400, 570 s →
+285 klatek co 2 s w `shots/frames/periodic/`, gitignored) + kod `vitorpamplona/amethyst`
+@ tag **v1.13.1** (`1bda3ab`). Wersję potwierdza sama appka: stopka szuflady renderuje
+**`v1.13.1-FDROID`** (`BuildConfig.VERSION_NAME` + sufiks smaku).
+Poprzednia wersja tego dokumentu (v1.12.6) jest zamrożona w
+[`docs/refs/amethyst-v1-12/screen-map.md`](../amethyst-v1-12/screen-map.md).
 
-## Home — app bar (góra)
-Ze screena, od lewej:
-- **LEFT = avatar użytkownika** (okrągłe zdjęcie), tap → otwiera **drawer** (konto/relay). NIE hamburger, NIE logo.
-  Kod: `HomeTopBar.kt` → `UserDrawerSearchTopBar.kt` `LoggedInUserPictureDrawer`, `onClick = nav::openDrawer`.
-- **CENTER = selektor feedu „All Follows ⌄"** (etykieta wybranego feedu + chevron w dół). NIE logo/checkmark.
-  Tap → otwiera **zgrupowany Dialog** z feedami (All Follows / Global / listy / #hashtagi / communities…).
-  Kod: `FeedFilterSpinner.kt` (`ExpandMore` chevron), default `TopFilter.AllFollows` → string `follow_list_kind3follows` = „All Follows".
-- **RIGHT = licznik relayów „16/16" (szary) + fioletowa ikona grafu relayów** (połączone węzły).
-  ⚠️ Niuans wersji: screenshot pokazuje graf relayów; źródło v1.12.6 w tym slocie ma lupę (Search). Bazujemy na **screenie** (graf + „16/16").
+**[REC vs REPO]** nagranie wygrywa LAYOUT, repo wygrywa HEX / etykiety / nazwy ikon. Każdy rozjazd
+jest niżej oznaczony.
 
-## Home — sub-taby (pod app barem)
-- **„New Threads" | „Conversations"** (aktywny podkreślony fioletem). Trzeci „Everything" bywa włączany.
-  ⚠️ **SIM BŁĄD:** symulator ma „Following / Global" — to NIEPRAWDA. Following-vs-Global należy do selektora feedu w app barze, nie do tego rzędu tabów. Kod: `HomeScreen.kt` `AssembleHomeTabs` (`new_threads`/`conversations`/`home_tab_everything`).
+> ## ⚠️ Trzy „fakty" z ery v1.12.6, które były błędne
+>
+> Poprzednia screen-mapa opierała ekran Home na **oficjalnym promo-screenshocie**
+> (`docs/screenshots/home.png`) i tam, gdzie screenshot kłócił się ze źródłem, wybierała screenshot.
+> Recon v1.13.1 pokazał, że w trzech miejscach źródło miało rację **już w v1.12.6**, a screenshot był
+> po prostu starszy niż kod:
+>
+> 1. **Prawy slot app bara.** Szipowaliśmy licznik „16/16" + ikonę grafu relayów. Upstream nie ma
+>    licznika relayów w app barze **w żadnej z wersji** — `UserDrawerSearchTopBar.kt` ma tam
+>    wyłącznie `SearchIcon`. Jedyny licznik połączeń w całej appce siedzi w wierszu **Relays**
+>    w szufladzie (`DrawerContent.kt`, `PoolStatus("connected/available")`).
+> 2. **Piąty slot rzędu akcji.** Szipowaliśmy „Stats" (słupki + liczba wyświetleń).
+>    `DefaultReactionRowItems` jest **bajt w bajt identyczne w v1.12.6 i v1.13.1** i kończy się na
+>    `Share(showCounter = false)`. Akcji „view count" nie ma w kodzie ani jednej, ani drugiej wersji.
+> 3. **Pasek LIVE na górze feedu.** Szipowaliśmy stały, pełnej szerokości pasek z tytułem, podtytułem,
+>    plakietką LIVE i licznikami 🚀/⚡. Upstream renderuje `DisplayLiveBubbles` jako **poziomy
+>    `LazyRow` okrągłych bąbli** i tylko `if (feed.list.isNotEmpty())` — własny komentarz w kodzie
+>    nazywa brak bąbli „the common case". W 285 klatkach nagrania pasek nie pojawia się ani raz.
+>
+> Wszystkie trzy naprawione w wersji żywej; **zamrożone archiwum `amethyst-v1-12` zachowuje je**
+> (freeze jest snapshotem tego, co szipowaliśmy, nie erratą). Nie „naprawiaj" ich z powrotem.
+
+---
+
+## Motyw i tokeny (największa zmiana wydania)
+
+v1.13.1 dorzuca **wybieralny akcent** (6 opcji, domyślny Purple) i przy okazji **odfiolecia całą
+neutralną rampę** — zamiast fallbacku na fioletowawy baseline Material 3 wchodzą szarości bez
+odcienia. Cytat z `Theme.kt`: *„Left unset, these fall back to Material's violet-tinted baseline
+greys, which read as a faint purple wash independent of the accent."*
+
+Dark, akcent PURPLE (domyślka — to szipujemy):
+
+| rola | v1.12.6 | v1.13.1 |
+|---|---|---|
+| `primary` | `#BB86FC` | `#BB86FC` (Purple200) |
+| `onPrimary` | baseline `#381E72` | **`#000000`** — `onAccent()` wybiera przez kontrast WCAG (7.9:1 vs 2.7:1) |
+| `secondary` | `#03DAC5` (Teal200) | `#03DAC5` — tylko Purple zachowuje teal |
+| `primary/secondary/tertiaryContainer` | baseline | **`#36244C`** = `lerp(primary, Black, 0.58)` w Oklab |
+| `onXContainer` | baseline | **`#F4EDFF`** = `lerp(primary, White, 0.85)` w Oklab |
+| `background`/`surface` | `#000000` | `#000000` |
+| `onSurface` | baseline `#E6E1E5` | **`#E6E6E6`** |
+| `surfaceVariant` | `#1D1A22` | **`#1E1E1E`** |
+| `onSurfaceVariant` | baseline `#CAC4D0` | **`#CACACA`** |
+| `outline` / `outlineVariant` | baseline | **`#909090`** / **`#454545`** |
+| rampa kontenerów | brak | `#141414` · `#1A1A1A` · `#252525` · `#2E2E2E` · `#383838` |
+| `inversePrimary` | `#7F67BE` | **`#6200EE`** (Purple500) |
+
+Pochodne (formuły bez zmian): `placeholderText` = onSurface @42%, `grayText` = @52%,
+`lessImportantLink` = primary @52%, `newItemBackgroundColor` = primary @12%.
+Bitcoin-orange `#F7931A` bez zmian.
+
+**Weryfikacja:** `#36244C` policzone z formuły zgadza się z pikselem pigułki nawigacji spróbkowanym
+z nagrania (`#34224B`) w granicach zaokrągleń — to potwierdza, że `lerp` Compose'a działa w Oklab,
+nie w sRGB.
+
+Light, akcent PURPLE (**nie** szipujemy go jako domyślki, ale symulator ma jasny motyw — patrz niżej):
+
+| rola | v1.12.6 | v1.13.1 |
+|---|---|---|
+| `primary` | `#7F67BE` | **`#6200EE`** (Purple500) |
+| `onPrimary` | `#FFFFFF` | `#FFFFFF` — `onAccent()` na tym głębokim fiolecie daje biel (7,7:1 vs 2,7:1) |
+| `secondary` | `#03DAC6` | `#03DAC5` (Teal200) |
+| `primary/secondary/tertiaryContainer` | baseline `#EADDFF` | **`#E2E2FF`** = `lerp(primary, White, 0.85)` |
+| `onXContainer` | baseline `#21005D` | **`#2D0077`** = `lerp(primary, Black, 0.40)` |
+| `background`/`surface` | baseline `#FFFBFE` | **`#FDFDFD`** |
+| `onBackground`/`onSurface` | baseline `#1C1B1F` | **`#1C1C1C`** |
+| `surfaceVariant` | baseline `#E7E0EC` | **`#FAFAFA`** |
+| `onSurfaceVariant` | baseline `#49454F` | **`#484848`** |
+| `outline` / `outlineVariant` | baseline `#79747E` / `#CAC4D0` | **`#767676`** / **`#CACACA`** |
+| rampa kontenerów | brak | `surfaceDim #DEDEDE` · `Bright #FDFDFD` · `Lowest #FFFFFF` · `Low #F7F7F7` · `Container #F2F2F2` · `High #ECECEC` · `Highest #EBEBEB` |
+| `inversePrimary` | `#BB86FC` | `#BB86FC` (Purple200 — akcent trybu ciemnego) |
+
+Uwaga: **light odwraca kierunek obu lerpów** (`accentContainer` jaśnieje ku bieli,
+`onAccentContainer` ciemnieje ku czerni z ułamkiem **0.40**, nie 0.85). Role `error*` i
+`inverseSurface`/`inverseOnSurface` **nie są** nadpisywane w `lightColorScheme()`, więc zostają na
+baseline Material. `surfaceDim` w dark = `Color.Black`.
+
+---
+
+## Home — app bar
+
+Od lewej: **avatar konta** (tap → szuflada; `LoggedInUserPictureDrawer`, `nav::openDrawer`) ·
+**selektor feedu „All Follows ⌄"** (`follow_list_kind3follows`, chevron `ExpandMore` 20 dp) ·
+**lupa** (`SearchIcon`, 22 dp, tint `placeholderText` → nawiguje do `Route.Search`, patrz §Search).
+Wysokość paska `TopBarSize = 50 dp`. Pasek **auto-chowa się przy scrollu** (`DisappearingScaffold`).
+
+`HomeTopBar.kt` **nie występuje w diffie v1.12.6→v1.13.1** — kompozycja jest bajt w bajt ta sama.
+
+## Home — sub-taby
+
+`SecondaryTabRow` (płaskie taby tekstowe + pełnej szerokości podkreślenie, **bez pigułek**):
+**„New Threads" · „Conversations"** (+ opcjonalny **„Everything"**, wyłączony domyślnie).
+Etykiety i kolejność bez zmian od v1.12.6. Rząd znika, gdy włączony jest tylko jeden tab.
+Nowość: **Settings → Home → „Visible tabs"** pozwala wyłączyć każdy z trzech, a druga karta
+**„Content in the feed"** daje 19 przełączników rodzajów treści (wszystkie ON).
 
 ## Home — treść
-- **Rząd LIVE (nie stories!):** pojedynczy pasek „live-now" na górze feedu (NIP-53), np. „Exploring random ideas… / LIVE 🚀17 ⚡122.5k". To bąbel trwających transmisji, NIE karuzela stories per-user.
-  ⚠️ **SIM BŁĄD:** symulator ma instagramowy „stories row" — Amethyst go NIE ma. Kod: `home/live/DisplayLiveBubbles`.
-- **Karty notatek:** avatar-left (robohash), nagłówek `name @handle` + znak boost (⟲ „boosted • 35m"), znaczki NIP-05 (zielona pieczątka), „Show More" (fioletowy pill) przy ucięciu, media inline. Małe chipy relayów + chevron ⌄ pod avatarem.
-- **Footer akcji (ze screena):** `💬14  ⟲35  ♡73  ⚡7.0k  📊911` = **Reply → Boost → Like(serce) → Zap → Stats(słupki, liczba)**. „Like" = reakcja (serce, long-press → emoji; ten sam przycisk). Kod: `ReactionsRow.kt` `DefaultReactionRowItems` = Reply, Boost, Like, Zap, Pay(ukryty), Share; na screenie 5. slot to wskaźnik statystyk/słupki.
-- **FAB** = fioletowy „pióro +" (compose), prawy-dół. Kod: `NewNoteButton`.
-- ⚠️ **SIM BŁĄD:** symulator ma wymyślony rząd chipów „All/Bitcoin/Nostr/Tech/Memes" — nie ma go w realnym Home.
 
-## Home — bottom nav (5 ikon, bez etykiet)
-Ze screena, od lewej: **Home (dom, aktywny fiolet) · Messages (koperta) · Shorts (reels/prostokąt z play) · Discover (globus) · Notifications (dzwonek z fioletową kropką)**. Ikony bez podpisów.
-- **BRAK zakładki Profile** (profil = przez avatar→drawer). **BRAK zakładki Search** (search w app barze/źródle).
-- Kod: `AppBottomBar.kt` / `NavBarItem.kt`. Źródłowy default v1.12.6 ma 6 (dokłada „Favorite Feed Algorithms"); screenshot pokazuje 5 → **bazujemy na 5 ze screena**. Kropki-badge: `NotificationDotIcon` (kolor `primary`).
+- **Brak paska LIVE** w stanie domyślnym (patrz ramka na górze). Bąble live to poziomy `LazyRow`,
+  renderowany warunkowo; v1.13.1 usunął też 5 dp martwego odstępu, który wcześniej rezerwował się
+  nad pierwszą notatką, gdy bąbli nie było.
+- **Karta notatki:** avatar (55 dp) z plakietką „Following" (tarcza, w dark = `inversePrimary`
+  `#6200EE`) · nazwa/npub · znaczniki metadanych · `• czas` + `⋮` jako zwarta para.
+- **Nagłówek przebudowany:** wszystkie znaczniki przeniesione do **pierwszego** wiersza i zamienione
+  na dwa nowe prymitywy — `HeaderPill` (chip: `RoundedCornerShape(6dp)`, tło `onSurface @7%`,
+  ikona 13 dp, `labelSmall`) dla PoW / OTS / lokalizacji / wygaśnięcia / bounty, oraz `QuietMark`
+  (pogrubiony szary tekst + opcjonalna ikona 16 dp) dla Draft / edycji / przypięcia / private-rumor.
+  Konkretnie: `PoW-24` → chip „24"; „Existed since 3d" → chip „3d"; „Edited" → sama ikona ołówka.
+- **Słowo „boosted" ZNIKŁO** — jedynym sygnałem repostu w nagłówku jest wyszarzona nazwa autora
+  (`grayText`, onSurface @52%). `BoostedMark()` usunięty ze źródła.
+- **Kolumna favikon relayów pod avatarem USUNIĘTA** z karty notatki. Te same relaye pojawiają się
+  teraz jako wiersz **„Accepted by relays"** wewnątrz rozwiniętej galerii reakcji.
+- **Rząd akcji** (`DefaultReactionRowItems`, identyczne w obu wersjach):
+  **[chevron rozwijania] · Reply · Boost · Like · Zap · Share**.
+  `Pay` istnieje w enumie, ale ships `enabled = false`. `Share` ma `showCounter = false`, więc jest
+  ikoną bez liczby i — jako ostatni element bez licznika — dokleja się do prawej krawędzi
+  (`isLastIconOnly` w `GenericInnerReactionRow`). **Liczniki renderują się tylko przy wartości > 0.**
+- **Chevron rozwijania pokazuje się teraz praktycznie na KAŻDEJ notatce** — wcześniej wymagał
+  reakcji/zapów/boostów, teraz wystarczy, że notatka była widziana na jakimkolwiek relayu.
+- **Galeria reakcji** (po chevronie): wiersz na typ reakcji, w każdym avatary reagujących; wiersz ⚡
+  niesie kwotę w satach na pomarańczowo; doszedł wiersz BOLT12 i „Accepted by relays".
+- **Share** nie odpala już systemowego choosera Androida — otwiera wewnętrzny `ModalBottomSheet`
+  „Share" z czterema wierszami: Share · Share as Image · Share as Image Url · **Share as QR**.
+- **FAB** = lawendowe kółko 55 dp z piórem; **glif zmienił kolor z białego na `onPrimary`**, czyli
+  w dark na **czarny**.
 
-## Kolory / avatary (potwierdzone)
-- Tło **pure black** `#000000` ✓ (nasz token OK). Akcent fiolet z rodziny `#7F67BE`/`#D0BCFF` ✓. Zap ⚡ orange.
-- **Avatary = robohash** generowane **lokalnie na urządzeniu** (nie robohash.org), seed = sha256(pubkey), składane z części body/face/eyes/mouth/accessory. Kod: `commons/.../robohash/RobohashAssembler.kt`.
-  ⚠️ **SIM BŁĄD:** symulator hotlinkuje DiceBear (sieć) — powinny być lokalne robohash-owe roboty.
+## Home — bottom nav
 
-## Messages ([`shots/messages.png`](shots/messages.png)) — ZROBIONE
-- **App bar:** avatar (lewo) · **logo Amethyst** na środku (NIE selektor feedu!) · „16/16" + graf relayów (prawo). Potwierdza, że centrum app-bara zależy od ekranu (Home = selektor, Messages = logo).
-- **Sub-taby:** „Known" (aktywny) / „New Requests" + ⋮ overflow.
-- **Wiersze rozmów:** avatar/ikona grupy · nazwa + `@handle` (szary) + ⚡ (zap-enabled) · ikona ▷ (play) · „• czas" po prawej · podgląd ostatniej wiadomości pod spodem. Public chaty („Nostr Public Chat", „Amethyst Users") mają kwadratowe ikony grup; zielona pieczątka NIP-05.
-- **FAB** „+" (fiolet, prawy-dół).
-- Zaimplementowane w `screens/MessagesScreen.tsx` + współdzielony `components/AppTopBar.tsx` (center-slot). Avatary = gradient-initials (CSP-safe; robohash zunifikuje je globalnie — #8).
+**`DefaultBottomBarItems` = Home · Messages · Wallet · Browser · Notifications** (5 pozycji).
+W v1.12.6 domyślka miała **6**: Home · Messages · Shorts · Discover · Favorite Feed Algorithms ·
+Notifications. Shorts i Discover wypadły z paska — zostają w sekcji **Navigate** szuflady.
 
-## Notifications ([`shots/notifications.png`](shots/notifications.png)) — ZROBIONE (sygnaturowy ekran)
-- App bar jak wyżej (tu selektor pokazuje „Global"). Pod nim: **wiersz podsumowania** „Today ⌄" + `💬41  🔁17(zielony)  ♥152(róż)  ⚡7k(orange)`.
-- **Sygnaturowy wykres tygodniowy** (Fri–Thu): wielo-seryjny area chart, **podwójna oś** (lewo liczby 42–339, prawo saty 9k–74k), serie: czerwona/pomarańczowa(zapy)/fioletowa/zielona. To najbardziej rozpoznawalny element — wymaga SVG area-chartu.
-- **Reakcje pogrupowane po typie**: rzędy `⚡ / 🔁 / ♥ / 👍 / 🔥 / 🤙 / 👀`, każdy z klastrem avatarów osób, które zareagowały (na rzędzie ⚡ kwoty satów na avatarach: 666/21/1k/5k…). Potem pojedyncze itemy powiadomień.
+**To jest domyślka, nie przeróbka użytkownika:** zapis paska przeniósł się z lokalnego DataStore do
+synchronizowanego bloba NIP-78 **bez migracji** (`BottomBarPersistenceTest`: *„no migration from the
+old app-global setting is attempted"*), więc każdy użytkownik po aktualizacji ląduje na nowej
+domyślce. To odróżnia ten przypadek od Wispa (gdzie nagranie pokazywało przestawiony toggle).
 
-## Live activity ([`shots/replies.png`](shots/replies.png))
-- To NIE zwykły wątek, tylko **widok live-streamu + czat** (otwierany z bąbla LIVE): duży obszar mediów, nagłówek „Exploring random ideas… LIVE 🚀17 ⚡122.5k", bąbelki czatu z reakcjami, composer „reply here.." + Post.
+- Ikony (Material Symbols, waga 300, FILL 0): `Home` · `Mail` · `AccountBalanceWallet` ·
+  `Language` (globus) · `Notifications`. Bez etykiet (`alwaysShowLabel = false`).
+- **Nowość: pigułka M3** pod aktywną ikoną (`secondaryContainer` `#36244C`). v1.12.6 nie miał żadnego
+  wskaźnika — zaznaczenie niósł sam tint. Tint bez zmian: `primary` aktywny, `onSurface65`
+  (`#969696`) nieaktywny.
+- `HorizontalDivider` 0.25 dp **na górze** paska — było i jest.
+- Kropka-badge tylko na Home / Messages / Notifications. Wallet i Browser **nigdy** jej nie mają.
+- Pasek znika na każdym ekranie, który nie jest korzeniem zakładki, i przy otwartej klawiaturze.
+- **Wallet i Browser nie mają FAB-a** — z nową domyślką dwie z pięciu zakładek są bez FAB-a.
 
-## Profile ([`shots/profile.png`](shots/profile.png) — screen od użytkownika) — ZROBIONE
-`ui/screen/loggedIn/profile/ProfileScreen.kt` (+ `header/*`). Góra→dół:
-- **Top bar** przezroczysty, płynie nad bannerem: lewo = okrągły back (jeśli `canPop`), prawo = okrągły **⋮ (MoreVert)**. Bez tytułu.
-- **Banner** full-width, wys. **150dp**, crop. **Avatar** 100dp, okrągły, **nachodzi na banner** (content column `padding(top=100dp)`).
-- **Rząd akcji** (prawo, na wysokości avatara, FilledTonalButton 50dp): **Message/DM · Zap(wallet) · Edit(tylko `isMe`) · Follow/Unfollow · List**. (QR jest niżej, „more" = ⋮ w top barze.)
-- **Blok tożsamości:** display name (bold 22sp) + opc. `(zaimki)`; `@username` (szary); skrócony **npub** + copy; **nprofile** + copy + **QR**; „Last seen"; **NIP-05** (✓ + user@domain); **Website** (link); zewn. tożsamości (X/Telegram/Mastodon/GitHub); **lightning** (lud16); badges; **bio** (rich text); divider.
-- ⚠️ **BRAK twitterowego paska statystyk** „1.2K followers / 340 following". Liczby są w nagłówkach zakładek Follows/Followers/Relays.
-- **Zakładki** (scrollable): **Notes · Replies · Mutual · Gallery · Apps · Follows · [Followers*] · [Zaps*] · Bookmarks · Followed Tags · Reports · Relays** (* warunkowe).
-- ⚠️ SIM ma twitterowy profil: „Joined March 2023" (Nostr nie ma daty dołączenia), taby Posts/Replies/Likes, pasek statystyk — do wymiany.
+## Home — dialog filtra feedu
 
-## Compose / New Post ([`shots/compose.png`](shots/compose.png) + [`compose-typed.png`](shots/compose-typed.png) — screeny od użytkownika) — ZROBIONE
-`ui/screen/loggedIn/home/ShortNotePostScreen.kt` (VM `ShortNotePostViewModel.kt`). **PEŁNY EKRAN** (Scaffold), nie bottom-sheet. Post: szary gdy pusty → **fiolet gdy jest treść**. Avatar ma mały fioletowy badge konta.
-- **Top bar** (`ActionTopBar`): lewo = **X** (Close, zapisuje draft), prawo = filled **„Post"** (`R.string.post`), enabled = `canPost`. Bez selektora konta.
-- **Body:** okrągły **avatar** (35dp; tap = post anonimowy → ikona NoAccounts) + pole **„What's on your mind?"** (multiline). Sekcje warunkowe inline: quote, notyfikowani userzy, subject, poll, content-warning, expiration, schedule, geohash, zap-split…
-- **Toolbar** (scrollable Row 50dp, kolejność): gallery · files · camera · video · voice · **private(Lock)** · **poll** · zap-split · zapraiser · PoW · **subject** · **sensitive/NSFW** · **expiration(NIP-40)** · schedule · **geohash** · secret-emoji · invoice.
-- ⚠️ **BRAK limitu znaków** (grep `maxLength/280` = 0). Bez licznika, bez kółka postępu. Post gated przez `canPost`, nie długość.
-- ⚠️ SIM ma **fejkowy 280-limit + kółko postępu** + selektor Public/Followers (nie istnieje) — do usunięcia.
+Tap w „All Follows ⌄" otwiera `GroupedFeedFilterDialog`.
+**[REC vs REPO] ten dialog istniał już w v1.12.6** — nasz płaski popup 5 pozycji był błędem
+reprodukcji, nie różnicą wersji.
 
-## Login / Sign up ([`shots/login.png`](shots/login.png) + [`shots/signup.png`](shots/signup.png) — screeny od użytkownika 2026-08-05) — ZROBIONE
-Dwa ekrany logged-off, ten sam szkielet. Kod: `ui/screen/loggedOff/login/LoginScreen.kt` (`LoginPage`) i
-`.../signup/SignUpScreen.kt` (`SignUpPage`) — obydwa to wyśrodkowana `Column` (padding **20dp**,
-`verticalScroll`, `imePadding`), więc treść **jest wyśrodkowana w pionie**, bez app-bara i bez footera.
+- `Dialog` + `Surface` `RoundedCornerShape(28dp)` w `surfaceContainerHigh`; tytuł
+  `select_list_to_filter` = **„Select an option to filter the feed"**, wyśrodkowany `titleSmall`.
+- Grupy: własny `Surface` `RoundedCornerShape(16dp)` w `surfaceContainerLow`, nagłówek **wersalikami**
+  12 sp, tracking 0.8 sp. Nazwy grup: `Feeds` · `Relays` · `Hashtags` · `Interest Sets` ·
+  `Locations` · `Feed Algorithms` · `Communities` · `Lists`. Grupa bez wpisów się nie renderuje —
+  dlatego nagranie pokazuje pięć z ośmiu.
+- Wiersz = ikona 20 dp + odstęp 12 dp + etykieta 14 sp.
+- Z nagrania: FEEDS → All Follows · All User Follows · Default Follow List · Mute List;
+  RELAYS → Global; INTEREST SETS → Tags (własny zestaw użytkownika);
+  LOCATIONS → Around Me · **Teleport to a place…** (nowe w v1.13.1); LISTS → List · mute.
 
-**Wspólna kolejność (verbatim z Compose):**
-logo **150dp** (`CustomHashTagIcons.Amethyst`, `ContentScale.Inside`) → **Spacer 40dp** → pole → [tekst błędu,
-`colorScheme.error`, `bodySmall`] → **Spacer 10dp** → `TorSettingsSetup` → [`TermsGate`] → **Spacer 10dp** →
-**wypełniony pill** → **Spacer 40dp** → pytanie krzyżowe → **Spacer 20dp** → **pill obrysowy**.
+## Wallet (NOWA zakładka)
 
-- **Logo:** ta sama ikona co launcher — struś wycięty z litery „A". Ścieżki **verbatim** z
-  `res/drawable/amethyst.xml` (viewport 512×512, dwie ścieżki: oczko + korpus), gradient **`#652D80` →
-  `#2598CF`** (`userSpaceOnUse`, x 22.6 → 489.54).
-  ⚠️ **[REC vs REPO]** drawable deklaruje gradient oczka w przestrzeni viewportu (startX 42.27 → endX 55.73),
-  co dałoby płaski błękit; realny render (i screen) pokazuje **rampę fiolet→błękit w obrębie samej kropki** —
-  reprodukcja używa gradientu `objectBoundingBox`.
-- **Pole klucza** (`KeyTextField.kt`): M3 `OutlinedTextField` przy **domyślnej szerokości 280dp**, czyli
-  **68% szerokości ekranu** (411dp) — **NIE full-bleed**; ten margines to najbardziej rozpoznawalny detal ekranu.
-  `leadingIcon` = **QR** (`ic_qrcode`, 24dp, `tint = colorScheme.primary` → **fioletowy**),
-  `trailingIcon` = **oko** (`MaterialSymbols.Visibility`/`VisibilityOff`, kolor on-surface, biały),
-  `visualTransformation = PasswordVisualTransformation` (maskowanie), placeholder **„nsec.. or npub.."**
-  (`nsec_npub_hex_private_key`). Pod polem warunkowe `PasswordField` (ncryptsec) — na screenie nieobecne.
-- **Linia Tor:** `connect_via_tor1` **„Adjust"** (kolor tekstu) + `connect_via_tor2` **„Tor Settings"**
-  (akcentowy fiolet). Cały wiersz jest klikalny, ale tylko druga połowa jest zabarwiona.
-- **Przyciski:** `Button`/`OutlinedButton`, `RoundedCornerShape(35dp)`, **wysokość 50dp**, etykieta z
-  `padding(horizontal = 40dp)` → pill **dopasowany do treści**, nie na całą szerokość.
-  ⚠️ **[REC vs REPO]** M3 barwi etykietę `OutlinedButton` kolorem `primary`; realny render trzyma ją
-  **białą (on-surface)** przy neutralnym obrysie — bierzemy screen.
-- **Login** (`shots/login.png`): pole klucza → „Adjust Tor Settings" → **„Login"** (wypełniony) →
-  **„Don't have a Nostr account?"** → **„Sign Up"** (obrysowy).
-  `ExternalSignerButton` („Login with Amber") renderuje się **tylko gdy Amber jest zainstalowany** — na
-  screenie go nie ma, więc reprodukcja go nie ma.
-- **Sign up** (`shots/signup.png`): **„Welcome Ostrich!"** (`titleLarge`) → Spacer 20dp →
-  **„How should we call you?"** (`titleMedium`) → Spacer 20dp → pole z placeholderem **„Ostrich McAwesome"**
-  (`my_awesome_name`) → „Adjust Tor Settings" → **„Create Account"** (wypełniony) →
-  **„Already have a Nostr account?"** → **„Login"** (obrysowy).
-  `TermsGate` (checkbox regulaminu) jest w kodzie bezwarunkowo, ale na screenie go **nie ma** — reprodukcja
-  pomija, zgodnie z zasadą „recording wygrywa dla layoutu".
-- Wszystkie literały potwierdzone verbatim w `res/values/strings.xml`: `welcome`, `how_should_we_call_you`,
-  `my_awesome_name`, `nsec_npub_hex_private_key`, `login`, `sign_up`, `create_account`,
-  `don_t_have_an_account`, `already_have_an_account`, `connect_via_tor1/2`.
-- ⚠️ **Świadome odstępstwo (bezpieczeństwo, nie wierność):** pole klucza używa `DEMO_KEY_PLACEHOLDER`
-  zamiast prawdziwego „nsec.. or npub.." i odrzuca wklejony realny nsec — patrz
-  `src/simulators/shared/utils/keySafety.ts`. Ta sama reguła obowiązuje w każdej reprodukcji.
-- ⚠️ **SIM BŁĄD (naprawiony 2026-08-05):** poprzedni `LoginScreen.tsx` był generycznym stubem — fioletowy
-  app bar z ikoną „checkmark w kółku", nagłówek „Welcome", **taby Sign In / Create Account**, osobne pola
-  npub i nsec, generator kluczy z toastem „Copied to clipboard!" i stopka „By signing in, you agree to the
-  Terms of Service". Nic z tego nie istnieje w prawdziwym Amethyście.
+Korzeń zakładki: **lewy tytuł „Wallet"** (bez avatara, bez lupy) + **„+"** po prawej.
+Karta on-chain: obramowanie bitcoin-orange, okrągła ikona ₿, **„Bitcoin"** + chip **„(i) Public"**,
+druga linia **„Onchain · Taproot"**, po prawej duże pomarańczowe **„0"** nad **„sats"**;
+pod spodem obrysowy **„⧉ Copy"** i wypełniony pomarańczowy **„▷ Send"**.
+Niżej pusty stan NWC: **„No wallets connected"** ·
+**„Connect one or more NWC wallets to send and receive payments."** · lawendowa pigułka
+**„+ Add NWC Connection"** (tekst ciemny — `onPrimary` = czarny).
+Saldo w nagraniu realnie ładuje się przez spinner; odtwarzamy stan **końcowy**.
 
-## Domknięte z wideo (screen recording od użytkownika, 37 klatek scene-detect)
-Wideo (`shots/*.mp4`, gitignored) + contact sheets → potwierdziło 5 zbudowanych ekranów i ujawniło resztę.
-- **Thread / note-detail** — ZROBIONE: tap notatki (`MaterialCard.onOpenThread`) → `ThreadScreen` (parent + wcięte odpowiedzi z linią-łącznikiem + composer „reply here.." + back). Overlay `z-[60]` (musi być nad app-barem, który jest `md-app-bar-enhanced` sticky z-50 — inaczej home app bar przebija i jego avatar jest klikalny → otwierał drawer).
-- **Settings suite** — ZROBIONE (3 widoki w `SettingsScreen` wg `section`): **Application Preferences** (Language/Theme/Image Preview/Video Playback/URL Preview/Profile Picture/Immersive Scrolling/UI Mode/Gallery Style/Push Notification), **Security Filters** (toggle Warn-on-reports/Filter-spam + „Warn" + taby Blocked/Spammers/Hidden + Unblock), **Relays** (Public Outbox/Inbox + nostr.wine 196MB itd. + Add a Relay). Drawer: Settings→preferences, Security→security, Relays→relays. Settings = full-screen `absolute inset-0 z-[55]` **plain div** (framer opacity spring zacinał się na ~0.95 → przebijał feed).
-- **Security Filters → Hidden Words** — ZROBIONE 2026-08-13, **ze źródła, nie z nagrania**.
-  `[REC vs REPO]` **rozjazd strukturalny**: nagranie (2026-07-14) pokazuje na tym ekranie trzy
-  ZAKŁADKI (`Blocked Users | Spammers | Hidden Words`) — widać je na kilkunastu klatkach, z aktywnym
-  „Blocked Users" i listą npubów z przyciskiem „Unblock". Kod `v1.12.6`
-  (`ui/screen/loggedIn/settings/SecurityFiltersScreen.kt`) ma tam natomiast **listę wierszy**
-  prowadzących do osobnych ekranów (Blocked Users / Spamming Users / Hidden Words / Muted threads),
-  a `HiddenWordsScreen.kt` jest własnym ekranem z własnym top barem. Zgodnie z regułą pierwszeństwa
-  **bierzemy nagranie** (layout) — zakładki zostają.
-  **Nagranie NIGDY nie otwiera zakładki Hidden Words**, więc jej zawartość jest odtworzona
-  z `HiddenWordsScreen.kt` @ v1.12.6, verbatim ze stringów:
-  - pusty stan `security_hidden_words_empty` = „No hidden words. Add a word below to hide posts
-    containing it." (wcześniej mieliśmy skrócone „No hidden words");
-  - pole `AddMuteWordTextField`: `OutlinedTextField`, label **i** placeholder to ten sam string
-    `hide_new_word_label` = „Hide new word or sentence", `singleLine`, `ImeAction.Send`, trailing
-    `AddButton(isActive = hasChanged)` — czyli przycisk przygaszony, dopóki pole jest puste;
-  - pole siedzi w `bottomBar` na `Surface(tonalElevation = 3.dp)`, dociśnięte do dołu ekranu
-    (u nas `sticky bottom-0` + kolumna `min-h-full`, bo inaczej wisiało pod ostatnim wierszem);
-  - wiersz słowa (`MutedWordRow`): tekst **pogrubiony, wyśrodkowany**, `HorizontalDivider` pod każdym,
-    długie przytrzymanie zaznacza (zaznaczenie = tło `primary` @ 12%).
-  Czego świadomie NIE odtwarzamy: trybu zaznaczania wielu słów, akcji „show" per wiersz i top bara
-  z licznikiem zaznaczeń — nagranie ich nie pokazuje, a demo ich nie potrzebuje.
-- **Messages New Requests** — ZROBIONE: npub-owe nieznane kontakty z datami (Known = nazwane wg messages.png).
-- **Account drawer** ([`drawer.png`](shots/drawer.png)) — ZROBIONE: banner + avatar + „pitiunited" + „Update your status" (Building nostr stuff… 🧑‍💻 + kosz) + „2374 Following · -- Followers" + menu (Profile/My Lists/Bookmarks/Drafts/Relays 528/1806/Media Servers/Security Filters/Privacy Options/Backup Keys/App Preferences/User Preferences). `absolute` (nie `fixed` — było wychodziło poza telefon), bez slajdu (animacje w podglądzie nie grają — patrz niżej).
-- ⏳ Odłożone niuanse z wideo: kontekstowe sub-taby feedu (Global → Follow Packs/Reads/Feed Algorithms/Live Streams); full-bleed media-note z pionowymi akcjami; ekrany Media Servers / Privacy Options / Backup Keys / My Lists / Drafts (w drawerze są, ale bez własnych widoków).
+## Browser (NOWA zakładka, globus)
 
-> **Ważne (środowisko podglądu):** animacje wejścia (framer ORAZ CSS `@keyframes`) **nie postępują** w podglądzie — utykają na klatce startowej (opacity ~0.7–0.95, translateX -100%/-31px). Wszystkie overlaye (compose/thread/settings/drawer) renderuj **w stanie końcowym** (plain div, bez enter-animacji), inaczej nie zweryfikujesz i użytkownik widzi utknięty stan.
+**Bez app bara.** Na górze pełnej szerokości zaokrąglone pole adresu
+**„Search or enter address"**, pod nim fioletowy nagłówek **„Discover web apps"** i katalog
+webowych klientów Nostr: ikona · nazwa · jednolinijkowy opis · gwiazdka ulubionych.
+Z nagrania, w kolejności: Primal · Coracle · Snort · noStrudel · Iris · Nostter · Jumble · Nostria ·
+Nosotros · lumilumi · (Phoenix — ucięty krawędzią kadru, opis nieczytelny → **nie odtwarzamy**).
 
-## Checklista rozbieżności (status)
-1. ✅ App bar center: checkmark-logo → **selektor „All Follows ⌄"** (klikalny dropdown feedów).
-2. ✅ App bar left: hamburger → **avatar (otwiera drawer)** (placeholder gradient; docelowo robohash — p. #8).
-3. ✅ App bar right: search+bell → **„16/16" + ikona grafu relayów** (`Waypoints`).
-4. ✅ Sub-taby: „Following/Global" → **„New Threads / Conversations"**.
-5. ✅ Usunięto **rząd chipów** i **stories row** → **jeden bąbel LIVE** jako pierwszy element feedu (scrolluje z treścią).
-6. ✅ Footer: dodany 5. slot **Stats (słupki + liczba)** → Reply/Boost/Like/Zap/Stats.
-7. ✅ Bottom nav: **5 ikon: Home/Messages/Shorts/Discover/Notifications** (bez etykiet, bez Profile; kropka-badge na Notifications; nawigacja tourem programowa, `data-tour` zachowane).
-8. ✅ Avatary: DiceBear (sieć) → **lokalne robohash-owe roboty** — `components/Avatar.tsx` (deterministyczny FNV-1a hash → inline-SVG robot: głowa/antena/uszy/oczy/usta, kolory z seedu). CSP-safe, offline. Podmienione wszędzie (feed/thread/profile-notes via MaterialCard, Messages DM, Notifications, Search, Video, app-bar/compose/drawer/profile = ten sam robot usera `pitiunited`). Grupy/logo/live-bubble zostają. **Zdjęcia w postach:** `getSampleImages` (`src/data/mock/utils.ts`) przepisane na lokalne inline-SVG gradient-„photo" jako `data:`-URI (było głównie martwe fake-URL-e + zdalny picsum). Amethyst = **zero zdalnych żądań obrazów** (avatary inline-SVG, media data:-URI), offline/CSP-safe.
+## Search (lupa w app barze)
 
-9. ✅ **Login / Sign up** (2026-08-05): generyczny stub (fioletowy app bar, taby „Sign In / Create Account",
-   osobne pola npub+nsec, generator kluczy, stopka ToS) → **dwa realne ekrany logged-off** — verbatim logo
-   z `amethyst.xml`, pole 280dp z fioletowym QR + okiem, „Adjust **Tor Settings**", pill 50dp/r35dp,
-   przełączanie Login ↔ Sign Up. Nowy `components/AmethystLogo.tsx`.
+**[REC vs REPO] — cała sekcja pochodzi ze źródła, nie z nagrania.** Nagranie nie otwiera tego ekranu
+(lupa nie jest w nim tapnięta), więc opis jest czytany z `screen/loggedIn/search/SearchScreen.kt`
+@ v1.13.1. Layout w takim wypadku też rozstrzyga repo — nie ma klatki, która mogłaby go obalić.
 
-_Zweryfikowane side-by-side z [`shots/home.png`](shots/home.png): build OK, 0 błędów w konsoli, struktura zgodna z v1.12.6._
-_Login/Sign-up zweryfikowane side-by-side z [`shots/login.png`](shots/login.png) i [`shots/signup.png`](shots/signup.png)._
+- **Top bar to NIE `TopAppBar`,** tylko zwykła `Column` na `surface` z własnym paddingiem od
+  systemowych insetów. Nie ma w nim **ani strzałki wstecz, ani avatara, ani tytułu** — wyjście z
+  ekranu niesie systemowy back Androida.
+- **Pole:** `TextField`, `RoundedCornerShape(25.dp)`, wiodąca `SearchIcon` 20 dp w `placeholderText`,
+  placeholder `npub_hex_username` = **„npub, username, text"**, przycisk czyszczenia w slocie
+  końcowym, gdy coś wpisano, `singleLine`, obie linie wskaźnika przezroczyste.
+- **Rząd filtrów** (`padding(horizontal = 10.dp, vertical = 4.dp)`, `spacedBy(8.dp)`):
+  `SingleChoiceSegmentedButtonRow` z trzema segmentami **All · People · Notes**
+  (`search_scope_*`) na całą szerokość + przycisk **`Tune`** (`search_filters_open`). Przy każdym
+  filtrze poza domyślnym Tune dostaje **kropkę 8 dp w `primary`** (offset -10/+10 dp).
+- **Arkusz filtrów** (`ModalBottomSheet`, `skipPartiallyExpanded`): tytuł **„Filters"** →
+  **„Source"** + segmenty **Local · Relays** (domyślka **Relays**) → wiersz **„Follows only"**
+  z `Switch` → **„Sort by"** z radiami **Relevance · Newest · Popular** (`EVENT_OPTIONS` w tej
+  kolejności, domyślka **Newest**) → `TextButton` **„Reset"**. Sekcja sortowania **nie renderuje
+  się w zakresie People**.
+- **Wyniki** to jedna `LazyColumn`, w kolejności: linie hashtagów (`Search hashtag: #tag`, pogrubione
+  i wyśrodkowane) → użytkownicy (`UserCompose`: zdjęcie 55 dp, nazwa, jednolinijkowe „about"
+  w `placeholderText`, w slocie końcowym Follow/Unfollow + przycisk listy) → relaye → czaty
+  publiczne → kanały efemeryczne → aktywności live → notatki (`NoteCompose`, czyli ta sama karta
+  co w feedzie). Między blokami hairline'y `DividerThickness`.
+- **Bramkowanie zakresem** (`SearchBarViewModel`): hashtagi i notatki znikają w People, użytkownicy
+  w Notes, a relaye i kanały renderują się **wyłącznie w All** (relaye dodatkowo wymagają frazy
+  dłuższej niż 1 znak). **Przy pustym polu nie renderuje się żaden blok wyników.**
+- **Dolny pasek na tym ekranie NIE występuje** — `AppBottomBar` wychodzi wcześniej przy
+  `nav.canPop()`, a Search jest wpychany na stos, nie jest korzeniem zakładki.
+- Nagłówek listy to warunkowa karta „dodaj relay wyszukiwania" (`AddInboxRelayForSearchCard`),
+  renderowana tylko kontu bez takiego relaya → **nie odtwarzamy**.
+
+## Discover (szuflada → Navigate)
+
+**[REC vs REPO] — cała sekcja pochodzi ze źródła** (`screen/loggedIn/discover/DiscoverScreen.kt`);
+nagranie nie otwiera Discover, bo zakładka wypadła z dolnego paska.
+
+- **Top bar = `DiscoveryTopBar`, czyli TEN SAM `UserDrawerSearchTopBar` co na Home:** avatar konta ·
+  **selektor feedu** (`FeedFilterSpinner`, ten sam dialog `select_list_to_filter`, tyle że wiązany
+  z `defaultDiscoveryFollowList`) · lupa. Logo Amethysta na środku tego ekranu **nie występuje**.
+- Pod paskiem **`SecondaryScrollableTabRow`** (`edgePadding = 8.dp`) z **siedmioma** zakładkami
+  w kolejności, etykiety dosłownie: **Follow Packs** (`discover_follows`) · **Reads**
+  (`discover_reads`) · **Feed Algorithms** (`discover_content_v2`) · **Live Streams**
+  (`discover_live_v2`) · **Communities** (`discover_community_v2`) · **Marketplace**
+  (`discover_marketplace`) · **Chats** (`discover_chat`). Strony przełącza `HorizontalPager`.
+- **Marketplace jako jedyna** renderuje się w siatce `GridCells.Fixed(2)`; reszta to `LazyColumn`.
+  Element w każdej zakładce to `ChannelCardCompose`, który maluje **inną kartę na rodzaj zdarzenia**
+  (follow set / long-form / NIP-89 / live activity / community / classified / public chat).
+- **FAB tylko na dwóch zakładkach:** Reads → `NewLongFormMarkdownButton`, Marketplace →
+  `NewProductButton` (oba: kółko 55 dp, `Add` 26 dp, `primary`/`onPrimary`).
+- Pusty feed to `FeedEmpty`: wyśrodkowane **„Feed is empty."** + obrysowy **„Refresh"**.
+
+## Shorts (szuflada → Navigate)
+
+**[REC vs REPO] — cała sekcja pochodzi ze źródła** (`screen/loggedIn/shorts/ShortsScreen.kt`).
+
+- **Top bar = `ShortsTopBar`, czyli znowu `UserDrawerSearchTopBar`** z selektorem feedu
+  (`defaultShortsFollowList`) — avatar · selektor · lupa.
+- **To NIE jest pełnoekranowy pionowy pager wideo.** `ShortsFeedLoaded` to zwykła `LazyColumn`
+  kart `VideoCardCompose`, każda w układzie: **nagłówek autora → media na całą szerokość →
+  rząd reakcji z `showReactionDetail = true` → tytuł (bold, `titleSmall`, 1 linia) + treść**,
+  a między kartami hairline + `Spacer(8.dp)`. Element renderuje się wyłącznie
+  `if (item.event is VideoEvent)`.
+- **FAB jest zawsze** i jest rozwijany (`NewShortVideoButton`): tap otwiera dwa kolejne FAB-y
+  ponad nim — `Videocam` („Record a video") i `AddPhotoAlternate` („Upload image") — a sam
+  przełącza glif na `Close`.
+- Pusty feed: to samo `FeedEmpty` co w Discover.
+
+## Messages
+
+App bar: avatar · **logo Amethyst** na środku · lupa. Sub-taby **„Known" / „New Requests"** + `⋮`.
+Wiersz rozmowy: avatar · nazwa/npub · `• czas` po prawej · podgląd („You: …") · fioletowa kropka
+nieprzeczytanych. **Nowość: karta „Older legacy messages"** wpleciona w listę Known —
+`⋯` + tytuł + podtytuł **„NIP-04 · 7 relays · loaded since Aug 2026"**. FAB = lawendowe **„+"**.
+Kropka na kopercie w dolnym pasku zapala się teraz dla **każdej** nieprzeczytanej rozmowy, nie tylko
+dla DM-ów NIP-17/NIP-04.
+
+## Thread
+
+Top bar: **„← Thread"**, wyrównany do lewej. Notatka główna: avatar 55 dp, nazwa, **NIP-05 pod nazwą**
+(kolor = `primary`), treść 18 sp, pigułka **„Show More"** nad wygaszonym tekstem, rząd akcji
+z licznikami. Odpowiedzi wcięte z pionową linią-łącznikiem (zebra bez zmian).
+Notatka główna renderuje się z `showReactionDetail = true`, więc galeria reakcji
+(z „Accepted by relays") jest tam widoczna od razu.
+
+## Profile
+
+Banner 150 dp (bez zmian), avatar 100 dp nachodzący na banner, top bar przezroczysty z okrągłym
+back i `⋮`.
+
+- **Rząd akcji.** Upstream: Message · Payment · **BOLT12** · [Edit gdy `isMe`] · Follow/Unfollow ·
+  List — ale Payment, BOLT12 i Edit są warunkowe.
+  **[REC vs REPO]** na profilu obcego użytkownika, który otwiera nagranie, renderują się
+  **dokładnie trzy**: koperta · **Follow** · lista. Tyle szipujemy.
+- **Blok tożsamości** (kolejność bez zmian): display name (bold 22 sp) → `@username` →
+  **npub + copy** → **nprofile + copy + QR** → **„Last seen …"** → NIP-05 → website →
+  tożsamości zewnętrzne → **chipy szyn płatności** → badges → bio.
+- **Chipy płatności** zamiast dawnej linijki lightning: obrysowane chipy w barwie szyny —
+  z nagrania **„⚡ Lightning <adres>"** i **„₿ On-chain"**, oba bitcoin-orange.
+- **Zakładki** (pełna kolejność v1.13.1): **Notes · Replies · Yours · Gallery · Apps & Sites ·
+  Follows · [Followers] · [Zaps] · Bookmarks · Followed Tags · Reports · Relays**.
+  „Yours" to realna etykieta (string `mutual`), nie nasz wymysł; **„Apps & Sites" jest nowe**.
+- **Nadal BRAK twitterowego paska statystyk** — liczby follows/followers siedzą w nagłówkach zakładek.
+
+## Szuflada (account drawer)
+
+Kolejność wg `DrawerContent.kt`: nagłówek → **You** → **Navigate** → **Feeds** → **Create** →
+**System** → (spacer) → **Accounts** → stopka z wersją. Sekcje są zwijane (chevron po prawej).
+
+- **Nagłówek:** banner + avatar + nazwa + pole **„Update your status"** + „N Following · N Followers".
+- **You** (`DrawerYouItems`): Profile (tint `primary`) · My Lists · Bookmarks · **Web Bookmarks** ·
+  Drafts · **Scheduled posts** · Hashtag Sets · My Blossom Files · My Emoji Packs · Wallet ·
+  **Remote Signer**.
+- **Navigate** (`DrawerNavigateItems`): Home · Messages · Shorts · Browser · Discover · Notifications.
+- **Feeds** (`DrawerFeedsItems`, 28 pozycji): Reads · Pictures · Shorts · Videos · Episodes ·
+  Podcasts · Music · Playlists · Polls · Marketplace · Workouts · Git Repositories · Live Streams ·
+  Nests · Communities · Public Chats · Relay Groups · Concord Channels · Location Channels ·
+  Calendars · Calendar lists · App Store · Web apps · nApplets · nSites · Follow Packs · Badges ·
+  Emojis.
+- **Create:** tylko **HLS Upload** — sąsiedni wiersz „Chess" jest w `if (isDebug)`, więc w wydaniu
+  release go nie ma.
+- **System:** **Relays** z licznikiem (jedyny kolorowy tekst w szufladzie; w nagraniu `355/1810`,
+  wartość żyje — między klatkami skacze `148/1810` → `321/1811`) · **Settings**.
+- **Stopka:** **`v1.13.1-FDROID`** + ikona QR. Sufiks smaku był już w v1.12.6.
+
+**To jest zmiana strukturalna:** v1.12.6 miał tu płaskie menu konta na 11 pozycji. W v1.13.1
+szuflada jest mapą możliwości appki i **Security Filters, Media Servers oraz Backup Keys już w niej
+nie ma** — przeniosły się do Settings (Backup Keys do Danger Zone).
+
+## Settings
+
+Jeden **przeszukiwalny korzeń** zamiast trzech osobnych celów ze szuflady.
+
+- **Top bar:** back + **pigułka „Search settings"** (`settings_search_placeholder`).
+  **Nagłówka „Settings" na tym ekranie nie ma** — pole wyszukiwania zajmuje jego miejsce.
+- Wiersz = **kafelek ikony w zaokrąglonym kwadracie** (fiolet) + etykieta + chevron; sekcja = jedna
+  duża zaokrąglona karta; hairline zaczyna się za kolumną ikon. Kafelki to sygnatura tego ekranu.
+- **`account_settings` = „Account Settings":** Relays · Relay Sync · Import Follows · Media Servers ·
+  Nest servers · Zaps · Reactions · Reaction Row · Messages · Bottom Navigation Bar ·
+  Video Player Buttons · Audio Visualizer · Favorite Feed Algorithms · Profile badges ·
+  Payment Targets · BOLT12 Offers · **Security Filters** · Translations · Connected Apps ·
+  Relay Authentication · Call Settings.
+- **`app_settings` = „App Settings":** Privacy Options · UI Preferences · Home · Notifications ·
+  Compose Settings · Profile UI · Calendar reminders · Bitcoin Explorer (OTS) · Namecoin Settings ·
+  App resource usage.
+### Security Filters (`account_settings` → Security Filters)
+
+**Uwaga: to NIE jest ekran z zakładkami.** v1.12.6 miał tu trzy taby (Blocked
+Users / Spammers / Hidden Words); `SecurityFiltersScreen.kt` @ v1.13.1 to
+`Scaffold` z `TopBarWithBackButton("Security Filters")` i przewijalna `Column`
+(`padding(horizontal = 16.dp, vertical = 12.dp)`, `spacedBy(20.dp)`) z **dwiema
+kartami sekcji**. Nagranie nie otwiera tego ekranu → **[REC vs REPO] ze źródła**.
+
+**„Filtering preferences"** (`security_section_filtering_preferences`), pięć
+kafelków w tej kolejności, każdy z kafelkiem ikony, `SettingsDivider` między:
+
+1. **Show sensitive content** (`Visibility`) — „Shows a warning message when the
+   author of the post marked it as sensitive". Pod opisem **wbudowany, pełnej
+   szerokości `SingleChoiceSegmentedButtonRow`**: `WarningType.entries` = **Warn ·
+   Show · Hide**, domyślnie Warn. Nie dialog.
+2. **Filter spam** (`FilterAlt`) — przełącznik. „Hides posts from strangers that
+   were exactly the same for 5 or more times". **Wyłączenie czyści przejściowy
+   zbiór spamerów** (`Account.updateFilterSpam` → `resetTransientUsers()`) i nic
+   go nie przywraca.
+3. **Hide posts that violate community rules** (`Shield`) — przełącznik,
+   domyślnie OFF, ustawienie lokalne (nie synchronizowane). Objaśnienie o NIP-9B.
+4. **Warn on reports** (`Report`) — przełącznik. Objaśnienie **straciło** twarde
+   „5 or more": „Shows a warning message when posts or profiles have reports from
+   your follows". Pod nim `SettingsSubControlRow` **Report warning threshold**
+   ze `SettingsStepper` 1–999 (domyślnie 5), wygaszany razem z przełącznikiem.
+5. **Max hashtags per post** (`Tag`) — `SettingsStepper` 0–99, domyślnie 8;
+   wartość 0 renderuje się jako `security_unlimited` = **„∞"**.
+
+**„Blocked content"** (`security_section_blocked_content`), cztery wiersze
+nawigacyjne, każdy z pigułką licznika (`SettingsCountBadge`, przy zerze nie
+renderuje się wcale) i każdy **wpychający własny ekran**:
+**Blocked Users** (`PersonOff`) · **Spammers** (`Block`) · **Hidden Words**
+(`VisibilityOff`) · **Muted threads** (`Forum`).
+
+Trzy pierwsze ekrany dzielą `BlockListTopBar` i **long-press multi-select**: bez
+zaznaczenia pasek to tytuł + back, z zaznaczeniem — `num_selected` = „%d
+selected", przycisk zamknięcia i jedno **Unblock**; zaznaczony wiersz dostaje tło
+`primary` @12%, a poza trybem zaznaczania wiersz ma własny przycisk „Unblock"
+(`ShowUserButton`). Puste stany to wyśrodkowana tarcza 48 dp nad tekstem:
+„You haven't blocked any users yet." · „No accounts have been flagged as spam in
+this session." · „No hidden words. Add a word below to hide posts containing
+it." · „No muted threads". Ekran Hidden Words ma zadokowane u dołu pole
+`AddMuteWordTextField` (label i placeholder to ten sam string) z obrysowym
+przyciskiem **„Add"**; wiersz słowa jest **wyrównany do lewej** (`Text` z
+`weight(1f)` zjada rząd). Muted threads nie ma zaznaczania — każdy wiersz ma
+przycisk **„Unmute"**.
+
+- **`danger_zone` = „Danger Zone":** **Backup Keys** · Request to Vanish · Vanish History ·
+  Reset Marmot State. Cała sekcja kodowana kolorem błędu (łososiowe etykiety, ciemnoczerwone kafelki).
+  „Reset Marmot State" pyta dialogiem potwierdzenia.
+- **Smak F-Droid:** nie ma czwartej kategorii „About & Legal" (Privacy Policy / Child Safety
+  Standards) — lista kończy się na Danger Zone. Za to **ma** wiersz „Push provider" w Notifications,
+  którego nie ma w buildzie Play (odwrotnie, niż zakładaliśmy). Tor **nie jest** bramkowany smakiem.
+
+## Login / Sign up
+
+Bez zmian względem v1.12.6 — patrz zamrożona screen-mapa po szczegóły (logo 150 dp z
+`amethyst.xml`, pole klucza 280 dp z fioletowym QR i okiem, „Adjust **Tor Settings**", pigułki
+50 dp / r35 dp). W smaku F-Droid **nie ma bramki regulaminu** („I accept the terms of use"), którą
+pokazuje build Play — czyli nasz brak `TermsGate` jest teraz potwierdzony źródłowo, nie tylko
+screenem.
+
+## Hashtag (`#tag` w treści notatki)
+
+**[REC vs REPO] ze źródła** (`loggedIn/hashtag/HashtagScreen.kt`); nagranie nie
+otwiera tego ekranu. `TopBarExtensibleWithBackButton`, którego slot tytułu to
+`Text("#${tag}", Modifier.weight(1f))`, a za nim `HashtagActionOptions`:
+przycisk **Follow/Unfollow** i menu `MoreVert`, którego **jedyny** wpis to
+`mute_hashtag` = „Mute hashtag" (po zamuceniu „Unmute hashtag" — i to menu jest
+jedyną drogą z powrotem). Ciało to zwykły feed notatek z tym tagiem, plus FAB
+`NewHashtagPostButton`.
+
+## Compose
+
+Pełny ekran; top bar **X w obrysowanym kółku** (lewo) + **„Post"** (prawo, szary → akcent po wpisaniu
+treści). Body: avatar z fioletowym badge konta + pole **„What's on your mind?"**.
+Toolbar u dołu, przewijalny. **Bez limitu znaków i bez kółka postępu.**
+
+## Bramkowane / nieodtworzone (świadomie)
+
+- **`FeatureSetType.SIMPLIFIED` jest domyślką** — drugi wiersz nagłówka notatki nie rysuje się wcale.
+  Dlatego przeniesienie znaczników do pierwszego wiersza jest tym, co domyślny użytkownik NOWO widzi.
+- Bąble live, chip lokalizacji przy filtrze, przycisk BOLT12 na profilu, karta pseudonimu,
+  pusty stan zablokowanego użytkownika — wszystkie warunkowe, żadnego nie widać w nagraniu.
+- **Discover** i **Shorts**: nagranie ich nie otwiera (wychodzą z dolnego paska). **Chrome obu
+  ekranów jest odtworzone ze źródła** (patrz §Discover i §Shorts, oznaczone `[REC vs REPO]`);
+  nieodtworzone zostaje **ciało list** — siedem wariantów `ChannelCardCompose` i karta
+  `VideoCardCompose` — bo nie ma ani klatki referencyjnej, ani zdarzeń, którymi dałoby się je
+  wypełnić (mock w symulatorze to wyłącznie notatki kind-1). Obie zakładki pokazują za to
+  **`FeedEmpty` upstreamu**, czyli realny stan appki bez treści w zasięgu.
+- Ekrany z szuflady poza Wallet/Browser/Messages/Notifications/Profile: wiersze renderujemy wiernie
+  (szuflada JEST mapą możliwości appki), ale bez ekranów docelowych — rejestr luk w
+  [`docs/gaps/amethyst.md`](../../gaps/amethyst.md).
+
+> **Ważne (środowisko podglądu):** animacje wejścia (framer ORAZ CSS `@keyframes`) **nie postępują**
+> w podglądzie — utykają na klatce startowej. Wszystkie overlaye (compose/thread/settings/drawer)
+> renderuj **w stanie końcowym**.

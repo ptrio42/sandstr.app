@@ -4,6 +4,8 @@ import { useParentTheme } from '../shared/hooks/useParentTheme';
 import { TourContext } from '../../components/tour';
 
 import { TabBar, type YakiTab } from './components/TabBar';
+import { useScreenSync } from '../shared/screenSync';
+import { publishComposedNote } from '../shared/composeBridge';
 import { Drawer, type DrawerDest } from './components/Drawer';
 import { FeedSourceSheet, type FeedSource } from './components/FeedSelector';
 import { ZapIcon } from './components/icons';
@@ -87,6 +89,16 @@ export function YakiHonneSimulator({ className = '', tourCommand, onCommandHandl
   // "Create account" wizard. "Continue as a guest" skips straight to the feed.
   const [authRoute, setAuthRoute] = useState<'welcome' | 'signin' | 'signup'>('welcome');
   const [tab, setTab] = useState<YakiTab>('home');
+
+  // Keep your place across a client switch (shared/screenSync.ts).
+  useScreenSync<YakiTab>({
+    map: { feed: 'home', messages: 'dms', notifications: 'notifications' },
+    current: authed ? tab : null,
+    onRestore: (screen) => {
+      setAuthed(true);
+      setTab(screen);
+    },
+  });
   const [source, setSource] = useState<FeedSource>('recent');
   const [sourceSheetOpen, setSourceSheetOpen] = useState(false);
   const [overlays, setOverlays] = useState<Overlay[]>([]);
@@ -255,7 +267,12 @@ export function YakiHonneSimulator({ className = '', tourCommand, onCommandHandl
   const renderOverlay = (o: Overlay) => {
     switch (o.type) {
       case 'compose':
-        return <ComposeSheet currentUserSeed={SELF.seed} replyTo={o.replyTo} onClose={pop} onPost={() => { registerAction('post'); pop(); showToast('Note published! 🎉'); }} />;
+        return <ComposeSheet currentUserSeed={SELF.seed} replyTo={o.replyTo} onClose={pop} onPost={(text: string) => {
+          registerAction('post');
+          publishComposedNote(text);
+          pop();
+          showToast('Note published! 🎉');
+        }} />;
       case 'thread':
         return <ThreadScreen note={o.note} onBack={pop} onViewProfile={viewProfile} onReply={openReply} onZap={doZap} />;
       case 'article':

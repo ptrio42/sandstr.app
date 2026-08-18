@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useScreenSync } from '../../shared/screenSync';
 import { HomeScreen } from './screens/HomeScreen';
 import { SearchScreen } from './screens/SearchScreen';
 import { NotificationsScreen } from './screens/NotificationsScreen';
@@ -18,6 +19,13 @@ export interface PrimalMobileSimulatorProps {
 export function PrimalMobileSimulator({ className = '' }: PrimalMobileSimulatorProps) {
   const parentTheme = useParentTheme();
   const [activeTab, setActiveTab] = useState<TabId>('home');
+
+  // Keep your place across a client switch (shared/screenSync.ts).
+  useScreenSync<TabId>({
+    map: { feed: 'home', search: 'search', notifications: 'notifications', profile: 'profile' },
+    current: activeTab,
+    onRestore: setActiveTab,
+  });
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
   const [toast, setToast] = useState<{

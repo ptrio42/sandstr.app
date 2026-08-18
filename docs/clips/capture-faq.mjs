@@ -12,11 +12,11 @@
 // Output: .work/faq/<loop>/frame-*.jpg + frames.json, then .work/faq/<loop>.mp4
 // (raw — no captions, no card, no chrome; the cut is assembled separately).
 //
-// Frames come from Page.startScreencast, NOT a captureScreenshot loop: the loop
-// shares the CDP socket with the driver and throttles everything to ~1 fps.
-// Screencast emits nothing while the screen is static, so each frame's duration
-// is measured from ARRIVAL time (metadata.timestamp is non-monotonic and
-// produced phantom 7-second gaps last time).
+// Frames come from a Page.captureScreenshot TIMER plus a paint pump that keeps
+// the compositor busy — see `startPool` and `installPaintPump` for the numbers
+// behind both. This replaced Page.startScreencast, which stopped delivering on
+// Chrome 151 for anything that is not continuously animating. Each frame's
+// duration is measured from ARRIVAL time, never from a browser timestamp.
 
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -130,18 +130,6 @@ const LOOPS = [
     steps: 1,
   },
   {
-    // The one loop that types INSIDE the simulator: the point of the clip is
-    // watching the words land, not just finding the field.
-    id: 'amethyst-mute',
-    path: '/c/amethyst',
-    viewport: PHONE,
-    faq: '[aria-label="Amethyst FAQ"]',
-    query: 'too much noise',
-    entry: 'mute',
-    steps: 2,
-    typeInSim: { selector: '[data-tour="amethyst-hidden-words"] input', words: ['bip110', 'coldcard'] },
-  },
-  {
     id: 'amethyst-zap',
     path: '/c/amethyst',
     viewport: PHONE,
@@ -149,6 +137,86 @@ const LOOPS = [
     query: 'tip someone',
     entry: 'zap',
     steps: 1,
+  },
+  {
+    // "Read one relay" — four ring steps because the answer names four screens
+    // and the first one is a prerequisite: the relay has to be on your list
+    // before the filter can list it. `topical relays` is the query because that
+    // is what people call this; the term is nowhere in Damus itself.
+    id: 'damus-relay-feed',
+    path: '/c/damus',
+    viewport: PHONE,
+    faq: '[aria-label="Damus FAQ"]',
+    query: 'topical relays',
+    entry: 'relay-feed',
+    // TWO rings, not four. The rings show WHERE the address goes; the tail below
+    // then adds the relay for real and narrows the feed to it. Ringing the funnel
+    // and a toggle as steps 3-4 filmed the right controls with the wrong relay:
+    // nothing was ever added, and the switch that went off belonged to
+    // relay.damus.io rather than to the address the clip had just pointed at.
+    // THREE rings: the drawer row, the Add relay button, then the address field.
+    // Two started on the Relays screen with no account of how you got there,
+    // which is exactly the half of step 1 people ask about.
+    steps: 3,
+    holdLast: 1100,
+    afterTour: [
+      { click: '[data-tour="damus-add-relay-field"] input' }, { sleep: 400 },
+      // A thematic relay, not one of the big public ones. The clip's argument is
+      // "read Nostr like a newspaper — pick a section", and `relay.nostr.wine`
+      // reads as infrastructure rather than as a section. Also NOT one of the
+      // seeded five: addRelay refuses duplicates, so a silently rejected add
+      // would film a row that was already on the list.
+      { type: 'wss://gardening.relay.town' }, { sleep: 500 },
+      // Everything up to here plays at 1.0x — see the `typed` split in the build.
+      { mark: 'typed' },
+      { key: 'Enter' }, { sleep: 1900 },          // the row lands in My Relays
+      // Back out of Relays first. Confirming the sheet pops it by itself, but the
+      // Relays screen replaces the bottom edge with its own chrome — there is no
+      // tab bar to aim at until we leave it.
+      { click: '[data-tour="damus-relays"] button' }, { sleep: 1300 },
+      // The tab bar labels its buttons with the tab id, not a display name.
+      { click: '[aria-label="search"]' }, { sleep: 1600 },
+      { click: '[data-tour="damus-search-filter"]' }, { sleep: 1500 },
+      // Everything off except the one just added — this is the beat the clip is
+      // for, and the only state in which "read one relay" is true on screen.
+      { toggleOthers: { container: '[data-tour="damus-relay-filter"]', keep: 'wss://gardening.relay.town', gap: 120 } },
+      { reveal: { container: '[data-tour="damus-relay-filter"]', text: 'wss://gardening.relay.town' } },
+      { sleep: 1500 },
+      // CLOSE THE SHEET AND SHOW THE FEED. Ending on a settings sheet leaves the
+      // whole point unproven — the viewer never sees that the feed behind it
+      // actually changed. The counter in the section header ("N of M") is the
+      // evidence, and it only exists because the filter really narrows the pool.
+      // y=110 of a 775pt viewport: the sheet is a 68% bottom detent, so anything
+      // above ~250 is scrim. Aiming at the scrim's own centre hits the panel.
+      { clickAt: { x: 215, y: 110 } }, { sleep: 3400 },
+    ],
+    // The clip ends on the FEED, so the relay's own name is no longer on screen —
+    // real Damus does not label a feed with the relay carrying it, and adding
+    // such a label would be our invention. The relay is asserted mid-flow
+    // instead: `reveal` throws if that row is not in the sheet.
+    //
+    // UPPERCASE on purpose — the header is styled `uppercase` and Chrome's
+    // innerText reports text as RENDERED, so the source spelling never matches.
+    expect: ['ALL RECENT NOTES'],
+  },
+  {
+    // The keyword-mute clip, and the one loop that keeps filming after the
+    // mini-tour ends: the ring lands on the field, then the words get typed
+    // into it. It goes through the FAQ like every other loop — search, answer,
+    // "Show me in the simulator" — because that flow IS the product; a scripted
+    // walk through the same screens shows the app but not what sandstr adds.
+    id: 'amethyst-mute',
+    path: '/c/amethyst',
+    viewport: PHONE,
+    faq: '[aria-label="Amethyst FAQ"]',
+    query: 'too much noise',
+    entry: 'mute',
+    // Four ring steps: drawer → Settings row → Hidden Words row → the field.
+    steps: 4,
+    typeInSim: {
+      selector: '[data-tour="amethyst-hidden-words"] input',
+      words: ['bip110', 'coldcard'],
+    },
   },
 ];
 
@@ -162,6 +230,19 @@ const SWITCHES = [
   { id: 'sw-nostur-wisp', from: '/c/nostur', to: 'text:Wisp', wait: '[aria-label="Wisp FAQ"]' },
   { id: 'sw-amethyst-damus', from: '/c/amethyst', to: 'text:Damus', wait: '[aria-label="Damus FAQ"]' },
 ];
+
+// Scripted shots: no FAQ mini-tour, just a list of actions — for anything that
+// cannot be reached through a mini-tour at all.
+//
+// EMPTY on purpose. This existed for one shot (amethyst-mute) because typing
+// while a tour was running killed Page.startScreencast: the overlay recomputes
+// its spotlight on every DOM mutation, typing mutates continuously, and the
+// stream died mid-word. The recorder now PULLS frames instead of waiting to be
+// pushed them (see `startPool`), so tour churn no longer costs frames — and a
+// scripted walk through the same screens films the client without filming the
+// thing sandstr adds to it. That loop went back through the FAQ where it
+// belongs. Keep the mechanism; reach for it only when there is no mini-tour.
+const SCRIPTS = [];
 
 // Guided-tour teasers: land on ?tour=1 and let the tour drive. The tooltip is
 // NOT hidden here — in a "take the tour" post the card IS the thing being
@@ -183,7 +264,11 @@ const T = {
   // 4s, nie 2.4: to jest moment, w którym widz CZYTA odpowiedź, a klip ma
   // wyglądać jak człowiek, nie jak makro. Montaż i tak tę fazę skraca.
   readAnswer: 4000,
-  afterShowMe: 300,
+  // The pointer sits on "Show me in the simulator" for this long BEFORE pressing
+  // it, and the frame holds this long after. 300ms of "after" and nothing at all
+  // of "before" was the whole reason the demo looked like it started by itself.
+  beforeShowMe: 1100,
+  afterShowMe: 1100,
   holdStep: 1700,
   holdLastStep: 2500,
   tail: 700,
@@ -285,15 +370,30 @@ class Page {
     return result.value;
   }
 
-  /** Poll an expression until it returns truthy. Returns the value. */
+  /**
+   * Wait for an expression to go truthy — polling INSIDE the page, not over CDP.
+   *
+   * The obvious version (evaluate every 100ms from here) shares one socket with
+   * the screencast, and a few seconds of it reliably starves the stream: frames
+   * stopped arriving mid-run while the driver carried on, so clips ended early
+   * with the last action missing and nothing looked broken. One round trip with
+   * `awaitPromise` costs the same whether the wait is 50ms or 15s.
+   */
   async until(expression, { timeout = 15000, every = 100, label = expression } = {}) {
-    const t0 = Date.now();
-    for (;;) {
-      const v = await this.eval(expression);
-      if (v) return v;
-      if (Date.now() - t0 > timeout) throw new Error(`timed out waiting for: ${label}`);
-      await sleep(every);
-    }
+    const v = await this.eval(`new Promise((resolve) => {
+      const started = Date.now();
+      const tick = () => {
+        let value = null;
+        try { value = (${expression}); } catch { value = null; }
+        if (value) return resolve(JSON.stringify({ ok: true, value }));
+        if (Date.now() - started > ${timeout}) return resolve(JSON.stringify({ ok: false }));
+        setTimeout(tick, ${every});
+      };
+      tick();
+    })`);
+    const res = JSON.parse(v);
+    if (!res.ok) throw new Error(`timed out waiting for: ${label}`);
+    return res.value;
   }
 
   /**
@@ -313,14 +413,55 @@ class Page {
     })()`);
   }
 
+  /** Same in-page wait as `until` — see the note there on why not to poll CDP. */
   async waitVisible(selector, opts = {}) {
-    const t0 = Date.now();
-    for (;;) {
-      const r = await this.visibleRect(selector);
-      if (r) return r;
-      if (Date.now() - t0 > (opts.timeout ?? 15000)) throw new Error(`no visible element: ${selector}`);
-      await sleep(100);
-    }
+    const js = selector.startsWith('text:')
+      ? `[...document.querySelectorAll('button')].filter(b => b.textContent.includes(${JSON.stringify(selector.slice(5))}))`
+      : `[...document.querySelectorAll(${JSON.stringify(selector)})]`;
+    return this.until(
+      `(() => {
+        const el = ${js}.find(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width, h: r.height };
+      })()`,
+      { timeout: opts.timeout ?? 15000, label: `no visible element: ${selector}` },
+    );
+  }
+
+  /**
+   * Keep the compositor committing frames, so screenshots stay evenly spaced.
+   *
+   * `Page.captureScreenshot` waits for a frame from the surface. On a client
+   * screen that is sitting still nothing schedules one, and the wait goes long
+   * and lumpy — measured on an idle /c/amethyst: p50 45 ms but a 446 ms max, and
+   * in a real scripted run that tail opened 2.6 s holes with zero frames. A
+   * 2x2 px layer nudged every animation frame flattens it: p50 61 ms, max 84 ms.
+   *
+   * Parked at -8px so it falls outside the captured viewport entirely — it is a
+   * metronome for the compositor, not something the camera can see.
+   *
+   * A CSS animation, NOT a requestAnimationFrame loop writing `style.transform`.
+   * The rAF version mutates an attribute 60 times a second inside document.body,
+   * and this app watches for that: the tour overlay recomputes its spotlight on
+   * every DOM mutation. Driving it from JS cost more than it bought — p50 rose
+   * to 203 ms a shot with a 1948 ms tail. A composited keyframe animation
+   * produces the same frames with no DOM writes and no JS on the main thread.
+   */
+  async installPaintPump() {
+    await this.eval(`(() => {
+      if (document.getElementById('__cap_pump')) return true;
+      const s = document.createElement('style');
+      s.textContent = '@keyframes __cap_pump_kf{from{transform:translateX(0)}to{transform:translateX(0.5px)}}'
+        + '#__cap_pump{position:fixed;left:-8px;top:-8px;width:2px;height:2px;background:#000;opacity:0.01;'
+        + 'pointer-events:none;will-change:transform;z-index:2147483647;'
+        + 'animation:__cap_pump_kf .1s linear infinite alternate}';
+      document.head.appendChild(s);
+      const d = document.createElement('div');
+      d.id = '__cap_pump';
+      document.body.appendChild(d);
+      return true;
+    })()`);
   }
 
   // A headless screenshot has no pointer, and a demo without one is unreadable.
@@ -403,7 +544,7 @@ class Page {
     }
   }
 
-  async pressKey(key, code = key, vk = { ArrowRight: 39, Enter: 13 }[key] ?? 0) {
+  async pressKey(key, code = key, vk = { ArrowRight: 39, Enter: 13, Escape: 27 }[key] ?? 0) {
     for (const type of ['rawKeyDown', 'keyUp']) {
       await this.send('Input.dispatchKeyEvent', {
         type, key, code, windowsVirtualKeyCode: vk, nativeVirtualKeyCode: vk,
@@ -426,6 +567,31 @@ class Page {
    * opacity rather than display:none on purpose — the overlay measures and
    * positions the tooltip, and removing it from layout moves the spotlight.
    */
+  /**
+   * Hide the HOST's FAQ panel for the camera, from the demo onwards.
+   *
+   * Once "Show me in the simulator" has been pressed the panel is no longer part
+   * of the walkthrough — but ClientView deliberately slides it back when a mini
+   * tour ends, and a tour can end whenever it likes: mid-hold, after the
+   * harness's Escape loop has already confirmed a closed panel, at the exact
+   * frame a phase boundary lands on. Chasing it with marks and trims cost an
+   * afternoon and still left a 1.4s flash of FAQ across the client.
+   *
+   * Same justification as `hideTourChrome`: our own chrome, hidden so the shot is
+   * of the client. Applied only after the demo starts, so the press itself — the
+   * beat that shows WHERE the demo came from — still has the panel in frame.
+   */
+  async hideHostPanel() {
+    await this.eval(`(() => {
+      if (document.getElementById('__cap_hide_panel')) return true;
+      const s = document.createElement('style');
+      s.id = '__cap_hide_panel';
+      s.textContent = '[data-sandstr-modal]{opacity:0 !important;pointer-events:none !important;}';
+      document.head.appendChild(s);
+      return true;
+    })()`);
+  }
+
   async hideTourChrome() {
     await this.eval(`(() => {
       if (document.getElementById('__cap_hide_tour')) return true;
@@ -454,49 +620,136 @@ function jpegSize(buf) {
 }
 
 /**
- * ONE screencast for the whole run, never stopped.
+ * ONE frame pool for the whole run, fed by a `Page.captureScreenshot` TIMER.
  *
- * Measured the hard way: headless flips a page to `visibilityState: 'hidden'`
- * once nothing consumes its frames, and neither `Page.bringToFront` nor
- * `Page.setWebLifecycleState({state:'active'})` brings it back — so the second
- * per-loop `startScreencast` returned a single frame and the loop came out
- * empty. Keeping one consumer attached across navigations keeps the page
- * visible; loops are sliced out of the pool by arrival time afterwards.
+ * This used to be `Page.startScreencast`, and that stopped working: Chrome 151
+ * only emits a screencast frame when the compositor actually produces one, and
+ * a client sitting still between scripted clicks produces almost none. Measured
+ * on 2026-08-14, same machine, same build:
+ *
+ *   page driven by the script, screencast   →   2 frames in 13.8 s
+ *   same page with a 30 fps spinner forced  → 134 frames in  6.0 s
+ *   captureScreenshot on a 100 ms timer     →  ~10.8 fps, median 87 ms, p90 93 ms
+ *
+ * The second row is why the older loops recorded fine: a running mini-tour
+ * repaints its spotlight continuously, so the stream had something to send. The
+ * scripted Hidden Words shot has no tour, and it kept shipping 10-31 frames.
+ *
+ * Pulling frames also fixes the driver, which is the non-obvious half. With
+ * nothing consuming its output the renderer throttles the page's own timers, so
+ * `until()` — which polls INSIDE the page — crawled: a single `click('Login')`
+ * took 9.1 s and one walk to Hidden Words burned 65 s of wall clock. Asking for
+ * a screenshot every 100 ms keeps the renderer producing, and the same walk
+ * finishes in a fraction of that.
+ *
+ * The old warning that a screenshot loop "throttles everything to ~1 fps" was
+ * true of the version that ALSO polled the DOM over CDP on the same socket.
+ * That polling is long gone (see `until`), and one in-flight screenshot at a
+ * time leaves the driver's occasional round trip plenty of room.
  */
 async function startPool(cdp, page, poolDir) {
+  // Clear it: the pool is numbered from 1 each run, so a short run leaves the
+  // previous run's tail behind and "834 files on disk" stops meaning anything
+  // when you are trying to work out why a clip came out empty.
+  await rm(poolDir, { recursive: true, force: true });
   await mkdir(poolDir, { recursive: true });
   const frames = [];
   const writes = [];
+  const lat = [];
   let n = 0;
-  cdp.on('Page.screencastFrame', (params, sid) => {
-    if (sid !== page.sid) return;
-    const at = Date.now();
-    // ACK FIRST, disk second. Acking after the write puts every frame behind an
-    // fs round-trip; the acks fall behind, Chrome stops sending, and a later
-    // loop records 3 frames in 13 seconds. This was the whole "the page must be
-    // hidden" red herring.
-    cdp.send('Page.screencastFrameAck', { sessionId: params.sessionId }, page.sid).catch(() => {});
-    const buf = Buffer.from(params.data, 'base64');
-    const path = join(poolDir, `f-${String(++n).padStart(5, '0')}.jpg`);
-    const { w, h } = jpegSize(buf);
-    frames.push({ at, path, w, h });
-    writes.push(writeFile(path, buf));
-  });
-  // maxWidth/maxHeight in DEVICE pixels: without them Chrome emits frames at the
-  // CSS viewport size and a dsf-2 capture arrives at half resolution.
-  // Cap the frame at 1600px on the long side. A desktop capture is 2560x2000 =
-  // 5MP per frame, and at that size the stream starves: one Coracle run produced
-  // 24 frames and stopped emitting entirely before the demo even started, so the
-  // beat the loop exists for was missing from the recording. Chrome only ever
-  // scales DOWN to this cap, and 1600 still outresolves the card it lands in.
-  await page.send('Page.startScreencast', {
-    format: 'jpeg', quality: 92, everyNthFrame: 1, maxWidth: 1600, maxHeight: 1600,
-  });
+  let stopped = false;
+
+  const shoot = async () => {
+    const t = Date.now();
+    try {
+      // NO `clip` unless the frame would be oversized, because `clip.scale`
+      // MULTIPLIES the emulated device scale factor rather than replacing it.
+      // Asking for scale 2 on a dsf-2 phone viewport returned 1720x3100 — 5.3 MP
+      // a frame, which dropped the rate to 7 fps and was most of why the first
+      // timer build still only managed 1.4 fps. Measured 2026-08-14 at 430x775:
+      //
+      //   no clip       20.2 fps, median 49 ms   860x1550   <- what we want
+      //   clip scale=1  16.2 fps, median 64 ms   860x1550
+      //   clip scale=2   7.0 fps, median 139 ms  1720x3100
+      //
+      // The emulation override already delivers device pixels, so the plain
+      // call is both the fastest path and the correct size.
+      const vw = page.viewportW ?? 430;
+      const vh = page.viewportH ?? 775;
+      const dsf = page.dsf ?? 2;
+      // Cap the long side at 1600 device px: a desktop viewport is 2560x2000 =
+      // 5 MP, and at that size the per-frame cost dominates. 1600 still
+      // outresolves the 860-wide card the frame lands in.
+      const natural = Math.max(vw, vh) * dsf;
+      // RACED, never bare. A screenshot request can be left hanging forever —
+      // most reliably on about:blank before the first navigation, where nothing
+      // ever produces the frame it waits for. Unraced, that single pending
+      // promise parks the pump on its first call: the pool stays empty, the run
+      // prints nothing, and `stop()` then waits in `finally` on a loop that can
+      // never come back. Three runs "hung" this way before it was this.
+      const data = await Promise.race([
+        page.send('Page.captureScreenshot', {
+          format: 'jpeg', quality: 92, captureBeyondViewport: false,
+          ...(natural > 1600
+            ? { clip: { x: 0, y: 0, width: vw, height: vh, scale: 1600 / natural } }
+            : {}),
+        }).then((r) => r?.data ?? null),
+        sleep(4000).then(() => null),
+      ]);
+      if (stopped || !data) return;
+      const at = Date.now();
+      const buf = Buffer.from(data, 'base64');
+      const path = join(poolDir, `f-${String(++n).padStart(5, '0')}.jpg`);
+      const { w, h } = jpegSize(buf);
+      frames.push({ at, path, w, h });
+      writes.push(writeFile(path, buf));
+    } catch { /* navigation in flight — the next pass picks it back up */ }
+    lat.push(Date.now() - t);
+  };
+
+  /**
+   * A CONTINUOUS loop, not setInterval — but with a floor.
+   *
+   * setInterval plus an in-flight guard quantises every capture up to a multiple
+   * of the period: at a 66 ms tick, a shot that takes 140 ms misses two ticks and
+   * lands 198 ms after the last one. That is exactly what the first timer build
+   * measured — a p50 inter-frame gap of 198 ms, three ticks to the millisecond,
+   * while the capture itself was nowhere near that slow. Chaining the next shot
+   * off the previous one's completion spends the real latency and nothing more.
+   *
+   * The floor is not optional. The pool starts before the first navigation, and
+   * on about:blank every capture fails instantly — an unpaced loop then fires
+   * ~125 CDP calls a second on the socket the driver is trying to navigate with,
+   * and the run hangs with an empty pool. FLOOR_MS caps the rate at ~18 fps,
+   * which is above anything the renderer delivers anyway.
+   */
+  const FLOOR_MS = 55;
+  const pump = (async () => {
+    while (!stopped) {
+      const started = Date.now();
+      await shoot();
+      const spent = Date.now() - started;
+      if (spent < FLOOR_MS) await sleep(FLOOR_MS - spent);
+    }
+  })();
+
   return {
     frames,
+    /** Capture rate, so a thin clip is visible in the run output, not days later. */
+    stats() {
+      if (!lat.length) return '0 shots';
+      const s = [...lat].sort((a, b) => a - b);
+      const at = (p) => s[Math.min(s.length - 1, Math.floor(s.length * p))];
+      return `shot p50 ${at(0.5)}ms p90 ${at(0.9)}ms max ${s.at(-1)}ms`;
+    },
     async stop() {
-      await page.send('Page.stopScreencast').catch(() => {});
-      cdp.off('Page.screencastFrame');
+      stopped = true;
+      // Bounded. `stop()` runs in withBrowser's finally, so waiting on the pump
+      // unconditionally turns any stuck capture into a hung process that never
+      // reports the error that actually killed the run. The pump only touches
+      // `frames`/`writes`, both already snapshotted by the time we get here, so
+      // walking away from a late one costs nothing.
+      await Promise.race([pump.catch(() => {}), sleep(5000)]);
       await Promise.allSettled(writes);
     },
     /** Frames are written in the background; flush before slicing a loop out. */
@@ -548,6 +801,89 @@ async function encodeRange(pool, t0, t1, dir, out) {
   return shot;
 }
 
+/**
+ * The scripted-step runner, shared by SCRIPTS and by a loop's `afterTour` tail.
+ *
+ * Step kinds: `{sleep}` `{key}` `{type}` `{click}` and `{toggleOthers}`.
+ *
+ * `toggleOthers: { container, keep }` clicks every `[role="switch"]` inside
+ * `container` whose row does NOT contain the `keep` text, one at a time with the
+ * cursor travelling to each. It exists because "read one relay" is only true on
+ * screen once the others are off, and doing that with a list of nth-clicks would
+ * hard-code a relay count that the previous step just changed by adding one.
+ */
+async function runSteps(page, steps, onStep, marks, t0) {
+  for (const step of steps) {
+    onStep?.(Date.now());
+    // `{ mark: 'name' }` stamps a phase boundary from inside a step list, so the
+    // cut can give one beat its own speed. Used for `typed`: the address being
+    // entered is the one thing in the tail a viewer has to READ, and at the
+    // tail's overall 1.95x it went by in 1.4s for 25 characters.
+    if (step.mark) { if (marks) marks[step.mark] = Date.now() - t0; }
+    else if (step.sleep) await sleep(step.sleep);
+    else if (step.key) await page.pressKey(step.key);
+    else if (step.type) await page.typeText(step.type, T.perChar);
+    else if (step.click) await page.click(step.click);
+    else if (step.clickAt) {
+      // Explicit viewport coordinates, for targets whose BOX is not where you can
+      // actually hit them. A sheet scrim is `absolute inset-0`, so `click()` aims
+      // at the centre of the screen — which is the sheet panel sitting on top of
+      // it. The dismiss never fired and the clip ended on the sheet it was meant
+      // to close.
+      await page.moveCursor(step.clickAt.x, step.clickAt.y, { settle: 300 });
+      await page.clickAt(step.clickAt.x, step.clickAt.y);
+    }
+    else if (step.reveal) {
+      // Scroll the row carrying this text into view and park the pointer beside
+      // it. The assertion at the end of a loop reads `innerText`, which is happy
+      // with a row scrolled out of the sheet — the added relay ended up below the
+      // fold on the final hold and the clip closed on somebody else's switch.
+      const box = await page.eval(`(() => {
+        const row = [...document.querySelectorAll(${JSON.stringify(`${step.reveal.container} [role="switch"]`)})]
+          .map(sw => sw.closest('div'))
+          .find(r => r && r.textContent.includes(${JSON.stringify(step.reveal.text)}));
+        if (!row) return null;
+        row.scrollIntoView({ block: 'center' });
+        const r = row.getBoundingClientRect();
+        return JSON.stringify({ x: r.x + r.width - 30, y: r.y + r.height / 2 });
+      })()`);
+      if (!box) throw new Error(`reveal found no row for: ${step.reveal.text}`);
+      await sleep(320);
+      const { x, y } = JSON.parse(box);
+      await page.moveCursor(x, y, { settle: 380 });
+    }
+    else if (step.toggleOthers) {
+      const { container, keep } = step.toggleOthers;
+      const n = await page.eval(
+        `document.querySelectorAll(${JSON.stringify(`${container} [role="switch"]`)}).length`,
+      );
+      for (let i = 0; i < n; i++) {
+        // Re-resolve every pass: the list scrolls under the pointer as rows are
+        // brought into view, so an index captured up front goes stale.
+        const box = await page.eval(`(() => {
+          const rows = [...document.querySelectorAll(${JSON.stringify(`${container} [role="switch"]`)})];
+          const sw = rows[${i}];
+          if (!sw) return null;
+          const row = sw.closest('div');
+          if (row && row.textContent.includes(${JSON.stringify(keep)})) return 'skip';
+          if (sw.getAttribute('aria-checked') === 'false') return 'skip';
+          sw.scrollIntoView({ block: 'nearest' });
+          const r = sw.getBoundingClientRect();
+          return JSON.stringify({ x: r.x + r.width / 2, y: r.y + r.height / 2 });
+        })()`);
+        if (!box || box === 'skip') continue;
+        const { x, y } = JSON.parse(box);
+        // Short settle on purpose: twelve of these is the longest and most
+        // repetitive stretch in the clip, so every 100ms here is 100ms the cut
+        // has to squeeze out of the beats that matter.
+        await page.moveCursor(x, y, { settle: 120 });
+        await page.clickAt(x, y);
+        await sleep(step.toggleOthers.gap ?? 220);
+      }
+    }
+  }
+}
+
 function run(cmd, args) {
   return new Promise((resolve, reject) => {
     const p = spawn(cmd, args, { stdio: ['ignore', 'inherit', 'inherit'] });
@@ -561,6 +897,7 @@ async function captureLoop(page, pool, loop, baseUrl) {
   page.deviceH = loop.viewport.h * loop.viewport.dsf;
   page.viewportW = loop.viewport.w;
   page.viewportH = loop.viewport.h;
+  page.dsf = loop.viewport.dsf;
   await page.send('Emulation.setDeviceMetricsOverride', {
     width: loop.viewport.w, height: loop.viewport.h,
     deviceScaleFactor: loop.viewport.dsf, mobile: false,
@@ -572,6 +909,7 @@ async function captureLoop(page, pool, loop, baseUrl) {
   await page.until(`document.readyState === 'complete'`, { timeout: 30000, label: 'document ready' });
   await page.waitVisible(loop.faq, { timeout: 20000 });
   await page.hideTourChrome();
+  await page.installPaintPump();
   await page.installCursor();
   await sleep(T.afterLoad);
 
@@ -605,11 +943,35 @@ async function captureLoop(page, pool, loop, baseUrl) {
   marks.answer = Date.now() - t0;
 
   // 3 — the simulator shows it
+  //
+  // Driven by hand rather than through `page.click`, because this is the beat
+  // the whole clip turns on and it needs to be SEEN. Left inside the compressed
+  // "read the answer" phase, the pointer arrived and the button fired inside a
+  // couple of frames at 2.4x: the drawer just flew open with nothing on screen
+  // explaining why. So: park the pointer on the button, hold while the viewer
+  // reads it, press, hold again — and mark the moment, so the cut can play this
+  // stretch at something near real speed (see the `showMe` split).
+  //
   // By text, not by position: the entry's header button is also "the last button
   // of its parent", so a positional selector collapses the answer instead.
-  await page.click('text:Show me in the simulator');
+  const SHOW_ME = 'text:Show me in the simulator';
+  await page.ensureInView(SHOW_ME);
+  const smRect = await page.waitVisible(SHOW_ME);
+  await page.moveCursor(smRect.x, smRect.y);
+  marks.showMe = Date.now() - t0;
+  await sleep(T.beforeShowMe);
+  // Re-measure: the answer may still be expanding under the pointer.
+  const smFresh = (await page.visibleRect(SHOW_ME)) ?? smRect;
+  if (Math.hypot(smFresh.x - smRect.x, smFresh.y - smRect.y) > 4) {
+    await page.moveCursor(smFresh.x, smFresh.y, { settle: 160 });
+  }
+  await page.clickAt(smFresh.x, smFresh.y);
   await sleep(T.afterShowMe);
   marks.demo = Date.now() - t0;
+  // From here on the panel is scaffolding, not subject — see hideHostPanel. Only
+  // for loops with a tail: the plain loops end while the tour is still up and
+  // never reach the reopen.
+  if (loop.afterTour) await page.hideHostPanel();
 
   for (let step = 1; step <= loop.steps; step++) {
     // A mini-tour needs ~1-1.5s to mount its screen, and until it does the
@@ -644,7 +1006,19 @@ async function captureLoop(page, pool, loop, baseUrl) {
     const cx = Math.min(r.x + r.w + 16, page.viewportW - 14);
     const cy = Math.min(r.y + r.h + 16, page.viewportH - 14);
     await page.moveCursor(cx, cy, { settle: 420 });
-    await sleep(step === loop.steps ? T.holdLastStep : T.holdStep);
+    // A mini-tour can END BY ITSELF here, and when it does ClientView reopens the
+    // FAQ panel over the client — a flash the cut cannot remove, because it lands
+    // INSIDE the ring phase rather than in the stretch between `dismiss` and
+    // `typing2`. Shortening the hold was not enough: on damus-relay-feed the
+    // panel came back ~2s before the mark either way.
+    //
+    // So for a loop with a tail, phase D ends the instant the last ring settles.
+    // `dismiss` is stamped HERE, before the hold, and everything after — the
+    // hold, the self-ending tour, the reopened panel, the two Escapes — falls
+    // into the stretch the cut drops. The last frame of D is the settled ring,
+    // which is the frame that phase wanted anyway.
+    if (step === loop.steps && loop.afterTour) marks.dismiss = Date.now() - t0;
+    await sleep(step === loop.steps ? (loop.holdLast ?? T.holdLastStep) : T.holdStep);
     if (step < loop.steps) {
       const before = await page.eval(`JSON.stringify(document.querySelector('.tour-spotlight')?.getBoundingClientRect())`);
       // Keyboard, not the Next button: that button is inside the tooltip we just
@@ -657,9 +1031,31 @@ async function captureLoop(page, pool, loop, baseUrl) {
     }
   }
   if (loop.typeInSim) {
-    // The tour is still up, so its ring stays around the field while the words
-    // go in. Enter is safe: TourOverlay ignores its nav keys while the event
-    // target is an input, which is exactly where we are typing.
+    // END THE TOUR FIRST. Its overlay watches document.body for mutations and
+    // recomputes the spotlight's clip-path on each one; typing mutates the DOM
+    // continuously, and the resulting churn stalls the screencast a few seconds
+    // in — the words landed in the app while the video quietly stopped, so the
+    // clip shipped showing one word of two. The ring has already done its job
+    // by this point: it pointed at the field.
+    // Fixed pauses, no waiting predicates. Both kinds of wait — polling over CDP
+    // and polling inside the page — have stalled this phase: the tab stops
+    // painting a few seconds in, the screencast dies with it, and an in-page
+    // wait then never resolves because the page's own timers are frozen too.
+    // Two Escapes on a timer are dumber and they work: the first ends the tour,
+    // the second closes the FAQ panel that ClientView deliberately reopens when
+    // a tour ends (good product behaviour, wrong for this shot — the panel lands
+    // over the simulator and eats the typing).
+    //
+    // `dismiss` marks the start of that clean-up so the CUT CAN DROP IT. On
+    // screen it reads as the simulator vanishing behind the FAQ panel for a
+    // second and coming back, which is our scaffolding showing through, not
+    // anything the app does to a viewer who never opened a mini-tour. Frames
+    // between `dismiss` and `typing2` are captured and simply never rendered.
+    marks.dismiss = Date.now() - t0;
+    await page.pressKey('Escape');
+    await sleep(1200);
+    await page.pressKey('Escape');
+    await sleep(1200);
     const box = await page.waitVisible(loop.typeInSim.selector);
     await page.moveCursor(box.x, box.y);
     await page.clickAt(box.x, box.y);
@@ -673,14 +1069,68 @@ async function captureLoop(page, pool, loop, baseUrl) {
       // frames stopped arriving mid-typing, so the clip shipped showing only
       // the first of the two. Sleep long enough for the row to render, then ask
       // once — and fail loudly if it is not there.
-      await sleep(1500);
-      const landed = await page.eval(
-        `[...document.querySelectorAll('[data-tour="amethyst-hidden-list"] div')]
-           .some(d => d.textContent.trim() === ${JSON.stringify(word)})`,
-      );
-      if (!landed) throw new Error(`typed "${word}" but it never reached the hidden-words list`);
-      await sleep(900);
+      await sleep(1600);
     }
+  }
+  if (loop.typeInSim) {
+    // One check, after the filming: every word must be on the list, or the clip
+    // is a lie. Cheap here — nothing is being recorded any more.
+    const missing = await page.eval(
+      `${JSON.stringify(loop.typeInSim.words)}.filter(w =>
+         ![...document.querySelectorAll('[data-tour="amethyst-hidden-list"] div')]
+           .some(d => d.textContent.trim() === w))`,
+    );
+    if (missing.length) throw new Error(`typed but never landed: ${missing.join(', ')}`);
+  }
+
+  if (loop.afterTour) {
+    // The mini-tour points; the tail DOES. A ring on "Add relay" followed by a
+    // teleport to a filter that then narrows a DIFFERENT relay is two halves
+    // with no thread between them — the viewer never sees the relay arrive, and
+    // the one being switched off is not the one that was just added. So the tail
+    // types the address for real, watches the row appear, walks to the tab, opens
+    // the sheet and turns the others off.
+    //
+    // End the tour first, same as typeInSim: its overlay recomputes the spotlight
+    // on every DOM mutation, and the tail mutates continuously. Second Escape
+    // closes the FAQ panel ClientView reopens when a tour ends.
+    // `dismiss` is already stamped — the ring loop does it the moment the last
+    // ring settles, so this whole clean-up sits inside the dropped stretch.
+    marks.dismiss ??= Date.now() - t0;
+    // Escape until the host panel is ACTUALLY gone, not a fixed two presses.
+    //
+    // Two was a guess that held only while the tour ended before the harness got
+    // here. When the tour self-ends AFTER the second Escape, ClientView reopens
+    // the FAQ panel and nothing closes it again — so the tail began with the
+    // panel over the client, and no amount of cutting phase D could hide it,
+    // because the flash was at the START of phase E. Verified: the panel was
+    // still up 2s into the tail.
+    for (let i = 0; i < 4; i++) {
+      await page.pressKey('Escape');
+      await sleep(900);
+      const open = await page.eval(`!!document.querySelector('[data-sandstr-modal], .tour-overlay')`);
+      if (!open) break;
+      if (i === 3) throw new Error('FAQ panel / tour would not close before the tail');
+    }
+    // Run the FIRST tail step, THEN stamp `typing2`.
+    //
+    // Anything earlier is a promise rather than a fact: the tour can self-end
+    // after the Escape loop has already confirmed a closed panel, and ClientView
+    // slides the FAQ back over the client at exactly the moment phase E begins.
+    // Trimming the end of D did not help, because the flash was on the other side
+    // of the join. The first step is a click INTO the simulator — it can only
+    // succeed with the panel gone, so stamping after it means the cut swallows
+    // every last frame of the clean-up, however late the tour gets around to it.
+    const [firstStep, ...restSteps] = loop.afterTour;
+    await runSteps(page, [firstStep], undefined, marks, t0);
+    marks.typing2 = Date.now() - t0;
+    await runSteps(page, restSteps, undefined, marks, t0);
+  }
+  if (loop.expect) {
+    const missing = await page.eval(
+      `${JSON.stringify(loop.expect)}.filter(t => !document.body.innerText.includes(t))`,
+    );
+    if (missing.length) throw new Error(`never appeared on screen: ${missing.join(', ')}`);
   }
   await sleep(T.tail);
 
@@ -700,12 +1150,16 @@ async function captureLoop(page, pool, loop, baseUrl) {
 async function captureSwitch(page, pool, sw, baseUrl) {
   page.deviceW = PHONE.w * PHONE.dsf;
   page.deviceH = PHONE.h * PHONE.dsf;
+  page.viewportW = PHONE.w;
+  page.viewportH = PHONE.h;
+  page.dsf = PHONE.dsf;
   await page.send('Emulation.setDeviceMetricsOverride', {
     width: PHONE.w, height: PHONE.h, deviceScaleFactor: PHONE.dsf, mobile: false,
   });
   await page.send('Page.navigate', { url: baseUrl + sw.from });
   await page.until(`document.readyState === 'complete'`, { timeout: 30000, label: 'document ready' });
   await page.waitVisible('[aria-label="Switch client"]', { timeout: 20000 });
+  await page.installPaintPump();
   await page.installCursor();
   await sleep(T.afterLoad);
 
@@ -729,12 +1183,54 @@ async function captureSwitch(page, pool, sw, baseUrl) {
   return { id: sw.id, frames: manifest.length, secs, out };
 }
 
+// ------------------------------------------------------------- one script ----
+async function captureScript(page, pool, script, baseUrl) {
+  page.deviceW = script.viewport.w * script.viewport.dsf;
+  page.deviceH = script.viewport.h * script.viewport.dsf;
+  page.viewportW = script.viewport.w;
+  page.viewportH = script.viewport.h;
+  page.dsf = script.viewport.dsf;
+  await page.send('Emulation.setDeviceMetricsOverride', {
+    width: script.viewport.w, height: script.viewport.h,
+    deviceScaleFactor: script.viewport.dsf, mobile: false,
+  });
+  await page.send('Page.navigate', { url: baseUrl + script.path });
+  await page.until(`document.readyState === 'complete'`, { timeout: 30000, label: 'document ready' });
+  await page.installPaintPump();
+  await page.installCursor();
+  await sleep(T.afterLoad);
+
+  const dir = join(WORK, script.id);
+  await rm(dir, { recursive: true, force: true });
+  const t0 = Date.now();
+  const marks = { steps: [] };
+
+  await runSteps(page, script.steps, (at) => marks.steps.push(at - t0));
+
+  const t1 = Date.now();
+  marks.end = t1 - t0;
+  if (script.expect) {
+    const missing = await page.eval(
+      `${JSON.stringify(script.expect)}.filter(w => !document.body.innerText.includes(w))`,
+    );
+    if (missing.length) throw new Error(`never appeared on screen: ${missing.join(', ')}`);
+  }
+  await sleep(250);
+  await pool.flush();
+  const out = join(WORK, `${script.id}.mp4`);
+  const manifest = await encodeRange(pool, t0, t1, dir, out, { w: page.deviceW, h: page.deviceH });
+  await writeFile(join(dir, 'marks.json'), JSON.stringify(marks, null, 1));
+  const secs = ((manifest.at(-1).at - manifest[0].at) / 1000).toFixed(1);
+  return { id: script.id, frames: manifest.length, secs, out };
+}
+
 // --------------------------------------------------------------- one tour ----
 async function captureTour(page, pool, tour, baseUrl) {
   page.deviceW = PHONE.w * PHONE.dsf;
   page.deviceH = PHONE.h * PHONE.dsf;
   page.viewportW = PHONE.w;
   page.viewportH = PHONE.h;
+  page.dsf = PHONE.dsf;
   await page.send('Emulation.setDeviceMetricsOverride', {
     width: PHONE.w, height: PHONE.h, deviceScaleFactor: PHONE.dsf, mobile: false,
   });
@@ -742,6 +1238,7 @@ async function captureTour(page, pool, tour, baseUrl) {
   await page.until(`document.readyState === 'complete'`, { timeout: 30000, label: 'document ready' });
   // The deep link starts the tour by itself — that IS what this clip is proving.
   await page.until(`!!document.querySelector('.tour-tooltip')`, { timeout: 20000, label: 'tour to start' });
+  await page.installPaintPump();
   await page.installCursor();
 
   const dir = join(WORK, tour.id);
@@ -840,7 +1337,8 @@ async function withBrowser(debugPort, loop, fn) {
 
   const pool = await startPool(cdp, page, join(WORK, '.pool', loop.id));
   try {
-    return await fn(cdp, page, pool);
+    const result = await fn(cdp, page, pool);
+    return result && typeof result === 'object' ? { ...result, rate: pool.stats() } : result;
   } finally {
     await pool.stop().catch(() => {});
     cdp.close();
@@ -854,7 +1352,8 @@ async function main() {
   const loops = wanted.length ? LOOPS.filter((l) => wanted.includes(l.id)) : LOOPS;
   const switches = wanted.length ? SWITCHES.filter((s) => wanted.includes(s.id)) : SWITCHES;
   const tours = wanted.length ? TOURS.filter((t) => wanted.includes(t.id)) : TOURS;
-  if (!loops.length && !switches.length && !tours.length) throw new Error(`no such loop: ${wanted.join(', ')}`);
+  const scripts = wanted.length ? SCRIPTS.filter((x) => wanted.includes(x.id)) : SCRIPTS;
+  if (!loops.length && !switches.length && !tours.length && !scripts.length) throw new Error(`no such loop: ${wanted.join(', ')}`);
 
   await mkdir(WORK, { recursive: true });
   const { server, port } = await serveDist();
@@ -869,7 +1368,15 @@ async function main() {
         captureLoop(page, pool, loop, baseUrl),
       );
       results.push(r);
-      console.log(`→ ${r.frames} frames, ${r.secs}s`);
+      console.log(`→ ${r.frames} frames, ${r.secs}s  ${(r.frames / r.secs).toFixed(1)} fps  ${r.rate}${r.frames / r.secs < 8 ? '   ← THIN' : ''}`);
+    }
+    for (const [i, script] of scripts.entries()) {
+      process.stdout.write(`  · ${script.id} (scripted) `);
+      const r = await withBrowser(port + 90 + i, script, (cdp, page, pool) =>
+        captureScript(page, pool, script, baseUrl),
+      );
+      results.push(r);
+      console.log(`→ ${r.frames} frames, ${r.secs}s  ${(r.frames / r.secs).toFixed(1)} fps  ${r.rate}${r.frames / r.secs < 8 ? '   ← THIN' : ''}`);
     }
     for (const [i, tour] of tours.entries()) {
       process.stdout.write(`  · ${tour.id} `);
@@ -877,7 +1384,7 @@ async function main() {
         captureTour(page, pool, tour, baseUrl),
       );
       results.push(r);
-      console.log(`→ ${r.frames} frames, ${r.secs}s`);
+      console.log(`→ ${r.frames} frames, ${r.secs}s  ${(r.frames / r.secs).toFixed(1)} fps  ${r.rate}${r.frames / r.secs < 8 ? '   ← THIN' : ''}`);
     }
     for (const [i, sw] of switches.entries()) {
       process.stdout.write(`  · ${sw.id} `);
@@ -885,7 +1392,7 @@ async function main() {
         captureSwitch(page, pool, sw, baseUrl),
       );
       results.push(r);
-      console.log(`→ ${r.frames} frames, ${r.secs}s`);
+      console.log(`→ ${r.frames} frames, ${r.secs}s  ${(r.frames / r.secs).toFixed(1)} fps  ${r.rate}${r.frames / r.secs < 8 ? '   ← THIN' : ''}`);
     }
   } finally {
     server.close();

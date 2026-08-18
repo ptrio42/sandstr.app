@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import type { MockUser } from '../../../data/mock';
+import type { MockUser, MockNote } from '../../../data/mock';
 import { Avatar } from '../components/Avatar';
-import { Nip05Check } from '../components/NoteCard';
+import { Nip05Check, NoteCard } from '../components/NoteCard';
 import { SearchIcon, FilterIcon } from '../components/icons';
 
 interface Props {
@@ -9,12 +9,19 @@ interface Props {
   users: MockUser[];
   onOpenDrawer: () => void;
   onViewProfile: (u: MockUser) => void;
+  onOpenRelayFilter: () => void;
+  /** The whole global pool, before the relay filter. */
+  notes: MockNote[];
+  /** Already narrowed by the Universe relay filter — see relayState. */
+  feedNotes: MockNote[];
+  onOpenThread?: (n: MockNote) => void;
+  onReply?: (n: MockNote) => void;
 }
 
 const TRENDING = ['#nostr', '#bitcoin', '#zapathon', '#PenisButter', '#coffeechain', '#grownostr', '#photography', '#plebchain'];
 
 // Damus "Universe" — search + discovery. Header shows "Universe 🛸" + relay count + filter.
-export const SearchScreen: React.FC<Props> = ({ currentUser, users, onOpenDrawer, onViewProfile }) => {
+export const SearchScreen: React.FC<Props> = ({ currentUser, users, onOpenDrawer, onViewProfile, onOpenRelayFilter, notes, feedNotes, onOpenThread, onReply }) => {
   const [q, setQ] = useState('');
   const me = currentUser?.username || 'sandy';
   const [followed, setFollowed] = useState<Record<string, boolean>>({});
@@ -30,7 +37,20 @@ export const SearchScreen: React.FC<Props> = ({ currentUser, users, onOpenDrawer
           <button onClick={onOpenDrawer}><Avatar seed={me} className="w-9 h-9" /></button>
           <div className="flex-1 text-center font-bold text-[17px] text-[var(--damus-text)]">Universe <span className="align-middle">🛸</span></div>
           <span className="text-[14px] text-[var(--damus-text-secondary)]">7/13</span>
-          <FilterIcon className="w-6 h-6 text-[var(--damus-text)]" />
+          {/*
+            A real button, not a bare glyph. This is the ONLY route to a
+            single-relay feed in Damus — there is no per-relay timeline screen —
+            and it sat here as an undecorated icon with no handler (gap dam-19).
+            Screen-map §6a.
+          */}
+          <button
+            type="button"
+            onClick={onOpenRelayFilter}
+            aria-label="Filter feed by relay"
+            data-tour="damus-search-filter"
+          >
+            <FilterIcon className="w-6 h-6 text-[var(--damus-text)]" />
+          </button>
         </div>
 
         <div className="flex items-center gap-3 px-4 pb-3">
@@ -58,7 +78,58 @@ export const SearchScreen: React.FC<Props> = ({ currentUser, users, onOpenDrawer
               <span key={t} className="px-3 py-1.5 rounded-full bg-[var(--damus-bg-secondary)] text-[var(--damus-purple)] text-[15px]">{t}</span>
             ))}
           </div>
-          <div className="text-[13px] font-semibold text-[var(--damus-text-secondary)] uppercase tracking-wide mt-5 mb-1">Suggested</div>
+        </div>
+      )}
+
+      {/*
+        "All recent notes" — the global feed §6 puts on this screen and the one
+        surface that makes the relay filter mean anything. Without it the funnel
+        set a filter with no visible consequence: a switch you could flip and
+        nothing on screen would move (gap dam-21).
+      */}
+      {!q && (
+        <div data-tour="damus-universe-feed">
+          {/*
+            The HEADER gets its own anchor because the section wrapper above is
+            taller than the screen and the tour overlay refuses targets that
+            size (docs/TOURS.md). The header row is also the honest target: the
+            "N of M" counter on it IS the evidence the filter narrowed the feed.
+          */}
+          <div
+            data-tour="damus-universe-feed-header"
+            className="flex items-baseline justify-between px-4 pt-4 pb-1"
+          >
+            <div className="text-[13px] font-semibold text-[var(--damus-text-secondary)] uppercase tracking-wide">
+              All recent notes
+            </div>
+            <span className="text-[12px] text-[var(--damus-text-tertiary)]">
+              {feedNotes.length} of {notes.length}
+            </span>
+          </div>
+          {feedNotes.slice(0, 12).map((n) => {
+            const author = users.find((u) => u.pubkey === n.pubkey) ?? users[0];
+            return (
+              <NoteCard
+                key={n.id}
+                note={n}
+                author={author}
+                onOpenThread={() => onOpenThread?.(n)}
+                onViewProfile={() => onViewProfile(author)}
+                onReply={() => onReply?.(n)}
+              />
+            );
+          })}
+          {feedNotes.length === 0 && (
+            <div className="px-4 py-10 text-center text-[15px] text-[var(--damus-text-secondary)]">
+              Every relay is switched off in the filter.
+            </div>
+          )}
+        </div>
+      )}
+
+      {!q && (
+        <div className="px-4 pt-5 pb-1 text-[13px] font-semibold text-[var(--damus-text-secondary)] uppercase tracking-wide">
+          Suggested
         </div>
       )}
 

@@ -20,6 +20,7 @@
  */
 import React, { useState } from 'react';
 import type { MockNote, MockUser } from '../../../data/mock';
+import { MENTION_TOKEN_RE, resolveMention } from '../../../data/mock';
 import { Avatar, WotScore } from './Avatar';
 import { Icon } from './Icon';
 import {
@@ -78,9 +79,17 @@ export interface NoteCardProps {
 type Segment =
   | { kind: 'text'; value: string }
   | { kind: 'topic'; value: string }
-  | { kind: 'code'; value: string };
+  | { kind: 'code'; value: string }
+  | { kind: 'mention'; value: string };
 
 const TOPIC_RE = /^#[^\s!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]+/;
+/**
+ * `nostr:` references. §7.3.1 lists `address` and `profile` in the parser array
+ * ahead of the fallthrough, so upstream turns these into a name or an embed
+ * rather than leaving the token as text — this port used to leave it as text.
+ * Matched here, resolved in src/data/mock/mentions.ts.
+ */
+const MENTION_RE = new RegExp(`^${MENTION_TOKEN_RE.source.replace(/^\^|\$$/g, '')}`, 'i');
 const CODE_BLOCK_RE = /^```([^]*?)```/;
 const CODE_INLINE_RE = /^`(.*?)`/;
 
@@ -98,6 +107,14 @@ export function parseNoteContent(input: string): Segment[] {
 
   while (i < input.length) {
     const rest = input.slice(i);
+
+    const mention = MENTION_RE.exec(rest);
+    if (mention) {
+      flush();
+      segments.push({ kind: 'mention', value: mention[0] });
+      i += mention[0].length;
+      continue;
+    }
 
     const topic = TOPIC_RE.exec(rest);
     if (topic && !/^#\d+$/.test(topic[0])) {
@@ -131,16 +148,91 @@ export function parseNoteContent(input: string): Segment[] {
   return segments;
 }
 
+/**
+ * Upstream truncation (`NoteContentKind1.svelte`, screen-map §7.3): the body is
+ * cut somewhere between 500 and 1000 chars, the tail fades under
+ * `mask-image: linear-gradient(0deg, transparent 0px, black 100px)`, and a
+ * centred `btn btn-low` reading **"See more"** — NOT "Show more" — sits below.
+ *
+ * The range is what the reference records, so the cut is taken at the first
+ * whitespace after 500 and never past 1000: same window, and it never lands
+ * mid-word.
+ */
+const SEE_MORE_MIN = 500;
+const SEE_MORE_MAX = 1000;
+
+function truncateAt(content: string): number | null {
+  if (content.length <= SEE_MORE_MAX) return null;
+  const window = content.slice(SEE_MORE_MIN, SEE_MORE_MAX);
+  const breakAt = window.search(/\s/);
+  return breakAt === -1 ? SEE_MORE_MAX : SEE_MORE_MIN + breakAt;
+}
+
 function NoteText({ content }: { content: string }) {
-  const segments = parseNoteContent(content);
+  const [expanded, setExpanded] = useState(false);
+  const cut = truncateAt(content);
+  const clipped = cut !== null && !expanded;
+  const shown = clipped ? content.slice(0, cut) : content;
+  const segments = parseNoteContent(shown);
+  if (clipped) {
+    return (
+      <div>
+        <p
+          style={{
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            maskImage: 'linear-gradient(0deg, transparent 0px, black 100px)',
+            WebkitMaskImage: 'linear-gradient(0deg, transparent 0px, black 100px)',
+          }}
+        >
+          <NoteSegments segments={segments} />
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.5rem' }}>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded(true);
+            }}
+            className="co-btn co-btn-low"
+          >
+            See more
+          </button>
+        </div>
+      </div>
+    );
+  }
+  return <NoteTextBody segments={segments} />;
+}
+
+function NoteTextBody({ segments }: { segments: ReturnType<typeof parseNoteContent> }) {
   return (
     <p style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+      <NoteSegments segments={segments} />
+    </p>
+  );
+}
+
+function NoteSegments({ segments }: { segments: ReturnType<typeof parseNoteContent> }) {
+  return (
+    <>
       {segments.map((segment, i) => {
         if (segment.kind === 'topic') {
           // `NoteContentTopic.svelte` — an underlined Button printing `#{value}`.
           return (
             <span key={i} style={{ textDecoration: 'underline' }}>
               #{segment.value}
+            </span>
+          );
+        }
+        if (segment.kind === 'mention') {
+          const mention = resolveMention(segment.value);
+          // Same underlined-button treatment `NoteContentTopic.svelte` gets:
+          // §7.3 says hashtags render underlined rather than accent-coloured,
+          // and the profile/event links share that styling upstream.
+          return (
+            <span key={i} style={{ textDecoration: 'underline' }}>
+              {mention.kind === 'profile' ? `@${mention.label}` : mention.label}
             </span>
           );
         }
@@ -157,7 +249,7 @@ function NoteText({ content }: { content: string }) {
         }
         return <React.Fragment key={i}>{segment.value}</React.Fragment>;
       })}
-    </p>
+    </>
   );
 }
 
@@ -294,6 +386,45 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                 />
               ))}
             </div>
+          )}
+
+          {/* Link preview card (§7.3): "non-media links become an OG preview
+              card with a white footer (`bg-white px-4 py-2 text-black`) holding
+              a bold title and a 140-char description". Only mounted for a pasted
+              note — mock notes never carry one, because unfurling needs the
+              network (workers/index.ts). */}
+          {note.linkPreview && (
+            <a
+              href={note.linkPreview.url}
+              target="_blank"
+              rel="noreferrer noopener"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                display: 'block',
+                marginTop: '0.5rem',
+                overflow: 'hidden',
+                borderRadius: '0.25rem',
+                textDecoration: 'none',
+              }}
+            >
+              {note.linkPreview.image && (
+                <img
+                  src={note.linkPreview.image}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  style={{ width: '100%', maxHeight: '20rem', objectFit: 'cover', display: 'block' }}
+                />
+              )}
+              <div style={{ background: '#fff', color: '#000', padding: '0.5rem 1rem' }}>
+                <div style={{ fontWeight: 700 }}>{note.linkPreview.title || note.linkPreview.siteName}</div>
+                {note.linkPreview.description && (
+                  <div style={{ fontSize: '0.875rem' }}>
+                    {note.linkPreview.description.slice(0, 140)}
+                  </div>
+                )}
+              </div>
+            </a>
           )}
         </div>
       </div>

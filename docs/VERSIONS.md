@@ -109,9 +109,21 @@ katalogu PRZED sedem klas, żeby jego selektory `target` też dostały rename.
    `docs/refs/<archId>/shots/`. Zamrożonego ledgera gapów NIE wliczaj do arytmetyki
    `docs/GAPS.md`. Freeze odnotuj datowaną notą w `docs/FIDELITY.md` (precedens: Olas).
 8. **THIRD-PARTY.md:** bez zmian — ten sam upstream i ta sama licencja.
-9. **Dopiero teraz** przebudowa `src/simulators/<id>/` do nowej wersji (recon wg
-   skilla `wierna-reprodukcja-klienta`), nowy `reproduces` w `MOUNTS`, aktualizacja
-   toura/FAQ/screen-map jak zwykle.
+9. **Karta share:** `npm run og:cards`. Freeze tworzy NOWĄ trasę `/c/<archId>`, więc
+   build wypuszcza `dist/c/<archId>.html` z `og:image` na `/og/<archId>.png` — bez
+   tego kroku ten plik nie istnieje i każdy udostępniony link do archiwum pokazuje
+   kartę bez obrazka. Karta archiwum sama się oznacza pigułką „Archived · <wersja>"
+   (derywowaną z `archivedOf` + `reproduces` w `src/shareMeta.ts` / `shareRoutes()`),
+   więc nic nie dopisujesz ręcznie — ale wygenerować trzeba. **Drugi przebieg po
+   kroku 10:** żywy klient dostaje wtedy nowy `reproduces`, a jego opis karty go cytuje.
+   **Zanim odpalisz: skopiuj wpis `ENTRY` żywego klienta na `<archId>`** w
+   `scripts/og-client-cards.mjs` (precedens: `'amethyst-v1-12': ['Login']`). Karta fotografuje
+   symulator, a archiwum dziedziczy jego ekran logowania — bez wpisu generator staje z błędem
+   „entry step … matched nothing visible", a gdyby wpisu nie było wcale, karta zamrożonej wersji
+   reklamowałaby formularz logowania.
+10. **Dopiero teraz** przebudowa `src/simulators/<id>/` do nowej wersji (recon wg
+    skilla `wierna-reprodukcja-klienta`), nowy `reproduces` w `MOUNTS`, aktualizacja
+    toura/FAQ/screen-map jak zwykle.
 
 ## Grep-guard
 
@@ -136,6 +148,9 @@ find src/simulators -maxdepth 1 -type d \( -name '*-v*' -o -name '*-20*' \) -exe
   przejście w obie strony działa.
 - Rail: na archiwum podświetlony chip żywego rodzeństwa; `[` `]` cyklują od niego.
 - Wąski viewport: lista Versions w AboutSheet; pasek archiwum nie ucina tekstu przy 320px.
+- `public/og/<archId>.png` istnieje, a `dist/c/<archId>.html` ma `og:image` na ten plik
+  i tytuł z wersją („Try Amethyst v1.12.6 in your browser") — inaczej archiwum i żywy
+  klient są w feedzie nie do odróżnienia.
 - Grep-guard: OK.
 
 ## Znane ograniczenia (świadome)

@@ -1,6 +1,12 @@
 # sandstr — ship & grant decision document
 *2026-07-28. Every claim below traces to a file in this repo or to the three audit lanes. Estimates are labelled as estimates.*
 
+> **SUPERSEDED 2026-08-14 — do not draft from this file.** Most of its blocker list has shipped,
+> and it calls HRF's programme "Open-Source Bitcoin Grants" at `:23` and `:156` — the real name is
+> the **Bitcoin Development Fund** (`hrf.org/program/financial-freedom/bitcoin-development-fund/`).
+> Its outreach package (§ maintainer consent) is still the plan of record. The live application
+> draft is [`docs/grants/opensats.md`](grants/opensats.md).
+
 ---
 
 ## 1. SHIP OR NOT

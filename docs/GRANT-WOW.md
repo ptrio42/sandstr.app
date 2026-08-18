@@ -1,3 +1,10 @@
+> **SUPERSEDED 2026-08-14 — do not draft from this file.** Its strategy still holds; its facts do
+> not. The repo is public (186 commits, pushed), the site is live, the `nsec` solicitation is gone
+> behind a key-safety tripwire, the handoff ships, and Amethyst's hotlinks are fixed. It also calls
+> HRF's programme by the wrong name — it is the **Bitcoin Development Fund**. The live application
+> draft is [`docs/grants/opensats.md`](grants/opensats.md); the current gap list is the
+> 2026-08-14 grant-readiness audit.
+
 ## 1) THE ONE-LINE ANSWER
 
 Yes — but almost none of it is engineering. The three things that raise grant odds are (a) getting the repo public *now* so a public commit history exists by the time you submit, (b) removing two self-inflicted contradictions that a checking reviewer or maintainer will find in under a minute (a fake login that asks for your `nsec` while PRIVACY.md swears it never does; a README that argues for the strategy you abandoned), and (c) finishing the outbound handoff and shooting the short video — because OpenSats' own advice page asks for one. Do not add protocol code, do not do more fidelity work.

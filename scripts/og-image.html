@@ -4,17 +4,32 @@
     <meta charset="UTF-8" />
     <title>sandstr — Open Graph card source</title>
     <!--
-      Source for public/og.png (1200x630). Regenerate after any brand change:
+      Source for public/og.png (1200x630) — the GALLERY's card. The twelve
+      per-client cards are generated instead by scripts/og-client-cards.mjs
+      (`npm run og:cards`), which reads the lockup below rather than copying it
+      a third time. Regenerate this one after any brand change:
 
         node --version >/dev/null   # nothing to install; any headless Chrome will do
         "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
           --headless --disable-gpu --window-size=1200,630 --hide-scrollbars \
           --screenshot=public/og.png scripts/og-image.html
 
+      That command WRITES THE PNG AND THEN HANGS — modern headless Chrome does
+      not exit after --screenshot (measured on Chrome 151; --headless=old, which
+      did exit, was removed in Chrome 132). Wait for the file, then Ctrl-C. It is
+      not a failed render, and the same trap is why og-client-cards.mjs polls the
+      file instead of waiting on an exit code.
+
       The mark and wordmark geometry below is copied verbatim from
       src/host/brand/SandstrMark.tsx and SandstrWordmark.tsx. If you change either
       component, update the paths here too — this file is a static mirror, not an
       import, because the card has to render without the app or a bundler.
+
+      KEEP div.lockup BELOW a single flat div holding exactly the two brand
+      SVGs: og-client-cards.mjs slices it out by its opening tag and the first
+      closing div after it, then asserts both viewBoxes are present. (Written
+      without the literal tag on purpose — spelling it out here would make the
+      slice start in this comment.)
     -->
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }

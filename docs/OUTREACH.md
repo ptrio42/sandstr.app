@@ -122,6 +122,44 @@ Without those parameters a reply reads "open it, hit the question mark, search" 
 three steps at exactly the moment the asker is impatient. This was the single most
 important product change that promotion forced.
 
+**Every `/c/<client>` link now previews as that client** (2026-08-14). Until then
+all of them rendered the gallery card, so a Damus reply and a Wisp reply looked
+identical in a feed — the link preview is often the only part of a reply a
+scroller reads. The build writes one `dist/c/<id>.html` per client with its own
+title, description and image (`scripts/prerender.mjs`), and the images are
+`public/og/<id>.png`, regenerated with `npm run og:cards`. Two things follow for
+promotion:
+
+- the card **shows that client's actual screen** (2026-08-16), captured from the
+  built site — a phone in perspective for the mobile clients, a browser window
+  addressed `sandstr.app/c/<id>` for the web and desktop ones. Never full-bleed:
+  the device frame is what makes it read as *a screen showing X* rather than as
+  X, which is the whole reason a faithful reproduction is allowed on a card at
+  all. Around it sits sandstr chrome — our lockup, the client's mark, and
+  "SIMULATION · UNOFFICIAL · MOCK DATA · NOT AFFILIATED WITH &lt;NAME&gt;" burned
+  in along the bottom — so a reply can link a client without the note itself
+  having to carry the disclaimer sentence (still carry it when the note names a
+  brand in prose — see "What not to claim");
+- **do not also attach a screenshot** to a note that links a client. The card
+  already is one, and a second image pushes the link preview out of view in most
+  Nostr clients — you would be trading the disclaimer-bearing image for a bare one;
+- the card is a **photograph of the reproduction, so it goes stale when the
+  reproduction changes**. Anyone rebuilding a simulator has to re-run
+  `npm run og:cards` (it is in the fidelity-pass checklist); a promo push is a
+  reasonable moment to check the cards match what the site currently renders;
+- previews and archived snapshots say so **on the card**, in a pill. Sharing an
+  early preview as if it were a finished reproduction now takes effort.
+
+`robots.txt` gained a `Twitterbot` and a `facebookexternalhit` exception at the
+same time, for a reason worth knowing: **X documents that Twitterbot implements
+the robots.txt spec and renders no card at all when the URL is disallowed** —
+not a fallback card, nothing — and its troubleshooting page tells publishers to
+add exactly this exception. Meta's crawler documentation says the same about
+respecting the file. So `Disallow: /c/` had been suppressing X previews of every
+deep link, and probably Facebook's too. Discord, Telegram and the Nostr clients
+never consulted the file, which is why this was invisible from where the owner
+was posting. Search is untouched: neither crawler feeds an index.
+
 **A clip shows WHERE a thing is, not WHY it broke.** For "my zap failed" the right
 answer is the text one (the `trouble-*` entries name the stage that failed); keep the
 clip for "how do I even do this".
@@ -180,5 +218,46 @@ reference letters (`SHIP-AND-GRANT.md`), and the only channel where a single rep
 outweighs everything above. The first post tagging an author went out 2026-08-12
 (Wisp), deliberately without asking for corrections — the owner's call.
 
+**Reception so far — three maintainers, one of whom used words** (as of 2026-08-15):
+
+| Who | Client | Signal | Tagged? |
+|---|---|---|---|
+| Barry Deen | Wisp | zapped the note, no reply text | yes (2026-08-12 post) |
+| Fabian | Nostur | zapped, no reply text | **no** — found the note himself |
+| Vitor Pamplona | Amethyst | **replied, asked how it works** | yes (2026-08-14 post) |
+
+Read this as **non-objection, not consent** — including Vitor's. A zap is a tip, not a
+licence, and "how does it work" says nothing about whether the author wants the thing to
+exist. Its use is that all three can now be written to without a cold start ("you saw it —
+anything you want corrected?"). This table does not leave the repo: three reactions are not
+traction, and offering them as evidence invites the one question whose honest answer is
+"no, nobody approved anything".
+
+**What actually produced them: the tag.** Both notes that tagged a maintainer got that
+maintainer, 2 for 2. Neither note was otherwise remarkable (numbers below). Credit the tag,
+not the copy — and note the tag is also what makes the "anything you want corrected?"
+follow-up cheap.
+
+### The two tagged notes, measured (2026-08-15)
+
+| note | ↩ | ⇄ | ♥ | ⚡ |
+|---|---|---|---|---|
+| 2026-08-12 Wisp, `?tour=1`, tagged Barry | 3 | 8 | 6 | 3 (2021 sats) |
+| 2026-08-14 Amethyst, `?faq=mute`, tagged Vitor | 3 | 7 | 7 | 1 (333 sats) |
+| *baseline: product announcements* | *0–5* | *4* | *3* | *—* |
+
+Both notes open with a question, per the rule above — and both landed **inside the old
+announcement band on replies**, nowhere near the 44/30/25 reply ceiling. The lift is in
+**reposts and zaps** (roughly double the announcement median, and the Wisp note out-zapped
+the best aphorism in this account's history).
+
+**The refinement that follows: a rhetorical question is still an announcement.** "Had enough
+of the current thing?" gives the reader nothing to answer, so it does not buy replies; what
+earned 44 replies was a question the reader could actually answer ("can you recommend an app
+for tracking expenses?"). Rhetorical openers buy **distribution** — that is a real win for a
+note carrying a link, just not the one the question rule promised.
+
 The second open thread is `Disallow: /c/` in `robots.txt`: while it stands, linkable
-answers do nothing for search long tail (see "Możliwy kierunek" in `FAQ.md`).
+answers do nothing for search long tail (see "Możliwy kierunek" in `FAQ.md`). The
+2026-08-14 card work did **not** settle this — it carved out the two link-preview
+crawlers, which do not index, and left the search decision exactly where it was.
