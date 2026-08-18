@@ -3,6 +3,7 @@ import './snort.theme.css';
 import { TourContext } from '../../components/tour';
 import { useParentTheme } from '../shared/hooks/useParentTheme';
 import { useScreenSync } from '../shared/screenSync';
+import { publishComposedNote } from '../shared/composeBridge';
 import type { MockNote, MockThread, MockUser } from '../../data/mock';
 import { Avatar } from './components/Avatar';
 import { Icon, type IconName } from './components/Icon';
@@ -294,8 +295,10 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
     [registerAction],
   );
 
-  const handlePost = useCallback(() => {
+  const handlePost = useCallback((text: string) => {
     registerAction('post');
+    // The host turns a note written here into the previewed note.
+    publishComposedNote(text);
     setComposeOpen(false);
     setReplyTo(null);
   }, [registerAction]);

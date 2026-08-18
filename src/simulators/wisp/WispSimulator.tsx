@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useScreenSync } from '../shared/screenSync';
+import { publishComposedNote } from '../shared/composeBridge';
 import type { MockNote, MockUser } from '../../data/mock';
 import { useParentTheme } from '../shared/hooks/useParentTheme';
 import { TourContext } from '../../components/tour';
@@ -366,9 +367,10 @@ export function WispSimulator({ className = '', tourCommand, onCommandHandled }:
               currentUser={currentUser}
               replyTo={composeState.replyTo}
               onClose={() => setComposeState({ open: false, replyTo: null })}
-              onPublish={() => {
+              onPublish={(text: string) => {
                 setComposeState({ open: false, replyTo: null });
                 registerAction('post');
+                publishComposedNote(text);
                 showToast('Note published');
               }}
             />

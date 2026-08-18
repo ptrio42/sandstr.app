@@ -31,6 +31,7 @@ import './coracle.theme.css';
 import { TourContext } from '../../components/tour';
 import { useParentTheme } from '../shared/hooks/useParentTheme';
 import { useScreenSync } from '../shared/screenSync';
+import { publishComposedNote } from '../shared/composeBridge';
 import type { MockNote, MockRelay, MockUser } from '../../data/mock';
 import { Avatar } from './components/Avatar';
 import { Icon } from './components/Icon';
@@ -331,10 +332,12 @@ export const CoracleSimulator: React.FC<CoracleSimulatorProps> = ({
     registerAction('compose');
   }, [isAuthed, openModal, registerAction]);
 
-  const onSend = useCallback(() => {
+  const onSend = useCallback((text: string) => {
     closeModal();
     showToast('Your note has been published!');
     registerAction('post');
+    // The host turns a note written here into the previewed note.
+    publishComposedNote(text);
   }, [closeModal, registerAction, showToast]);
 
   const onExternal = useCallback(

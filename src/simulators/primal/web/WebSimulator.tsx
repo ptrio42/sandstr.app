@@ -13,6 +13,7 @@ import { ReadsScreen } from './screens/ReadsScreen';
 import { ThreadScreen } from './screens/ThreadScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { useScreenSync } from '../../shared/screenSync';
+import { publishComposedNote } from '../../shared/composeBridge';
 import { PlaceholderScreen } from './screens/PlaceholderScreen';
 import type { PNote } from './data';
 import './primal-web.theme.css';
@@ -102,6 +103,7 @@ export function PrimalWebSimulator({ className = '', tourCommand, onCommandHandl
   const handlePost = useCallback((_text: string) => {
     setComposeOpen(false);
     setPosted(true);
+    publishComposedNote(_text);
     showToast('Your note has been published! ⚡');
   }, [showToast]);
 

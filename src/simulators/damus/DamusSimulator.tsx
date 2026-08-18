@@ -22,6 +22,7 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { SideMenu, type MenuDest } from './screens/SideMenu';
 import { TabBar, type DamusTab } from './components/TabBar';
 import { useScreenSync } from '../shared/screenSync';
+import { publishComposedNote } from '../shared/composeBridge';
 
 export type DamusScreen =
   | 'login' | 'home' | 'profile' | 'compose' | 'settings'
@@ -259,7 +260,12 @@ export const DamusSimulator: React.FC<DamusSimulatorProps> = ({ className = '', 
     };
     switch (o.type) {
       case 'compose':
-        return <ComposeScreen currentUser={currentUser} users={mockUsers} replyTo={o.replyTo} onPost={() => { registerAction('post'); pop(); }} onCancel={pop} />;
+        return <ComposeScreen currentUser={currentUser} users={mockUsers} replyTo={o.replyTo} onPost={(content) => {
+          registerAction('post');
+          // The host turns this into the previewed note (composeBridge.ts).
+          publishComposedNote(content);
+          pop();
+        }} onCancel={pop} />;
       case 'thread':
         return <ThreadScreen note={o.note} currentUser={currentUser} {...noteFeedProps} onBack={pop} />;
       case 'profile':

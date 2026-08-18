@@ -17,7 +17,8 @@ import { formatSats, formatTimestamp, seededCount, shortNpub } from '../coracleU
 export const ComposeScreen: React.FC<{
   replyTo?: MockNote | null;
   replyAuthor?: MockUser;
-  onSend: () => void;
+  /** Receives the composed text — see composeBridge.ts. */
+  onSend: (text: string) => void;
 }> = ({ replyTo, replyAuthor, onSend }) => {
   const [value, setValue] = useState('');
   const chars = value.length;
@@ -97,7 +98,7 @@ export const ComposeScreen: React.FC<{
           type="button"
           className="co-btn co-btn-accent"
           style={{ flexGrow: 1 }}
-          onClick={onSend}
+          onClick={() => onSend(value)}
         >
           Send
         </button>

@@ -10,6 +10,7 @@ import { getFaq } from '../data/faq';
 import { showFaqInSimulator } from '../components/faq/FaqMiniTourLauncher';
 import FaqPanel from './FaqPanel';
 import PreviewNoteSheet from './PreviewNoteSheet';
+import { COMPOSE_EVENT } from '../simulators/shared/composeBridge';
 import {
   clearScreenIntent,
   readScreenIntent,
@@ -881,6 +882,21 @@ export default function ClientView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [previewText]);
 
+  /**
+   * A note written in the client's OWN composer gets exactly the same treatment
+   * as one pasted into the dialog — see simulators/shared/composeBridge.ts.
+   * The remount that follows is what puts it on the feed, and screenSync brings
+   * the visitor back to the feed rather than to the sign-in wall.
+   */
+  useEffect(() => {
+    const onComposed = (e: Event) => {
+      const text = (e as CustomEvent<string>).detail;
+      if (text) applyPreviewRef.current(text);
+    };
+    window.addEventListener(COMPOSE_EVENT, onComposed);
+    return () => window.removeEventListener(COMPOSE_EVENT, onComposed);
+  }, []);
+
   const applyPreview = (text: string) => {
     setPreviewText(writePreviewNote(text));
     setPreviewImage(activePreviewImage());
@@ -890,6 +906,8 @@ export default function ClientView() {
     setMountNonce((n) => n + 1);
     setPreviewOpen(false);
   };
+  const applyPreviewRef = useRef(applyPreview);
+  applyPreviewRef.current = applyPreview;
 
   // The mounted simulator cross-fades in place on every switch; the frame/card
   // chrome around it stays put so it reads as "same device, new app".

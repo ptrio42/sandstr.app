@@ -27,6 +27,7 @@ import './amethyst.theme.css';
 import type { MockUser } from '../../data/mock';
 import { generateAvatarGradient, getUserByPubkey, mockUsers } from '../../data/mock';
 import { useScreenSync } from '../shared/screenSync';
+import { publishComposedNote } from '../shared/composeBridge';
 import { TourContext } from '../../components/tour';
 import { AmethystToastContext } from './toast';
 import { AmethystSecurityContext, useSecurityState } from './securityState';
@@ -707,7 +708,12 @@ export function AmethystSimulator({ className = '', tourCommand, onCommandHandle
       <ComposeScreen
         isOpen={isComposeOpen}
         onClose={() => { setIsComposeOpen(false); setReplyTo(null); }}
-        onPost={handleNewPost}
+        onPost={(content: string) => {
+          handleNewPost(content);
+          // User action only — the tour calls handleNewPost directly, and the
+          // host's remount would end a running tour (composeBridge.ts).
+          publishComposedNote(content);
+        }}
         replyTo={replyTo ? { author: replyTo.author.name, content: replyTo.content } : null}
       />
 

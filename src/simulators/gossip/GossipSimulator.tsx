@@ -12,6 +12,7 @@ import { useParentTheme } from '../shared/hooks/useParentTheme';
 import type { MockNote, MockUser } from '../../data/mock';
 import { mockNotes, mockUsers, getUserByPubkey } from '../../data/mock';
 import { useScreenSync } from '../shared/screenSync';
+import { publishComposedNote } from '../shared/composeBridge';
 
 export type GossipView = 'feed' | 'thread' | 'people' | 'relays' | 'settings';
 
@@ -178,7 +179,10 @@ export const GossipSimulator: React.FC = () => {
       <ComposeModal
         isOpen={state.isComposeOpen}
         onClose={closeCompose}
-        onPost={handlePost}
+        onPost={(content: string) => {
+          handlePost(content);
+          publishComposedNote(content);
+        }}
       />
 
       {state.showTour && (

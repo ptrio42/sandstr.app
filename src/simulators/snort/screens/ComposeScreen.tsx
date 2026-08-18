@@ -34,7 +34,8 @@ export interface ComposeScreenProps {
   replyTo: MockNote | null;
   replyAuthor?: MockUser;
   onClose: () => void;
-  onPost: () => void;
+  /** Carries the composed text so the host can preview it (composeBridge.ts). */
+  onPost: (text: string) => void;
 }
 
 export function ComposeScreen({
@@ -56,11 +57,11 @@ export function ComposeScreen({
         onClose();
         return;
       }
-      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) onPost();
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) onPost(text);
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [onClose, onPost]);
+  }, [onClose, onPost, text]);
 
   /* Upstream's reply context renders the target with `showFooter:false,
      showTime:false, canClick:false, showMedia:false` — i.e. author + body only. */
@@ -236,7 +237,7 @@ export function ComposeScreen({
             type="button"
             className="snort-btn snort-post-btn"
             data-tour="snort-post"
-            onClick={onPost}
+            onClick={() => onPost(text)}
           >
             {replyTo ? 'Reply' : 'Send'}
           </button>

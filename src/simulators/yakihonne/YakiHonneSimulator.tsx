@@ -5,6 +5,7 @@ import { TourContext } from '../../components/tour';
 
 import { TabBar, type YakiTab } from './components/TabBar';
 import { useScreenSync } from '../shared/screenSync';
+import { publishComposedNote } from '../shared/composeBridge';
 import { Drawer, type DrawerDest } from './components/Drawer';
 import { FeedSourceSheet, type FeedSource } from './components/FeedSelector';
 import { ZapIcon } from './components/icons';
@@ -266,7 +267,12 @@ export function YakiHonneSimulator({ className = '', tourCommand, onCommandHandl
   const renderOverlay = (o: Overlay) => {
     switch (o.type) {
       case 'compose':
-        return <ComposeSheet currentUserSeed={SELF.seed} replyTo={o.replyTo} onClose={pop} onPost={() => { registerAction('post'); pop(); showToast('Note published! 🎉'); }} />;
+        return <ComposeSheet currentUserSeed={SELF.seed} replyTo={o.replyTo} onClose={pop} onPost={(text: string) => {
+          registerAction('post');
+          publishComposedNote(text);
+          pop();
+          showToast('Note published! 🎉');
+        }} />;
       case 'thread':
         return <ThreadScreen note={o.note} onBack={pop} onViewProfile={viewProfile} onReply={openReply} onZap={doZap} />;
       case 'article':

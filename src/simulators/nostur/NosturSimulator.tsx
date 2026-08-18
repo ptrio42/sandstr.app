@@ -9,6 +9,7 @@ import { ZapSheet } from './components/ZapSheet';
 import { Switch } from './components/Chrome';
 import { WelcomeScreen } from './screens/WelcomeScreen';
 import { useScreenSync } from '../shared/screenSync';
+import { publishComposedNote } from '../shared/composeBridge';
 import { FeedScreen } from './screens/FeedScreen';
 import { ThreadScreen } from './screens/ThreadScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
@@ -483,9 +484,10 @@ export function NosturSimulator({
           account={DEMO_USER}
           replyTo={replyTarget}
           onClose={() => setCompose({ open: false, replyToId: null })}
-          onPost={() => {
+          onPost={(text: string) => {
             setCompose({ open: false, replyToId: null });
             registerAction('post');
+            publishComposedNote(text);
             showToast('Posted');
           }}
         />
