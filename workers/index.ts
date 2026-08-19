@@ -19,9 +19,7 @@
  *  - text/html only, 512 kB max, 5 s timeout;
  *  - the response is the four extracted fields — never the fetched bytes.
  *
- * There is no application-level rate limit: this relies on Cloudflare's own
- * protection in front of it. If the endpoint ever gets abused, that is the first
- * thing to add.
+ * Abuse protection is the platform's, in front of the Worker.
  */
 
 interface Env {

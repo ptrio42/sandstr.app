@@ -17,19 +17,11 @@ interface SettingsGroup {
 export function SettingsScreen() {
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
-  const [encryption, setEncryption] = useState(true);
 
   const settingsGroups: SettingsGroup[] = [
     {
       title: 'Privacy & Security',
       items: [
-        {
-          icon: '🔐',
-          label: 'End-to-End Encryption',
-          value: encryption,
-          onChange: setEncryption,
-          type: 'toggle',
-        },
         {
           icon: '🔑',
           label: 'Backup Keys',

@@ -22,29 +22,30 @@ type Convo = {
   preview: string;
 };
 
-// Real Amethyst Messages ("Known" tab), modelled on the v1.12.6 screenshot:
+// Amethyst Messages ("Known" tab), modelled on the v1.12.6 reference screenshot:
 // public chats + DMs, name + @handle, a play affordance, and "• time".
+// Layout is the reference; every name, handle and preview below is invented.
 const conversations: Convo[] = [
-  { id: 'nostr', name: 'Nostr', tag: 'Public Chat', group: true, time: '1h', preview: '⚡JOLT⚡: Genuinely curious if anyone …' },
-  { id: 'amethyst', name: 'Amethyst Users', tag: 'Public Chat', group: true, logo: true, time: '1h', preview: '⚡JOLT⚡: Genuinely curious if anyone …' },
-  { id: 'karrot', name: 'Karrot', handle: '@karrot', verified: true, time: '3h', preview: 'They usually go after hosts, but in amethyst…' },
+  { id: 'nostr', name: 'Nostr', tag: 'Public Chat', group: true, time: '1h', preview: '⚡Volt⚡: Genuinely curious if anyone …' },
+  { id: 'amethyst', name: 'Amethyst Users', tag: 'Public Chat', group: true, logo: true, time: '1h', preview: '⚡Volt⚡: Genuinely curious if anyone …' },
+  { id: 'karrot', name: 'Maple Dev', handle: '@mapledev', verified: true, time: '3h', preview: 'They usually go after hosts, but in amethyst…' },
   { id: 'neo', name: 'Neonwarden', handle: '@wallet.example', zap: true, time: '13h', preview: "It's gone now." },
-  { id: 'btcmil', name: 'Btcmilhao', handle: '@Lodki', time: '15h', preview: 'Então tem algo errado na configuração do …' },
+  { id: 'btcmil', name: 'Satoshi Norte', handle: '@satnorte', time: '15h', preview: 'Beleza, então o relay novo já está funcion…' },
   { id: 'violet', name: 'Violet Volt', verified: true, time: '15h', preview: '#Amethyst v0.62.8: More Performance…' },
-  { id: 'dbth', name: "Don't Believe the Hype 🦊", handle: '@dontb…', time: '21h', preview: 'Because it might happen that the melt take…' },
-  { id: 'jolt', name: '⚡JOLT⚡', handle: '@HalfChargedKing', time: '2d', preview: 'Can you please report this for impersonatio…' },
-  { id: 'mvl', name: 'Marta Vellin', handle: '@mvellin', time: '3d', preview: "Let me know when it's a good time for…" },
+  { id: 'dbth', name: 'Question Everything 🦊', handle: '@questev…', time: '21h', preview: 'Because it might happen that the melt take…' },
+  { id: 'jolt', name: '⚡Volt⚡', handle: '@voltrunner', time: '2d', preview: 'Can you take a look at the relay list when…' },
+  { id: 'mvl', name: 'Mia Macro', handle: '@macromia', time: '3d', preview: "Let me know when it's a good time for…" },
 ];
 
 // "New Requests" = messages from contacts you don't follow → shown as short npub
-// ids with a date (per the real inbox), not display names.
+// ids with a date, not display names.
 const requests: Convo[] = [
-  { id: 'r1', name: 'npub18s5…gqttz5c3', time: 'Mar 12', preview: 'Cześć, zbudowałem serwis edukacyjny nostr…' },
-  { id: 'r2', name: 'npub16g4…hquekv4h', time: 'Feb 19', preview: 'Referenced event not found' },
-  { id: 'r3', name: 'npub10wn…csjekxa2', time: 'Feb 16', preview: 'Test' },
-  { id: 'r4', name: 'npub1xz7…ps5xyzav', time: 'Feb 08', preview: 'Referenced event not found' },
-  { id: 'r5', name: 'npub1wmh…jsj6a6yx', time: 'Jan 26', preview: 'Referenced event not found' },
-  { id: 'r6', name: 'npub1rsl…zsat947q', time: 'Jan 10', preview: 'Referenced event not found' },
+  { id: 'r1', name: 'npub1q7x…8m4n6p0v', time: 'Mar 12', preview: 'Hi! Built a small onboarding guide, mind a…' },
+  { id: 'r2', name: 'npub1k4d…2r9s5tuz', time: 'Feb 19', preview: 'Referenced event not found' },
+  { id: 'r3', name: 'npub1v2h…7wq3ljae', time: 'Feb 16', preview: 'Test' },
+  { id: 'r4', name: 'npub1m9t…4xg8ncy6', time: 'Feb 08', preview: 'Referenced event not found' },
+  { id: 'r5', name: 'npub1zc6…5gkqpdrf', time: 'Jan 26', preview: 'Referenced event not found' },
+  { id: 'r6', name: 'npub1t8j…9naeqx2s', time: 'Jan 10', preview: 'Referenced event not found' },
 ];
 
 // Deterministic gradient avatar (CSP-safe; robohash unification is a separate task).

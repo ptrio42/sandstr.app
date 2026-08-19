@@ -13,7 +13,7 @@ import React from 'react';
  * source and then injected `<span class="…">` markup into the same string, so
  * the string-literal pattern re-matched the quotes in the markup it had just
  * written. The corrupted result went through `dangerouslySetInnerHTML` and was
- * visible as raw markup on the first note of the feed — SHIP-AND-GRANT B8:
+ * visible as raw markup on the first note of the feed — the 2026-07-28 review, B8:
  *
  *     1"snort-code-keyword">fn parse_event(json: &str)…
  *

@@ -1,8 +1,9 @@
 # Privacy
 
-sandstr is a static, fully client-side site. There is no backend, no database,
-no analytics, no cookies, and no account system. Nothing you type or click is
-transmitted anywhere — there is no server of ours to transmit it to.
+sandstr is a static, client-side site. There is no database, no analytics, no
+cookies, and no account system, and nothing you type or click inside a simulation
+is transmitted anywhere. There is exactly one server-side endpoint — `/api/unfurl`,
+for link preview cards — and it is described in full below.
 
 **Two honest caveats.**
 

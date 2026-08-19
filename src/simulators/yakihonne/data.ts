@@ -84,7 +84,7 @@ export const yakiArticles: YakiArticle[] = [
   },
   {
     id: 'art-community',
-    authorName: 'FeynStructure', authorSeed: 'feynstructure', nip05: true,
+    authorName: 'FernStructure', authorSeed: 'fernstructure', nip05: true,
     title: 'On Finding Your Community on Nostr', summary: 'No description',
     readMin: 6, timeAgo: '1 day ago',
     likes: 20, comments: 1, quotes: 2, zaps: 1100, cover: cover(),
@@ -133,17 +133,17 @@ export interface YakiDM {
 }
 
 export const yakiDMs: YakiDM[] = [
-  { name: 'Smoothflow_dev', seed: 'smoothflow', preview: 'Testing followers broadcast (sorry for spam)', time: '3mo', unread: true },
-  { name: 'BitBlick', seed: 'bitblick', preview: "Yes, if it doesn't you need to contact the coor…", time: '3mo', unread: true },
-  { name: 'JokerHodl', seed: 'jokerhodl', preview: 'Cześć, zbudowałem serwis edukacyjny n…', time: '4mo', fromYou: true },
-  { name: 'Bitcoin Baraza 🇰🇪', seed: 'baraza', preview: 'Explore 👇 more about the Bitcoin Baraza ini…', time: '4mo' },
-  { name: 'Ostrich.Post', seed: 'ostrichpost', preview: 'Dm', time: '4mo' },
-  { name: 'PayPerBit', seed: 'payperbit', preview: 'It was our provider. Fixed now.', time: '4mo' },
-  { name: 'Aidra', seed: 'aidra', preview: 'Hey, I hope you will be able to join us for #eur…', time: '5mo' },
-  { name: 'PandaPier', seed: 'pandapier', preview: 'nostr:nevent1qqsz22t953qvst7kccf5frfvu…', time: '5mo', fromYou: true },
-  { name: 'Enjoy the ride', seed: 'enjoytheride', preview: '🙏 ✌️ 😊', time: '5mo' },
-  { name: 'Japes4Sats', seed: 'japes4sats', preview: 'Test', time: '6mo' },
-  { name: 'Zapmail', seed: 'zapmail', preview: 'Hey, can I ask you to fill this short survey, plea…', time: '6mo' },
+  { name: 'Smoothsail_dev', seed: 'smoothsail', preview: 'Testing followers broadcast (sorry for spam)', time: '3mo', unread: true },
+  { name: 'BitBlink', seed: 'bitblink', preview: "Yes, if it doesn't you need to contact the coor…", time: '3mo', unread: true },
+  { name: 'JesterHodl', seed: 'jesterhodl', preview: 'Hi — put together a short onboarding guide…', time: '4mo', fromYou: true },
+  { name: 'Sat Circle 🌍', seed: 'satcircle', preview: 'Explore 👇 more about the Sat Circle initi…', time: '4mo' },
+  { name: 'Quill.Post', seed: 'quillpost', preview: 'Dm', time: '4mo' },
+  { name: 'PayPerNote', seed: 'paypernote', preview: 'It was our provider. Fixed now.', time: '4mo' },
+  { name: 'Aria Relay', seed: 'ariarelay', preview: 'Hey, I hope you will be able to join us for #eur…', time: '5mo' },
+  { name: 'PineHarbor', seed: 'pineharbor', preview: 'nostr:nevent1qqs2f8kt7wq3ljae5gkqpdrf9…', time: '5mo', fromYou: true },
+  { name: 'Slow Ride', seed: 'slowride', preview: '🙏 ✌️ 😊', time: '5mo' },
+  { name: 'Jokes4Sats', seed: 'jokes4sats', preview: 'Test', time: '6mo' },
+  { name: 'Zapbox', seed: 'zapbox', preview: 'Hey, can I ask you to fill this short survey, plea…', time: '6mo' },
 ];
 
 export interface YakiRelay {
@@ -169,7 +169,7 @@ export const homeNotes: YakiNoteData[] = [
     content: 'Lunch time!  Its hard to beat ribeye steak for lunch, with avocado on the side. 🤤🤤',
     images: [cover()],
     reactions: 6, replies: 3, reposts: 2, quotes: 0, zaps: 177,
-    zapChip: { sats: 100, from: 'Zap Cooking', reactors: ['zapcooking', 'marina'] },
+    zapChip: { sats: 100, from: 'Sat Kitchen', reactors: ['satkitchen', 'marina'] },
   },
   {
     id: 'n-rainy', name: 'Mariah2100', seed: 'mariah2100', nip05: true, zap: true, timeAgo: '3 hours ago',

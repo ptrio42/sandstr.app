@@ -1,14 +1,12 @@
 /**
  * Key-safety tripwire for the simulated sign-in screens.
  *
- * WHY THIS EXISTS. Every reproduction here is a pixel-faithful clone of a real
- * client. Several of them had a `type="password"` field labelled "Paste your
- * nsec private key" whose handler accepted any string and "logged you in" —
- * one of them under the reassurance "Your keys never leave this device. You are
- * in control." A faithful clone of a real app that asks for your secret key and
- * promises it is safe is structurally a phishing page, regardless of the
- * SIMULATION banner above it, and publishing that would have taught visitors
- * exactly the habit that gets Nostr users drained.
+ * WHY THIS EXISTS. Every reproduction here is a faithful clone of a real client,
+ * and real clients import an account by pasting a secret key. A simulation must
+ * never take one: no visitor's real nsec may reach this page, and no copy on a
+ * simulated sign-in may reassure anyone that it would be safe if it did. The
+ * habit this protects is the visitor's, not ours — pasting an nsec into a page
+ * because it looked familiar is how Nostr users get drained.
  *
  * So the sims still SHOW the import affordance — it is part of the real
  * interface and removing it would cost fidelity — but they never ask for a real

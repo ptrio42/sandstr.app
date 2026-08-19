@@ -163,9 +163,8 @@ stroke, chrome icons fill.
 `thumbs-down` is not in `Icon.svelte`'s if-chain → **renders an empty SVG**. Dead branch.
 
 **Sandstr substitution.** Neither Font Awesome nor its art ships here. The glyphs in
-`src/simulators/coracle/components/Icon.tsx` are re-drawn from scratch to read the way FA-solid reads
-(512 box, solid fills) rather than copied — which also avoids inheriting FA's CC BY 4.0 attribution
-obligation. The seven stroked action icons are reproduced on upstream's own 17×16 box.
+`src/simulators/coracle/components/Icon.tsx` are drawn for this repo on a 512 box with solid fills, so they
+read the way FA-solid reads. The seven stroked action icons are reproduced on upstream's own 17×16 box.
 
 ---
 

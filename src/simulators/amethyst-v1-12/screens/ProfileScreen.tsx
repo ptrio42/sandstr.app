@@ -23,7 +23,7 @@ interface ProfileScreenProps {
 
 const profile = {
   name: 'sandy',
-  npub: 'npub178u…vq05qrg4',
+  npub: 'npub1q7x9…8m4n6p0v',
   nip05: 'sandy.example',
   website: 'sandy.example',
   lightning: 'sandy@wallet.example',

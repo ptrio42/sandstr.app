@@ -196,8 +196,11 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
   koncie właściciela, realne tematy pytań z `#asknostr`, playbook odpowiadania i lista
   rzeczy, których nie wolno twierdzić. Czytaj ZANIM zaczniesz robić materiał promocyjny.
 - `docs/clips/README.md` + `docs/clips/faq-teaser.md` — scenariusze klipów demo.
-- `docs/AUDIT.md` — snapshot historyczny; „owned-IP-first / front door = Nostr Kitten" jest NIEAKTUALNE.
-  Tak samo przeterminowane `SHIP-AND-GRANT.md` i `GRANT-WOW.md` — sprawdź ich zarzuty, zanim je powtórzysz.
+- **`docs/AUDIT.md`, `docs/SHIP-AND-GRANT.md`, `docs/GRANT-WOW.md`, `docs/grants/` — NIE ŚLEDZONE
+  (2026-08-19), leżą tylko lokalnie i mają tam zostać.** Wszystkie trzy są przeterminowane, a przy
+  tym omawiają nazwanych ludzi i niosą własną ocenę ryzyka prawnego projektu — w publicznym repo
+  czytały się jak przyznanie. Możesz z nich korzystać lokalnie; nie linkuj ich ze śledzonych plików
+  i nie przywracaj do gita.
 - `README.md` (przegląd + wydzielenie), `PRIVACY.md`, `TRADEMARKS.md`, `THIRD-PARTY.md`.
 
 ## Licencja / origin
@@ -206,4 +209,4 @@ MIT, „Copyright (c) 2026 ptrio42" (`LICENSE`) — pokrywa kod w repo, nie cudz
 **Sandstr**, domena produkcyjna **`sandstr.app`**; reszta decyzji brandingowych → skill
 `branding-i-ryzyko-prawne`.
 Origin: extraction spike (2026-07-14) z symulatorów żyjących w przewodniku `nostrich.love` — mechanika
-w `README.md`, audyt z tamtej sesji w `docs/AUDIT.md`. Notatki osobiste: `CLAUDE.local.md` (gitignored).
+w `README.md` (audyt z tamtej sesji: `docs/AUDIT.md`, lokalnie). Notatki osobiste: `CLAUDE.local.md` (gitignored).

@@ -1,6 +1,6 @@
 # sandstr — simulations of real clients live under /c/. They are deliberately
-# kept out of indexes: a pixel-faithful /c/damus ranking for "Damus" would be
-# the textbook confusion pattern, and the gallery is the page that should rank.
+# kept out of indexes: those pages carry another project's branding, so the
+# gallery, not a simulation, is what should rank.
 User-agent: *
 Disallow: /c/
 

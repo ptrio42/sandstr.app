@@ -265,7 +265,7 @@ Source: `search_view/search_view.dart`. (Distinct from `discover_view.dart`, whi
 **Logo mark:** a **stylized faceted/angular abstract mark** (6 sharp polygonal facets, needle-sharp point at bottom, two thin spike-tips at top splaying up-right; silhouette leans right) — **NOT literally a leaf/bird/flame** (semantic intent undocumented). Two SVG forms, 3 color variants each (tinted at runtime → treat as monochrome):
 - **Mark only** `logo-mark-{white,black,purple}.svg`, `viewBox="0 0 35 61"` (`LogosIcons.logoMark*`).
 - **Full logo + wordmark** `logo-{white,black,purple}.svg`, `viewBox="0 0 149 61"`.
-- Purple variant fill = **`#7A117E`**. Reproduce the mark from the exact 6-path SVG geometry (`viewBox 0 0 35 61`) in the recon, not a semantic label.
+- Purple variant fill = **`#7A117E`**. Reproduce the silhouette from the recon shot (needle-tip bottom, two spike-tips top, ~6 facets, ratio 35:61) — not from a semantic label.
 
 **App icon / launcher:** white mark on a **purple→magenta vertical gradient** rounded-square (`assets/icon.png`); `logo.png` = white mark on flat `#7A117E` purple. **Duality to preserve:** the *icon/logo asset* is **purple**, but the *in-app UI accent* is **orange `#EE7700`**. Onboarding tints the mark near-white and renders the FAB/links/buttons orange. No custom in-Flutter splash (native splash = launcher assets).
 
@@ -299,7 +299,7 @@ The ~12 details that most define YakiHonne's look and are easiest to get wrong:
 
 1. **Orange, not purple.** Default accent = **`#EE7700`**. Purple (`#6B218D` / `#86318C` / `#7A117E`) is the logo-asset color + a *selectable* accent, never the default UI accent. (Corrects AUDIT.md.)
 2. **The purple↔orange duality.** The **app icon/logo is purple**, but the **live UI is orange**. Reproduce both — a purple splash/icon feeding an orange in-app accent.
-3. **The logo mark is a faceted angular abstract**, not a leaf/bird/flame. Reproduce from the exact 6-path SVG (`viewBox 0 0 35 61`), needle-tip bottom, two spike-tips top.
+3. **The logo mark is a faceted angular abstract**, not a leaf/bird/flame. Reproduce the silhouette (ratio 35:61, needle-tip bottom, two spike-tips top), not the upstream path data.
 4. **Active bottom-nav tab is NOT orange** — it's white/black (`primaryColorDark`) with a **filled icon + tiny 4px dot below**. Only the **compose FAB is orange**.
 5. **5 bottom tabs, icon-only, exact order:** Home · Media · Wallet · DMs · Notifications (default Home). Compose is a separate orange FAB, bottom-right, only on Home & Media.
 6. **Feed selector labels:** Recent · Recent With Replies · Trending · Global · Paid · Widgets (Recent default) — not generic "For You / Following".

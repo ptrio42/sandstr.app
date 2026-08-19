@@ -126,9 +126,9 @@ const HeroIllustration = () => (
         {/* two notes */}
         <div className="mt-1 px-1.5 space-y-1.5 pb-1">
           {[
-            { seed: 'stephanlivera', name: 'Stephan Livera', w: ['92%', '78%', '64%'] },
-            { seed: 'jack', name: 'jack', w: ['70%', '48%'] },
-            { seed: 'nvk', name: 'NVK', w: ['84%', '56%'] },
+            { seed: 'signalsage', name: 'Signal Sage', w: ['92%', '78%', '64%'] },
+            { seed: 'wrenwebb', name: 'wren', w: ['70%', '48%'] },
+            { seed: 'zenzapper', name: 'ZEN', w: ['84%', '56%'] },
           ].map((n) => (
             <div key={n.seed} className="flex items-start gap-1">
               <Avatar seed={n.seed} className="w-[9px] h-[9px]" rounded="rounded-full" />

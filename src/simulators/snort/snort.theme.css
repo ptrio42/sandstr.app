@@ -101,7 +101,7 @@
  * Real Snort scrolls as ONE document: body `overflow-y: scroll` with the two
  * side columns `sticky top-0 h-screen` (§5). Sandstr's /c/:id is a
  * non-scrolling 100dvh app shell, so the equivalent here is a flex row whose
- * centre column owns the scroll. This also fixes SHIP-AND-GRANT B9b, where
+ * centre column owns the scroll. This also fixes the 2026-07-28 review, B9b, where
  * .snort-main had no scroller and the login card's lower half was unreachable.
  *
  * Column visibility is gated in JS off the CONTAINER width, not a viewport

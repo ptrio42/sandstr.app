@@ -21,7 +21,7 @@ captures in Display P3 and the JPEG is decoded as sRGB. Sampled values below are
 repo hex is authoritative. (e.g. `--primary #ff3f15` sampled as `#ed2518`; `--live #f83838` sampled as `#dd2a3f` —
 distinct in the same frame, which is how we know they are two different tokens.)
 
-> ## ⚠ OPEN QUESTION — confirm the brand with the maintainer before shipping
+> ## ⚠ OPEN QUESTION — which brand is canonical
 > The GitHub repo's homepage field now points at **phoenix.social**, which serves a byte-identical build, while the
 > PWA manifest still says snort.social. No rename announcement was found as of 2026-07-29.
 >
@@ -41,7 +41,7 @@ distinct in the same frame, which is how we know they are two different tokens.)
 >   name say Snort.
 >
 > Phoenix reads as a white-label deployment, **not** a rename — but nothing in-repo explains the homepage field, so a
-> rebuild must confirm current branding + logo usage with Kieran (`v0l`) as part of the opt-in ask.
+> rebuild must re-confirm current branding + logo usage against upstream before shipping.
 
 ---
 
@@ -206,11 +206,11 @@ The single highest-fidelity-value surface. `Components/Event/Note/Note.tsx:78-10
 - Timestamp: `text-sm text-neutral-500 font-medium`; `…` menu trigger is `dots` at **size 15**,
   `cursor-pointer text-neutral-500 px-1 py-0.5`.
 - Name fallback chain (`Utils/index.ts:462-472`): `display_name` → `name` → *(AnimalName — disabled for Snort,
-  `animalNamePlaceholders: false`)* → `npub1…` truncated to **12 chars**. **[REC ✓ "npub178umpxt".]**
+  `animalNamePlaceholders: false`)* → `npub1…` truncated to **12 chars**. **[REC ✓ a bare `npub1…` truncated to 12 chars.]**
 - **nip05** (`Nip05.tsx:50-69`): `inline-flex items-center text-neutral-400 font-normal`, `opacity-50` while
   unverified; `name@` in a `.nick` span then the domain; `_@domain` hides the `_@`; **domain gets
   `text-snort-gradient` when it is `snort.social`/`CONFIG.nip05Domain` and verified**; a 13px **red `x`**
-  (`text-error`) is appended when `showBadges && !isVerified` — **[REC ✓ visible after "sandwich.farm".]**
+  (`text-error`) is appended when `showBadges && !isVerified` — **[REC ✓ visible after an unverified `name@domain`.]**
   There is **no green check**; only the failure badge exists.
 - The avatar is a Radix **HoverCard** trigger on every note (openDelay 100 / closeDelay 300, `z-[9999]`).
 - **Follow-distance check-mark on the avatar** (`FollowDistanceIndicator.tsx`): a 16px `bg-layer-1` circle with a 10px
@@ -409,7 +409,7 @@ only, plus a `primary` **"Sign up"** button with a `sign-in` icon. **[REC ✓.]*
   rail, an orange **"＋ New Note"** pill at ≥1280. **[REC ✓ orange pill.]** Self-hides on `/settings`, `/messages`,
   `/new`, `/login`, `/about`, `/e`, `/nevent`, `/note1`, `/naddr`, `/subscribe` and when readonly.
 - **`ProfileMenu` at the very bottom**: trigger is a `ProfilePreview` with a **40px avatar**, display name
-  `max-xl:hidden`, and an `arrowFront` icon rotated 90° as the caret. **[REC ✓ avatar + "npub178umpxt" + chevron.]**
+  `max-xl:hidden`, and an `arrowFront` icon rotated 90° as the caret. **[REC ✓ avatar + a 12-char `npub1…` + chevron.]**
   Menu (`bg-layer-2 rounded-lg overflow-hidden z-[9999] min-w-48`): **Profile** (`user`), a non-interactive
   **"Switch accounts"** caption, then one row per other session. A red **"Read Only"** (`text-heart`) sub-header when readonly.
 
@@ -439,7 +439,7 @@ backdrop-blur-lg` over `--header-bg-color`.
 - **Centre on a root feed:** the feed picker (§6.1). **Elsewhere:** a click-to-scroll-top title —
   `cursor-pointer flex-1 text-center p-2 overflow-hidden whitespace-nowrap truncate md:text-lg`. Title resolution:
   capitalized path segment by default; **"Search: {term}"** on `/search/*`; **"{KindName} by {DisplayName}"** for a
-  note/naddr in the path **[REC ✓ "Short Text Note by utxo the webmaster 🧑‍💻"]**; display name for npub/nprofile;
+  note/naddr in the path **[REC ✓ "Short Text Note by {DisplayName}"]**; display name for npub/nprofile;
   `#tag` on `/t/*`; relay name on `/relay*`.
 - **Right:** `NotificationsHeader` wrapped in **`md:invisible`** — on desktop the bell only reserves space.
 
@@ -679,7 +679,7 @@ slate-blue glyphs, one red circle, then the pill. Per §3.1 that is `.light butt
   `flex items-center gap-2` + 16px `link-02` + an `<a target="_blank" rel="noreferrer">` whose label is stripped to
   `hostname + pathname`; lightning = `flex gap-2 items-center` + 16px **`zapCircle`** + the LNURL name in
   `text-ellipsis overflow-hidden hover:underline cursor-pointer`, click opens the ZapModal.
-  **[REC ✓ a black bolt-in-circle then `utxo@rizful.com`; bio links in violet.]**
+  **[REC ✓ a black bolt-in-circle then a `name@domain` lightning address; bio links in violet.]**
 
 ### 8.4 Tabs — the shared pill `TabSelectors`
 
@@ -781,10 +781,10 @@ Note the deliberate asymmetry: the mention **filter** icon is `at-sign` tinted v
 ### 9.4 Action line
 
 `n = pubkeys.length - 1`:
-- Reaction — `"{n,plural,=0{{name} liked} other{{name} & {n} others liked}}"` **[REC ✓ bold "npub178umpxt liked".]**
+- Reaction — `"{n,plural,=0{{name} liked} other{{name} & {n} others liked}}"` **[REC ✓ bold "`npub1…` liked".]**
 - Repost — `"… reposted"` · ZapReceipt — `"… zapped"`
 - **TextNote — empty string**: the mention group shows **no action line**; instead its `AvatarGroup` sets
-  `showUsername={true}` so the name sits beside the avatar. **[REC ✓ the "sandwich / sandwich.farm ×" row has no bold
+  `showUsername={true}` so the name sits beside the avatar. **[REC ✓ the "`name` / `name@domain` ×" row has no bold
   line, just gray context text.]**
 - Anonymous zappers render as the literal **"Anon"**.
 
@@ -1180,10 +1180,9 @@ Other login entries: sidebar `primary` **"Sign up"** + 24px `sign-in` icon; mobi
   (`#DE271D`/`#F13117`/`#FB4A11` bottom, `#FD5110→#F73714→#EE2F16→#F97910` body, `#E5261A` left wing,
   `#FD6A0F→#F83B11` head, `#FB8811` alpha fades), most gradients vertical. **No wordmark in it.**
 
-> **Sandstr / `THIRD-PARTY.md` note (SHIP-AND-GRANT B3):** reading hex values, icon names, label strings and action
-> ordering from this repo is fact-gathering, not copying expression. **Do not ship `nostrich_*.png` or Phoenix's
-> `logo.svg` path data**; use the `ClientGlyph` monogram fallback until Kieran grants explicit consent — which the
-> §0 open question makes a prerequisite anyway.
+> **Sandstr / `THIRD-PARTY.md` note:** **do not ship `nostrich_*.png` or Phoenix's `logo.svg` path data** — use the
+> `ClientGlyph` monogram fallback instead. Attribution for anything referenced from this repo belongs in
+> `THIRD-PARTY.md`.
 
 ---
 
@@ -1242,9 +1241,9 @@ Servers · Nostr Address · compose modal · reply modal · poll composer · a z
     `border-border` in `AsyncButton` → no-op · light-mode DM gradient → transparent outgoing bubbles ·
     `rounded-rounded-lg-none` typo · "Supported Extensions" links nowhere · relay "Dead" uptime beside "Connected" ·
     `--font-size-small` / `--font-size-tiny` dead.
-12. **Real identities in the recording are reference-only.** The capture shows real people (Jameson Lopp, utxo the
-    webmaster, semisol, Kyma Fi, sandwich, Zaikaboy) with real nip05s and lightning addresses. Per SHIP-AND-GRANT
-    **B1**, mock data must use invented personas — **do not transcribe any of these into `src/data/mock/`.**
+12. **Real identities in the recording are reference-only.** The capture is of a logged-in session, so it shows real
+    accounts with real nip05s and lightning addresses. Mock data uses invented personas — **never transcribe an
+    identity, handle, nip05, lightning address or npub out of the capture, into this file or into `src/`.**
 
 ---
 

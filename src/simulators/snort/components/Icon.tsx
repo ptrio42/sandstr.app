@@ -10,7 +10,7 @@ import React from 'react';
  * symbols are a Lucide / Untitled-UI-ish outline set: `stroke="currentColor"`,
  * `fill="none"`, ~1.7 stroke width, round caps and joins.
  *
- * We can't ship their sprite (it's their artwork — see SHIP-AND-GRANT B3), so
+ * We can't ship their sprite (it's their artwork — see the 2026-07-28 review, B3), so
  * these are equivalent outline glyphs drawn here, keeping Snort's OWN NAMES so
  * the screens read like the real source. Default size 20; the nav passes 24 and
  * the note action bar passes 18, exactly as upstream does.

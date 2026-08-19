@@ -17,10 +17,8 @@ import {
  * REPO-ONLY SURFACE: the recording opens already signed in, so this screen is
  * built from source alone and is listed as such in screen-map.md §18.
  *
- * The key field goes through shared/utils/keySafety.ts. It never asks for a
- * real nsec and it carries no custody reassurance — a pixel-faithful clone that
- * asks for your secret key and promises it is safe is a phishing page whatever
- * banner sits above it.
+ * The key field goes through shared/utils/keySafety.ts: it never asks for a
+ * real nsec and it carries no custody reassurance.
  */
 export function WelcomeScreen({ onLogin }: { onLogin: () => void }) {
   const [step, setStep] = useState<'welcome' | 'existing'>('welcome');

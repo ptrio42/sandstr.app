@@ -388,7 +388,7 @@ Footer: 16dp glyph + **"wisp v1.2.1"** @30%.
 |---|---|---|---|
 | Fiat Mode | ON ($0.1, cents, coin-stack, $0.00 wallet) | default OFF (`FiatPreferences.kt:11`) | ship sats+₿ (repo default); note only |
 | Zap presets | $0.013/$0.064/$0.318/$0.637/$3.18 (USD of sats presets) | 21/100/500/1000/5000 sats | repo values |
-| Amber/NIP-55 | — | README claims it; **no NIP-55 code exists** (`NostrSigner.kt` local only) | omit signer button |
+| Amber/NIP-55 | — | no external-signer integration found during recon (`NostrSigner.kt` is local only) | omit signer button |
 | "Select Relay" dialog | shown with "+ New Set", "covers N" | feed relay-picker (`FeedScreen.kt`) | REC layout |
 | Wallet balance | "$0.00" | default unit SATS | "0 sats" |
 | Onboarding Suggestions "Skip" | not visible | DEBUG builds only | omit (matches both) |

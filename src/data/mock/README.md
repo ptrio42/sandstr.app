@@ -492,19 +492,6 @@ A: Yes! 200+ diverse posts with realistic engagement, multiple writing styles, a
 **Q: Do you understand Nostr event structures?**  
 A: Yes! Full implementation of kinds 0, 1, 3, 6, 7 with proper tags, signatures, and metadata.
 
-**Q: How do you ensure content diversity?**  
-A: 14 content categories, 50+ unique user personas, varied engagement patterns, and randomized generation.
+## License
 
-**Q: Any concerns about content generation?**  
-A: All content is appropriate, high-quality, and free from spam or offensive material.
-
-## 📄 License
-
-This mock data system is created for the Nostr Client Simulator Project.
-
----
-
-**Completion Timeline:** Same day delivery ✓  
-**Total Files:** 8 TypeScript files  
-**Total Lines of Code:** ~2500+  
-**Test Coverage:** All exports validated
+Part of sandstr; MIT, same as the rest of the repository.

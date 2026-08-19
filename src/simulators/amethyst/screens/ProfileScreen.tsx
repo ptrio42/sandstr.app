@@ -64,7 +64,7 @@ const SELF: ProfileSubject = {
     { network: 'Mastodon', handle: '@sandy@example.social' },
   ],
   seed: 'sandy',
-  npub: 'npub178u…vq05qrg4',
+  npub: 'npub1q7x9…8m4n6p0v',
   nprofile: 'nprofile1qqs9p…9uvrafdc',
   lastSeen: 'Last seen 31 minutes ago',
   nip05: 'sandy.example',

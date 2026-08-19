@@ -12,10 +12,10 @@ interface Tx {
 }
 
 const txs: Tx[] = [
-  { dir: 'in', sats: 210, who: 'Zap Cooking', when: 'Today' },
+  { dir: 'in', sats: 210, who: 'Sat Kitchen', when: 'Today' },
   { dir: 'in', sats: 1000, who: 'Marina', when: 'Yesterday' },
-  { dir: 'out', sats: 21, who: 'FeynStructure', when: 'Yesterday' },
-  { dir: 'in', sats: 5000, who: 'Zapmail', when: '3 days ago' },
+  { dir: 'out', sats: 21, who: 'FernStructure', when: 'Yesterday' },
+  { dir: 'in', sats: 5000, who: 'Zapbox', when: '3 days ago' },
   { dir: 'out', sats: 500, who: 'sandy', when: '4 days ago' },
 ];
 

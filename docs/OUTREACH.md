@@ -213,27 +213,16 @@ Two rules from above still bind: the note names other people's brands, so it car
 ## Open
 
 **Talking to the client maintainers** is still open and still the highest-value item
-on the list: it is simultaneously the trademark mitigation, the source of the grant's
-reference letters (`SHIP-AND-GRANT.md`), and the only channel where a single repost
-outweighs everything above. The first post tagging an author went out 2026-08-12
-(Wisp), deliberately without asking for corrections — the owner's call.
+on the list: it is simultaneously the trademark mitigation and the only channel where a
+single repost outweighs everything above. The first post tagging an author went out
+2026-08-12 (Wisp), deliberately without asking for corrections — the owner's call.
 
-**Reception so far — three maintainers, one of whom used words** (as of 2026-08-15):
+A reaction to a note is **not** consent: a zap is a tip, not a licence, and a "how does it
+work?" reply says nothing about whether the author wants the thing to exist. Nobody has
+approved anything, and nothing in this file may be presented as if they had. What a
+reaction does buy is a warm follow-up — "you saw it, anything you want corrected?".
 
-| Who | Client | Signal | Tagged? |
-|---|---|---|---|
-| Barry Deen | Wisp | zapped the note, no reply text | yes (2026-08-12 post) |
-| Fabian | Nostur | zapped, no reply text | **no** — found the note himself |
-| Vitor Pamplona | Amethyst | **replied, asked how it works** | yes (2026-08-14 post) |
-
-Read this as **non-objection, not consent** — including Vitor's. A zap is a tip, not a
-licence, and "how does it work" says nothing about whether the author wants the thing to
-exist. Its use is that all three can now be written to without a cold start ("you saw it —
-anything you want corrected?"). This table does not leave the repo: three reactions are not
-traction, and offering them as evidence invites the one question whose honest answer is
-"no, nobody approved anything".
-
-**What actually produced them: the tag.** Both notes that tagged a maintainer got that
+**What produces reactions: the tag.** Both notes that tagged a maintainer got that
 maintainer, 2 for 2. Neither note was otherwise remarkable (numbers below). Credit the tag,
 not the copy — and note the tag is also what makes the "anything you want corrected?"
 follow-up cheap.
@@ -242,14 +231,13 @@ follow-up cheap.
 
 | note | ↩ | ⇄ | ♥ | ⚡ |
 |---|---|---|---|---|
-| 2026-08-12 Wisp, `?tour=1`, tagged Barry | 3 | 8 | 6 | 3 (2021 sats) |
-| 2026-08-14 Amethyst, `?faq=mute`, tagged Vitor | 3 | 7 | 7 | 1 (333 sats) |
+| 2026-08-12 Wisp, `?tour=1`, tagged the maintainer | 3 | 8 | 6 | 3 |
+| 2026-08-14 Amethyst, `?faq=mute`, tagged the maintainer | 3 | 7 | 7 | 1 |
 | *baseline: product announcements* | *0–5* | *4* | *3* | *—* |
 
 Both notes open with a question, per the rule above — and both landed **inside the old
 announcement band on replies**, nowhere near the 44/30/25 reply ceiling. The lift is in
-**reposts and zaps** (roughly double the announcement median, and the Wisp note out-zapped
-the best aphorism in this account's history).
+**reposts and zaps** (roughly double the announcement median).
 
 **The refinement that follows: a rhetorical question is still an announcement.** "Had enough
 of the current thing?" gives the reader nothing to answer, so it does not buy replies; what

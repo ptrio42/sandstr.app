@@ -5,7 +5,7 @@ import React from 'react';
  * already used by Amethyst, Damus and Primal. Same seed always yields the same
  * robot, and nothing leaves the browser.
  *
- * This replaces the DiceBear hotlinks the old Snort sim used (SHIP-AND-GRANT
+ * This replaces the DiceBear hotlinks the old Snort sim used (2026-07-28 review,
  * B5: signed-in Snort was loading 27 remote images, each carrying the visitor's
  * IP and a per-profile seed to a third-party CDN while the front page claimed
  * "nothing leaves your browser").

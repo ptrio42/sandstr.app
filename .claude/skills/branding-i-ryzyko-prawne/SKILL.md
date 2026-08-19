@@ -7,15 +7,13 @@ description: 'Decyzje wokół marki i ryzyka prawnego sandstr: nazwa, domena, di
 
 ## Rdzeń: real-clients-first
 
-Produktem są wierne reprodukcje realnych, brandowanych klientów. Ryzyko znaku towarowego
-i trade-dress **mitygujemy, a nie uciekamy we własne IP**. `docs/AUDIT.md` rekomenduje
-„owned-IP-first / Nostr Kitten jako front door" — to **NIEAKTUALNE**, nadpisane przez właściciela
-(nota stoi w `docs/AUDIT.md:3`). Nie cytuj jego sekcji „Rekomendowany branding", „Kluczowe ryzyka"
-ani „Roadmapa" jako obowiązujących — wracasz wtedy z kierunkiem, który właściciel już odrzucił.
-Tak samo przeterminowane są `docs/SHIP-AND-GRANT.md` (2026-07-28) i `docs/GRANT-WOW.md` — sięgasz
-po nie właśnie przy „czy możemy to pokazać", a ich blokery są już zamknięte: `LICENSE` istnieje,
-`git remote` wskazuje `ptrio42/sandstr.app`, mock-tożsamości są zmyślone, README nie głosi
-owned-IP-first, Kitten nie jest front doorem. Sprawdź każdy ich zarzut, zanim zgłosisz go jako żywy.
+Produktem są wierne reprodukcje realnych, brandowanych klientów — to kierunek właściciela i nie
+podmieniamy go na własne IP. Trzy stare dokumenty (`docs/AUDIT.md`, `docs/SHIP-AND-GRANT.md`,
+`docs/GRANT-WOW.md`) mówią co innego („owned-IP-first / Nostr Kitten jako front door"); **od
+2026-08-19 nie są śledzone w repo, leżą tylko lokalnie i są przeterminowane** — nie cytuj ich
+zaleceń jako obowiązujących i nie przywracaj ich do gita. Ich blokery są zamknięte: `LICENSE`
+istnieje, `git remote` wskazuje `ptrio42/sandstr.app`, mock-tożsamości są zmyślone, README nie
+głosi owned-IP-first, Kitten nie jest front doorem. Sprawdź każdy zarzut, zanim zgłosisz go jako żywy.
 
 ## Ścieżka (a) — GŁÓWNA: zgoda opt-in od każdego zespołu
 
@@ -43,11 +41,10 @@ owned-IP-first, Kitten nie jest front doorem. Sprawdź każdy ich zarzut, zanim 
 - Obowiązkowe atrybuty obu: `z-[var(--z-disclaimer)]` (skala warstw hosta stoi w `:root` w `src/index.css`: rail 3000 < tour-backdrop 9000 < tour-card 9200 < disclaimer 9400 < host-modal 9600; gola liczba `z-[...]` w `src/host/` jest zakazana) (nad backdropem toura) **oraz**
   `data-tour-keep-clear`. Bez pierwszego tour przyciemniał baner do nieczytelności; bez drugiego
   karta toura kładła się na nim. Na formie telefonowej **nigdy `truncate`** — przy 320px ucinało
-  tekst do „…not affiliated wit…", a na telefonie ten pasek jest jedyną rzeczą odróżniającą stronę
-  od realnego klienta.
-- Mitygacja, której baner nie zastąpi: `X-Frame-Options: DENY` + CSP `frame-ancestors`
-  w `public/_headers`. Bez nich pixel-wierny `/c/damus` da się osadzić w cudzej ramce bez chrome'u
-  i przeczytać jako prawdziwy klient.
+  tekst do „…not affiliated wit…", a to ten pasek mówi odwiedzającemu, że ogląda symulację.
+- Czego baner nie załatwia: `X-Frame-Options: DENY` + CSP `frame-ancestors` w `public/_headers`.
+  Bez nich stronę `/c/<klient>` da się osadzić w cudzej ramce z pominięciem całego chrome'u hosta,
+  razem z banerem.
 
 ## Nazwa, domena, SEO
 
@@ -115,11 +112,11 @@ owned-IP-first, Kitten nie jest front doorem. Sprawdź każdy ich zarzut, zanim 
   shipowanie cudzego logo bez atrybucji. Otwarte pozycje (verbatim swirl Primala, realne ikony
   w `public/icons/`) są spisane w sekcji „Open items, stated plainly"; fallback bez cudzej marki już
   istnieje — `src/host/ClientGlyph.tsx`.
-- **Otwarte i żywe: cztery pliki prawne — `LICENSE`, `PRIVACY.md`, `TRADEMARKS.md`, `THIRD-PARTY.md` —
-  nie są podlinkowane z wdrożonej strony.** `grep` po `src/host/` nie znajduje ani jednego odwołania,
-  a `public/` nie ma ich kopii, więc odwiedzający live URL nie ma do nich żadnej drogi.
-  Naiwne `href="/PRIVACY.md"` po cichu wyrenderuje galerię: `wrangler.jsonc` ma
-  `not_found_handling: "single-page-application"`. Linkuj blob-URL-e GitHuba albo skopiuj do `public/`.
+- **Cztery pliki prawne — `LICENSE`, `PRIVACY.md`, `TRADEMARKS.md`, `THIRD-PARTY.md` — są
+  podlinkowane ze stopki** (`src/host/Layout.tsx:126-141`, przez `repoFileUrl()` z
+  `src/host/contribute.ts`). Dodając piąty, dopisz go tam. Nie linkuj naiwnie `href="/PRIVACY.md"` —
+  `wrangler.jsonc` ma `not_found_handling: "single-page-application"`, więc taki link po cichu
+  wyrenderuje galerię; idź przez blob-URL GitHuba albo skopiuj plik do `public/`.
 - `PRIVACY.md`: zero backendu, analityki i cookies, tylko trzy klucze `localStorage`. Jedyny caveat —
   hotlinki, a jego stan na dziś to **12 URL-i DiceBear, wyłącznie w Keychat i Gossip** (dokładnie te
   dwa mają `status: 'preview'`). **Unsplash zszedł w `src/` do zera**, choć caveat i `img-src`
