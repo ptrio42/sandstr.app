@@ -20,7 +20,7 @@ export function NoteBody({ text }: { text: string }) {
     <div className="primal-note-body">
       {lines.map((line, li) => {
         const trimmed = line.trim();
-        // whole-line mention (e.g. "@CITADEL WIRE")
+        // whole-line mention (e.g. "@KEEP WIRE")
         if (trimmed.startsWith('@') && trimmed.length < 40 && !trimmed.includes(' the ')) {
           return (
             <div key={li}>

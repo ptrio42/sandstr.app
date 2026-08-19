@@ -4,7 +4,7 @@ import { SlidersIcon, SearchIcon, ChevronDownIcon, VideoIcon } from '../componen
 import { getSampleImages } from '../../../data/mock';
 
 const tiles = getSampleImages(8);
-const seeds = ['mariah2100', 'zenzapper', 'marinka', 'sandy', 'bohemya', 'dallen', 'fife', 'stlouie88'];
+const seeds = ['prairie2100', 'zenzapper', 'moonlark', 'sandy', 'bohemya', 'darrinvale', 'pipit', 'stmarlo88'];
 
 interface Props {
   currentUserSeed: string;

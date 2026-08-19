@@ -65,7 +65,7 @@ const SELF: ProfileSubject = {
   ],
   seed: 'sandy',
   npub: 'npub1q7x9…8m4n6p0v',
-  nprofile: 'nprofile1qqs9p…9uvrafdc',
+  nprofile: 'nprofile1qqs4h…3kd7pnwe',
   lastSeen: 'Last seen 31 minutes ago',
   nip05: 'sandy.example',
   website: 'sandy.example',

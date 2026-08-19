@@ -14,7 +14,7 @@ const trendingTopics = [
   { topic: 'NIP Updates', posts: '18.3K posts', category: 'Nostr' },
 ];
 
-const recentSearches = ['#bitcoin', '@jack', 'nostr', 'zapping'];
+const recentSearches = ['#bitcoin', '@nina', 'nostr', 'zapping'];
 
 export function SearchScreen({ showToast }: SearchScreenProps) {
   const [query, setQuery] = useState('');

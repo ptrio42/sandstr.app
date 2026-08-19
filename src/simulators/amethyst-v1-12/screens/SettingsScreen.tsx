@@ -84,12 +84,12 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 }
 
 const BLOCKED = [
-  { name: 'npub1v7u…eqmz37jj' },
-  { name: 'npub1j2p…cs6kxw0d' },
-  { name: 'npub1al9…hswjuds8' },
-  { name: 'npub1lck…8qgyhdfm' },
-  { name: 'npub144k…ssuua6c9' },
-  { name: 'npub1ylt…4qnwlakz' },
+  { name: 'npub1t4m…7xqrjdsv' },
+  { name: 'npub1h9c…3kelwzua' },
+  { name: 'npub1zg7…59npfvhr' },
+  { name: 'npub1r2d…qwm8ytkc' },
+  { name: 'npub1u6k…d7svgxnp' },
+  { name: 'npub1a5w…2hjtqefz' },
 ];
 
 function SecurityView({ initialTab = 'blocked' }: { initialTab?: 'blocked' | 'spammers' | 'hidden' }) {

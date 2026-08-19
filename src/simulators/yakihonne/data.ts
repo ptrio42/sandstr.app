@@ -49,26 +49,26 @@ export interface YakiArticle {
 const cover = () => getSampleImages(1)[0];
 
 const ARTICLE_BODY = [
-  "When I arrived here about six months ago, I had no idea what I was doing (and I'm still very much figuring it out). As I've written about previously, the only other time I was ever on social media of any kind was as a teenager, circa 2003-2005, on a website (there were no mobile apps at the time) called Nexopia.",
-  "I came here not because I had any desire to return to social media. In fact, I was rather against the whole thing, hence my complete avoidance for the past twenty years. It seemed to be doing more harm than good to most of the people I knew who used it.",
-  "The beauty of Nostr, for me, is found in the profiles with small to medium size follower counts. Random people, often living obscure lives, united by a common desire for freedom and sovereignty. People, frequently anonymous, expressing themselves honestly, telling whoever cares to listen what they find cool or interesting or beautiful.",
-  "I used those initial \"celebrity\" follows as inroads into the murky community of Nostr by poking through their replies and checking out interesting profiles. I wandered, I replied, I zapped, I looked into people who had replied to other posts.",
+  "When I landed here about six months ago, I had no idea what I was doing (and I'm still very much figuring it out). As I've mentioned before, the only other time I ever kept an account anywhere was as a teenager, back when forums still had guestbooks and nobody carried a phone that could load one.",
+  "I didn't come here because I missed feeds. If anything I was against the whole idea, which is why I skipped the last two decades of it. From the outside it seemed to take more out of the people I knew than it ever gave back to them.",
+  "The beauty of this place, for me, is in the accounts with small to medium follower counts. Ordinary people, often living quiet lives, held together by a shared appetite for freedom and self-reliance. People, frequently anonymous, saying plainly what they find funny or useful or beautiful, and expecting nothing back for it.",
+  "I used those first few big follows as a way in, poking through their replies and opening whatever profile looked interesting. I wandered, I replied, I zapped, I followed the people who had bothered to answer somebody else's note.",
 ];
 
 export const yakiArticles: YakiArticle[] = [
   {
     id: 'art-ai',
-    authorName: '雪猫', authorSeed: 'yukineko', nip05: true,
-    title: 'みんなの AI 開発フロー', summary: 'No description',
+    authorName: '霧猫', authorSeed: 'kirineko', nip05: true,
+    title: 'わたしの Nostr 開発メモ', summary: 'No description',
     readMin: 1, timeAgo: '19 hours ago',
     likes: 0, comments: 0, quotes: 0, zaps: 100, cover: cover(),
     client: 'YakiHonne', body: ARTICLE_BODY,
   },
   {
     id: 'art-cbdc',
-    authorName: 'Nick Anthony', authorSeed: 'nickanthony', nip05: true,
-    title: 'CBDC Banned in United States Until 2031',
-    summary: 'Given the risks of CBDCs, this passage marks a great win for financial freedom.',
+    authorName: 'Policy Pleb', authorSeed: 'policypleb', nip05: true,
+    title: 'Why a State Ledger Cannot Be Opt-In',
+    summary: 'Given the risks of a programmable currency, opting out has to stay a real choice.',
     readMin: 1, timeAgo: '1 day ago',
     likes: 3, comments: 0, quotes: 0, zaps: 0, cover: cover(),
     client: 'YakiHonne', body: ARTICLE_BODY,
@@ -76,8 +76,8 @@ export const yakiArticles: YakiArticle[] = [
   {
     id: 'art-relay',
     authorName: '0xDevBot', authorSeed: '0xdevbot', nip05: true,
-    title: 'Where the Free-Relay Dream Falls Flat',
-    summary: "Nostr's relay economy is bleeding — 95% of relays can't cover costs. The pay-wall reality, and why 0…",
+    title: 'What Running a Relay Actually Costs',
+    summary: "Relay bills are quieter than relay opinions. A month of bandwidth, disk and moderation, itemised, and w…",
     readMin: 3, timeAgo: '1 day ago',
     likes: 4, comments: 0, quotes: 1, zaps: 0, cover: cover(),
     client: 'YakiHonne', body: ARTICLE_BODY,
@@ -85,15 +85,15 @@ export const yakiArticles: YakiArticle[] = [
   {
     id: 'art-community',
     authorName: 'FernStructure', authorSeed: 'fernstructure', nip05: true,
-    title: 'On Finding Your Community on Nostr', summary: 'No description',
+    title: 'On Finding Your Footing on Nostr', summary: 'No description',
     readMin: 6, timeAgo: '1 day ago',
     likes: 20, comments: 1, quotes: 2, zaps: 1100, cover: cover(),
     client: 'YakiHonne', body: ARTICLE_BODY,
   },
   {
     id: 'art-futuro',
-    authorName: 'abu ruqayyah', authorSeed: 'aburuqayyah', nip05: false,
-    title: 'Futurology', summary: "The future doesn't hold much good.",
+    authorName: 'abu pixel', authorSeed: 'abupixel', nip05: false,
+    title: 'Futurology', summary: "Tomorrow is not promising us much.",
     readMin: 4, timeAgo: '1 day ago',
     likes: 0, comments: 0, quotes: 0, zaps: 0, cover: cover(),
     client: 'YakiHonne', body: ARTICLE_BODY,
@@ -112,15 +112,15 @@ export interface YakiActivity {
 }
 
 export const yakiActivity: YakiActivity[] = [
-  { id: 'a1', name: 'Fife', seed: 'fife', timeAgo: '6 hours ago', kind: 'smart_widget', subtitle: 'Featured Calendar Events' },
-  { id: 'a2', name: 'Fife', seed: 'fife', timeAgo: '6 hours ago', kind: 'smart_widget', subtitle: 'Community Stream' },
-  { id: 'a3', name: 'Dallen Older', seed: 'dallen', timeAgo: '1 day ago', kind: 'video', subtitle: '' },
-  { id: 'a4', name: 'MadMonke2141', seed: 'madmonke', timeAgo: '2 days ago', kind: 'curation', subtitle: 'Musical Profile' },
-  { id: 'a5', name: 'ϟtefan', seed: 'stefan', timeAgo: '2 days ago', kind: 'article', subtitle: 'My Nostr Stuff' },
-  { id: 'a6', name: 'stlouie88', seed: 'stlouie88', timeAgo: '2 days ago', kind: 'video', subtitle: 'Concord Protocol' },
-  { id: 'a7', name: 'Eporedano', seed: 'eporedano', timeAgo: '2 days ago', kind: 'article', subtitle: 'Consensus - Chapter 14' },
-  { id: 'a8', name: 'Eporedano', seed: 'eporedano', timeAgo: '2 days ago', kind: 'article', subtitle: 'Consensus - Chapter 13' },
-  { id: 'a9', name: 'Eporedano', seed: 'eporedano', timeAgo: '2 days ago', kind: 'article', subtitle: 'Consensus - Chapter 12' },
+  { id: 'a1', name: 'Pipit', seed: 'pipit', timeAgo: '6 hours ago', kind: 'smart_widget', subtitle: 'Featured Calendar Events' },
+  { id: 'a2', name: 'Pipit', seed: 'pipit', timeAgo: '6 hours ago', kind: 'smart_widget', subtitle: 'Community Stream' },
+  { id: 'a3', name: 'Darrin Vale', seed: 'darrinvale', timeAgo: '1 day ago', kind: 'video', subtitle: '' },
+  { id: 'a4', name: 'MadMarmot2141', seed: 'madmarmot', timeAgo: '2 days ago', kind: 'curation', subtitle: 'Musical Profile' },
+  { id: 'a5', name: 'ϟtella', seed: 'stella', timeAgo: '2 days ago', kind: 'article', subtitle: 'My Nostr Stuff' },
+  { id: 'a6', name: 'stmarlo88', seed: 'stmarlo88', timeAgo: '2 days ago', kind: 'video', subtitle: 'Cascade Protocol' },
+  { id: 'a7', name: 'Ottavino', seed: 'ottavino', timeAgo: '2 days ago', kind: 'article', subtitle: 'Longhand - Chapter 14' },
+  { id: 'a8', name: 'Ottavino', seed: 'ottavino', timeAgo: '2 days ago', kind: 'article', subtitle: 'Longhand - Chapter 13' },
+  { id: 'a9', name: 'Ottavino', seed: 'ottavino', timeAgo: '2 days ago', kind: 'article', subtitle: 'Longhand - Chapter 12' },
 ];
 
 export interface YakiDM {
@@ -162,18 +162,18 @@ export const yakiRelays: YakiRelay[] = [
 
 export const zapPresets = [20, 100, 500, 1000, 5000, 10000, 50000, 100000];
 
-// Curated home feed — mirrors the reference recording note-for-note.
+// Curated home feed — invented personas, laid out in the reference feed's shape.
 export const homeNotes: YakiNoteData[] = [
   {
-    id: 'n-steak', name: 'Mariah2100', seed: 'mariah2100', nip05: true, zap: true, timeAgo: '22 minutes ago',
-    content: 'Lunch time!  Its hard to beat ribeye steak for lunch, with avocado on the side. 🤤🤤',
+    id: 'n-steak', name: 'Prairie2100', seed: 'prairie2100', nip05: true, zap: true, timeAgo: '22 minutes ago',
+    content: 'Lunch time!  Its hard to beat leftover brisket for lunch, with avocado on the side. 🤤🤤',
     images: [cover()],
     reactions: 6, replies: 3, reposts: 2, quotes: 0, zaps: 177,
     zapChip: { sats: 100, from: 'Sat Kitchen', reactors: ['satkitchen', 'marina'] },
   },
   {
-    id: 'n-rainy', name: 'Mariah2100', seed: 'mariah2100', nip05: true, zap: true, timeAgo: '3 hours ago',
-    content: 'A dark and rainy morning for us, not typical for July in texas.  As soon as it  quits i need to take advantage of the moisture and get some buckwheat seeds in the ground.\n#RainyDay',
+    id: 'n-rainy', name: 'Prairie2100', seed: 'prairie2100', nip05: true, zap: true, timeAgo: '3 hours ago',
+    content: 'A dark and rainy morning up here, not typical for July on the ridge.  As soon as it  quits i need to take advantage of the moisture and get some clover seeds in the ground.\n#RainyDay',
     images: [cover()],
     reactions: 5, replies: 1, reposts: 0, quotes: 0, zaps: 31,
     reactionEmoji: '💜', defaultLiked: true,
@@ -186,8 +186,8 @@ export const homeNotes: YakiNoteData[] = [
     quoted: 'loading',
   },
   {
-    id: 'n-gn', name: 'Marinka', seed: 'marinka', nip05: true, zap: true, timeAgo: '1 hour ago',
-    content: "GN 🌙\n\nAngine de Poitrine is honestly the best concentration music I've ever enjoyed. My brain runs extremely smooth when listening to it.\n\nNighty night everybody! 🧡💜\n\nHere my favorite piece:",
+    id: 'n-gn', name: 'Moonlark', seed: 'moonlark', nip05: true, zap: true, timeAgo: '1 hour ago',
+    content: "GN 🌙\n\nSlow ambient piano is honestly the best concentration music I've ever enjoyed. My brain runs extremely smooth when listening to it.\n\nNighty night everybody! 🧡💜\n\nHere my favorite piece:",
     reactions: 3, replies: 0, reposts: 0, quotes: 0, zaps: 12,
   },
   {

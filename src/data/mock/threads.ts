@@ -422,7 +422,7 @@ const threadTemplates: ThreadTemplate[] = [
         content: 'Monthly for lower fees. Stack sats on the 1st of every month.',
         replies: [
           {
-            content: 'Strike and Swan both offer free automatic DCA. No need to worry about fees.',
+            content: 'Most exchanges offer automatic recurring buys. Just check the fee schedule first.',
           },
         ],
       },

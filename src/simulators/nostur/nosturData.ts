@@ -142,7 +142,7 @@ export interface FollowPack {
 }
 
 export const followPacks: FollowPack[] = [
-  { id: 'fp-1', title: 'Freedom Tech Signal', total: 122, at: 4, by: 6 },
+  { id: 'fp-1', title: 'Signal Over Noise', total: 122, at: 4, by: 6 },
   { id: 'fp-2', title: 'Protocol Builders 2026', total: 98, at: 11, by: 2 },
   { id: 'fp-3', title: 'Podcasters', total: 47, at: 17, by: 9 },
   { id: 'fp-4', title: 'Relay Operators', total: 31, at: 22, by: 13 },

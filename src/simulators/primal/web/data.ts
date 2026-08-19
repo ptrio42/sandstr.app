@@ -74,7 +74,7 @@ export const feedNotes: PNote[] = [
     handle: 'pia@trustgraph.example',
     time: '23 hr.',
     verified: true,
-    body: '🚀 wotscout v2 just dropped.\n\nSearch and discovery for Nostr, done right.\n\nMultiple algorithms.\nMultiple providers.\nOne personalized, decentralized experience.\n\nSo fast to feel instant. So flexible to be yours.',
+    body: '🚀 wotscout v2 just dropped.\n\nFollow graphs you can actually inspect.\n\nPick a scorer.\nPick a source.\nOne feed that stays yours end to end.\n\nQuick enough to forget it is there. Yours to retune.',
     media: img(),
     zapTop: { amount: '1389', comment: '🤘' },
     reply: 6,
@@ -103,7 +103,7 @@ export const feedNotes: PNote[] = [
     handle: 'mira@kessler.example',
     time: '23 hr.',
     verified: true,
-    body: 'Is 55% Miner Activation Too Low For BIP-110?',
+    body: 'Is 40% Miner Signalling Enough For A Soft Fork?',
     reply: 4,
     zap: '188',
     like: 21,
@@ -132,9 +132,9 @@ export const liveCard = { name: 'Static Bloom Radio', started: 'Started 1 yr. ag
 
 export const trending = [
   { name: 'HODLR', time: '1 hr.', preview: "This is tough to do, but every time I can get into the headspace where I'm just…" },
-  { name: 'Mira Kessler', time: '4 hr.', preview: '12 Attacks On Bitcoin (And What Happened) https://media.sandbox.example/1164e2…' },
+  { name: 'Mira Kessler', time: '4 hr.', preview: '9 Myths About Bitcoin (And What Broke Them) https://media.sandbox.example/1164e2…' },
   { name: 'SPARK', time: '1 hr.', preview: "⚡🤠 SPARK - It's time for me to renew my VPN subscription. Do you have any…" },
-  { name: 'freedomfran', time: '2 hr.', preview: 'Revolting I wonder how many people who drink these "energy drinks" know they…' },
+  { name: 'freedomfran', time: '2 hr.', preview: 'Grim stuff I wonder how many people who buy these "wellness shots" ever read…' },
   { name: 'alv', time: '3 hr.', preview: 'https://media.sandbox.example/f2c0104cbb2522c186fa3f3ca068cebe5170364ae3805…' },
   { name: 'wildersoul', time: '3 hr.', preview: 'Good night, Nostr fam! Just wanna say thanks for being so nice and for lettin…' },
   { name: 'Bertking', time: '3 hr.', preview: 'People always talk about lack of money, but the real lack is of ideas and…' },
@@ -239,16 +239,16 @@ export const profileStats = [
 export const profileMeta = { following: '2374', followers: '3514', joined: 'Joined Nostr on Dec 20, 2022' };
 
 export const latestReads = [
-  { title: 'Fat Is Not Optional', time: '5 mo.', read: '1 minutes' },
-  { title: 'Chapter 1: Meat, fat and simplicity', time: '5 mo.', read: '1 minutes' },
+  { title: 'Sleep Is Not Optional', time: '5 mo.', read: '1 minutes' },
+  { title: 'Chapter 1: Rest, light and routine', time: '5 mo.', read: '1 minutes' },
 ];
 
 export const popularNotes = [
-  { time: '3 yr.', text: 'Looks like 69ers are way behind again 😅 @npub138guayty78..pekq6wk36k…' },
-  { time: '3 yr.', text: "Wanna try a little game 👍 I'm thinking of a number 💭 Zap ⚡ this note with an…" },
-  { time: '3 yr.', text: 'GM #Nostr ☀️💜👥 Getting married today 😅👍…' },
-  { time: '3 yr.', text: '@npub1dqg3at6cma..sn0szs3643 @npub1dy7zsvk7jw..78as6hljz5 put you…' },
-  { time: '1 yr.', text: 'CATSTRR - a nostr relay that only accepts notes with cat pictures 🐱…' },
+  { time: '3 yr.', text: 'Looks like my bracket is busted again 😅 @npub1qz4h7e2vk9..r3dts5x0mw…' },
+  { time: '3 yr.', text: "Fancy a quick puzzle 👍 I'm picking a block height 💭 Zap ⚡ this note with your…" },
+  { time: '3 yr.', text: 'GM #Nostr ☀️💜👥 Shipping the beta today 😅👍…' },
+  { time: '3 yr.', text: '@npub1w5tgq2v7dx..u3znf6a9pk @npub1e4rc8h0sym..d27v5xqjt4 put you…' },
+  { time: '1 yr.', text: 'PURRSTR - a nostr relay that only accepts notes with cat pictures 🐱…' },
 ];
 
 export const relays = [
