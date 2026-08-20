@@ -21,9 +21,15 @@ w projekcie. `connect-src` zostaje `'self'`. **Deploy = `git push` na main** —
 i wdraża samo; lokalny `wrangler deploy` NIE zadziała (brak logowania, tylko `CLOUDFLARE_API_TOKEN` by
 pomógł). Po wdrożeniu sprawdź TAKŻE endpoint: `curl -s 'https://sandstr.app/api/unfurl?url=https%3A%2F%2Fnostr.com'`
 musi zwrócić JSON — `<!doctype html>` znaczy, że `run_worker_first` nie zadziałało.
-Weryfikacja części klienckiej: porównaj hash chunka z `dist/assets/` z tym serwowanym na
-`sandstr.app/assets/…` albo grepni marker treści — hash samego `index-*.js` to za mało, bo zmiany
-w symulatorze siedzą w lazy chunkach.
+**Weryfikacja części klienckiej: grepnij MARKER TREŚCI, nigdy hash.** Nazwy chunków z Twojego
+`dist/assets/` a te z produkcji **się nie zgadzają** — Workers Builds buduje w innym środowisku,
+więc content-hash wychodzi inny przy identycznej treści (zmierzone 2026-08-20: lokalnie
+`YakiHonneSimulatorWithTour-CzWs6etG.js`, na produkcji `…-94splmgn.js`, **oba 79 908 B**).
+Pytanie o lokalną nazwę pliku dostaje **200 z `index.html`** (SPA fallback), co wygląda jak
+udany deploy i nim nie jest. Poprawna droga: pobierz `https://sandstr.app/`, wyciągnij z niego
+`assets/index-*.js`, z tego chunka wyciągnij nazwę lazy chunka klienta, dopiero jego grepnij
+(a przy okazji sprawdź, czy pierwsze bajty to JS, nie `<!doctype`). Hash samego `index-*.js`
+to i tak za mało, bo zmiany w symulatorze siedzą w lazy chunkach.
 
 ## Komendy
 
