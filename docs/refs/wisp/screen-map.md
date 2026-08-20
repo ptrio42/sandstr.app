@@ -9,9 +9,8 @@ flagged **[REC vs REPO]**.
 
 Identity (verified 2026-07-30 from the project's own materials): repo
 `https://github.com/barrydeen/wisp` ("wee interface for scrolling posts"), homepage
-`https://wisp.mobile` ("Wisp — Social that's actually fun again"), author Barry Deen, **MIT**
-(`LICENSE`, © 2025 Barry Deen), Google Play id `com.wisp.app`. OpenSats-funded (opensats.org lists
-Wisp among funded Nostr projects; grant-wave page not individually re-verified). README pitch
+`https://wisp.mobile` ("Wisp — Social that's actually fun again"), **MIT**
+(`LICENSE`), Google Play id `com.wisp.app`. README pitch
 (`README.md:3,25`): "A minimal, performant Android client … implements the full outbox/inbox relay
 model with reliability scoring … decentralization is the default path, not an opt-in."
 
@@ -398,7 +397,7 @@ Footer: 16dp glyph + **"wisp v1.2.1"** @30%.
 **Verified against recording frames:** splash/login, Nostr sheet, create-account, suggestions,
 topics, first-post countdown, feed (+selector dropdown, relay picker, LIVE row), thread (+emoji
 picker, empty state), reply, zap dialog (fiat variant), add-to-list, wallet home/detail, search
-(profiles/notes), profile (fiatjaf), DMs (list/new-group/conversation), notifications (empty),
+(profiles/notes), profile (a followed account), DMs (list/new-group/conversation), notifications (empty),
 compose (+draft, undo pill), own profile, drawer (+settings subtree), Interface, Relays
 (General/DM), Keys, Safety, PoW, Social Graph (+computed viz), Custom Emojis, Relay Health,
 relay detail, Console.

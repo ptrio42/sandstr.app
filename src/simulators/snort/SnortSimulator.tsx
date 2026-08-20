@@ -324,7 +324,7 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
           username: 'snortuser',
           avatar: '',
           bio: 'Exploring Nostr with Snort',
-          nip05: 'demo@snort.social',
+          nip05: 'demo@snort.example',
           // Fixed constants, never Date.now(): the tour must replay
           // identically on every pass. Mirrors LoginScreen's DEMO_USER.
           createdAt: 1_700_000_000,

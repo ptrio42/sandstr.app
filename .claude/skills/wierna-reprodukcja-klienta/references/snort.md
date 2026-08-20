@@ -4,7 +4,7 @@ Ground truth: `docs/refs/snort/screen-map.md` (autorytatywny, 19 sekcji, 1267 li
 + `v0l/snort@3cc8317`). Luki: `docs/gaps/snort.md`. Kod: `src/simulators/snort/` (12 powierzchni),
 tokeny `snort.theme.css`.
 
-- Repo `v0l/snort`, **MIT**, Kieran (`v0l`); `snort.social`. **GitHub jest kanoniczny, `git.v0l.io` to
+- Repo `v0l/snort`, **MIT**; `snort.social`. **GitHub jest kanoniczny, `git.v0l.io` to
   mirror.** Tokeny: `packages/app/src/index.css` — **Tailwind v4, blok `@theme{}`**, a `tailwind.config`
   w repo **NIE ISTNIEJE** → to PORT, nie tłumaczenie.
 - **Dwa akcenty WSPÓŁISTNIEJĄ:** violet `--highlight` `#ac88ff` (dark) / `#7139f1` (light) obok CTA

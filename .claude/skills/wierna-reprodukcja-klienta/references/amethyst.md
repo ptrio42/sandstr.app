@@ -7,7 +7,7 @@ Kod: `src/simulators/amethyst/`, tokeny `amethyst.theme.css`.
 - **Wzorzec wierności** razem z Damusem: głęboki, zweryfikowany referencyjnie flagowiec/szablon,
   **9 powierzchni**. Do niego równamy — inline-SVG robohash avatary, lokalne media postów jako
   `data:`-URI, offline/CSP-safe, tokeny z repo klienta + weryfikacja side-by-side z realnym recordingiem.
-- Repo: `vitorpamplona/amethyst`, **MIT**, Vitor Pamplona; `amethyst.social`. Tokeny:
+- Repo: `vitorpamplona/amethyst`, **MIT**; `amethyst.social`. Tokeny:
   `.../ui/theme/Color.kt` + `Theme.kt`. Brak wersji web — weryfikuj ze źródła + screenów.
 - **Realny fiolet `#7F67BE`** (Primary50) / `#D0BCFF` (Primary80). **`#6750A4` to generyczny Material
   default, NIE token Amethysta** — nie wpisuj go. Zap = BitcoinOrange `#F7931A`, dark bg/surface = czysta

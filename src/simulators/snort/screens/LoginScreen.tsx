@@ -63,7 +63,7 @@ const DEMO_USER: MockUser = {
   username: 'snortuser',
   avatar: '',
   bio: 'Exploring Nostr with Snort',
-  nip05: 'demo@snort.social',
+  nip05: 'demo@snort.example',
   followersCount: 256,
   followingCount: 128,
   createdAt: 1_700_000_000,

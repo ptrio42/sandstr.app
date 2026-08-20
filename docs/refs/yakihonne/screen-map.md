@@ -2,7 +2,7 @@
 
 Authoritative spec for a faithful React/Tailwind web reproduction of the **YakiHonne mobile app** (Flutter/Dart). Merged from source recon of `YakiHonne/mobile-app@main` (11-surface pass, 2026-07-14), cross-checked against `YakiHonne/web-app` `src/styles/root.css`. Convention: **repo wins for exact HEX + icon/label names; a screen recording wins for LAYOUT.** All hex values converted from Flutter `Color(0xAARRGGBB)`. Divergences flagged **[REC vs REPO]**; unconfirmed items flagged **(UNVERIFIED)**.
 
-> **The one thing to get right:** the default brand accent is **orange `#EE7700`**, not purple. Purple is the *logo-asset* color and one *selectable* theme accent among six — never the default UI accent. AUDIT.md's "purple" recommendation is wrong; this file corrects it.
+> **The one thing to get right:** the default brand accent is **orange `#EE7700`**, not purple. Purple is the *logo-asset* color and one *selectable* theme accent among six — never the default UI accent. An early audit recommended "purple"; that is wrong, and this file corrects it.
 
 ---
 
@@ -297,7 +297,7 @@ Source: `search_view/search_view.dart`. (Distinct from `discover_view.dart`, whi
 
 The ~12 details that most define YakiHonne's look and are easiest to get wrong:
 
-1. **Orange, not purple.** Default accent = **`#EE7700`**. Purple (`#6B218D` / `#86318C` / `#7A117E`) is the logo-asset color + a *selectable* accent, never the default UI accent. (Corrects AUDIT.md.)
+1. **Orange, not purple.** Default accent = **`#EE7700`**. Purple (`#6B218D` / `#86318C` / `#7A117E`) is the logo-asset color + a *selectable* accent, never the default UI accent. (Corrects the early audit.)
 2. **The purple↔orange duality.** The **app icon/logo is purple**, but the **live UI is orange**. Reproduce both — a purple splash/icon feeding an orange in-app accent.
 3. **The logo mark is a faceted angular abstract**, not a leaf/bird/flame. Reproduce the silhouette (ratio 35:61, needle-tip bottom, two spike-tips top), not the upstream path data.
 4. **Active bottom-nav tab is NOT orange** — it's white/black (`primaryColorDark`) with a **filled icon + tiny 4px dot below**. Only the **compose FAB is orange**.

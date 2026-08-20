@@ -1,6 +1,6 @@
 # Sandstr — Fidelity Kit (wierne odtwarzanie realnych klientów)
 
-> **Co to jest:** zweryfikowany (multi-agentowy recon, 2026-07-14) zestaw „ground truth" do podnoszenia **wierności** (`fidelity` — najsłabsza oś w `docs/AUDIT.md`, `f`=2–5). Dla każdego z 9 realnych klientów: prawdziwe tokeny marki, **plik-źródło tokenów w repo klienta**, struktura nawigacji i detale, które decydują o rozpoznawalności. Powstało, bo oryginał robiono bez modelu wizji — kolory/nawigacja/layout były zgadywane.
+> **Co to jest:** zweryfikowany (multi-agentowy recon, 2026-07-14) zestaw „ground truth" do podnoszenia **wierności** (`fidelity` — najsłabsza oś w pierwszym audycie, `f`=2–5). Dla każdego z 9 realnych klientów: prawdziwe tokeny marki, **plik-źródło tokenów w repo klienta**, struktura nawigacji i detale, które decydują o rozpoznawalności. Powstało, bo oryginał robiono bez modelu wizji — kolory/nawigacja/layout były zgadywane.
 >
 > **Klucz:** **wszystkie te klienty są open source.** Wierne odtwarzanie to **port z ground truth**, nie zgadywanie z pamięci. Nie zgadujesz fioletu Amethysta — to stała w `Color.kt`.
 
@@ -57,7 +57,7 @@
 - ✅ **Nostur (iOS)** (13 powierzchni: welcome+add-account/feed×3/thread/profile/notifications/
   messages+DM/search/bookmarks/compose/zap/drawer/settings×6) — `docs/refs/nostur/screen-map.md`
   (autorytatywny, 19 sekcji; recording 2026-08-05 + `nostur-com/nostur-ios-public@11bcebb`).
-  SwiftUI, **GPL-3.0**, autor Fabian Lachman; `nostur.com`, App Store `1672780508` (+ macOS `.dmg`).
+  SwiftUI, **GPL-3.0**; `nostur.com`, App Store `1672780508` (+ macOS `.dmg`).
   **10 nazwanych motywów, default dosłownie `"default"`** (`Theme.swift:39`); light/dark to preferencja
   systemu (`preferredColorScheme` = `nil` poza `dark_garnet`) → robimy oba, registry otwiera dark.
   Accent w repo to **`display-p3(51,162,166)`** (`Themes.xcassets/defaultAccentColor.colorset`) —
@@ -165,34 +165,34 @@ Pełny how-to w pamięci `[[fidelity-repro-playbook]]`.
 - ⚠ **Korekta „sygnatury":** **Deck mode NIE jest sygnaturą — to martwy kod.** Potrójnie zablokowany: `features.deck: false` w `config/default.json`, dodatkowo paywall subskrypcji (`deckSubKind: 1`, a `features.subscriptions: false`), a `SnortDeckLayout` **nie jest nigdzie zaimportowany** → **route `/deck` nie istnieje** (wpada w catch-all `/:link`). Nie buduj na nim symulatora i nie opisuj go jako dostępnego trybu.
 - ⚠ **Korekta „dark-first":** baza CSS jest ciemna, ale domyślna preferencja to **`theme: "system"`** (`Utils/Login/Preferences.ts`), a `useTheme.tsx` przełącza klasy `.light`/`.dark` na `<html>` — czyli user w light mode widzi **jasny** Snort (recording właśnie taki jest). Rób OBA motywy i oddaj sterowanie hostowemu `useParentTheme`.
 - **Multi-brand:** repo buduje 6 marek z jednego kodu (`config/{default,iris,meku,nostr,phoenix,soloco}.json`, wybór przez `NODE_CONFIG_ENV`). `default.json` **to Snort** i wszystkie 4 pipeline'y Drone budują `default` → Snort jest kanoniczny; phoenix.social to white-label (patrz otwarte pytanie w nagłówku screen-mapy).
-- **Upstream:** **GitHub `github.com/v0l/snort` jest kanoniczny, `git.v0l.io` to mirror** (zweryfikowane 2026-07-29). Licencja MIT, © 2023 Kieran (v0l). Marka = raster `nostrich_*.png` (fioletowy struś) — **nie shipuj go bez zgody**, użyj `ClientGlyph`.
+- **Upstream:** **GitHub `github.com/v0l/snort` jest kanoniczny, `git.v0l.io` to mirror** (zweryfikowane 2026-07-29). Licencja MIT. Marka = raster `nostrich_*.png` (fioletowy struś) — **nie shipuj go bez zgody**, użyj `ClientGlyph`.
 
 ### Amethyst — Android (repo `vitorpamplona/amethyst`, MIT)
 - **Tokeny:** `amethyst/src/main/java/com/vitorpamplona/amethyst/ui/theme/Color.kt` (raw) + `Theme.kt` (light/dark ColorScheme) + `Type.kt` / `Shape.kt`. Brak wersji web — weryfikuj ze źródła + screenów Play.
 - **Paleta (confirmed):** `#7F67BE` (Primary50 — sygnaturowy fiolet) · `#9A82DB` · `#B69DF8` · `#D0BCFF` (Primary80 / DEFAULT) · `#BB86FC` · light-primary `#6200EE` · `#3700B3` · zap **BitcoinOrange `#F7931A`** · dark bg/surface **pure `#000000`**. Uwaga: `#6750A4` to generyczny Material default, **NIE** token Amethysta.
 - **Nav / killer:** bottom-nav Material 3, ~5 dest. (Home/Search/Live-Video z kropką/Notifications/Messages) + górny drawer konta/relayów; **kolejność akcji: comments → boost → reaction (EMOJI, nie serce) → zap (⚡ + suma sat)**; Material You, czysta czerń, robohash-avatary; domyślny akcent = fiolet (user-selectable, ale fiolet definiuje markę).
-- **Upstream:** Vitor Pamplona, `amethyst.social`.
+- **Upstream:** `amethyst.social`.
 
 ### YakiHonne — web/iOS/Android (repo `YakiHonne/web-app` + `YakiHonne/mobile-app`, MIT)
 - ⚠️ **Repo:** używać `YakiHonne/web-app` i `YakiHonne/mobile-app`; `yakihonne-web-app`/`yakihonne-mobile-app` są **ZARCHIWIZOWANE**.
 - **Tokeny:** mobile `lib/utils/constants.dart` (`kMainColor`, `kMainColor1..5`, `kPurple`) + `lib/utils/theme/theme.dart` (4 warianty). Web `src/styles/root.css` (`--c1`/`--orange-main`, `--c2`, `--c3`). Żywa: `yakihonne.com`.
 - **Paleta (confirmed):** **DEFAULT = ORANŻ `#EE7700`** (`kMainColor`/`--orange-main`) · fiolet `#6B218D` (selectable accent) · `#86318C` (kPurple) · deep purple `#220038` (ciemne powierzchnie) · aubergine `#1F0021` · dark bg `#171718` · cream `#FAF7F3`.
 - **Nav / killer:** mobile bottom-nav 5 tabów: **Home, Media, Wallet (center), Notifications, Messages**; desktop 3-kolumnowy (rail + suggested articles + timeline); **Smart Widgets inline = sygnatura**; Cashu wallet jako centralna zakładka; 4 motywy (light/dark/black/cream); dual content model (artykuły vs notatki), article reader.
-- ⚠️ **Korekta AUDIT.md:** audyt każe „przeskinować na fiolet" — **błąd**. Oranż to prawdziwy default; sim miał go dobrze. Fiolet dodaj jako drugorzędny/ciemne powierzchnie.
+- ⚠️ **Korekta pierwszego audytu:** audyt każe „przeskinować na fiolet" — **błąd**. Oranż to prawdziwy default; sim miał go dobrze. Fiolet dodaj jako drugorzędny/ciemne powierzchnie.
 - **Upstream:** JustHonne Technologies.
 
 ### Primal — web/iOS/Android (org `PrimalHQ`, MIT)
 - **Tokeny:** `primal-web-app/src/palette.scss` (autorytatywne, per named theme) + `*.module.scss`. Android `primal-android-app/.../theme/colors/Midnight.kt`, `Ice.kt`. Żywa: `primal.net` (SolidJS — **nie React**, tokeny trzeba przetłumaczyć ręcznie).
 - **Paleta (confirmed):** **DEFAULT accent BLUE `#2394EF`** (Midnight/Ice) · alt-theme magenta `#ca077c` + liked `#F800C1` · gradient sunset `#EF404A→#5B12A4`, midnight `#14B9FF→#690DFF` · dark bg OLED `#000`, input `#222`, surface `#1A1A1A` · zapped amber `#FFA02F`, reposted green `#66E205`, bookmarked `#0090F8`.
 - **Nav / killer:** wbudowany **Lightning wallet + kwoty zapów** = sygnatura; **domyślny akcent to niebieski, nie magenta** (magenta = alt „Sunset"); OLED-czerń (nie `#121212`); nav z **Reads + Wallet** jako first-class; gęste, tekst-first karty; przełącznik custom feeds na górze feedu.
-- ⚠️ **Korekta AUDIT.md:** „purple/magenta" to tylko alt-theme; default = blue.
+- ⚠️ **Korekta pierwszego audytu:** „purple/magenta" to tylko alt-theme; default = blue.
 - **Upstream:** Primal Systems Inc.
 
 ### Damus — iOS/macOS (repo `damus-io/damus`, **GPL-3.0**)
 - **Tokeny:** `damus/Shared/Components/DamusColors.swift` + `Assets.xcassets/Colors/*.colorset/Contents.json` (RGB light/dark) + `Gradients/PinkGradient.swift`. Ikony = **bundlowane assety** (`Assets.xcassets/iconography/`), nie SF Symbols. Tab-bar: `Features/Timeline/Views/MainTabView.swift`.
 - **Paleta (confirmed):** `#CC43C5` DamusPurple (accent) · `#BF26ED` DeepPurple · **gradient `#D34CD9→#F869B6`** (sygnatura) · `#4B4DFF` blue · `#66C34F` green · `#F7931A` Bitcoin · purpurowe tło `#F4DAF4`/`#5D2D5C`.
 - **Nav / killer:** dokładnie **4 taby + centralny compose FAB**; kolejność (MainTabView): Home / DMs / [FAB] / Search(=Universe) / Notifications(bell); **własne ikony** (selected = `.fill` wariant), nie SF Symbols; poza tym natywny iOS (SF Pro, systemowe nav/sheets); gradient purple→pink na follow/banner/QR; „Purple" subscription (numer subskrybenta + badge + DeepL).
-- **Upstream:** William Casarin; marka rozpoznawalna → nie shipuj upstreamowego rastra.
+- **Upstream:** `damus.io`; marka rozpoznawalna → nie shipuj upstreamowego rastra.
 
 ### Coracle — web (repo `coracle-social/coracle`, MIT) — ✅ ZROBIONE 2026-08-05
 - 📄 **Pełny spec: `docs/refs/coracle/screen-map.md`** (19 sekcji, cytaty do plików repo). Niżej streszczenie.
@@ -201,25 +201,25 @@ Pełny how-to w pamięci `[[fidelity-repro-playbook]]`.
 - ⚠️ **Korekta:** `LogoSvg.svelte:8` ma inny oranż `#EB5E28` jako fallback `--logo-color`, ale ten komponent **nie ma żadnych importerów** — martwy. Brand to `#FC560E`.
 - **Nav / killer:** **dark-first + ciepłe brązy** (stary sim: light+cold = podwójnie źle); **lewy sidebar `w-72`** z 6 pozycjami **TYLKO TEKST, bez ikon**: Feeds/Relays/Notifications/Messages/Groups/Lists (NIE Communities/Calendar/Market — te nie istnieją), aktywna **rośnie** `text-2xl`→`text-3xl` + akcentowe podkreślenie; fonty **Lato** (body) + **Staatliches** (wszystkie `.btn`/nagłówki — to typeface **all-caps**, stąd kapitaliki w UI mimo Title case w kodzie); sygnatura = panel **„Your Feeds"** (composable feeds) + rating relayów + **WoT dial przy każdej nazwie** (nie checkmark!); gęsty, utylitarny layout; prawie wszystko to **modale**.
 - ⚠️ **Bazowy `.btn` jest BIAŁY na CZARNYM** (`app.css:374-376`) — akcent jest opt-in, tylko dla akcji głównej.
-- **Upstream:** Jon Staab, `coracle.social`.
+- **Upstream:** `coracle.social`.
 
 ### Keychat — cross-platform (repo `keychat-io/keychat-app`, **AGPL-3.0**)
 - **Tokeny:** `packages/app/lib/page/theme.dart` (`MaterialTheme` light/dark) + `app_theme.dart` (orange selection). Wallet: `packages/keychat_ecash`. Assety: `packages/app/assets/images/`.
 - **Paleta (confirmed):** **PURPLE** light `#8700ED` / dark `#d4bbff` (Material 3, seed ~`#695392`) · **orange** akcenty `#EC6E0E` (invite), selection `#FDDABB`/`#896647` · light surface `#fef7fe`, dark `#141317` · secondary magenta `#783776`/`#fcacf3`.
 - **Nav / killer:** **3-tab CupertinoTabBar**: Chats / Browser / Me (nie drawer, nie 4–5 tabów); Material 3 bez ripple (NoSplash); sygnatura = „super app" (szyfrowany czat kosztujący ecash „stamps" + Cashu/Lightning wallet + browser mini-appów); badge trybu szyfrowania per-room; „Red Pocket" (czerwona koperta); onboarding tworzy nsec/seed, bez telefonu/emaila.
-- ⚠️ **Korekta AUDIT.md:** brand **NIE** jest niebieski `#2D7FF9` — jest fioletowo-pomarańczowy.
+- ⚠️ **Korekta pierwszego audytu:** brand **NIE** jest niebieski `#2D7FF9` — jest fioletowo-pomarańczowy.
 
 ### Gossip — desktop (repo `mikedilger/gossip`, MIT)
 - **Tokeny:** `gossip-bin/src/ui/theme/default.rs` (`Color32::from_rgb`) + `mod.rs` (roundness/spacing) + `test_page.rs` (mapa token→widget). Screeny: `assets/gossip_screenshot_{dark,light}.png`. Brak DOM — czytaj Rust.
 - **Paleta (confirmed):** accent **stalowy błękit `#74A7CC`** dark / `#557A95` light (jeden brand color) · dark bg `#0A0A0A`/`#1B1B1B`/`#262626` · error `#EF4444`, success `#22C55E`, amber `#FBBF24` · highlight: relay `#A040A0`, pubkey green, eventid red.
 - **Nav / killer:** **wąski pionowy icon-rail** po lewej + cienki status bar na dole (sim: generyczny „Twitter sidebar" = największy błąd); spartańskie **egui** immediate-mode (płaskie fille, hairline separatory, wysoka gęstość, brak cieni/kart); sygnatura = **outbox/gossip relay model** (Relays screen z per-relay read/write/outbox); developer-tool DNA (surowy JSON eventu, kolorowe chipy pubkey/eventid/relay).
-- **Upstream:** Mike Dilger; repo idle (aktywny fork YGGverse).
+- **Upstream:** repo idle (aktywny fork YGGverse).
 
 ---
 
-## Korekty do `docs/AUDIT.md` (rekomendacje kolorów częściowo błędne)
+## Korekty do pierwszego audytu (rekomendacje kolorów częściowo błędne)
 
-| Klient | AUDIT.md mówi | Ground truth |
+| Klient | pierwszy audyt mówi | Ground truth |
 |---|---|---|
 | YakiHonne | „re-skin na fiolet, oranż zły" | **oranż `#EE7700` to prawdziwy default**; fiolet = akcent/ciemne powierzchnie |
 | Keychat | brand blue `#2D7FF9` | **fiolet `#8700ED`/`#d4bbff` + orange** |

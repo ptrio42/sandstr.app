@@ -223,7 +223,7 @@ export const keychatConfig: SimulatorConfig = {
 
 /**
  * Wisp - Android Nostr client
- * "a wee interface to scroll posts" — outbox-model client by Barry Deen.
+ * "a wee interface to scroll posts" — an outbox-model Android client.
  * Colors from docs/refs/wisp/screen-map.md: accent #FF9800 (Theme.kt "custom"
  * default), secondary = the brand-glyph radial stop #E97941 (ic_wisp_logo.xml).
  */
@@ -250,7 +250,7 @@ export const wispConfig: SimulatorConfig = {
 
 /**
  * Nostur - iOS/iPadOS/macOS Nostr client
- * Native SwiftUI client by Fabian Lachman. Colors from
+ * Native SwiftUI client. Colors from
  * docs/refs/nostur/screen-map.md §1: the shipped "default" theme's accent is
  * stored as display-p3(51,162,166) in
  * Themes.xcassets/defaultAccentColor.colorset — which the device paints as

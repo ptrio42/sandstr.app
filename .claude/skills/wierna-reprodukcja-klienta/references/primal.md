@@ -6,7 +6,7 @@ Kod: `src/simulators/primal/web/` (+ tokeny `primal-web.theme.css`), wrapper
 `src/simulators/primal/PrimalWebSimulatorWithTour.tsx`.
 
 - Powstał z rebuildu **z recordingu + recon** repo `PrimalHQ/primal-web-app` (**MIT**, Primal Systems Inc.,
-  Miljan Braticevic; `primal.net`). Uwaga: to **SolidJS**, nie React → tokeny tłumaczysz ręcznie.
+  `primal.net`). Uwaga: to **SolidJS**, nie React → tokeny tłumaczysz ręcznie.
 - **Layout 3-kolumnowy:** lewy nav / feed / prawy sidebar.
 - **Dwa motywy: Ice (light, ten z recordingu) + Midnight (dark, OLED, realny default).**
 - **Accent BLUE `#2394EF`** — NIE oranż i NIE magenta. Magenta to legacy alt-theme „Sunset". `configs.ts`

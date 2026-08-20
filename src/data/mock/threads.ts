@@ -29,13 +29,13 @@ const threadTemplates: ThreadTemplate[] = [
     category: ContentCategory.BITCOIN,
     replies: [
       {
-        content: 'Welcome! Start with the Bitcoin Standard by Saifedean Ammous. Best introduction to the "why" of Bitcoin.',
+        content: 'Welcome! Start with any solid sound-money primer. Best introduction to the "why" of Bitcoin.',
         replies: [
           {
             content: 'Second this. It completely changed my perspective on money.',
           },
           {
-            content: 'Also check out the "What is Money" podcast series by Robert Breedlove after you read it.',
+            content: 'Also check out a good monetary-history podcast series after you read it.',
           },
         ],
       },
@@ -460,7 +460,7 @@ const threadTemplates: ThreadTemplate[] = [
     category: ContentCategory.PERSONAL,
     replies: [
       {
-        content: 'The Bitcoin Standard - Saifedean Ammous. Changed how I think about money.',
+        content: 'A sound-money primer someone here recommended. Changed how I think about money.',
       },
       {
         content: 'Meditations by Marcus Aurelius. Ancient wisdom that\'s still relevant.',

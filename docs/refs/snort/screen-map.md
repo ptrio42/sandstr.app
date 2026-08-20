@@ -7,8 +7,7 @@ Authoritative spec for a faithful React/Tailwind web reproduction of the Snort N
   `snort.social`, recorded **2026-07-14**, 4:12 (252 s), 2868×1592 @60 fps ≈ **1434×796 CSS px @2× (desktop, LIGHT theme,
   signed in)**. Frames extracted to `docs/refs/snort/shots/frames/` + `periodic/` + `full/` (all gitignored).
 - **Repo recon:** `v0l/snort` @ **`3cc8317af0b95ca227d8c91b014eea414e0ac26f`** ("chore: bump @snort/system to 2.1.7",
-  2026-07-29). **`github.com/v0l/snort` is canonical** — `git.v0l.io` is a mirror (verified 2026-07-29). License **MIT**,
-  © 2023 Kieran (v0l).
+  2026-07-29). **`github.com/v0l/snort` is canonical** — `git.v0l.io` is a mirror (verified 2026-07-29). License **MIT** (see `THIRD-PARTY.md` for the attribution line).
 - Stack: React 19.2 · **Tailwind v4.1** (CSS-first `@theme`, **no `tailwind.config.*` exists**) · react-router 7 ·
   react-intl 7 · Radix dropdown/hover-card · `classnames`. Breakpoints are Tailwind v4 defaults:
   `sm 640 · md 768 · lg 1024 · xl 1280`.
@@ -1249,8 +1248,8 @@ Servers · Nostr Address · compose modal · reply modal · poll composer · a z
 
 ## 19. Why Snort is preview-tier, and what this spec fixes
 
-From `docs/SHIP-AND-GRANT.md` §4 the Snort sim has **zero real tokens, invented navigation, and a corrupted code
-block**. Mapping each to the sections above:
+The previous Snort shell was built without reference material — invented tokens, invented navigation.
+Mapping each defect to the sections above:
 
 | Defect | Fix source |
 |---|---|

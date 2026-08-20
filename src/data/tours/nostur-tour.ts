@@ -12,7 +12,7 @@ const nosturTourSteps: TourStep[] = [
     target: '.nostur-simulator',
     title: 'Welcome to Nostur',
     content:
-      'Nostur is a native SwiftUI Nostr client for iPhone, iPad and macOS by Fabian Lachman — teal on pure black, ten built-in themes and an unusually deep settings tree. Let us take a look around.',
+      'Nostur is a native SwiftUI Nostr client for iPhone, iPad and macOS — teal on pure black, ten built-in themes and an unusually deep settings tree. Let us take a look around.',
     position: 'center',
     spotlightPadding: 0,
   },

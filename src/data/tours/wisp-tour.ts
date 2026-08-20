@@ -12,7 +12,7 @@ const wispTourSteps: TourStep[] = [
     target: '.wisp-simulator',
     title: 'Welcome to Wisp',
     content:
-      'Wisp is "a wee interface to scroll posts" — a minimal, fast Android Nostr client by Barry Deen, built around the outbox relay model, an embedded Lightning wallet and an orange-on-black look. Let us take a look around.',
+      'Wisp is "a wee interface to scroll posts" — a minimal, fast Android Nostr client built around the outbox relay model, an embedded Lightning wallet and an orange-on-black look. Let us take a look around.',
     position: 'center',
     spotlightPadding: 0,
   },

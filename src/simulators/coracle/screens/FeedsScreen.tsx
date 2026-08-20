@@ -171,7 +171,7 @@ export const FeedsScreen: React.FC<FeedsScreenProps> = ({
       )}
 
       {/* Exhausted state — pumpkin + "That's all!" (Feed.svelte:189-193). The
-          real asset is Jon Staab's; the shape is drawn locally instead. */}
+          real asset is upstream artwork; the shape is drawn locally instead. */}
       {filtered.length > 0 && (
         <div
           style={{

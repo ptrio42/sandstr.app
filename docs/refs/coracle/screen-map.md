@@ -9,7 +9,7 @@ Authoritative spec for a faithful React/Tailwind web reproduction of the Coracle
   (desktop, DARK theme, signed in as `@test`)**. Frames extracted to `shots/frames/` (scene-detect) and
   `shots/periodic/` (0.5 fps, 230 frames) — all gitignored, only this map is committed.
 - **Repo recon:** `coracle-social/coracle` @ **`efea13f02ea44083d93e695a860dedadda68fe5e`** ("Fix a tag
-  parsing error", 2026-08-04). License **MIT**. Author **Jon Staab (`hodlbod`)**, FUTO fellow.
+  parsing error", 2026-08-04). License **MIT**.
 - Stack: **Svelte 4** (`package.json:81` — *not* Svelte 5) · **Tailwind 3** (`tailwind.config.cjs`) ·
   Vite 6 · a hand-rolled router (`src/util/router.ts`) · `@welshman/*` for the nostr layer ·
   Tiptap via `@welshman/editor`. Breakpoints are custom: `xs 400 · sm 640 · md 768 · lg 1024 · xl 1280 ·
@@ -738,7 +738,7 @@ Recorded here rather than hidden, because the readiness axis is the product's ho
 4. **Avatars** are the client's own `PlaceholderCircle` — the hue-from-pubkey gradient bust it renders for
    anyone without a picture (`PlaceholderCircle.svelte:7-16`, `stringToHue` at `misc.ts:84-95`). Mock
    users have no pictures, so this is the real code path, not a substitute. Zero network requests.
-5. **The wordmark image is not reproduced.** `/images/wordmark-dark.png` is Jon Staab's artwork. The sim
+5. **The wordmark image is not reproduced.** `/images/wordmark-dark.png` is upstream artwork. The sim
    sets "CORACLE" in the display face beside the host's neutral `ClientGlyph`, the same call made for
    Snort's nostrich.
 6. **nstart is not reproduced** — see the [REC vs REPO] box in §9.4.

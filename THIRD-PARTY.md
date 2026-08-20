@@ -92,7 +92,7 @@ reproduces nobody's work. It is no longer listed in the gallery either.
   MIT is recorded.
 - **Nostur copyright holder.** Its `LICENSE` is the stock GPLv3 text with no
   per-project copyright line — only the FSF boilerplate. Authorship is evidenced
-  by the source-file headers ("Created by Fabian Lachman", e.g. `Theme.swift:5`),
+  by the source-file headers (e.g. `Theme.swift:5`),
   the README contact and the commit history, so the SPDX id is recorded above
   and a copyright holder deliberately is not. To be confirmed with the author.
 

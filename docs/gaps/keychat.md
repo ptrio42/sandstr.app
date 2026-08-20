@@ -197,7 +197,7 @@ To lista zakupowa na następny pass, nie backlog:
 
 - **Zły brand.** Symulator jest niebieski `#2D7FF9`/`#1E40AF` (`keychat.theme.css:7-8`,
   `src/simulators/shared/configs.ts:210-211`), a ground truth to **fiolet `#8700ED` / `#d4bbff`
-  + orange `#EC6E0E`** (`docs/FIDELITY.md:185`, jawnie jako korekta AUDIT.md w `:187` i `:203`).
+  + orange `#EC6E0E`** (`docs/FIDELITY.md:185`, jawnie jako korekta pierwszego audytu w `:187` i `:203`).
   To dokładnie to, co mówi statusNote w rejestrze — naprawa to recon + rebuild, nie łatanie wierszy.
 - `keychat.theme.css` definiuje `.ripple`, `.md-card`, `.chat-bubble*`, `.keychat-bottom-nav`,
   `.bottom-nav-indicator` — **żadna z tych klas nie jest użyta w JSX** (grep po `*.tsx` = 0).

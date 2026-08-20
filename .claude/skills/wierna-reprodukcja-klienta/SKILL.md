@@ -25,7 +25,7 @@ realnego renderu daje plausible-but-wrong (o mało nie wylądowało logo tam, gd
 | YakiHonne, Keychat, Gossip, Primal-mobile, Nostr Kitten, Olas | `references/pozostali.md` | screen-mapę ma tylko YakiHonne | `docs/gaps/{yakihonne,keychat,gossip}.md` |
 
 Tokeny, ich pliki-źródła w repo klienta i kanały opt-in: `docs/FIDELITY.md` (tam też korekty kolorów
-z `docs/AUDIT.md` — AUDIT to snapshot historyczny, jego rekomendacjom kolorów NIE ufaj).
+ze starych notatek — to snapshot historyczny, jego rekomendacjom kolorów NIE ufaj).
 
 ## Proces reference-first (kolejność jest obowiązkowa)
 

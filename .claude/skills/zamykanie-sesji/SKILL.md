@@ -75,7 +75,7 @@ Zaproponuj miejsce, **wyboru dokonuje człowiek**:
   `- [Tytuł](plik.md) — po co to` dopisana do `MEMORY.md` (to indeks linków, nie wysypisko treści).
   Stan jednego zadania tam nie idzie.
 - **`docs/`** — tylko na wyraźne „tak" i tylko gdy wniosek należy do istniejącego tematu: `AUDIT.md`,
-  `FAQ.md`, `FIDELITY.md`, `GAPS.md`, `TOURS.md`, `GRANT-WOW.md`, `SHIP-AND-GRANT.md`,
+  `FAQ.md`, `FIDELITY.md`, `GAPS.md`, `TOURS.md`, `COMPARE.md`, `VERSIONS.md`,
   `gaps/<klient>.md`, `refs/<klient>/screen-map.md`, `clips/`. Retro ani notatka przekazania **nie są
   tematem** — nie zakładaj dla nich nowego pliku w `docs/`.
 - **`CLAUDE.local.md`** (gitignorowany) — osobiste i lokalne notatki. `CLAUDE.md` mówi wprost, że idą

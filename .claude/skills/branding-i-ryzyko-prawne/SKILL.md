@@ -8,12 +8,11 @@ description: 'Decyzje wokół marki i ryzyka prawnego sandstr: nazwa, domena, di
 ## Rdzeń: real-clients-first
 
 Produktem są wierne reprodukcje realnych, brandowanych klientów — to kierunek właściciela i nie
-podmieniamy go na własne IP. Trzy stare dokumenty (`docs/AUDIT.md`, `docs/SHIP-AND-GRANT.md`,
-`docs/GRANT-WOW.md`) mówią co innego („owned-IP-first / Nostr Kitten jako front door"); **od
-2026-08-19 nie są śledzone w repo, leżą tylko lokalnie i są przeterminowane** — nie cytuj ich
-zaleceń jako obowiązujących i nie przywracaj ich do gita. Ich blokery są zamknięte: `LICENSE`
-istnieje, `git remote` wskazuje `ptrio42/sandstr.app`, mock-tożsamości są zmyślone, README nie
-głosi owned-IP-first, Kitten nie jest front doorem. Sprawdź każdy zarzut, zanim zgłosisz go jako żywy.
+podmieniamy go na własne IP. Starsze notatki procesowe (nieśledzone od 2026-08-19, patrz
+`.gitignore`) mówią co innego — „owned-IP-first / Nostr Kitten jako front door". To jest
+**przeterminowane**: nie cytuj ich zaleceń jako obowiązujących i nie przywracaj ich do repo.
+Ich blokery są zamknięte: `LICENSE` istnieje, `git remote` wskazuje `ptrio42/sandstr.app`,
+mock-tożsamości są zmyślone, README nie głosi owned-IP-first, Kitten nie jest front doorem.
 
 ## Ścieżka (a) — GŁÓWNA: zgoda opt-in od każdego zespołu
 

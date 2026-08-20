@@ -23,10 +23,7 @@ docs/refs/*/shots/
 # tsc incremental state (a `composite`/`--build` run drops these next to the config)
 *.tsbuildinfo
 
-# Grant drafts, strategy notes and the old audit snapshot — LOCAL ONLY.
-# They discuss named third parties (maintainers as prospective referees), carry
-# the project's own legal risk assessment, and read as admissions out of context.
-# They stayed on disk; they must never be tracked again.
+# Working notes that are not part of the published project. Local only.
 docs/grants/
 docs/SHIP-AND-GRANT.md
 docs/GRANT-WOW.md

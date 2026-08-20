@@ -170,7 +170,7 @@ is no per-relay timeline screen, you narrow the CURRENT feed down to one relay.
   2. `List` of `RelayToggle`, one per relay, sourced from `state.nostrNetwork.ourRelayDescriptors`, **no explicit sort** — list order is whatever the pool hands back, i.e. the same order as My Relays.
 - **`RelayToggle` row**, left to right: optional relay status indicator · paid-relay badge
   (`RelayType`) · `Toggle` whose label is the relay's **full URL**
-  (`relay_id.absoluteString`, e.g. `wss://jb55.com` — NOT the bare host used in §8 rows,
+  (`relay_id.absoluteString`, e.g. `wss://relay.example.com` — NOT the bare host used in §8 rows,
   and no truncation logic in the component). `SwitchToggleStyle` tinted `.accentColor`.
 - **Toggle semantics are INVERTED against the name.** ON = relay is **not** filtered, i.e.
   its notes show. OFF = relay is filtered **out**. Writing it the other way round is the

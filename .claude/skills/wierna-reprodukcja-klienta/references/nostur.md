@@ -5,7 +5,7 @@ Ground truth: `docs/refs/nostur/screen-map.md` (autorytatywny, 19 sekcji, 472 li
 Kod: `src/simulators/nostur/` (13 powierzchni: welcome / feed×3 / thread / profile / notifications /
 messages+DM / search / bookmarks / compose / zap / drawer / settings×6), tokeny `nostur.theme.css`.
 
-- Repo `nostur-com/nostur-ios-public`, **GPL-3.0**, autor **Fabian Lachman**; `nostur.com`,
+- Repo `nostur-com/nostur-ios-public`, **GPL-3.0**; `nostur.com`,
   App Store id `1672780508`, także macOS `.dmg`. SwiftUI. ⚠️ `LICENSE` to stock GPLv3 **bez linii
   copyright** — autorstwo tylko z nagłówków plików i historii commitów.
 - **10 nazwanych motywów; default nazywa się dosłownie `"default"`** (`Theme.swift:39`). Light/dark to

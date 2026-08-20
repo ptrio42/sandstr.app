@@ -247,7 +247,7 @@ const MOUNTS: Record<
     status: 'ready',
     theme: 'dark', // real shipping default: theme "custom" dark (MainActivity.kt:47)
     // Verified 2026-07-30 against wisp.mobile + github.com/barrydeen/wisp
-    // (MIT, © 2025 Barry Deen; Play id com.wisp.app; OpenSats-funded).
+    // (MIT; Play id com.wisp.app).
     homepage: 'https://wisp.mobile',
     repo: 'https://github.com/barrydeen/wisp',
     upstreamLicense: 'MIT',
@@ -270,7 +270,7 @@ const MOUNTS: Record<
     theme: 'dark',
     // Verified 2026-08-05 against nostur.com + the repo itself (GPL-3.0; the
     // LICENSE is stock GPLv3 with no per-project copyright line, so authorship
-    // is evidenced by the source headers — "Created by Fabian Lachman" — and by
+    // is evidenced by the Swift source-file headers and by
     // the commit history, not by a copyright notice. App Store id 1672780508.)
     homepage: 'https://nostur.com',
     repo: 'https://github.com/nostur-com/nostur-ios-public',
