@@ -180,10 +180,10 @@ export function Drawer({
             data-tour="amethyst-drawer-counts"
             className="mt-3 text-[15px] text-left"
           >
-            <span className="font-bold text-[var(--md-on-surface)]">2374</span>{' '}
+            <span className="font-bold text-[var(--md-on-surface)]">1284</span>{' '}
             <span className="text-[var(--md-on-surface-variant)]">Following</span>
             <span className="text-[var(--md-on-surface-variant)] mx-2">·</span>
-            <span className="font-bold text-[var(--md-on-surface)]">318</span>{' '}
+            <span className="font-bold text-[var(--md-on-surface)]">296</span>{' '}
             <span className="text-[var(--md-on-surface-variant)]">Followers</span>
           </button>
         </div>
@@ -225,7 +225,7 @@ export function Drawer({
  * a Delete button otherwise. We shipped the bar without the edit half.
  */
 function StatusField() {
-  const [saved, setSaved] = useState('Building nostr stuff… 🧑‍💻');
+  const [saved, setSaved] = useState('Tinkering with relays… 🧑‍💻');
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(saved);
   const changed = draft !== saved;

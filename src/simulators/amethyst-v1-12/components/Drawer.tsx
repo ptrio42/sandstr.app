@@ -55,12 +55,12 @@ export function Drawer({ isOpen, onClose, onTabChange, onOpenSettings }: DrawerP
               {/* Update your status */}
               <div className="mt-2 relative rounded-xl border border-[var(--md-outline)] px-3 py-2.5 flex items-center gap-2">
                 <span className="absolute -top-2 left-2 px-1 text-[11px] bg-[var(--md-surface)] text-[var(--md-on-surface-variant)]">Update your status</span>
-                <span className="flex-1 min-w-0 truncate text-sm text-[var(--md-on-surface)]">Building nostr stuff… 🧑‍💻</span>
+                <span className="flex-1 min-w-0 truncate text-sm text-[var(--md-on-surface)]">Tinkering with relays… 🧑‍💻</span>
                 <Trash2 className="w-4 h-4 text-[var(--md-on-surface-variant)] shrink-0" />
               </div>
 
               <p className="mt-3 text-[15px]">
-                <span className="font-bold text-[var(--md-on-surface)]">2374</span>{' '}
+                <span className="font-bold text-[var(--md-on-surface)]">1284</span>{' '}
                 <span className="text-[var(--md-on-surface-variant)]">Following</span>
                 <span className="text-[var(--md-on-surface-variant)] mx-2">·</span>
                 <span className="font-bold text-[var(--md-on-surface)]">--</span>{' '}

@@ -236,7 +236,7 @@ export const profileStats = [
   { n: '10', l: 'relays' },
 ];
 
-export const profileMeta = { following: '2374', followers: '3514', joined: 'Joined Nostr on Dec 20, 2022' };
+export const profileMeta = { following: '1284', followers: '2960', joined: 'Joined Nostr on Mar 14, 2023' };
 
 export const latestReads = [
   { title: 'Sleep Is Not Optional', time: '5 mo.', read: '1 minutes' },
