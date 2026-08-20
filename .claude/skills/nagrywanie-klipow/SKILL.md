@@ -17,12 +17,16 @@ i `docs/clips/faq-teaser.md` (cut #2: beat sheet FAQ, reguły kadru, uzasadnieni
 - `docs/clips/build-teaser-faq.sh` — sam ffmpeg; z pętli robi `out/sandstr-faq-a.mp4`, `-b.mp4`,
   sześć klipów per pytanie i `-hero.mp4`.
 - `docs/clips/capture-shots.sh` + `build-teaser.sh` + `Nagranie z ekranu 2026-08-5 o 22.07.56.mov`
-  — starsza generacja (cut #1): stills z dev servera i montaż z nagrania ekranu.
+  (lokalne, nieśledzone) — starsza generacja (cut #1): stills z dev servera i montaż z nagrania ekranu.
+  Nie ma go w świeżym klonie: `build-teaser.sh` przyjmuje ścieżkę przez `SRC=`.
 - Katalogi: `.work/` (pośrednie, m.in. pula klatek `.work/faq/.pool/<id>/*.jpg`), `out/`, `shots/`.
 
-**Git:** `docs/clips/.gitignore` wyklucza tylko `.work/` i `out/sandstr-faq-*.mp4`. Reszta binariów
-(`.mov`, `shots/*.png`, `out/sandstr-teaser-vertical.mp4`, `out/sandstr-loop-zap.mp4`) **jest
-śledzona** — nie kasuj jej i nie dokładaj nowych plików do `out/` poza wzorcem `sandstr-faq-*`.
+**Git: w `docs/clips/` NIE JEST ŚLEDZONE nic binarnego** (od 2026-08-19). `docs/clips/.gitignore`
+wyklucza `*.mov`/`*.mp4`/`*.png` oraz katalogi `.work/`, `out/`, `shots/`. Śledzone są **wyłącznie**
+skrypty i scenariusze (`*.sh`, `*.mjs`, `*.md`). Nagrania to zrzuty ekranu właściciela, a cuty i stille
+to wyjście builda — **nie commituj ich z powrotem**; ważyły połowę historii repo. Zniknięcie plików
+z gita nie znaczy, że zniknęły z dysku: leżą lokalnie i wszystkie skrypty działają jak wcześniej.
+Jeśli materiał ma trafić do kogoś, wyślij plik, nie linkuj repo.
 
 ## Uruchomienie — cut #2 (FAQ)
 
