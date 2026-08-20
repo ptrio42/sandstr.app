@@ -10,7 +10,7 @@ Settings/Relay orbits, Search, Branding/logo/login, sekcja „Fidelity killers")
 
 - Repo: **`YakiHonne/web-app` + `YakiHonne/mobile-app`** (MIT). `yakihonne-web-app` /
   `yakihonne-mobile-app` są **ZARCHIWIZOWANE** — nie linkuj ich i nie czytaj z nich.
-- **Default accent = ORANŻ `#EE7700`** (`kMainColor` / `--orange-main`). ⚠️ `docs/AUDIT.md` każe
+- **Default accent = ORANŻ `#EE7700`** (`kMainColor` / `--orange-main`). ⚠️ stary snapshot każe
   „przeskinować na fiolet" — **to błąd**; fiolet `#6B218D`/`#86318C` to selectable accent i ciemne
   powierzchnie. `configs.ts` ma już poprawnie `#EE7700`.
 - Rejestr: `frame: 'ios'`, `tour: true`, `status: 'ready'`, **`theme: 'light'`**, `upstreamLicense: 'MIT'`.
@@ -28,11 +28,11 @@ Luki: `docs/gaps/keychat.md`, `docs/gaps/gossip.md`. Tokeny w `docs/FIDELITY.md`
 
 - **Keychat** — `keychat-io/keychat-app`, **AGPL-3.0**; `keychat.io`. Rejestr: `frame: 'android'`,
   `tour: true`, `status: 'preview'`, statusNote „Brand and layout not yet verified against the real client.".
-  Brand = **fiolet `#8700ED` (light) / `#d4bbff` (dark) + oranż `#EC6E0E`**. ⚠️ `docs/AUDIT.md` mówi
+  Brand = **fiolet `#8700ED` (light) / `#d4bbff` (dark) + oranż `#EC6E0E`**. ⚠️ stary snapshot mówi
   brand blue `#2D7FF9` — **NIEPRAWDA**, i dokładnie ten błędny hex siedzi dziś w
   `configs.ts` (`keychatConfig.primaryColor: '#2D7FF9'`). Nawigacja: **3-tab CupertinoTabBar**
   Chats / Browser / Me — nie drawer, nie 4–5 tabów.
-- **Gossip** — `mikedilger/gossip`, **MIT**, Mike Dilger. **Genuinely nie ma strony** → w rejestrze
+- **Gossip** — `mikedilger/gossip`, **MIT**. **Genuinely nie ma strony** → w rejestrze
   `homepage: null`, linkujemy repo; **nie wymyślaj domeny**. Rejestr: `frame: null`, `tour: false`,
   `status: 'preview'`, statusNote „The real Gossip is a native desktop app; this is a rough web sketch.".
   Brand = **stalowy błękit `#74A7CC` (dark) / `#557A95` (light)**, jeden kolor; ⚠️ `configs.ts` ma zieleń

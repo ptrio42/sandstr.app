@@ -14,7 +14,7 @@ interface ThreadScreenProps {
 const replies: PostData[] = [
   { id: 'rep1', author: { name: 'sandwich', handle: 'sandwich', avatar: '', nip05: 'sandwich', isVerified: true }, content: 'GM ☀️', timestamp: '3d', stats: { replies: 1, reposts: 0, zaps: 0, likes: 2 } },
   { id: 'rep2', author: { name: 'sandy', handle: 'sandy.example', avatar: '', nip05: 'sandy.example', isVerified: true }, content: 'GM ☕', timestamp: '4d', stats: { replies: 0, reposts: 0, zaps: 100, likes: 1 } },
-  { id: 'rep3', author: { name: 'Matt', handle: 'matt', avatar: '', nip05: 'matt', isVerified: false }, content: 'GM #nostr 🦩 ☕😊🙏\n\nOff for breakfast then a swim today, gotta make the most of the good stuff.', timestamp: '4d', stats: { replies: 2, reposts: 1, zaps: 21, likes: 5 } },
+  { id: 'rep3', author: { name: 'Rune', handle: 'rune', avatar: '', nip05: 'rune', isVerified: false }, content: 'GM #nostr 🦩 ☕😊🙏\n\nOff for a long walk then some coffee today, gotta make the most of the quiet hours.', timestamp: '4d', stats: { replies: 2, reposts: 1, zaps: 21, likes: 5 } },
 ];
 
 export function ThreadScreen({ post, onBack }: ThreadScreenProps) {

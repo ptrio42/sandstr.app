@@ -2,8 +2,12 @@
 
 Source recording plus the two scripts that turn it into something postable.
 
+**Only the scripts and these notes are in git.** The recording, the stills and the
+finished cuts are local files — a fresh clone has the pipeline but not the media,
+and `build-teaser.sh` takes another source via `SRC=/path/to/recording.mov`.
+
 ```
-Nagranie z ekranu 2026-08-5 o 22.07.56.mov   # 96s walkthrough: Wisp → Nostur → Primal
+Nagranie z ekranu 2026-08-5 o 22.07.56.mov   # 96s walkthrough: Wisp → Nostur → Primal (local)
 capture-shots.sh                             # dev server → shots/*.png (headless Chrome, 2x)
 build-teaser.sh                              # recording + shots → out/*.mp4 (ffmpeg only)
 shots/                                       # one hero frame per client + the 6x brand lockup

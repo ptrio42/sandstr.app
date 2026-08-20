@@ -19,8 +19,8 @@ const stats = [
 
 const covers = getSampleImages(3);
 const latest = [
-  { date: 'Jan 26, 2026', title: 'Fat Is Not Optional', likes: 0, comments: 0, zaps: 0, cover: covers[0] },
-  { date: 'Jan 25, 2026', title: 'Pulled Beef Tacos in Cheese Shells', likes: 6, comments: 1, zaps: 138, cover: covers[1] },
+  { date: 'Jan 26, 2026', title: 'Cook It in Butter', likes: 0, comments: 0, zaps: 0, cover: covers[0] },
+  { date: 'Jan 25, 2026', title: 'Slow Beef Tacos in Crisp Cheese Shells', likes: 6, comments: 1, zaps: 138, cover: covers[1] },
 ];
 
 interface Props {
@@ -108,7 +108,7 @@ export const DashboardScreen: React.FC<Props> = ({ currentUserSeed, onBack }) =>
         <div className="w-16 h-16 rounded-xl bg-[var(--yh-surface-2)] flex items-center justify-center shrink-0"><NoteGlyph className="w-7 h-7 text-[var(--yh-text-2)]" /></div>
         <div className="flex-1 min-w-0">
           <div className="text-[13px] text-[var(--yh-text-2)]">Published on: Apr 09, 2023</div>
-          <div className="text-[16px] font-bold">Looks like 69ers are way behind again 😅 #[1]</div>
+          <div className="text-[16px] font-bold">Looks like the relays are way behind again 😅 #[1]</div>
         </div>
         <EllipsisVIcon className="w-5 h-5 text-[var(--yh-text-2)]" />
       </div>

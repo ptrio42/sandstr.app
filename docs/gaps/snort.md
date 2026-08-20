@@ -169,7 +169,7 @@ ekranie). Limit kolejki to 2 komendy na krok, a każdy stan po zalogowaniu zjada
   nie ma w ogóle (`screens/LoginScreen.tsx:92-105`). To **decyzja produktowa** (commit `2b885f2`,
   „stop soliciting private keys"), nie luka — nie zgłaszaj i nie „naprawiaj".
 - **Marka.** Zamiast rastrowego `nostrich_512.png` symulator rysuje monogram "S" na gradiencie
-  (`screens/LoginScreen.tsx:148-154`) — to wymóg SHIP-AND-GRANT B3 z §16, nie luka.
+  (`screens/LoginScreen.tsx:148-154`) — to wymóg z przeglądu 2026-07-28 (B3, §16), nie luka.
 - **Czego screen-mapa nie pokrywa, więc nie da się orzec luki:** treść i zachowanie podstron
   `/settings/{profile,preferences,keys,moderation,notifications,cache,media,tools,handle}` (§14 opisuje
   wyłącznie indeks i kafelki — sno-26…sno-32 mówią „wiersz jest martwy", a nie „ekran wygląda tak"),

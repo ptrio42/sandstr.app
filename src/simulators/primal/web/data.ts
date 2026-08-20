@@ -2,7 +2,7 @@
  * Curated Primal-flavoured mock content. Layout, density, badge mix and counts
  * mirror the reference recording (docs/refs/primal/shots) so the reproduction
  * reads as the real app — but EVERY identity is invented. The recording showed
- * real users; shipping their names with fabricated posts is defamation-shaped
+ * real users; their names never ship with invented posts
  * (see the header of src/data/mock/users.ts). Handles use .example domains
  * (RFC 2606, never resolve). Relay URLs are kept real on purpose: they are
  * infrastructure facts and part of fidelity, not statements by people.
@@ -74,7 +74,7 @@ export const feedNotes: PNote[] = [
     handle: 'pia@trustgraph.example',
     time: '23 hr.',
     verified: true,
-    body: '🚀 wotscout v2 just dropped.\n\nSearch and discovery for Nostr, done right.\n\nMultiple algorithms.\nMultiple providers.\nOne personalized, decentralized experience.\n\nSo fast to feel instant. So flexible to be yours.',
+    body: '🚀 wotscout v2 just dropped.\n\nFollow graphs you can actually inspect.\n\nPick a scorer.\nPick a source.\nOne feed that stays yours end to end.\n\nQuick enough to forget it is there. Yours to retune.',
     media: img(),
     zapTop: { amount: '1389', comment: '🤘' },
     reply: 6,
@@ -103,7 +103,7 @@ export const feedNotes: PNote[] = [
     handle: 'mira@kessler.example',
     time: '23 hr.',
     verified: true,
-    body: 'Is 55% Miner Activation Too Low For BIP-110?',
+    body: 'Is 40% Miner Signalling Enough For A Soft Fork?',
     reply: 4,
     zap: '188',
     like: 21,
@@ -132,9 +132,9 @@ export const liveCard = { name: 'Static Bloom Radio', started: 'Started 1 yr. ag
 
 export const trending = [
   { name: 'HODLR', time: '1 hr.', preview: "This is tough to do, but every time I can get into the headspace where I'm just…" },
-  { name: 'Mira Kessler', time: '4 hr.', preview: '12 Attacks On Bitcoin (And What Happened) https://media.sandbox.example/1164e2…' },
+  { name: 'Mira Kessler', time: '4 hr.', preview: '9 Myths About Bitcoin (And What Broke Them) https://media.sandbox.example/1164e2…' },
   { name: 'SPARK', time: '1 hr.', preview: "⚡🤠 SPARK - It's time for me to renew my VPN subscription. Do you have any…" },
-  { name: 'freedomfran', time: '2 hr.', preview: 'Revolting I wonder how many people who drink these "energy drinks" know they…' },
+  { name: 'freedomfran', time: '2 hr.', preview: 'Grim stuff I wonder how many people who buy these "wellness shots" ever read…' },
   { name: 'alv', time: '3 hr.', preview: 'https://media.sandbox.example/f2c0104cbb2522c186fa3f3ca068cebe5170364ae3805…' },
   { name: 'wildersoul', time: '3 hr.', preview: 'Good night, Nostr fam! Just wanna say thanks for being so nice and for lettin…' },
   { name: 'Bertking', time: '3 hr.', preview: 'People always talk about lack of money, but the real lack is of ideas and…' },
@@ -208,22 +208,22 @@ export const notifications: PNotif[] = [
   { id: 'no1', type: 'follow', name: 'Ashra', time: '8h' },
   { id: 'no2', type: 'follow', name: 'Wrenlin', time: '1d' },
   { id: 'no3', type: 'follow', name: 'CometWhispers', legend: true, time: '3d' },
-  { id: 'no4', type: 'follow', name: 'tzonatu', time: '3d' },
-  { id: 'no5', type: 'like', name: 'Raika', time: '3d', note: 'GM ☀️' },
-  { id: 'no6', type: 'zap', name: 'Bitcoin Baraza', time: '3d', sats: '2 100', note: 'weekend project — how it started vs how its going' },
-  { id: 'no7', type: 'reply', name: 'Casper Lund', time: '4d', note: 'ck this is the way' },
-  { id: 'no8', type: 'repost', name: 'Aldo', time: '5d', note: 'GM 😊' },
+  { id: 'no4', type: 'follow', name: 'Nocturne', time: '3d' },
+  { id: 'no5', type: 'like', name: 'Rayla', time: '3d', note: 'GM ☀️' },
+  { id: 'no6', type: 'zap', name: 'Sat Circle', time: '3d', sats: '2 100', note: 'weekend project — how it started vs how its going' },
+  { id: 'no7', type: 'reply', name: 'Cedar Lin', time: '4d', note: 'ck this is the way' },
+  { id: 'no8', type: 'repost', name: 'Alva', time: '5d', note: 'GM 😊' },
 ];
 
 export const conversations = [
-  { name: 'Bitcoin Baraza 🇰🇪', handle: 'baraza@fund.example', time: '4mo', unread: 2 },
-  { name: 'PayPerBit', handle: 'payperbit@bots.example', time: '4mo', unread: 1 },
-  { name: 'Holopad', handle: '', time: '5mo', unread: 54 },
-  { name: 'PandaPier', handle: '', time: '5mo', unread: 0 },
-  { name: 'Enjoy the ride', handle: 'enjoytheride@ride.example', time: '5mo', unread: 1 },
-  { name: 'JokerHodl', handle: 'jokerhodl@jokerhodl.example', time: '7mo', unread: 8 },
-  { name: 'Zapmail', handle: 'hello@wallet.example', time: '1y', unread: 1 },
-  { name: 'brinsky', handle: 'brinsky@nodecrew.example', time: '1y', unread: 3 },
+  { name: 'Sat Circle 🌍', handle: 'satcircle@fund.example', time: '4mo', unread: 2 },
+  { name: 'PayPerNote', handle: 'paypernote@bots.example', time: '4mo', unread: 1 },
+  { name: 'Lumen Lab', handle: '', time: '5mo', unread: 54 },
+  { name: 'PineHarbor', handle: '', time: '5mo', unread: 0 },
+  { name: 'Slow Ride', handle: 'slowride@ride.example', time: '5mo', unread: 1 },
+  { name: 'JesterHodl', handle: 'jesterhodl@jesterhodl.example', time: '7mo', unread: 8 },
+  { name: 'Zapbox', handle: 'hello@wallet.example', time: '1y', unread: 1 },
+  { name: 'brimsley', handle: 'brimsley@nodecrew.example', time: '1y', unread: 3 },
   { name: 'Stories for Sats', handle: '', time: '1y', unread: 4 },
 ];
 
@@ -236,19 +236,19 @@ export const profileStats = [
   { n: '10', l: 'relays' },
 ];
 
-export const profileMeta = { following: '2374', followers: '3514', joined: 'Joined Nostr on Dec 20, 2022' };
+export const profileMeta = { following: '1284', followers: '2960', joined: 'Joined Nostr on Mar 14, 2023' };
 
 export const latestReads = [
-  { title: 'Fat Is Not Optional', time: '5 mo.', read: '1 minutes' },
-  { title: 'Chapter 1: Meat, fat and simplicity', time: '5 mo.', read: '1 minutes' },
+  { title: 'Sleep Is Not Optional', time: '5 mo.', read: '1 minutes' },
+  { title: 'Chapter 1: Rest, light and routine', time: '5 mo.', read: '1 minutes' },
 ];
 
 export const popularNotes = [
-  { time: '3 yr.', text: 'Looks like 69ers are way behind again 😅 @npub138guayty78..pekq6wk36k…' },
-  { time: '3 yr.', text: "Wanna try a little game 👍 I'm thinking of a number 💭 Zap ⚡ this note with an…" },
-  { time: '3 yr.', text: 'GM #Nostr ☀️💜👥 Getting married today 😅👍…' },
-  { time: '3 yr.', text: '@npub1dqg3at6cma..sn0szs3643 @npub1dy7zsvk7jw..78as6hljz5 put you…' },
-  { time: '1 yr.', text: 'CATSTRR - a nostr relay that only accepts notes with cat pictures 🐱…' },
+  { time: '3 yr.', text: 'Looks like my bracket is busted again 😅 @npub1qz4h7e2vk9..r3dts5x0mw…' },
+  { time: '3 yr.', text: "Fancy a quick puzzle 👍 I'm picking a block height 💭 Zap ⚡ this note with your…" },
+  { time: '3 yr.', text: 'GM #Nostr ☀️💜👥 Shipping the beta today 😅👍…' },
+  { time: '3 yr.', text: '@npub1w5tgq2v7dx..u3znf6a9pk @npub1e4rc8h0sym..d27v5xqjt4 put you…' },
+  { time: '1 yr.', text: 'PURRSTR - a nostr relay that only accepts notes with cat pictures 🐱…' },
 ];
 
 export const relays = [

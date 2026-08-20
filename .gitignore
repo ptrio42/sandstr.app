@@ -6,6 +6,10 @@ CLAUDE.local.md
 .DS_Store
 .vite
 
+# Agent worktrees live inside the repo (.claude/worktrees/<name>). They were
+# only hidden by .git/info/exclude, which is machine-local and never shared.
+.claude/worktrees/
+
 # Local state from `wrangler dev` (the .claude/launch.json "sandstr-workers"
 # config) — caches and a simulated asset store, none of it reproducible input.
 .wrangler
@@ -18,3 +22,9 @@ docs/refs/*/shots/
 
 # tsc incremental state (a `composite`/`--build` run drops these next to the config)
 *.tsbuildinfo
+
+# Working notes that are not part of the published project. Local only.
+docs/grants/
+docs/SHIP-AND-GRANT.md
+docs/GRANT-WOW.md
+docs/AUDIT.md

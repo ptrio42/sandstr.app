@@ -7,7 +7,7 @@ Luki: `docs/gaps/damus.md`. Kod: `src/simulators/damus/`, tokeny `damus.theme.cs
 - **Wzorzec wierności** razem z Amethystem: głęboki, zweryfikowany referencyjnie flagowiec/szablon,
   **11 powierzchni**. Do niego równamy.
 - Powstał z pełnego rebuildu **z recordingu + recon repo** (`damus-io/damus`, **GPL-3.0**,
-  William Casarin / `@jb55`; `damus.io`).
+  `damus.io`).
 - **OLED-dark.** Dwa akcenty **współistnieją, nie zlewaj ich**:
   - DamusPurple `#CC43C5`
   - **PinkGradient `#D34CD9→#F869B6`** — marka: CTA / Post / banner
@@ -21,4 +21,4 @@ Luki: `docs/gaps/damus.md`. Kod: `src/simulators/damus/`, tokeny `damus.theme.cs
 - `configs.ts` ma poprawne hexy (`primaryColor '#CC43C5'`, `secondaryColor '#F869B6'`) — nie „poprawiaj".
 - Rejestr: `frame: 'ios'`, `tour: true`, `status: 'ready'`, `theme: 'dark'`, `upstreamLicense: 'GPL-3.0'`.
 
-**Opt-in / ryzyko:** marka bardzo rozpoznawalna → wymagana wyraźna zgoda; autor aktywny na Nostr.
+**Marka:** bardzo rozpoznawalna → nie shipuj upstreamowego rastra, użyj `ClientGlyph` (patrz `TRADEMARKS.md`).

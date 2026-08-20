@@ -33,7 +33,7 @@ const contentTemplates: Record<ContentCategory, string[]> = {
     'DCA is the way. Slow and steady wins the race.',
     'Bitcoin fixes this. All of this.',
     'Watching the price action today. Zoom out, friends. We\'re still early.',
-    'Bitcoin is a swarm of cyber hornets serving the goddess of wisdom.',
+    'Bitcoin is a swarm of stubborn machines guarding one very simple promise.',
     'The hardest money ever created. This is why we Bitcoin.',
     'Privacy matters. Use CoinJoin. Protect yourself.',
     'Self-custody is a superpower. Learn it, practice it, teach it.',

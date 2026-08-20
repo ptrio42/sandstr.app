@@ -64,13 +64,13 @@ function Disclaimer({ name, real }: { name: string; real: boolean }) {
 
 /**
  * The phone-width form of the mandated banner. It sits above the tour band so
- * the one legal mitigation CLAUDE.md calls non-negotiable stays legible even
+ * the banner CLAUDE.md calls non-negotiable stays legible even
  * while a tour backdrop is up — and below the host modal band, so the FAQ sheet
  * this strip used to punch through can cover it like any other dialog.
  * NO `truncate` here, ever: at 320px (the most common narrow-Android width)
- * it cut the text to "…not affiliated wit…" — on phones this strip is the
- * only thing distinguishing the page from the real client, so it wraps to a
- * second line instead of losing words.
+ * it cut the text to "…not affiliated wit…" — on phones this strip is how the
+ * visitor is told the page is a simulation, so it wraps to a second line
+ * instead of losing words.
  */
 function DisclaimerStrip({ name, real }: { name: string; real: boolean }) {
   return (
@@ -368,8 +368,8 @@ function ContextPanel({
 
 /**
  * The way out. A reproduction with no exit is a copy; one that hands you off is
- * a signpost — which is both the product's actual purpose ("try it, then go get
- * the real thing") and the cheapest trademark mitigation there is. Rendered at
+ * a signpost — which is the product's actual purpose ("try it, then go get the
+ * real thing"). Rendered at
  * every breakpoint: inline in the ContextPanel at lg+, in the meta row below
  * that, and in the mobile About sheet. URLs verified per-project — see the
  * caveats above MOUNTS in registry.tsx.
@@ -786,9 +786,9 @@ export default function ClientView() {
   }, [entry]);
 
   // Keep client routes out of search indexes (robots.txt Disallow: /c/ is the
-  // main lever; this covers crawlers that render JS anyway). A pixel-faithful
-  // /c/damus ranking for "Damus" is the textbook confusion pattern, and that
-  // ranking is worth nothing to us — the gallery is the page that should rank.
+  // main lever; this covers crawlers that render JS anyway). These pages carry
+  // another project's branding and the ranking is worth nothing to us — the
+  // gallery is the page that should rank.
   useEffect(() => {
     const meta = document.createElement('meta');
     meta.name = 'robots';

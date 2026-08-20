@@ -8,9 +8,8 @@ import { generateNpub, generateTimestamp, generateFollowerCount, generateAvatarG
 
 // EVERY identity below is invented. No mock user may reference a real person,
 // organisation, domain or payment identifier: this data renders as authored
-// posts inside the simulators, so a real name here means fabricated statements
-// attributed to a real human — defamation-shaped, and poison for the opt-in
-// consent strategy (see CLAUDE.md "Branding / ryzyko prawne").
+// posts inside the simulators, so a real name here would put invented words in
+// a real person's mouth.
 // Websites use .example (RFC 2606 — guaranteed never to resolve); lightning
 // addresses use @wallet.example. Keep it that way.
 export const mockUsers: MockUser[] = [
@@ -343,7 +342,7 @@ export const mockUsers: MockUser[] = [
     username: 'codewiz',
     avatar: generateAvatarGradient('codewiz'),
     bio: 'Full-stack dev. Rust > Go > Python. Building the future.',
-    website: 'https://github.com/codewiz',
+    website: 'https://codewiz.example',
     location: 'Berlin',
     lightningAddress: 'codewiz@wallet.example',
     followersCount: 1567,
@@ -384,7 +383,7 @@ export const mockUsers: MockUser[] = [
     username: 'oss_sarah',
     avatar: generateAvatarGradient('sarah'),
     bio: 'Contributor to open source. Maintainer of small libraries.',
-    website: 'https://sarah.dev',
+    website: 'https://sarahdev.example',
     location: 'Toronto',
     lightningAddress: 'sarah@wallet.example',
     followersCount: 1234,
@@ -561,7 +560,7 @@ export const mockUsers: MockUser[] = [
     username: 'writer_wendy',
     avatar: generateAvatarGradient('wendy'),
     bio: 'Fiction writer. Short stories. Working on my novel.',
-    website: 'https://wendywrites.com',
+    website: 'https://wendywrites.example',
     location: 'London',
     lightningAddress: 'wendy@wallet.example',
     followersCount: 1567,

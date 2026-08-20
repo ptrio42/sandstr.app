@@ -44,7 +44,7 @@ import { formatShort } from './snortUtils';
  *
  * Width gates are measured on the CONTAINER, not the viewport. Real Snort gates
  * in JS too (`useWindowSize`), and viewport `@media` queries are exactly what
- * made the 640–768px band delete this sim's navigation (SHIP-AND-GRANT B10) —
+ * made the 640–768px band delete this sim's navigation (the 2026-07-28 review, B10) —
  * the sim lives inside a card narrower than the window.
  */
 
@@ -324,7 +324,7 @@ export const SnortSimulator: React.FC<SnortSimulatorProps> = ({ tourCommand, onC
           username: 'snortuser',
           avatar: '',
           bio: 'Exploring Nostr with Snort',
-          nip05: 'demo@snort.social',
+          nip05: 'demo@snort.example',
           // Fixed constants, never Date.now(): the tour must replay
           // identically on every pass. Mirrors LoginScreen's DEMO_USER.
           createdAt: 1_700_000_000,

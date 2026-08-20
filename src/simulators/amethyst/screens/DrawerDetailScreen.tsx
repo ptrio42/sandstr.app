@@ -398,7 +398,7 @@ function AccountsView({ onLogout }: { onLogout?: () => void }) {
         <Avatar seed="sandy" className="w-11 h-11" />
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-[var(--md-on-surface)]">sandy</p>
-          <p className="text-sm truncate text-[var(--md-on-surface-variant)]">npub178u…vq05qrg4</p>
+          <p className="text-sm truncate text-[var(--md-on-surface-variant)]">npub1q7x9…8m4n6p0v</p>
         </div>
         <Check className="w-5 h-5 shrink-0" style={{ color: 'var(--md-primary)' }} aria-label="Active account" />
         <button

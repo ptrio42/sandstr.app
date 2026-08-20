@@ -5,7 +5,7 @@ export function MiniAppsScreen() {
   const apps = [
     {
       id: '1',
-      name: 'Nostr Market',
+      name: 'Nostr Bazaar',
       icon: '🛒',
       description: 'Buy and sell with Bitcoin',
       color: 'bg-purple-500',
@@ -19,14 +19,14 @@ export function MiniAppsScreen() {
     },
     {
       id: '3',
-      name: 'Nostrgram',
+      name: 'Photostr',
       icon: '📷',
       description: 'Image sharing on Nostr',
       color: 'bg-pink-500',
     },
     {
       id: '4',
-      name: 'Wikistr',
+      name: 'Lorestr',
       icon: '📚',
       description: 'Decentralized knowledge',
       color: 'bg-blue-500',
@@ -40,7 +40,7 @@ export function MiniAppsScreen() {
     },
     {
       id: '6',
-      name: 'BTC Map',
+      name: 'Sat Map',
       icon: '🗺️',
       description: 'Find Bitcoin merchants',
       color: 'bg-orange-500',

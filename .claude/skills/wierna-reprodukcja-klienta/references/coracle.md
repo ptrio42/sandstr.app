@@ -4,7 +4,7 @@ Ground truth: `docs/refs/coracle/screen-map.md` (autorytatywny, 19 sekcji, 814 l
 + `coracle-social/coracle@efea13f`, 12-agentowy recon). Luki: `docs/gaps/coracle.md`.
 Kod: `src/simulators/coracle/` (15 powierzchni), tokeny `coracle.theme.css`.
 
-- Repo `coracle-social/coracle`, **MIT © Jon Staab / `hodlbod`** (FUTO Fellow, bardzo opt-in-friendly);
+- Repo `coracle-social/coracle`, **MIT**;
   app na `app.coracle.social`. **Svelte 4 + Tailwind 3**; tokeny wstrzykiwane **runtime z `.env.template`**
   (`VITE_DARK_THEME` / `VITE_LIGHT_THEME`) do `:root`.
 - **Default = DARK** (`state.ts:36-40`, **brak `prefers-color-scheme`**) → wpis w rejestrze ma

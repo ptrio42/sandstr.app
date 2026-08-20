@@ -6,9 +6,8 @@ export type Frame = 'ios' | 'android' | null;
 
 /**
  * The readiness axis. It exists so the gallery never presents an early sketch
- * as a finished reproduction — honesty about state is part of the trademark
- * mitigation AND the grant story ("4 faithful reproductions plus 5 in
- * progress" beats "10 clients, half rough").
+ * as a finished reproduction: presenting a sketch as a faithful copy would
+ * misrepresent someone else's app.
  * - 'ready'   — reference-verified against the real client (screen-map + shots)
  * - 'preview' — clickable, but fidelity not yet verified; labelled as such
  * - 'planned' — not clickable yet ("coming soon"); no entry uses it today
@@ -41,9 +40,8 @@ export interface ClientEntry {
   /**
    * Where to send someone who wants the REAL client. This is the point of the
    * whole product, so it is not optional data: a reproduction with no way out
-   * is a copy, a reproduction that hands you off is a signpost. Also the
-   * cheapest trademark mitigation available, and the opening line of the
-   * consent email. `homepage` is null when the project genuinely has no site
+   * is a copy, a reproduction that hands you off is a signpost. `homepage` is
+   * null when the project genuinely has no site
    * (Gossip) — link the repo instead, never invent a domain.
    */
   homepage: string | null;
@@ -122,14 +120,14 @@ function once(fn: Loader): () => Promise<unknown> {
 // + a fidelity pass); an entry without one stays 'preview'.
 // `homepage`/`repo`/`upstreamLicense`/`installNote` were verified against each
 // project's OWN site and repository on 2026-07-29 — not from memory and not from
-// aggregators. A dead or wrong outbound link would embarrass us in front of
-// exactly the people we need consent from, so re-verify before changing one.
+// aggregators. A dead or wrong outbound link strands the visitor on their way
+// to the real client, so re-verify before changing one.
 // Recorded caveats:
 //  - snort: the GitHub repo's `homepage` field now says phoenix.social, but
 //    snort.social and phoenix.social serve byte-identical builds and the PWA
 //    manifest is still "snort.social - Nostr interface", with no rename
-//    announcement found. snort.social is the brand-correct link today; check
-//    with Kieran before switching. (git.v0l.io is a MIRROR — GitHub is canonical.)
+//    announcement found. snort.social is the brand-correct link today; re-check
+//    against upstream before switching. (git.v0l.io is a MIRROR — GitHub is canonical.)
 //  - gossip: genuinely has no website. homepage stays null; we link the repo.
 //  - yakihonne: attribute YakiHonne/web-app; the *-web-app / *-mobile-app repos
 //    are archived.
@@ -249,7 +247,7 @@ const MOUNTS: Record<
     status: 'ready',
     theme: 'dark', // real shipping default: theme "custom" dark (MainActivity.kt:47)
     // Verified 2026-07-30 against wisp.mobile + github.com/barrydeen/wisp
-    // (MIT, © 2025 Barry Deen; Play id com.wisp.app; OpenSats-funded).
+    // (MIT; Play id com.wisp.app).
     homepage: 'https://wisp.mobile',
     repo: 'https://github.com/barrydeen/wisp',
     upstreamLicense: 'MIT',
@@ -272,7 +270,7 @@ const MOUNTS: Record<
     theme: 'dark',
     // Verified 2026-08-05 against nostur.com + the repo itself (GPL-3.0; the
     // LICENSE is stock GPLv3 with no per-project copyright line, so authorship
-    // is evidenced by the source headers — "Created by Fabian Lachman" — and by
+    // is evidenced by the Swift source-file headers and by
     // the commit history, not by a copyright notice. App Store id 1672780508.)
     homepage: 'https://nostur.com',
     repo: 'https://github.com/nostur-com/nostur-ios-public',

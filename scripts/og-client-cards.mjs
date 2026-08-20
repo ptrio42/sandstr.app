@@ -805,8 +805,8 @@ function card(route, screen) {
 
       /* ---- the device ---------------------------------------------------- */
       /* Perspective is what makes this read as an OBJECT showing a screen
-         rather than as the screen itself, which is the whole trademark
-         argument for putting a faithful reproduction on a card at all. */
+         rather than as the screen itself, which is the point of putting a
+         reproduction on a card at all. */
       /* The device sits WHOLLY inside the card, top and bottom. An earlier
          version let the phone bleed off both edges for depth and it stopped
          reading as an object at all — a cropped rectangle of someone's app is

@@ -19,16 +19,14 @@ collected in §16.
 | Repo | `https://github.com/nostur-com/nostur-ios-public` | GitHub API `full_name`, `fork: false`, `archived: false` |
 | Repo description | "A nostr client for iOS" | GitHub API |
 | License | **GPL-3.0** | GitHub API `license.spdx_id`; `LICENSE` is the stock GPLv3 text |
-| Copyright holder | **not asserted in-repo** — `LICENSE` carries only the FSF boilerplate, no per-project copyright line. Authorship is evidenced by every Swift file header, e.g. `Theme.swift:5` "Created by **Fabian Lachman** on 28/08/2023", and by the HEAD commit author "Fabian". | repo files |
-| Author contact | `fabian@nostur.com` · `npub1n0sturny6w9zn2wwexju3m6asu7zh7jnv2jt2kx6tlmfhs7thq0qnflahe` | `README.md`, nostur.com |
+| Copyright holder | **not asserted in-repo** — `LICENSE` carries only the FSF boilerplate, no per-project copyright line. Authorship is evidenced only by the Swift file headers (e.g. `Theme.swift:5`) and the commit history. | repo files |
+| Author contact | published in the project README and on nostur.com | `README.md`, nostur.com |
 | Platforms | iPhone, iPad **and macOS** — site tagline "A nostr client for iPhone and macOS"; `README.md:1` says "a nostr client for Mac, iPhone and iPad" | site + README |
 | Install | **iOS App Store, app id `1672780508`**; macOS also as a direct `.dmg` (`nostur.com/Nostur-1.30.2.dmg` at time of check); source on GitHub | nostur.com download section |
 | Version in the recording | **1.30.2 (Build: 527)** — read off the sidebar footer | frame `f_059` |
 
-**Unverified / deliberately not asserted:** the surname "Lachman" comes from source-file headers,
-not from a signed copyright line or the site — it is recorded as evidence, not as a legal
-attribution. The repo has no `CONTRIBUTING`/`TRADEMARK` policy, so no stated position on
-third-party use of the name or the mark exists. OpenSats/other funding was not checked.
+**Unverified:** `LICENSE` is the stock GPLv3 text with no per-project copyright line, so authorship is
+evidenced only by the Swift file headers. The repo has no `CONTRIBUTING` or trademark policy.
 
 ---
 

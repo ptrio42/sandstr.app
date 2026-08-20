@@ -49,19 +49,14 @@ what those relays kept, not the whole tag.
 
 ## What the measurements said
 
-### Which forms work on the owner's account
+### Which forms work
 
-1798 notes, February 2025 → August 2026.
-
-| form | result |
-|---|---|
-| **a question to the reader** | 44, 30, 25, 23, 19, 18 replies — the account's ceiling |
-| aphorism / opinion | up to 44 reactions and 1512 sats zapped |
-| workshop / kitchen photo | median 2 reactions, 2 replies |
-| **product announcement** | 6 notes, median 3 reactions, **0–5 replies** |
-
-Announcements are the **weakest** category this account has, and questions beat them
-by 10–40×. The note announcing the FAQ scored ♥3 ↩0 ⇄4.
+Measured over eighteen months of one account's notes; the per-account numbers stay
+out of the repo. The ranking held everywhere: a **question to the reader** is the
+strongest form by a wide margin, an aphorism or an opinion comes next, a photo of
+what you are working on is weak, and a **product announcement is the weakest
+category there is** — questions beat announcements by roughly 10–40× on replies.
+The note announcing the FAQ landed at the bottom of that range.
 
 **So a broadcast post should be a question, not an announcement.** The video goes
 under the question, not instead of it.
@@ -213,43 +208,25 @@ Two rules from above still bind: the note names other people's brands, so it car
 ## Open
 
 **Talking to the client maintainers** is still open and still the highest-value item
-on the list: it is simultaneously the trademark mitigation, the source of the grant's
-reference letters (`SHIP-AND-GRANT.md`), and the only channel where a single repost
-outweighs everything above. The first post tagging an author went out 2026-08-12
-(Wisp), deliberately without asking for corrections — the owner's call.
+on the list: it is simultaneously the trademark mitigation and the only channel where a
+single repost outweighs everything above. The first post tagging an author went out
+2026-08-12 (Wisp), deliberately without asking for corrections — the owner's call.
 
-**Reception so far — three maintainers, one of whom used words** (as of 2026-08-15):
+A reaction to a note is **not** consent: a zap is a tip, not a licence, and a "how does it
+work?" reply says nothing about whether the author wants the thing to exist. Nobody has
+approved anything, and nothing in this file may be presented as if they had. What a
+reaction does buy is a warm follow-up — "you saw it, anything you want corrected?".
 
-| Who | Client | Signal | Tagged? |
-|---|---|---|---|
-| Barry Deen | Wisp | zapped the note, no reply text | yes (2026-08-12 post) |
-| Fabian | Nostur | zapped, no reply text | **no** — found the note himself |
-| Vitor Pamplona | Amethyst | **replied, asked how it works** | yes (2026-08-14 post) |
-
-Read this as **non-objection, not consent** — including Vitor's. A zap is a tip, not a
-licence, and "how does it work" says nothing about whether the author wants the thing to
-exist. Its use is that all three can now be written to without a cold start ("you saw it —
-anything you want corrected?"). This table does not leave the repo: three reactions are not
-traction, and offering them as evidence invites the one question whose honest answer is
-"no, nobody approved anything".
-
-**What actually produced them: the tag.** Both notes that tagged a maintainer got that
+**What produces reactions: the tag.** Both notes that tagged a maintainer got that
 maintainer, 2 for 2. Neither note was otherwise remarkable (numbers below). Credit the tag,
 not the copy — and note the tag is also what makes the "anything you want corrected?"
 follow-up cheap.
 
-### The two tagged notes, measured (2026-08-15)
+### What the two tagged notes changed
 
-| note | ↩ | ⇄ | ♥ | ⚡ |
-|---|---|---|---|---|
-| 2026-08-12 Wisp, `?tour=1`, tagged Barry | 3 | 8 | 6 | 3 (2021 sats) |
-| 2026-08-14 Amethyst, `?faq=mute`, tagged Vitor | 3 | 7 | 7 | 1 (333 sats) |
-| *baseline: product announcements* | *0–5* | *4* | *3* | *—* |
-
-Both notes open with a question, per the rule above — and both landed **inside the old
-announcement band on replies**, nowhere near the 44/30/25 reply ceiling. The lift is in
-**reposts and zaps** (roughly double the announcement median, and the Wisp note out-zapped
-the best aphorism in this account's history).
+Both opened with a question, per the rule above, and both landed **inside the ordinary
+announcement band on replies** — nowhere near what a real question earns. The lift was
+in **reposts and zaps**, roughly double the announcement median.
 
 **The refinement that follows: a rhetorical question is still an announcement.** "Had enough
 of the current thing?" gives the reader nothing to answer, so it does not buy replies; what

@@ -64,8 +64,8 @@ const SELF: ProfileSubject = {
     { network: 'Mastodon', handle: '@sandy@example.social' },
   ],
   seed: 'sandy',
-  npub: 'npub178u…vq05qrg4',
-  nprofile: 'nprofile1qqs9p…9uvrafdc',
+  npub: 'npub1q7x9…8m4n6p0v',
+  nprofile: 'nprofile1qqs4h…3kd7pnwe',
   lastSeen: 'Last seen 31 minutes ago',
   nip05: 'sandy.example',
   website: 'sandy.example',
@@ -140,7 +140,7 @@ export function ProfileScreen({ onBack, onFollowToggle, user, initialTab = 'Note
   const [isFollowing, setIsFollowing] = useState(!user);
   const profile = user ? subjectFor(user) : SELF;
   const tabCounts: Partial<Record<ProfileTab, number>> = {
-    Follows: user?.followingCount ?? 2374,
+    Follows: user?.followingCount ?? 1284,
     Followers: user?.followersCount ?? 318,
   };
 
@@ -149,7 +149,7 @@ export function ProfileScreen({ onBack, onFollowToggle, user, initialTab = 'Note
   const sourceNotes = user ? getNotesByAuthor(user.pubkey).slice(0, 6) : mockNotes.slice(0, 6);
   /**
    * Four tabs have honest content sitting in the corpus already, and were
-   * rendering an empty state anyway — the Follows header said 2374 while the
+   * rendering an empty state anyway — the Follows header said 1284 while the
    * tab under it said "No follows yet", which contradicts itself on screen
    * (gaps ame-49). Replies are the notes carrying an `['e', …, 'reply']` marker,
    * Gallery the ones with media, and Follows/Followers slices of the mock

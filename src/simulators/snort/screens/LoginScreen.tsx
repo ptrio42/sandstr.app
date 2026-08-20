@@ -63,7 +63,7 @@ const DEMO_USER: MockUser = {
   username: 'snortuser',
   avatar: '',
   bio: 'Exploring Nostr with Snort',
-  nip05: 'demo@snort.social',
+  nip05: 'demo@snort.example',
   followersCount: 256,
   followingCount: 128,
   createdAt: 1_700_000_000,
@@ -137,8 +137,8 @@ export function LoginScreen({ onLogin, users }: LoginScreenProps) {
           Upstream is `<img src={CONFIG.icon} width={48} height={48}
           className="rounded-lg mr-auto ml-auto" />` = `nostrich_512.png`, a
           raster painterly close-up of a violet→pink ostrich head (§16). It is a
-          bitmap: it cannot be redrawn as paths, and §16's SHIP-AND-GRANT note is
-          explicit that we must NOT ship it until Kieran (v0l) grants consent.
+          bitmap: it cannot be redrawn as paths, and we do not ship upstream
+          raster artwork.
           So this is the same 48px rounded-lg footprint filled with the app
           monogram "S" — itself Snort's own fallback idiom (`LogoHeader.tsx`
           renders `CONFIG.appName[0]` in a rounded-lg tile when `navLogo` is

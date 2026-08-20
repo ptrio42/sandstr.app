@@ -231,11 +231,7 @@ Standalone icon `src/assets/icons/logo_blue.svg`, `viewBox="0 0 256 256"`, singl
   - stop `0` → `#00E0FF` (cyan)
   - stop `0.481323` → `#0090F8` (azure/blue)
   - stop `1` → `#2554ED` (indigo)
-  - Vector (256-space): `x1=9.13 y1=3.59 x2=260.35 y2=255.64`.
-- Swirl path data (256-space, verbatim from `logo_blue.svg`):
-  ```
-  M126.074 0C197.002 0 254.5 57.3076 254.5 128C254.5 198.692 197.002 256 126.074 256C75.7248 256 32.1444 227.122 11.0931 185.079C4.86518 172.071 1.5 157.454 1.5 142.08C1.5 86.9399 46.3488 42.24 101.673 42.24C142.165 42.24 177.044 66.1859 192.835 100.644C193.592 102.295 191.145 103.784 189.786 102.576C180.707 94.5057 168.735 89.6 155.612 89.6C127.24 89.6 104.241 112.523 104.241 140.8C104.241 142.967 104.378 145.103 104.64 147.2V147.225C110.662 184.32 139.646 202.88 173.591 202.88C207.536 202.88 235.873 179.014 242.663 147.2C243.691 140.952 244.226 134.538 244.226 128C244.226 62.9629 191.327 10.24 126.074 10.24C86.7456 10.24 51.9053 29.3909 30.4289 58.8467C29.9396 59.5178 29.3768 60.133 28.7518 60.6809C22.2725 66.362 16.4662 72.7876 11.4678 79.8236C10.119 81.7221 6.84452 80.2871 7.75432 78.1448C27.2579 32.2207 72.89 0 126.074 0Z
-  ```
+- Swirl geometry — see `src/assets/icons/logo_blue.svg` upstream; the path data is theirs and is not copied here.
   Geometry: an outer near-circular ring that spirals inward — a fat comma/"9"-like open loop terminating in an inner curved hook. Not a closed circle; the negative space forms the swirl.
 
 ### Combined wide wordmark (`logo_blue_big.svg`, the actual sidebar asset)
@@ -390,7 +386,7 @@ Source: `Home.tsx`, `HomeHeader.tsx`, `HomeHeaderPhone.tsx`, `FeedSelect.tsx`, `
 ```
 Order: **display name → verification check badge → nip05 handle → time (with a leading "…" context-menu icon) → relative-time label**. **No "·" dot separator** and **no "@" prefix** on the handle in the DOM (avatar is rendered separately in the note's left column, not inside this component).
 - `authorName` (`src/stores/profile.ts`): `display_name || displayName || name || truncated npub`.
-- `nip05Verification`: if nip05 starts with `_@` it strips `_@` and shows just the domain (`_@jack.com` → `jack.com`); else raw nip05 (`jack@primal.net`). No leading `@` added.
+- `nip05Verification`: if nip05 starts with `_@` it strips `_@` and shows just the domain (`_@example.com` → `example.com`); else raw nip05 (`alice@example.com`). No leading `@` added.
 - **Relative time** (`src/lib/dates.ts` `date()`): `Intl.RelativeTimeFormat('en', { style: 'short' })` with `' ago'` stripped → `"23 hr."`, `"5 min."`, `"2 days"`, `"3 wk."`, `"4 mo."`, `"1 yr."`, and under a minute `` `${diff}s` `` (e.g. `"12s"`).
 - **"…" menu icon** = `styles.ellipsisIcon`, mask `url(../../assets/icons/context.svg)`. `.time` = `16px/400; color:var(--text-tertiary)` (`#757575`). Unverified fallback = empty `<div class={styles.verificationFailed}>` (4×4 placeholder).
 
@@ -868,7 +864,7 @@ Round icon-only buttons (`ButtonSecondary`) except Follow (pill) and Edit Profil
 - **Display name**: `<div class={styles.text}>{profileName()}</div>` in `styles.basicInfoName`. `profileName()` = displayName → name → truncated npub.
 - **Verified badge**: `<Show when={nip05 && verification()}>` → `<VerificationCheck large={true}/>`. Small rounded badge: `background var(--accent)` (blue) with **white checkmark** (`.checkIcon` = `var(--text-primary-button)`). Legend/premium get a colored badge (gold/aqua/silver/purple/…); default = accent-blue check.
 - **Premium/Legend badge**: `<PremiumCohortInfo>` after the name when `isVisibleLegend()`.
-- **Identity / handle line** (`styles.nipLine`): NIP-05 via `<div class={styles.nip05}>{nip05Verification(...)}</div>`. This is the "@handle"-equivalent (e.g. `jack@cash.app`). **No separate `@username` element and no visible npub string in the card** — identity = NIP-05 (npub is only a fallback inside `profileName()` / copied via context menu / QR).
+- **Identity / handle line** (`styles.nipLine`): NIP-05 via `<div class={styles.nip05}>{nip05Verification(...)}</div>`. This is the "@handle"-equivalent (e.g. `alice@example.com`). **No separate `@username` element and no visible npub string in the card** — identity = NIP-05 (npub is only a fallback inside `profileName()` / copied via context menu / QR).
 - **"Follows you" badge**: `<Show when={isFollowingYou()}>` → `styles.followsBadge` text **"Follows you"** (`profile.followsYou`).
 
 ### Bio + website

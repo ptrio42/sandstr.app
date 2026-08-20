@@ -62,7 +62,7 @@ function buildProfile(seed: string, name: string): YakiProfile {
   if (seed === SELF.seed) return SELF;
   return {
     seed, name, nip05: true,
-    nip05addr: `${name.toLowerCase().replace(/[^a-z0-9]/g, '')}@yakihonne.com`,
+    nip05addr: `${name.toLowerCase().replace(/[^a-z0-9]/g, '')}@yakihonne.example`,
     bio: 'Nostrich exploring the decentralized web. ⚡',
     followings: '312', followers: '1.2K', followsYou: true,
   };

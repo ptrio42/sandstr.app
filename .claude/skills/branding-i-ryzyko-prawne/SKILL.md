@@ -7,29 +7,24 @@ description: 'Decyzje wokół marki i ryzyka prawnego sandstr: nazwa, domena, di
 
 ## Rdzeń: real-clients-first
 
-Produktem są wierne reprodukcje realnych, brandowanych klientów. Ryzyko znaku towarowego
-i trade-dress **mitygujemy, a nie uciekamy we własne IP**. `docs/AUDIT.md` rekomenduje
-„owned-IP-first / Nostr Kitten jako front door" — to **NIEAKTUALNE**, nadpisane przez właściciela
-(nota stoi w `docs/AUDIT.md:3`). Nie cytuj jego sekcji „Rekomendowany branding", „Kluczowe ryzyka"
-ani „Roadmapa" jako obowiązujących — wracasz wtedy z kierunkiem, który właściciel już odrzucił.
-Tak samo przeterminowane są `docs/SHIP-AND-GRANT.md` (2026-07-28) i `docs/GRANT-WOW.md` — sięgasz
-po nie właśnie przy „czy możemy to pokazać", a ich blokery są już zamknięte: `LICENSE` istnieje,
-`git remote` wskazuje `ptrio42/sandstr.app`, mock-tożsamości są zmyślone, README nie głosi
-owned-IP-first, Kitten nie jest front doorem. Sprawdź każdy ich zarzut, zanim zgłosisz go jako żywy.
+Produktem są wierne reprodukcje realnych, brandowanych klientów — to kierunek właściciela i nie
+podmieniamy go na własne IP. Starsze notatki procesowe (nieśledzone od 2026-08-19, patrz
+`.gitignore`) mówią co innego — „owned-IP-first / Nostr Kitten jako front door". To jest
+**przeterminowane**: nie cytuj ich zaleceń jako obowiązujących i nie przywracaj ich do repo.
+Ich blokery są zamknięte: `LICENSE` istnieje, `git remote` wskazuje `ptrio42/sandstr.app`,
+mock-tożsamości są zmyślone, README nie głosi owned-IP-first, Kitten nie jest front doorem.
 
-## Ścieżka (a) — GŁÓWNA: zgoda opt-in od każdego zespołu
+## Ścieżka (a) — GŁÓWNA: kanał korekty dla zespołów
 
-- Twórcy są osiągalni na Nostr, a wierne demo im schlebia. Kanały per klient: sekcje „Opt-in"
-  w `docs/FIDELITY.md`. **Nie monetyzujemy marki konkretnego zespołu bez jego zgody.**
-- **Kontakt inicjuje właściciel — agent nie wysyła nic na zewnątrz.** Żadnych DM, maili, issue
+- **Kanał jest zaimplementowany:** `fidelityReportUrl` (`src/host/contribute.ts:38`) → formularze
+  w `.github/ISSUE_TEMPLATE/`. `TRADEMARKS.md` obiecuje każdemu zespołowi poprawkę błędu wierności
+  albo usunięcie reprodukcji na życzenie, bez pytań — **to obietnica do dotrzymania, nie copy.**
+- **Nie monetyzujemy cudzej marki.**
+- **Kontakt na zewnątrz inicjuje właściciel — agent nie wysyła nic.** Żadnych DM, maili, issue
   ani postów. Możesz przygotować draft jako plik i tyle; wysyłka to decyzja człowieka.
-- Wychodzące linki są pierwszym zdaniem tej rozmowy: `homepage`/`repo`/`upstreamLicense`/
-  `installNote` w `src/registry.tsx` (zweryfikowane wobec stron i repo klientów 2026-07-29 —
-  komentarz `src/registry.tsx:87-99`). Martwy albo zły link kompromituje nas przed dokładnie tymi
-  ludźmi, od których chcemy zgody — re-weryfikuj, zanim któryś zmienisz.
-- Kanał korekty jest zaimplementowany: `fidelityReportUrl` (`src/host/contribute.ts:38`) →
-  formularze w `.github/ISSUE_TEMPLATE/`. `TRADEMARKS.md` obiecuje maintainerowi poprawkę albo
-  usunięcie reprodukcji na życzenie, bez pytań — to obietnica do dotrzymania, nie copy.
+- Wychodzące linki (`homepage`/`repo`/`upstreamLicense`/`installNote` w `src/registry.tsx`,
+  zweryfikowane wobec stron i repo klientów 2026-07-29) to jedyna droga odwiedzającego do
+  prawdziwej appki — martwy albo zły link zostawia go w symulacji. Re-weryfikuj przed zmianą.
 
 ## Ścieżka (b) — disclaimer na każdym widoku klienta
 
@@ -43,11 +38,10 @@ owned-IP-first, Kitten nie jest front doorem. Sprawdź każdy ich zarzut, zanim 
 - Obowiązkowe atrybuty obu: `z-[var(--z-disclaimer)]` (skala warstw hosta stoi w `:root` w `src/index.css`: rail 3000 < tour-backdrop 9000 < tour-card 9200 < disclaimer 9400 < host-modal 9600; gola liczba `z-[...]` w `src/host/` jest zakazana) (nad backdropem toura) **oraz**
   `data-tour-keep-clear`. Bez pierwszego tour przyciemniał baner do nieczytelności; bez drugiego
   karta toura kładła się na nim. Na formie telefonowej **nigdy `truncate`** — przy 320px ucinało
-  tekst do „…not affiliated wit…", a na telefonie ten pasek jest jedyną rzeczą odróżniającą stronę
-  od realnego klienta.
-- Mitygacja, której baner nie zastąpi: `X-Frame-Options: DENY` + CSP `frame-ancestors`
-  w `public/_headers`. Bez nich pixel-wierny `/c/damus` da się osadzić w cudzej ramce bez chrome'u
-  i przeczytać jako prawdziwy klient.
+  tekst do „…not affiliated wit…", a to ten pasek mówi odwiedzającemu, że ogląda symulację.
+- Czego baner nie załatwia: `X-Frame-Options: DENY` + CSP `frame-ancestors` w `public/_headers`.
+  Bez nich stronę `/c/<klient>` da się osadzić w cudzej ramce z pominięciem całego chrome'u hosta,
+  razem z banerem.
 
 ## Nazwa, domena, SEO
 
@@ -115,11 +109,11 @@ owned-IP-first, Kitten nie jest front doorem. Sprawdź każdy ich zarzut, zanim 
   shipowanie cudzego logo bez atrybucji. Otwarte pozycje (verbatim swirl Primala, realne ikony
   w `public/icons/`) są spisane w sekcji „Open items, stated plainly"; fallback bez cudzej marki już
   istnieje — `src/host/ClientGlyph.tsx`.
-- **Otwarte i żywe: cztery pliki prawne — `LICENSE`, `PRIVACY.md`, `TRADEMARKS.md`, `THIRD-PARTY.md` —
-  nie są podlinkowane z wdrożonej strony.** `grep` po `src/host/` nie znajduje ani jednego odwołania,
-  a `public/` nie ma ich kopii, więc odwiedzający live URL nie ma do nich żadnej drogi.
-  Naiwne `href="/PRIVACY.md"` po cichu wyrenderuje galerię: `wrangler.jsonc` ma
-  `not_found_handling: "single-page-application"`. Linkuj blob-URL-e GitHuba albo skopiuj do `public/`.
+- **Cztery pliki prawne — `LICENSE`, `PRIVACY.md`, `TRADEMARKS.md`, `THIRD-PARTY.md` — są
+  podlinkowane ze stopki** (`src/host/Layout.tsx:126-141`, przez `repoFileUrl()` z
+  `src/host/contribute.ts`). Dodając piąty, dopisz go tam. Nie linkuj naiwnie `href="/PRIVACY.md"` —
+  `wrangler.jsonc` ma `not_found_handling: "single-page-application"`, więc taki link po cichu
+  wyrenderuje galerię; idź przez blob-URL GitHuba albo skopiuj plik do `public/`.
 - `PRIVACY.md`: zero backendu, analityki i cookies, tylko trzy klucze `localStorage`. Jedyny caveat —
   hotlinki, a jego stan na dziś to **12 URL-i DiceBear, wyłącznie w Keychat i Gossip** (dokładnie te
   dwa mają `status: 'preview'`). **Unsplash zszedł w `src/` do zera**, choć caveat i `img-src`

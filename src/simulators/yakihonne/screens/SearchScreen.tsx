@@ -8,15 +8,15 @@ interface Person { name: string; seed: string; handle: string; validated: boolea
 
 const people: Person[] = [
   { name: 'Block Bulletin (NewsBot)', seed: 'blockbulletin', handle: 'blockbulletin@news.example', validated: true },
-  { name: 'UTXOwl', seed: 'utxowl', handle: 'bashfulopera44@wallet.example', validated: false },
-  { name: 'UTXOz ⚡', seed: 'utxoz', handle: 'utxoz@cypherflow.ai', validated: true },
-  { name: 'RT International (NewsBot)', seed: 'rtintl', handle: 'rt@utxo.one', validated: true },
-  { name: 'rektbot', seed: 'rektbot', handle: 'rektbot@utxo.one', validated: true },
-  { name: "utxo's bot", seed: 'utxobot', handle: 'bot@utxo.one', validated: false },
-  { name: 'UTXO Alien', seed: 'utxoalien', handle: 'UTXOalien@nostrplebs.com', validated: false },
-  { name: 'utxo the webmaster 🧑‍💻', seed: 'utxoweb', handle: 'utxo@utxo.one', validated: true },
-  { name: 'Tom\'s Hardware (NewsBot)', seed: 'tomshw', handle: 'tomshardware@utxo.one', validated: true },
-  { name: 'UTXO Dreams', seed: 'utxodreams', handle: 'dreams@utxo.one', validated: false },
+  { name: 'NovaOwl', seed: 'novaowl', handle: 'bashfulopera44@wallet.example', validated: false },
+  { name: 'Novaz ⚡', seed: 'novaz', handle: 'novaz@cypherflow.example', validated: true },
+  { name: 'Nova Wire (NewsBot)', seed: 'novawire', handle: 'wire@novanet.example', validated: true },
+  { name: 'dipbot', seed: 'dipbot', handle: 'dipbot@novanet.example', validated: true },
+  { name: "nova's bot", seed: 'novabot', handle: 'bot@novanet.example', validated: false },
+  { name: 'Nova Alien', seed: 'novaalien', handle: 'novaalien@plebs.example', validated: false },
+  { name: 'nova the webmaster 🧑‍💻', seed: 'novaweb', handle: 'nova@novanet.example', validated: true },
+  { name: 'Rig Roundup (NewsBot)', seed: 'rigroundup', handle: 'rigroundup@novanet.example', validated: true },
+  { name: 'Nova Dreams', seed: 'novadreams', handle: 'dreams@novanet.example', validated: false },
 ];
 
 interface Props {
@@ -26,7 +26,7 @@ interface Props {
 
 export const SearchScreen: React.FC<Props> = ({ onBack, onViewProfile }) => {
   const [tab, setTab] = useState<(typeof TABS)[number]>('People');
-  const [q, setQ] = useState('utxo');
+  const [q, setQ] = useState('nova');
 
   return (
     <div className="absolute inset-0 z-[56] bg-[var(--yh-bg)] flex flex-col" data-tour="yakihonne-search">

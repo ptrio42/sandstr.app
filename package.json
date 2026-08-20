@@ -11,7 +11,8 @@
     "build:client": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "og:cards": "npm run build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/og-client-cards.mjs"
+    "og:cards": "npm run build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/og-client-cards.mjs",
+    "repro:frames": "node scripts/repro/frames.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

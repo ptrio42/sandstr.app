@@ -29,8 +29,8 @@ body {
                below the disclaimer.
      disclaimer the mandated "Simulation · mock data · unofficial…" banner
                (`Disclaimer` / `DisclaimerStrip` in host/ClientView.tsx). ABOVE
-               the tour on purpose: a 60%-black backdrop dimmed the one legal
-               trademark mitigation to unreadable for a whole tour.
+               the tour on purpose: a 60%-black backdrop dimmed the mandated
+               banner to unreadable for a whole tour.
      host-modal FAQ panel, ⌘K palette, mobile switcher sheet, About sheet —
                dialogs the visitor deliberately opened, so they own the screen.
                ABOVE the disclaimer, which is the fix for the chip painting over

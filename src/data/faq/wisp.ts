@@ -1,6 +1,6 @@
 /**
  * Wisp FAQ — grounded in docs/refs/wisp/screen-map.md, with upstream
- * barrydeen/wisp (v1.2.1, MIT © Barry Deen) cited where the recording never
+ * barrydeen/wisp (v1.2.1, MIT) cited where the recording never
  * opened a screen. docs/gaps/wisp.md is the showMe gate.
  *
  * Wisp is the small, readable Android client: one accent (#FF9800), an undo

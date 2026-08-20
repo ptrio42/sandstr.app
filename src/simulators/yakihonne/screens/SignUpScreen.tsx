@@ -28,18 +28,18 @@ interface Props {
 const STEPS = 5;
 
 const PACKS = [
-  { name: 'Nostr Streamers', desc: 'The top 50 most prolific live streamers on Nostr', others: 47, art: 'linear-gradient(135deg,#7a2f14,#c2410c 45%,#1e3a8a)' },
-  { name: 'Nostr Minute | DYOR | DIY', desc: '#FAQ Q&A | https://nostr.org | https://soapbox…', others: 905, art: null },
-  { name: 'Nostr Minute | DYOR', desc: '#FAQ Q&A | https://nostr.org | https://soapbox…', others: 882, art: null },
-  { name: 'Timechain Art Magazine', desc: 'npubs from members of the Timechain Art Magazine', others: 62, art: 'linear-gradient(135deg,#f5f5f4,#d6d3d1)' },
-  { name: 'Les Femmes Orange', desc: "Let's connect around the world: Les Femmes Orange", others: 43, art: null },
-  { name: 'Freedom Tech Signal', desc: 'high signal accounts focused on bitcoin, nostr…', others: 119, art: null },
-  { name: 'German speaking users | Deutsch sprechende', desc: 'Eine Sammlung von npubs, die auf Deutsch kommunizieren', others: 54, art: 'linear-gradient(135deg,#1e3a8a,#dc2626)' },
-  { name: 'Visionairies', desc: 'Join a tribe of daring visionaries—collaborate…', others: 47, art: 'linear-gradient(135deg,#0f172a,#334155)' },
-  { name: 'Desenvolvedores Nostr', desc: 'Uma lista de pessoas que constroem aplicações…', others: 130, art: 'linear-gradient(135deg,#7c3aed,#c026d3)' },
-  { name: 'Artisan Traders', desc: 'Plebs & businesses growing the bitcoin circular…', others: 47, art: 'linear-gradient(135deg,#78350f,#a16207)' },
+  { name: 'Livestream Plebs', desc: 'The 50 most prolific live streamers we could find', others: 47, art: 'linear-gradient(135deg,#7a2f14,#c2410c 45%,#1e3a8a)' },
+  { name: 'Daily Nostr | DYOR | DIY', desc: '#FAQ Q&A | https://nostr.org | https://howto.ex…', others: 905, art: null },
+  { name: 'Daily Nostr | DYOR', desc: '#FAQ Q&A | https://nostr.org | https://howto.ex…', others: 882, art: null },
+  { name: 'Blockspace Art Quarterly', desc: 'npubs from members of Blockspace Art Quarterly', others: 62, art: 'linear-gradient(135deg,#f5f5f4,#d6d3d1)' },
+  { name: 'Les Amies Orange', desc: "Let's connect around the world: Les Amies Orange", others: 43, art: null },
+  { name: 'Signal Over Noise', desc: 'high signal accounts focused on bitcoin, nostr…', others: 119, art: null },
+  { name: 'Deutschsprachige Runde | Deutsch sprechende', desc: 'Eine Sammlung von npubs, die auf Deutsch kommunizieren', others: 54, art: 'linear-gradient(135deg,#1e3a8a,#dc2626)' },
+  { name: 'Daydream Guild', desc: 'Join a tribe of daring dreamers—collaborate…', others: 47, art: 'linear-gradient(135deg,#0f172a,#334155)' },
+  { name: 'Programadores Nostr', desc: 'Uma lista de pessoas que constroem aplicações…', others: 130, art: 'linear-gradient(135deg,#7c3aed,#c026d3)' },
+  { name: 'Market Stall Plebs', desc: 'Plebs & businesses growing the bitcoin circular…', others: 47, art: 'linear-gradient(135deg,#78350f,#a16207)' },
   { name: 'Photographers', desc: 'Photographers. Sfw only.', others: 2, art: 'linear-gradient(135deg,#0e7490,#155e75)' },
-  { name: 'Farmstr & Permaculture', desc: '🌱🐓🐄🐝🚜', others: 45, art: 'linear-gradient(135deg,#14532d,#65a30d)' },
+  { name: 'Homestead & Permaculture', desc: '🌱🐓🐄🐝🚜', others: 45, art: 'linear-gradient(135deg,#14532d,#65a30d)' },
 ];
 
 const INTERESTS = [
@@ -54,7 +54,7 @@ const INTERESTS = [
   { name: 'Food', people: 4, art: 'linear-gradient(135deg,#166534,#b91c1c)' },
 ];
 
-const CLUSTER = ['ostrich', 'maria2000', 'jack', 'sandy', 'greeny', 'lost_signal'];
+const CLUSTER = ['ostrich', 'maria2000', 'jaybird', 'sandy', 'greeny', 'lost_signal'];
 
 export const SignUpScreen: React.FC<Props> = ({ onBack, onDone }) => {
   const [step, setStep] = useState(0);

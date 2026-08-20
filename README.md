@@ -84,8 +84,9 @@ trademark/trade-dress risk, and the mitigation is **honesty plus consent, not ev
   full-bleed, and always surrounded by sandstr's own chrome;
 - every client view links out to the real client — the reproduction exists to send people
   *to* the teams whose work it depicts;
-- the primary mitigation is **opt-in consent from each client's maintainers**, who can have
-  any fidelity error fixed or the whole reproduction removed on request, no questions asked.
+- every maintainer is invited to opt in, and any maintainer can have a fidelity error fixed
+  or the whole reproduction removed on request, no questions asked. Silence is not treated
+  as approval.
 
 (Nostr Kitten, our own GeoCities-parody client, is **unlisted** as of 2026-08-05 — it is not a
 real Nostr client, so it has no place on a shelf of reproductions. The code stays and

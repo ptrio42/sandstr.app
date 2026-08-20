@@ -6,7 +6,7 @@ Kod: `src/simulators/wisp/` (13 powierzchni: login / feed / thread / profile / n
 wallet / search / compose / zap / drawer / settings×4 — Interface, Relays, Keys, Social Graph),
 tokeny `wisp.theme.css`.
 
-- Repo `barrydeen/wisp`, **MIT © Barry Deen**, OpenSats-funded; homepage `wisp.mobile`,
+- Repo `barrydeen/wisp`, **MIT**; homepage `wisp.mobile`,
   Play `com.wisp.app`, w repo jest `zapstore.yaml`. Kotlin / Compose M3.
 - **Default = theme „custom" DARK**, accent `#FF9800`, bg `#0A0A0B`, error = celowy iOS-red `#FF3B30`.
   Jedyny brand-gradient to radial logo `#FFBA60→#E97941` (evenodd ghost z wyciętymi oczami).

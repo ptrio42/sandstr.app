@@ -16,8 +16,7 @@
  *    it owns its bottom: the three-counter publish HUD sits over a hairline
  *    above the account row.
  *  - The wordmark is NOT upstream's artwork. The real one is an <img> of Jon
- *    Staab's mark; shipping someone's logo inside an unofficial reproduction is
- *    exactly what the consent strategy avoids, so the word is set in the
+ *    Staab's mark, and we do not ship upstream artwork, so the word is set in the
  *    display face beside a neutral glyph — the same call made for Snort's
  *    nostrich.
  *  - The unread dot is anchored to the LABEL, not the full-width row: upstream's
