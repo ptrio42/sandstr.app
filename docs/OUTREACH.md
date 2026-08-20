@@ -49,19 +49,14 @@ what those relays kept, not the whole tag.
 
 ## What the measurements said
 
-### Which forms work on the owner's account
+### Which forms work
 
-1798 notes, February 2025 → August 2026.
-
-| form | result |
-|---|---|
-| **a question to the reader** | 44, 30, 25, 23, 19, 18 replies — the account's ceiling |
-| aphorism / opinion | up to 44 reactions and 1512 sats zapped |
-| workshop / kitchen photo | median 2 reactions, 2 replies |
-| **product announcement** | 6 notes, median 3 reactions, **0–5 replies** |
-
-Announcements are the **weakest** category this account has, and questions beat them
-by 10–40×. The note announcing the FAQ scored ♥3 ↩0 ⇄4.
+Measured over eighteen months of one account's notes; the per-account numbers stay
+out of the repo. The ranking held everywhere: a **question to the reader** is the
+strongest form by a wide margin, an aphorism or an opinion comes next, a photo of
+what you are working on is weak, and a **product announcement is the weakest
+category there is** — questions beat announcements by roughly 10–40× on replies.
+The note announcing the FAQ landed at the bottom of that range.
 
 **So a broadcast post should be a question, not an announcement.** The video goes
 under the question, not instead of it.
@@ -227,17 +222,11 @@ maintainer, 2 for 2. Neither note was otherwise remarkable (numbers below). Cred
 not the copy — and note the tag is also what makes the "anything you want corrected?"
 follow-up cheap.
 
-### The two tagged notes, measured (2026-08-15)
+### What the two tagged notes changed
 
-| note | ↩ | ⇄ | ♥ | ⚡ |
-|---|---|---|---|---|
-| 2026-08-12 Wisp, `?tour=1`, tagged the maintainer | 3 | 8 | 6 | 3 |
-| 2026-08-14 Amethyst, `?faq=mute`, tagged the maintainer | 3 | 7 | 7 | 1 |
-| *baseline: product announcements* | *0–5* | *4* | *3* | *—* |
-
-Both notes open with a question, per the rule above — and both landed **inside the old
-announcement band on replies**, nowhere near the 44/30/25 reply ceiling. The lift is in
-**reposts and zaps** (roughly double the announcement median).
+Both opened with a question, per the rule above, and both landed **inside the ordinary
+announcement band on replies** — nowhere near what a real question earns. The lift was
+in **reposts and zaps**, roughly double the announcement median.
 
 **The refinement that follows: a rhetorical question is still an announcement.** "Had enough
 of the current thing?" gives the reader nothing to answer, so it does not buy replies; what

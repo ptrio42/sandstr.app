@@ -14,19 +14,17 @@ podmieniamy go na własne IP. Starsze notatki procesowe (nieśledzone od 2026-08
 Ich blokery są zamknięte: `LICENSE` istnieje, `git remote` wskazuje `ptrio42/sandstr.app`,
 mock-tożsamości są zmyślone, README nie głosi owned-IP-first, Kitten nie jest front doorem.
 
-## Ścieżka (a) — GŁÓWNA: zgoda opt-in od każdego zespołu
+## Ścieżka (a) — GŁÓWNA: kanał korekty dla zespołów
 
-- Twórcy są osiągalni na Nostr, a wierne demo im schlebia. Kanały per klient: sekcje „Opt-in"
-  w `docs/FIDELITY.md`. **Nie monetyzujemy marki konkretnego zespołu bez jego zgody.**
-- **Kontakt inicjuje właściciel — agent nie wysyła nic na zewnątrz.** Żadnych DM, maili, issue
+- **Kanał jest zaimplementowany:** `fidelityReportUrl` (`src/host/contribute.ts:38`) → formularze
+  w `.github/ISSUE_TEMPLATE/`. `TRADEMARKS.md` obiecuje każdemu zespołowi poprawkę błędu wierności
+  albo usunięcie reprodukcji na życzenie, bez pytań — **to obietnica do dotrzymania, nie copy.**
+- **Nie monetyzujemy cudzej marki.**
+- **Kontakt na zewnątrz inicjuje właściciel — agent nie wysyła nic.** Żadnych DM, maili, issue
   ani postów. Możesz przygotować draft jako plik i tyle; wysyłka to decyzja człowieka.
-- Wychodzące linki są pierwszym zdaniem tej rozmowy: `homepage`/`repo`/`upstreamLicense`/
-  `installNote` w `src/registry.tsx` (zweryfikowane wobec stron i repo klientów 2026-07-29 —
-  komentarz `src/registry.tsx:87-99`). Martwy albo zły link kompromituje nas przed dokładnie tymi
-  ludźmi, od których chcemy zgody — re-weryfikuj, zanim któryś zmienisz.
-- Kanał korekty jest zaimplementowany: `fidelityReportUrl` (`src/host/contribute.ts:38`) →
-  formularze w `.github/ISSUE_TEMPLATE/`. `TRADEMARKS.md` obiecuje maintainerowi poprawkę albo
-  usunięcie reprodukcji na życzenie, bez pytań — to obietnica do dotrzymania, nie copy.
+- Wychodzące linki (`homepage`/`repo`/`upstreamLicense`/`installNote` w `src/registry.tsx`,
+  zweryfikowane wobec stron i repo klientów 2026-07-29) to jedyna droga odwiedzającego do
+  prawdziwej appki — martwy albo zły link zostawia go w symulacji. Re-weryfikuj przed zmianą.
 
 ## Ścieżka (b) — disclaimer na każdym widoku klienta
 

@@ -8,9 +8,8 @@ import { generateNpub, generateTimestamp, generateFollowerCount, generateAvatarG
 
 // EVERY identity below is invented. No mock user may reference a real person,
 // organisation, domain or payment identifier: this data renders as authored
-// posts inside the simulators, so a real name here means fabricated statements
-// attributed to a real human — defamation-shaped, and poison for the opt-in
-// consent strategy (see CLAUDE.md "Branding / ryzyko prawne").
+// posts inside the simulators, so a real name here would put invented words in
+// a real person's mouth.
 // Websites use .example (RFC 2606 — guaranteed never to resolve); lightning
 // addresses use @wallet.example. Keep it that way.
 export const mockUsers: MockUser[] = [

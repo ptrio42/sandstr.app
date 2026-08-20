@@ -2,7 +2,7 @@
  * Curated Primal-flavoured mock content. Layout, density, badge mix and counts
  * mirror the reference recording (docs/refs/primal/shots) so the reproduction
  * reads as the real app — but EVERY identity is invented. The recording showed
- * real users; shipping their names with fabricated posts is defamation-shaped
+ * real users; their names never ship with invented posts
  * (see the header of src/data/mock/users.ts). Handles use .example domains
  * (RFC 2606, never resolve). Relay URLs are kept real on purpose: they are
  * infrastructure facts and part of fidelity, not statements by people.

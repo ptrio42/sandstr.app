@@ -21,4 +21,4 @@ Luki: `docs/gaps/damus.md`. Kod: `src/simulators/damus/`, tokeny `damus.theme.cs
 - `configs.ts` ma poprawne hexy (`primaryColor '#CC43C5'`, `secondaryColor '#F869B6'`) — nie „poprawiaj".
 - Rejestr: `frame: 'ios'`, `tour: true`, `status: 'ready'`, `theme: 'dark'`, `upstreamLicense: 'GPL-3.0'`.
 
-**Opt-in / ryzyko:** marka bardzo rozpoznawalna → wymagana wyraźna zgoda; autor aktywny na Nostr.
+**Marka:** bardzo rozpoznawalna → nie shipuj upstreamowego rastra, użyj `ClientGlyph` (patrz `TRADEMARKS.md`).
