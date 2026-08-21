@@ -24,7 +24,8 @@
 
 The strip is the part nothing else can do. Every simulator already reads `src/data/mock`, so the
 note is genuinely identical and only the chrome differs — a side-by-side that would otherwise need
-eight devices and eight accounts.
+eight devices and eight accounts. `?note=<text>` makes that note **yours** (below), which is the
+only form of this page worth sending to someone about their own post.
 
 ## Surfaces
 
@@ -188,9 +189,23 @@ shared module so the static file is never quietly given markup the live page lac
 ## Linkable state
 
 Every part of the page state lives in the query string and is read on arrival:
-`?on=ios|android|web`, `?need=<axis,axis>`, `?show=<surface>`, `?cell=<client>:<axis>`. Defaults are
-omitted — a link should carry what someone chose, not the state of a page nobody touched — and
-unknown values degrade to the unfiltered page rather than a blank one.
+`?on=ios|android|web`, `?need=<axis,axis>`, `?show=<surface>`, `?cell=<client>:<axis>`, plus
+`?note=<text>`. Defaults are omitted — a link should carry what someone chose, not the state of a
+page nobody touched — and unknown values degrade to the unfiltered page rather than a blank one.
+
+**`?note=` is an input, not page state.** The other four are mirrored back into the address bar as
+you operate the page; this one is only ever read, and only ever removed — by "Back to the sample
+note", which deletes the param as well as the note, so a reload does not put it straight back. It
+is the same param `ClientView` reads and it shares one sessionStorage key with it
+(`src/data/mock/previewNote.ts`), so `/compare?note=gm%20nostr` shows eight renderings of that note
+*and* clicking into any client afterwards keeps it. It survives the chooser because the mirror
+effect copies unknown params through instead of rebuilding the query string from scratch.
+
+The strip says so when it is showing a pasted note, and says what the preview does **not** touch:
+the author, the timestamp and the counters stay mock, because `registerPreviewSlot` overwrites text,
+hashtags, links, mentions and media and nothing else. The notice is scoped to the note surface —
+the other three render a login screen, a composer and a nav bar, none of which change when a note is
+pasted.
 
 This exists for the reply playbook in [`OUTREACH.md`](OUTREACH.md): answering someone in a thread
 needs a link that lands on the answer, not on a page they then have to operate.
