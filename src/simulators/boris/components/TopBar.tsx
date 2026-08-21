@@ -19,12 +19,23 @@ export function TopBar({
 }) {
   return (
     <div
-      className="flex h-16 shrink-0 items-center gap-1 pl-1 pr-1"
+      className="flex h-16 shrink-0 items-center gap-1 overflow-hidden pl-1 pr-1"
       style={{ background: 'var(--boris-bg)' }}
       data-tour={tourId}
     >
       {navigation}
-      <div className="min-w-0 flex-1 truncate text-[17px] font-medium" style={{ color: 'var(--boris-on-bg)' }}>
+      {/* A floor, not min-w-0. The stage sizes the device off available HEIGHT
+          (ClientView -> aspect-[9/19.5]), so a short window hands Boris a screen
+          narrower than any real Android phone — measured 269 px at a 720 px
+          viewport. With min-w-0 the five fixed 48 px actions on Feeds took all
+          of it and the title rendered as "F…". The floor makes the title
+          inflexible instead, and the shortfall comes out of the IconButtons
+          below, which is why they are shrinkable down to 36 px. Above a ~316 px
+          screen nothing shrinks and the bar is byte-for-byte what it was. */}
+      <div
+        className="min-w-[3.5rem] flex-1 truncate text-[17px] font-medium"
+        style={{ color: 'var(--boris-on-bg)' }}
+      >
         {title}
       </div>
       {actions}
@@ -53,7 +64,7 @@ export function IconButton({
       title={label}
       onClick={onClick}
       data-tour={tourId}
-      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
+      className="flex h-12 w-12 min-w-[2.25rem] shrink items-center justify-center rounded-full"
       style={{ color: tint }}
     >
       {children}
