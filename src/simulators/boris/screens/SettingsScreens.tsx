@@ -732,15 +732,23 @@ function SubScreen({
                 <IconToggle icon={<Underline size={18} />} label="Underline style" selected={settings.highlightStyle === 'underline'} onClick={() => onSettings({ highlightStyle: 'underline' })} />
               </div>
             </SettingRow>
-            <SettingRow label="My Highlights">
-              <ColorSwatches colors={HIGHLIGHT_SWATCHES} value={settings.mine} onChange={(c) => onSettings({ mine: c })} />
-            </SettingRow>
-            <SettingRow label="Friends Highlights">
-              <ColorSwatches colors={HIGHLIGHT_SWATCHES} value={settings.friends} onChange={(c) => onSettings({ friends: c })} />
-            </SettingRow>
-            <SettingRow label="Nostrverse Highlights">
-              <ColorSwatches colors={HIGHLIGHT_SWATCHES} value={settings.nostrverse} onChange={(c) => onSettings({ nostrverse: c })} />
-            </SettingRow>
+            {/* The three colour rows carry ONE anchor between them. Anchoring
+                the preview card instead — the obvious choice, since it is what
+                shows the change — put the ring 65px into view on a target
+                1436px tall: below the fold and twice the height of the phone.
+                docs/TOURS.md, "a step whose subject needs scrolling has the
+                wrong target". */}
+            <div data-tour="boris-highlight-colors">
+              <SettingRow label="My Highlights">
+                <ColorSwatches colors={HIGHLIGHT_SWATCHES} value={settings.mine} onChange={(c) => onSettings({ mine: c })} />
+              </SettingRow>
+              <SettingRow label="Friends Highlights">
+                <ColorSwatches colors={HIGHLIGHT_SWATCHES} value={settings.friends} onChange={(c) => onSettings({ friends: c })} />
+              </SettingRow>
+              <SettingRow label="Nostrverse Highlights">
+                <ColorSwatches colors={HIGHLIGHT_SWATCHES} value={settings.nostrverse} onChange={(c) => onSettings({ nostrverse: c })} />
+              </SettingRow>
+            </div>
             <SettingRow label="Default Highlight Visibility">
               {/* Order is nostrverse → friends → mine, each tinted with THAT
                   layer's chosen colour at alpha 1 / 0.4 (HighlightsSection.kt:83-125). */}
@@ -912,7 +920,7 @@ function SubScreen({
 
     case 'scroll':
       return (
-        <div className="space-y-1 pt-1">
+        <div className="space-y-1 pt-1" data-tour="boris-scroll-switches">
           <SettingSwitch label="Hide top bar on scroll" value={settings.hideTopBarOnScroll} onChange={(v) => onSettings({ hideTopBarOnScroll: v })} />
           <SettingSwitch label="Use volume buttons to scroll" value={settings.volumeScroll} onChange={(v) => onSettings({ volumeScroll: v })} />
           <SettingSwitch label="Sync reading position across devices" value={settings.syncPosition} onChange={(v) => onSettings({ syncPosition: v })} />
@@ -1024,7 +1032,7 @@ function ZapSplits({ enabled, onToggle }: { enabled: boolean; onToggle: (v: bool
       <SettingSwitch label="Add zap splits to highlights" value={enabled} onChange={onToggle} />
       {enabled && (
         <>
-          <div className="space-y-2">
+          <div className="space-y-2" data-tour="boris-zap-presets">
             <p className="text-[15px]" style={{ color: 'var(--boris-on-surface-variant)' }}>
               Presets
             </p>
@@ -1097,7 +1105,7 @@ function RelayRow({ row }: { row: BorisRelayRow }) {
  */
 function Relays() {
   return (
-    <div className="space-y-4 pt-1">
+    <div className="space-y-4 pt-1" data-tour="boris-relays-list">
       <p className="text-[15px]" style={{ color: 'var(--boris-on-surface-variant)' }}>
         Relays Boris reads from and publishes to. Status is checked while this screen is open.
       </p>

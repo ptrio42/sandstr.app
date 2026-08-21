@@ -5,9 +5,20 @@ description: Pisanie i rewizja kurowanego FAQ per klient w src/data/faq/ — now
 
 # FAQ klienta — jak pisać i rewidować
 
-Osiem plików klientów (`coracle damus amethyst primal nostur yakihonne snort wisp`), 231 wpisów,
-137 mini-tourów. Keychat i Gossip **nie mają FAQ** — brak `docs/refs/<client>/` i brak mostka
-`FaqMiniTourLauncher`; nie dopisuj ich do `src/data/faq/index.ts` bez recon.
+Dziewięć plików klientów (`coracle damus amethyst primal nostur yakihonne snort wisp boris`),
+274 wpisy, 153 mini-toury. Keychat i Gossip **nie mają FAQ** — brak `docs/refs/<client>/` i brak
+mostka `FaqMiniTourLauncher`; nie dopisuj ich do `src/data/faq/index.ts` bez recon.
+
+**Boris (2026-08-21) jest wzorcem na klienta, który nie jest społecznościowy.** Siatki 17 tematów
+NIE rozszerzaj pod czytnik — pytania typu „jak zakreślać", „jak słuchać", „jak czytać offline",
+„jak dodać RSS" idą jako zwykłe `entries` we własnych kategoriach; dopisanie ich do
+`CANONICAL_TOPICS` zepsułoby osiem pozostałych plików po to, żeby opisać jedną appkę.
+Sześć tematów kanonicznych ma u niego odpowiedzi, jakich nie da żaden inny klient: `post`
+= zakreślenie (kind 9802, composera nie ma), `reactions` = 👀 lookmark i 📚 archiwum,
+`backup-keys` = klucza w appce nie ma w ogóle, `zap` = brak przycisku zapa + zap splits,
+`clear-cache` = limit pamięci zamiast czyszczenia, `manage-relays` = ekran tylko do odczytu.
+`n/a` mają tylko `mute` i `dms`, oba sprawdzone w źródle. Ma też najniższy stosunek demo do wpisów
+(16/43) — bo bramka `showMe` zadziałała, a nie dlatego, że komuś się nie chciało.
 
 ## Kolejność czytania — zanim napiszesz pierwszy wpis
 

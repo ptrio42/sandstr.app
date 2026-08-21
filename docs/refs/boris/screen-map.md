@@ -252,8 +252,10 @@ Label formats: `1 min read` / `N min read` (`data/ReadingTime.kt:18`); `1 highli
 (`:2339-2342`); dates like `May 8, 2006`.
 
 **Selection → highlight** (`ui/reader/HighlightTextToolbar.kt:53-84`): a 24 dp-corner pill on
-`inverseSurface` with text buttons `Copy` · `[Highlight — signed in only]` · `Read from here` ·
-`Select all`.
+`inverseSurface` with text buttons `Copy` · `[Highlight — signed in only]` · `TTS from here` ·
+`Select all`. `Copy` and `Select all` are `android.R.string`, so they render in the platform's
+own words; the third one is Boris's and reads **`TTS from here`** (`strings.xml:418`), not
+"Read from here".
 
 **Bottom stack** (`:1860-1877`): mini player, then `ReadingProgressBar`, then a navigation-bar
 spacer. The progress readout is **not** a floating percentage: it is a full-width row on `background`

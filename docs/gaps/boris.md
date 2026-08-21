@@ -1,8 +1,16 @@
 # Boris — gap ledger
 
 > Ground truth: `docs/refs/boris/screen-map.md` · Sim: `src/simulators/boris/`
-> Spisany: 2026-08-21 · Registry status: ready · Sim LOC: 5577 · kotwice `data-tour`: 94
-> Tour: 11 kroków (`src/data/tours/boris-tour.ts`, dopisany 2026-08-21)
+> Spisany: 2026-08-21 · Registry status: ready · Sim LOC: 5533 · kotwice `data-tour`: **77**
+> Tour: 11 kroków (`src/data/tours/boris-tour.ts`) · FAQ: 43 wpisy, 16 mini-tourów
+> (`src/data/faq/boris.ts`, 2026-08-21)
+>
+> **Kotwic jest 77, nie 94.** Przeliczone skryptem przy pisaniu banku FAQ: 46 nazw literalnych
+> plus 31 z pięciu rodzin szablonowych (`boris-tab-*` 5, `boris-settings-*` 13,
+> `boris-library-scope-*` 6, `boris-feeds-scope-*` 3, `boris-feeds-tab-*` 4), plus jedna rodzina
+> sterowana danymi (`boris-feed-card-<id>`), której nie liczę, bo jej rozmiar zależy od mocków.
+> Wcześniejsze 94 było szacunkiem autora, nie pomiarem — dokładnie ta klasa liczby, przed którą
+> ostrzega akapit niżej.
 
 > **Ten ledger jest deklaracją autora, nie niezależnym audytem.** Pozostałe dziesięć powstało w
 > przebiegu wieloagentowym z adwersaryjną weryfikacją każdego wiersza innego niż `ok`; ten spisała ta
@@ -15,20 +23,37 @@
 
 | missing | dead | partial | unreachable | unanchored | ok |
 |---|---|---|---|---|---|
-| 11 | 14 | 9 | 1 | 0 | 5 |
+| 11 | 14 | 10 | 1 | 0 | 6 |
 
-40 wierszy = 35 luk + 5 `ok`. Liczby policzone skryptem po kolumnie *Status*, nie ręcznie.
+42 wiersze = 36 luk + 6 `ok`. Liczby policzone skryptem po kolumnie *Status*, nie ręcznie
+(przeliczone 2026-08-21 po zamknięciu bor-01 i dopisaniu bor-41/bor-42).
 
-**Top 3 do zrobienia:** bor-01 (brak banku FAQ — blokuje `showMe` i wejście do `/compare`) ·
-bor-02 (zaznaczanie tekstu jest udawane: klik w akapit, nie realna selekcja) · bor-03 (Library
-zalogowany pokazuje te same artykuły w każdym scope).
+**Top 3 do zrobienia:** bor-02 (zaznaczanie tekstu jest udawane: klik w akapit, nie realna
+selekcja) · bor-03 (Library zalogowany pokazuje te same artykuły w każdym scope) · bor-31
+(półki offline i limit pamięci wyrenderowane na sztywno — to one zablokowały demo `clear-cache`
+i `offline`).
+
+**bor-01 zamknięte 2026-08-21.** Bank FAQ jest (`src/data/faq/boris.ts`, 43 wpisy), wrapper ma
+`FaqMiniTourLauncher`, a Boris jest w `/compare` (12 osi, 3 `yes` / 8 `no` / 1 `partial`).
+Do banku doszły cztery kotwice, których nie było: `boris-relays-list`, `boris-zap-presets`,
+`boris-scroll-switches`, `boris-highlight-colors`.
+
+**Ile z tego dało się pokazać: 16 mini-tourów na 43 wpisy (37%), przy ~60% u pozostałych ośmiu
+klientów.** Ta różnica to ten ledger działający jak bramka. Tekst dostały, a demo nie, dokładnie
+te odpowiedzi, których powierzchnia jest tu `dead` albo `partial`: Library i jej scope'y (bor-03,
+bor-04), menu ⋮ czytnika (bor-07), spis treści i Find (bor-08, bor-10), wiersze panelu Highlights
+(bor-09), wyniki wyszukiwania (bor-20), RSS (bor-30), półki offline i limit pamięci (bor-31),
+usuwanie zakreślenia (bor-19, bor-22).
+
+**Dwa wiersze dopisane przy tej okazji (bor-41, bor-42)** — oba znalezione klik-po-kliku podczas
+weryfikacji mini-tourów, nie przeglądem kodu.
 
 ## Gaps
 
 | ID | Surface (ścieżka w UI) | § | Status | Gap | Evidence | FAQ impact | Effort |
 |---|---|---|---|---|---|---|---|
-| bor-01 | cały klient → bank FAQ (`showMe`) | — | missing | Tour wszedł 2026-08-21 (11 kroków, `tour: true`, wrapper `BorisSimulatorWithTour`), ale nie ma `src/data/faq/boris.ts`. Bez banku: brak `showMe`, brak Borisa w `/compare` (komórki w `capabilities.ts` cytują id wpisów FAQ) i brak `FaqMiniTourLauncher` we wrapperze. Silnik i 94 kotwice są gotowe — brakuje treści | `src/simulators/boris/BorisSimulatorWithTour.tsx:5-9`, `src/data/capabilities.ts` (SCOPE) | blocks-showme | L |
-| bor-02 | Reader → zaznaczenie tekstu → pasek Copy / Highlight / Read from here / Select all | §4 | partial | Pasek ma poprawny kształt i kolejność, ale nie ma realnej selekcji: klik w akapit „zaznacza" jego pierwsze zdanie. Prawdziwe `window.getSelection()` dałoby dowolny fragment | `screens/ReaderScreen.tsx:398-410` | breaks-showme | M |
+| bor-01 | cały klient → bank FAQ (`showMe`) | — | ok | **Zamknięte 2026-08-21.** `src/data/faq/boris.ts` = 43 wpisy / 16 mini-tourów, `borisFaq` w `src/data/faq/index.ts`, `FaqMiniTourLauncher` + gałąź `isFaqStepId` we wrapperze, Boris w `src/data/capabilities.ts` (12 osi) i na `/compare` (pierwszy ekran + pasek zakładek; nota i composer jako `absent` z powodem) | `src/data/faq/boris.ts`, `src/simulators/boris/BorisSimulatorWithTour.tsx:16-17,61-80,125` | none | — |
+| bor-02 | Reader → zaznaczenie tekstu → pasek Copy / Highlight / TTS from here / Select all | §4 | partial | Etykieta poprawiona 2026-08-21: trzecia pozycja to `TTS from here` (`strings.xml:418`), nie „Read from here" — błąd wędrował ze screen-mapy przez sim do kopii toura. Pasek ma poprawny kształt i kolejność, ale nie ma realnej selekcji: klik w akapit „zaznacza" jego pierwsze zdanie. Prawdziwe `window.getSelection()` dałoby dowolny fragment | `screens/ReaderScreen.tsx:398-410` | breaks-showme | M |
 | bor-03 | Library (zalogowany) → chipy All / Private / Public / Web / Lookmarks / Archive | §6 | partial | Każdy scope filtruje ten sam zbiór artykułów po długości/domenie; nie ma osobnych zbiorów bookmarków ani stanu „zaszyfrowane, odblokuj signerem" | `screens/LibraryScreen.tsx:49-58` | breaks-showme | M |
 | bor-04 | Library → top bar → Info → arkusz „Library sources" | §6 | dead | Ikona `i` otwiera ekran ustawień Library zamiast arkusza z pięcioma opisami źródeł (lookmark = kind 7 👀 itd.) | `BorisSimulator.tsx:262` | breaks-showme | S |
 | bor-05 | Feeds → top bar → Info → arkusz „Feed visibility" | §5 | dead | To samo: otwiera ustawienia Feeds, nie arkusz z trzema zdaniami o zasięgach | `BorisSimulator.tsx:283` | breaks-showme | S |
@@ -67,6 +92,8 @@ zalogowany pokazuje te same artykuły w każdym scope).
 | bor-38 | Reader → pasek postępu (2 dp + etykieta, trzy kolory, `✓` przy 95 %) | §4 | ok | Cała reguła kolorów i format etykiety odtworzone | `screens/ReaderScreen.tsx` | none | — |
 | bor-39 | You (wylogowany) → „the passages you care about" z żółtym markerem | §6 | ok | Krój, rozmiar, 32 % alfa, promień i padding zgodne z `YouLoggedOut.kt` | `screens/YouScreen.tsx:78-96` | none | — |
 | bor-40 | Home → top bar → cyklujący awatar wspierającego | §2.2 | unreachable | Działa i ma kotwicę, ale żadna komenda toura nie ustawia go w stan „kliknięty" — a to najbardziej mylona kontrolka w całym kliencie | `components/SupportHeart.tsx:44-57` | blocks-showme | S |
+| bor-41 | Settings → Reading / Highlights → karta podglądu `ReadingPreview` | §7.2 | partial | Kotwica `boris-settings-preview` istnieje i treść jest wierna, ale jako CEL toura jest bezużyteczna: zmierzone w działającym simie, karta zaczyna się 65 px nad dolną krawędzią telefonu i ma 1436 px wysokości — pierścień wychodzi poza kadr na obiekcie dwa razy wyższym od ekranu. Realna karta mieści się w ekranie, bo jej trzy akapity są krótsze. `reading-settings` przez to nie ma demo, a `highlight-colors` celuje w nową kotwicę `boris-highlight-colors` | `screens/SettingsScreens.tsx:331`; pomiar: `getBoundingClientRect()` na `/c/boris`, ekran Highlights | breaks-showme | M |
+| bor-42 | You (zalogowany) → top bar → ⋮ → Copy Link / Share / njump / Native / Sign out | §6 | missing | Górny pasek zakładki You ma serce i koło zębate, ale nie ma trójkropka — a to jedyne miejsce w całej appce, gdzie da się wylogować (`AccountScreen.kt:133-144`) i jedyne, gdzie widać własny npub. Przez to `logout` i `multi-account` są tekstowe | `screens/YouScreen.tsx:60-71` | blocks-showme | S |
 
 ## Czego tu nie ma i nie będzie
 

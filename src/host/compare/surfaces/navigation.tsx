@@ -25,6 +25,7 @@ import { BottomBar as NosturBar } from '../../../simulators/nostur/components/Bo
 import { LeftSidebar as PrimalSidebar } from '../../../simulators/primal/web/components/LeftSidebar';
 import { Rail as SnortRail } from '../../../simulators/snort/SnortSimulator';
 import { Sidebar as CoracleSidebar } from '../../../simulators/coracle/components/Sidebar';
+import { BottomBar as BorisBar } from '../../../simulators/boris/components/BottomBar';
 
 import type { Surface, SurfacePreviewProps } from './types';
 
@@ -46,6 +47,11 @@ function YakiNav() {
 }
 function WispNav() {
   return <WispBar activeTab="home" onTabChange={noop} unread={{ notifications: true }} />;
+}
+// The only bar on this row with no compose affordance anywhere — not in it,
+// not floating above it. Boris has nothing to compose.
+function BorisNav() {
+  return <BorisBar activeTab="home" onTabChange={noop} />;
 }
 function NosturNav() {
   return <NosturBar active="home" onSelect={noop} badges={{ notifications: 3 }} />;
@@ -96,7 +102,7 @@ export const navigationSurface: Surface = {
   id: 'navigation',
   label: 'Getting around',
   blurb:
-    'Bottom bar or left rail, and which handful of destinations earned a permanent slot. Amethyst has no search tab; Damus and YakiHonne float compose above the bar instead of putting it in it.',
+    'Bottom bar or left rail, and which handful of destinations earned a permanent slot. Amethyst has no search tab; Damus and YakiHonne float compose above the bar instead of putting it in it; Boris has no compose control at all.',
   byClient: {
     damus: { Component: DamusNav, rootClass: 'damus-simulator', natural: BAR },
     amethyst: { Component: AmethystNavCell, rootClass: 'amethyst-simulator', natural: BAR },
@@ -106,5 +112,6 @@ export const navigationSurface: Surface = {
     wisp: { Component: WispNav, rootClass: 'wisp-simulator', natural: BAR },
     nostur: { Component: NosturNav, rootClass: 'nostur-simulator', natural: BAR },
     coracle: { Component: CoracleNav, rootClass: 'coracle-simulator', natural: RAIL },
+    boris: { Component: BorisNav, rootClass: 'boris-simulator', natural: BAR },
   },
 };

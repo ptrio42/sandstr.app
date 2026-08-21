@@ -82,7 +82,7 @@ const borisTourSteps: TourStep[] = [
     target: '[data-tour="boris-reader-body"]',
     title: 'Highlighting is the whole point',
     content:
-      'Select any sentence and a small bar offers Copy, Highlight, Read from here. Highlight publishes the passage to nostr as its own event — so your marks are yours, portable, and readable by any other client that speaks the same kind. Boris also attaches a zap split as it goes, so anything the highlight earns is shared with the author.',
+      'Select any sentence and a small bar offers Copy, Highlight, TTS from here. Highlight publishes the passage to nostr as its own event — so your marks are yours, portable, and readable by any other client that speaks the same kind. Boris also attaches a zap split as it goes, so anything the highlight earns is shared with the author.',
     position: 'top',
     allowClickThrough: true,
     spotlightPadding: 10,

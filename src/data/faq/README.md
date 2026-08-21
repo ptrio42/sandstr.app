@@ -22,12 +22,12 @@ until each declares it — that is the mechanism working, not a nuisance.
 > **The enforcement is real again as of 2026-08-07.** Between 2026-08-06 and then
 > it was not: a syntax error in `useSimulator.ts` made `tsc` drop *every* semantic
 > diagnostic, so `npm run typecheck` looked almost clean while checking nothing.
-> Verified after the fix — adding a throwaway topic names exactly the eight client
-> files. See the Gotchas section in `CLAUDE.md`.
+> Verified after the fix (2026-08-07) — adding a throwaway topic named exactly the eight client
+> files that existed then; there are nine now. See the Gotchas section in `CLAUDE.md`.
 
 **Worked example of the mechanism: `multi-account` (added 2026-08-07).**
-Adding it broke all eight files until each declared an answer, and the answers
-came out genuinely different: Amethyst, Nostur, YakiHonne and Wisp have a real
+Adding it broke all eight files that existed then until each declared an answer,
+and the answers came out genuinely different: Amethyst, Nostur, YakiHonne and Wisp have a real
 switcher; Snort has one but ships no way to ADD a second account; Damus and
 Primal hold one key at a time and switching means logging out. "This client
 does not have it" is a first-class answer — provided it was verified, not
@@ -159,6 +159,18 @@ that opened the visitor's own profile because of exactly this.
 spotlight is clipped to the target's own rect, so a caption about "the
 sheet" pinned to its send button leaves everything it names under the
 scrim. Whole-surface captions belong on the surface root.
+
+**…but measure that root before you trust it: a target below the fold, or
+taller than the phone, is not a target.** The spotlight is not scrolled into
+view. Boris's Reading and Highlights screens both carry the same preview card,
+which is the obvious subject for "how do I change the font" — and measured in
+the running sim it starts 65px above the bottom of the phone and is 1436px
+tall, so the ring landed off-frame on something twice the height of the screen.
+This is the same defect `docs/TOURS.md` records for the Boris tour's
+*Airplane mode* row, and both times it was found by LOOKING, not by reading the
+code. `getBoundingClientRect()` on the anchor, against the `.mobile-phone-frame-bezel`
+rect, settles it in one line — and take the screenshot first, because a hidden
+preview pane reports zeros.
 
 **When you add an anchor, check which BRANCH you put it in.** A screen that
 renders a list or a detail view depending on local state has two roots; the
