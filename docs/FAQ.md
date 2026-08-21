@@ -25,21 +25,59 @@
 | Snort | 27 | 15 | dwa realne bugi symulatora przy okazji |
 | Wisp | 27 | 16 | 5 odblokowań, o które prosił ledger |
 | Coracle | 32 | 20 | **pierwszy klient bez wrappera** — zbudowany od zera |
-| **Razem** | **231** | **137** | +64 wpisy w rundzie 2 (8 × 8) |
+| Boris | 43 | 16 | czytnik, nie klient społecznościowy — patrz niżej |
+| **Razem** | **274** | **153** | +64 wpisy w rundzie 2 (8 × 8), +43 Boris (2026-08-21) |
 
-**Liczby w tabeli to snapshot drzewa roboczego z 2026-08-17** — nie aktualizują się same, więc przed
-cytowaniem ich gdziekolwiek indziej przelicz. Przeliczone tego dnia od zera: doszedł `relay-feed`
+**Liczby w tabeli to snapshot drzewa roboczego z 2026-08-21** — nie aktualizują się same, więc przed
+cytowaniem ich gdziekolwiek indziej przelicz. Historia przeliczeń: 2026-08-17 doszedł `relay-feed`
 w Damusie (28/18 → 29/19), a **Amethyst miał 16 mini-tourów, nie 13** — trzy doszły przy przebudowie
-do v1.13.1 i nikt nie ruszył tej tabeli, więc suma stała na 133 zamiast 137.
+do v1.13.1 i nikt nie ruszył tej tabeli, więc suma stała na 133 zamiast 137. 2026-08-21 doszedł
+Boris; osiem starszych plików przeliczonych wtedy od zera zgodziło się co do joty (231/137).
 
 ```bash
-for f in src/data/faq/{amethyst,coracle,damus,nostur,primal,snort,wisp,yakihonne}.ts; do
+for f in src/data/faq/{amethyst,boris,coracle,damus,nostur,primal,snort,wisp,yakihonne}.ts; do
   echo "$(grep -cE "^      id: '" $f) $(grep -cE "^      showMe: \[" $f) $f"
 done | awk '{e+=$1;s+=$2; print} END{print "RAZEM", e, s}'
 ```
 
 (pierwsza kolumna = wpisy, druga = mini-toury; wcięcie 6 spacji odróżnia pole wpisu od kluczy
 `coverage` i od pól kroków `showMe`).
+
+### Boris (2026-08-21) — pierwszy klient, który nie jest klientem społecznościowym
+
+43 wpisy, 16 mini-tourów, i najniższy stosunek demo do wpisów w całym banku (37% wobec ~60%
+u pozostałych). To nie jest niedoróbka, tylko bramka `showMe` działająca zgodnie z przeznaczeniem:
+[`gaps/boris.md`](gaps/boris.md) ma 14 wierszy `dead` i 11 `missing`, i wypadają na nich dokładnie te
+powierzchnie, które chciałoby się pokazać — chipy Library, menu ⋮ czytnika, półki offline, chipy
+limitu pamięci, wyniki wyszukiwania. Odpowiedzi tekstowe są, demo nie ma.
+
+**Sześć tematów kanonicznych ma tu odpowiedzi, jakich nie da żaden inny klient**, i to jest
+argument za tym, żeby siatki 17 tematów nie rozszerzać pod czytnik:
+
+| Temat | Odpowiedź Borisa |
+|---|---|
+| `post` | publikujesz **zakreślenie** (kind 9802). Composera nie ma w ogóle |
+| `reactions` | dwa emoji: 👀 lookmark (tylko czyta) i 📚 archiwum (kind 7 / kind 17, publikuje) |
+| `backup-keys` | Boris **nigdy nie dostaje klucza** — Amber (NIP-55) albo bunkier (NIP-46). Nie ma czego backupować |
+| `zap` | nie ma przycisku zapa. Zamiast tego dokleja **zap split** do każdego zakreślenia |
+| `clear-cache` | nie ma przycisku czyszczenia — jest limit 210 MB … 5 GB, czytany przy starcie |
+| `manage-relays` | ekran **tylko do odczytu** nad Twoją listą NIP-65 + lokalna Citrine na `ws://127.0.0.1:4869` |
+
+`n/a` mają tylko `mute` i `dms`, oba **sprawdzone w źródle**, nie wywnioskowane z ciszy: w 291 plikach
+Kotlina słowo „mute" pada dwa razy i oba razy jest nazwą koloru, a NIP-04/NIP-44 są wyłącznie
+transportem dla zaszyfrowanej listy zakładek i dla bunkra.
+
+Pytania czytnikowe („jak słuchać", „jak czytać offline", „jak dodać RSS", „jak działa synchronizacja
+pozycji czytania") poszły jako zwykłe `entries` we własnych kategoriach. Dopisanie ich do
+`CANONICAL_TOPICS` zepsułoby dziewięć plików po to, żeby opisać jedną appkę.
+
+**Dwa defekty złapane dopiero klik-po-kliku, oba ten sam kształt:** cel `showMe` leżał pod zgięciem.
+Karta podglądu na ekranach Reading i Highlights zaczyna się **65 px** nad dolną krawędzią telefonu
+i ma **1436 px** wysokości — pierścień wychodził poza kadr na obiekcie dwa razy wyższym od ekranu.
+`reading-settings` stracił demo (jego główna kontrolka i tak jest `dead`, bor-25), a
+`highlight-colors` dostał nową kotwicę na trzech wierszach kolorów. To jest ta sama lekcja, którą
+tour Borisa dostał tydzień wcześniej na wierszu *Airplane mode* — i drugi raz znalazło ją oglądanie,
+nie czytanie kodu.
 
 **Nie zrobione:** Keychat i Gossip — czekają na nowe nagrania (bez recon nie ma czym mierzyć).
 ~~Gossip ma dodatkowo `gos-01`~~ — **naprawione 2026-08-07** razem z przywróceniem typechecka: klik

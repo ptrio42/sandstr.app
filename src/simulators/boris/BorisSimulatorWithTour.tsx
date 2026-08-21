@@ -2,15 +2,19 @@
  * Boris Simulator with Tour Integration — the tour drives the simulator state.
  * Preserves the repo-wide tourCommand / onCommandHandled contract exactly.
  *
- * No `FaqMiniTourLauncher` here yet: it takes a `ClientFaq`, and Boris has no
- * bank in `src/data/faq/` (gap bor-01). Adding one later is an import and a
- * second child — the queue below already serves both callers, because a mini
- * tour and the main tour are the same engine.
+ * Two callers share one queue, because a mini tour and the main tour are the
+ * same engine: `borisTourConfig` (indexed steps, the map below) and the FAQ
+ * panel's "Show me" (`FaqMiniTourLauncher`, which hands us a step-id -> commands
+ * map at launch). The `isFaqStepId` branch is what keeps them apart — an FAQ
+ * step carries its own commands and must never fall through to the index map,
+ * whose keys it would otherwise collide with.
  */
 
 import { useState, useRef, useCallback } from 'react';
 import { TourWrapper } from '../../components/tour';
 import type { TourStep } from '../../components/tour';
+import { FaqMiniTourLauncher, isFaqStepId } from '../../components/faq/FaqMiniTourLauncher';
+import { borisFaq } from '../../data/faq/boris';
 import { borisTourConfig } from '../../data/tours';
 import { BorisSimulator } from './BorisSimulator';
 import type { SimulatorCommand } from './types';
@@ -19,6 +23,8 @@ export function BorisSimulatorWithTour() {
   const [commandQueue, setCommandQueue] = useState<SimulatorCommand[]>([]);
   const [currentCommand, setCurrentCommand] = useState<SimulatorCommand | null>(null);
   const lastStepRef = useRef<number>(-1);
+  // Step-id -> commands for the ACTIVE FAQ mini-tour, set at launch.
+  const faqCommandsRef = useRef<Record<string, unknown[]>>({});
   // Timers armed by the queue — a step change replaces the queue, but an
   // already-armed timer still holds the OLD one in its closure.
   const pendingTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -52,10 +58,26 @@ export function BorisSimulatorWithTour() {
     [clearPendingTimers],
   );
 
+  const handleFaqLaunch = useCallback((commandsByStepId: Record<string, unknown[]>) => {
+    faqCommandsRef.current = commandsByStepId;
+    // New mini-tour, fresh dedup — relaunching the same entry reuses indices.
+    lastStepRef.current = -1;
+  }, []);
+
   const handleStepChange = useCallback(
-    (stepIndex: number, _step: TourStep) => {
+    (stepIndex: number, step: TourStep) => {
       if (lastStepRef.current === stepIndex) return;
       lastStepRef.current = stepIndex;
+
+      // FAQ mini-tour steps carry their own commands (set at launch); the index
+      // map below belongs to boris-tour only. A step with NO commands is legal
+      // and common here — the second stop of a two-step demo often stays on the
+      // screen the first one opened.
+      if (isFaqStepId(step.id)) {
+        const commands = (faqCommandsRef.current[step.id] ?? []) as SimulatorCommand[];
+        if (commands.length > 0) queueCommands(commands);
+        return;
+      }
 
       // At most TWO commands per step — the queue drops the third, and it drops
       // it deterministically (docs/TOURS.md). Most steps send one, because every
@@ -100,6 +122,7 @@ export function BorisSimulatorWithTour() {
   return (
     <TourWrapper tourConfig={borisTourConfig} autoStart={false} onStepChange={handleStepChange}>
       <BorisSimulator tourCommand={currentCommand} onCommandHandled={handleCommandHandled} />
+      <FaqMiniTourLauncher faq={borisFaq} onLaunch={handleFaqLaunch} />
     </TourWrapper>
   );
 }

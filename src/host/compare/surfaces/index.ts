@@ -3,7 +3,7 @@
  * screen asks for something, then you read a note, then you write one, and the
  * bar at the bottom is how you get anywhere else.
  */
-// The eight theme sheets, imported explicitly and in one place.
+// The nine theme sheets, imported explicitly and in one place.
 //
 // They are NOT reliably pulled in by the components above: a simulator's root
 // imports its own sheet, but the leaf components we mount here mostly do not,
@@ -19,6 +19,7 @@ import '../../../simulators/snort/snort.theme.css';
 import '../../../simulators/wisp/wisp.theme.css';
 import '../../../simulators/nostur/nostur.theme.css';
 import '../../../simulators/coracle/coracle.theme.css';
+import '../../../simulators/boris/boris.theme.css';
 
 import { firstScreenSurface } from './firstScreen';
 import { noteSurface } from './note';

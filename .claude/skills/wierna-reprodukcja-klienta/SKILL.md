@@ -93,7 +93,7 @@ realny klient jest prostszy (Snort nie ma kolorowania składni — usunięcie hi
 
 ## Komponenty, które montuje `/compare`
 
-`/compare` pokazuje cztery powierzchnie ośmiu klientów obok siebie i montuje **prawdziwe
+`/compare` pokazuje cztery powierzchnie dziewięciu klientów obok siebie i montuje **prawdziwe
 komponenty danego klienta**, nie podróbki (`docs/COMPARE.md`). Dwie konsekwencje przy
 przebudowie symulatora:
 

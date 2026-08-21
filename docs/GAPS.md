@@ -62,15 +62,22 @@
 | [Nostur](gaps/nostur.md) | ready | 51 | 1 | 33 | 8 | 6 | 3 | 12 | 41 | ✅ |
 | [Keychat](gaps/keychat.md) | preview | 38 | 6 | 18 | 8 | 3 | 3 | 5 | 19 | ❌ |
 | [Gossip](gaps/gossip.md) | preview | 35 | 9 | 11 | 6 | 5 | 4 | 2 | 0 | ❌ brak wrappera |
-| [Boris](gaps/boris.md) | ready | 35 | 11 | 14 | 9 | 1 | 0 | 5 | 94 | ❌ brak banku |
-| **Razem** | | **533** | **150** | **219** | **97** | **36** | **31** | **243** | **503** | **8/11** |
+| [Boris](gaps/boris.md) | ready | 36 | 11 | 14 | 10 | 1 | 0 | 6 | 77 | ✅ |
+| **Razem** | | **534** | **150** | **219** | **98** | **36** | **31** | **244** | **486** | **9/11** |
 
 > **Boris dopisany 2026-08-21, i jego wiersz ma inny status dowodowy niż pozostałe dziesięć.**
 > Ledger [`gaps/boris.md`](gaps/boris.md) spisała sesja, która zbudowała symulator, a nie niezależny
-> przebieg audytowy z adwersaryjną weryfikacją — dzieli więc z symulatorem ślepe plamy, a jego pięć
-> wierszy `ok` nie przeszło żadnego przesiewu. Wiersz `Razem` przeliczono deltą na tym jednym
+> przebieg audytowy z adwersaryjną weryfikacją — dzieli więc z symulatorem ślepe plamy, a jego
+> wiersze `ok` nie przeszły żadnego przesiewu. Wiersz `Razem` przeliczono deltą na tym jednym
 > kliencie; pozostałe dziesięć kolumn niesie wartości z wcześniejszych przeliczeń. Przy pierwszym
 > prawdziwym audycie Borisa policz jego ledger od zera.
+>
+> **Zaktualizowany 2026-08-21 (wieczór), przy pisaniu banku FAQ.** Mostek jest (❌ → ✅), bo
+> `bor-01` zostało zamknięte: 43 wpisy, 16 mini-tourów, `FaqMiniTourLauncher` we wrapperze.
+> Doszły dwa wiersze znalezione klik-po-kliku (`bor-41` karta podglądu jako cel toura,
+> `bor-42` brak ⋮ w zakładce You), więc 35 → 36 luk. **Kotwice spadły z 94 na 77 nie dlatego, że
+> coś usunięto — doszły cztery, a liczbę przeliczono skryptem po metodologii opisanej niżej;
+> 94 było szacunkiem autora.** Wiersz `Razem` przeliczony deltą na tych zmianach.
 
 **Metodologia kolumny `Kotwice`:** liczba **różnych wartości `data-tour`, jakie mogą trafić do DOM**
 danego klienta — każdy literał `data-tour="…"` plus każda wartość, jaką potrafi wyprodukować
