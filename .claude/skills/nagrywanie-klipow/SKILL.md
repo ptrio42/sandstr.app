@@ -1,6 +1,6 @@
 ---
 name: nagrywanie-klipow
-description: 'Nagrywanie i montaż klipów demo sandstr: teaser, screencast pętli FAQ, klip porównawczy, screenshoty do promocji. Użyj gdy: "nagraj teaser", "klip", "screencast", "capture", "zmontuj", "shoty na twittera", "klip na Nostra", albo gdy dotykasz docs/clips/ (harness.mjs, capture-faq.mjs, capture-compare.mjs, build-teaser-*.sh, capture-shots.sh). Harness to headless Chrome przez CDP + ffmpeg, zero zależności npm.'
+description: 'Nagrywanie i montaż klipów demo sandstr: teaser, screencast pętli FAQ, klip porównawczy, screenshoty do promocji. Użyj gdy: "nagraj teaser", "klip", "screencast", "capture", "zmontuj", "shoty na twittera", "klip na Nostra", albo gdy dotykasz docs/clips/ (harness.mjs, capture-faq.mjs, capture-compare.mjs, capture-demo.mjs, build-teaser-*.sh, capture-shots.sh). Także gdy pada "nagraj ten link" albo "zrób plik z demo linku". Harness to headless Chrome przez CDP + ffmpeg, zero zależności npm.'
 ---
 
 # Nagrywanie klipów demo sandstr
@@ -31,6 +31,17 @@ i `docs/clips/compare-teaser.md` (cut #3: jedna notatka w ośmiu klientach).
   właściciela, a wygenerowany podkład nie niesie licencji, atrybucji ani ryzyka roszczenia.
   Mapa sekcji w nagłówku pliku i cele betów w `build-teaser-compare.sh` to **jedna decyzja zapisana
   dwa razy** — ruszasz jedno, musisz ruszyć drugie.
+- **`docs/clips/capture-demo.mjs` — NIE cut, tylko narzędzie: nagrywa DOWOLNY link demo.**
+  Bierze URL (`/c/<id>?...` albo pełny `https://sandstr.app/...`) i filmuje to, co ten link robi.
+  Powstało, bo `/c/<id>` ma kontrakt parametrów (`docs/OUTREACH.md`) składany przez kreator
+  `src/host/DemoLinkSheet.tsx` — jedna konfiguracja ma dawać oba artefakty: link i plik.
+  Wyjście: `.work/demo/<slug>.mp4` + `<slug>.marks.json`.
+- `docs/clips/build-demo.sh` — **najmniejszy** z build-scriptów, bo to nie jest cut: bez podpisów,
+  bez montażu, bez karty końcowej. Dokleja pod kadrem pasek `sandstr.app · <wersja>` plus stały
+  disclaimer i cichą ścieżkę AAC. **Powód istnienia to etykieta wersji**: baner jest już w kadrze
+  (dlatego take nie jest kadrowany do samego urządzenia, inaczej niż w `build-teaser.sh`), ale
+  `reproduces` widać tylko przy kadrze desktopowym — telefonowy compact bar nie ma na to miejsca,
+  więc bez tego paska plik jedzie do maintainera bez żadnego znacznika nieaktualności.
 - Katalogi: `.work/` (pośrednie, m.in. pula klatek `.work/faq/.pool/<id>/*.jpg`), `out/`, `shots/`.
 
 **Git: w `docs/clips/` NIE JEST ŚLEDZONE nic binarnego** (od 2026-08-19). `docs/clips/.gitignore`
@@ -89,6 +100,35 @@ a każdy bet jest kodowany z `-frames:v` na dokładnie `cel × 30` klatek. Samo 
 ~30 ms zaokrąglenia na segment, co przez szesnaście betów daje słyszalny dryf. Build asertuje sumę
 przed muxem i wywala się, jeśli bety przestaną się sumować do 16 taktów.
 
+## Uruchomienie — dowolny link demo
+
+```bash
+npm run build
+node docs/clips/capture-demo.mjs '/c/wisp?theme=light&showme=zap'
+STEPS=3 node docs/clips/capture-demo.mjs '/c/wisp?tour=1'
+DWELL=9000 node docs/clips/capture-demo.mjs '/c/coracle?screen=relays'
+./docs/clips/build-demo.sh                     # wszystkie takes -> out/sandstr-demo-*.mp4
+./docs/clips/build-demo.sh wisp-tour-1         # albo jeden po slugu
+```
+
+Cztery tryby, wszystkie zmierzone 2026-08-21: mini-tour (`?showme=`), tour (`?tour=1`, przewijany
+`ArrowRight`, `STEPS=` przycina), sam ekran (`?screen=`, hold przez `DWELL=`) i goły link.
+
+- **Ten skrypt NIE przeklikuje ściany logowania**, w przeciwieństwie do tablic `ENTRY`
+  w `capture-faq.mjs` i `capture-compare.mjs`. Tamte inscenizują cut, w którym ściana nie występuje;
+  tu odbiorca otworzy dokładnie ten URL, więc take, który po cichu się loguje, filmuje stronę,
+  której ten link nie produkuje. Goły `/c/damus` kończy na powitalnym ekranie i skrypt **to wypisuje**
+  wraz z podpowiedzią (`?screen=feed`, `?showme=`, `?tour=1`). Naprawia się link, nie skrypt.
+- **Kadr wybiera się sam.** Start telefonowy (430×775); jeśli `ClientView` odda bramkę „is a desktop
+  client", skrypt przekadrowuje na 1280×1000 i ładuje raz jeszcze. Sygnałem gotowości hosta jest
+  **baner disclaimera** (renderuje się też na bramce i na ścianie logowania), a sygnałem gotowości
+  klienta `[data-tour]` — to samo, na co czeka `ClientView` przy `?tour=1`, więc nie może się
+  rozjechać z aplikacją.
+- **Próg „THIN" jest per kadr**: 8 fps dla telefonu, 5 dla desktopu. Zmierzone na jednej maszynie:
+  `?showme=zap` na Wispie 16,1 fps (telefon), `?screen=relays` na Coracle 7,4 fps (desktop, klatka
+  1600×1250 zamiast 860×1550). Jeden wspólny próg albo przepuszczałby martwy take telefonowy, albo
+  krzyczał przy każdym zdrowym desktopowym.
+
 ## Uruchomienie — cut #1 (stills + teaser z .mov)
 
 ```bash
@@ -117,6 +157,13 @@ naraz (równoległe instancje przeciw jednemu Vite dawały puste pliki) i wymusz
    stream po pierwszej pętli, a `Page.bringToFront` przestawia nagrywaną kartę w `hidden`.
 5. **Czekaj na `.tour-spotlight` z rectem > 8×8**, zanim uznasz, że krok wstał — mini-tour mocuje ekran
    ~1–1,5 s, a do tego czasu leci bez spotlightu (siatka missing-target) i filmujesz defekt.
+   **⚠ Ale NIE jako bramka przy kadrze telefonowym** (zmierzone 2026-08-21): mini-tour przy 375 px
+   rysuje kartę i poprawnie przestawia klienta, a `.tour-spotlight` **nie pojawia się nigdy**
+   (Wisp `showme=zap`: rect 352×573 przy 1280 px, `null` przy 375 px — identycznie z linku i z
+   przycisku „Show me", więc to silnik przy wąskich szerokościach, nie ścieżka wejścia).
+   Czekanie na spotlight wisi wtedy do timeoutu. `capture-demo.mjs` bramkuje na `.tour-overlay`
+   i traktuje ring jako opcjonalny. Zgłoszone osobno — jeśli to naprawisz, ta lekcja wraca do
+   pierwotnej postaci.
 6. **Wstrzyknij fejkowy kursor** (`installCursor`/`moveCursor`) — CDP go nie rysuje; po każdym kroku
    parkuj go na środku ringu, bo tooltip jest ukryty i nic innego nie mówi „patrz tu".
 7. **Następny krok touru wybijaj klawiszem `ArrowRight`**, nie klikiem w „Next" — ten przycisk jest
@@ -130,6 +177,12 @@ naraz (równoległe instancje przeciw jednemu Vite dawały puste pliki) i wymusz
    Czekaj na **plik** (poll, aż rozmiar przestanie rosnąć), potem ubij **grupę procesów** — sam pid
    zostawia kilkanaście helperów. Wzorzec działa w `scripts/og-client-cards.mjs`. Przy więcej niż
    kilku ujęciach i tak wygrywa CDP (lekcje 1–8); `--screenshot` zostaw statycznym stronom.
+10. **Ustawiając viewport, ustaw WSZYSTKIE PIĘĆ pól na `page`** — `viewportW`, `viewportH`, `dsf`
+   (czyta je `startPool`, licząc rozmiar zrzutu) oraz `deviceW`/`deviceH` (czyta je `encodeRange`
+   i clamp kursora). `capture-compare.mjs` i `capture-faq.mjs` ustawiają komplet; nowy skrypt, który
+   skopiował tylko parę `deviceW/deviceH`, dostał fallback `?? 430 / ?? 775` i **łapał nieprzycięte
+   klatki 2560×2000** (~5 MP). Objaw: `4 klatki w 1,7 s` przy desktopie, czyli wygląda jak martwa
+   pula albo statyczna strona, a jest źle policzonym cropem. Po komplecie pól: 35 klatek, 7,4 fps.
 
 ## Checklist
 

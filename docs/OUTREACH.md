@@ -141,6 +141,13 @@ reasoned about (2026-08-21):
   by `useScreenSync` rather than listed a second time anywhere. A frameless client
   gated at phone width publishes nothing, which is correct — it is not mounted.
 
+**Any link the builder produces can also be filmed**: `node docs/clips/capture-demo.mjs '<link>'`
+takes the same URL and records what it does, so one configuration yields both artefacts — the link
+you paste and a file you can attach. It deliberately does NOT click a client through its own login
+wall the way the scripted cuts do: the recipient opens this exact URL, so a take that quietly
+signed in would be filming a page the link does not produce. A bare `/c/damus` therefore records
+its welcome screen, and the run says so.
+
 It composes; it does not author. There is deliberately no caption field: a box that
 draws arbitrary words in a spotlight card on top of somebody else's client would turn
 a reproduction into a way to put words in their mouth. The pasted note is the one
