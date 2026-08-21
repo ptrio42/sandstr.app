@@ -80,6 +80,20 @@ failure to a healthy screen.
   Reusing a browser dries the stream up after the first loop, and
   `Page.bringToFront` makes it worse — it flips the very tab you are driving to
   `visibilityState: 'hidden'`.
+- **The capture line now divides by the DRIVER's window, so its fps is not
+  comparable with anything written down before 2026-08-21.** It used to divide by
+  the span of the frames that survived, which quietly excluded the silence at
+  either end: one switch printed `18 frames, 1.3s, 13.8 fps` while a third of the
+  beat had no frames at all. Read `hole 610ms@3.1s` first — size and offset of the
+  longest silence — and the frame count second. A healthy switch is 35-48 frames.
+- **A switch that ENDS on a continuously animating client costs about twice as
+  much per frame, and that is the client being faithful.** Wisp's splash bobs its
+  glyph forever (`docs/refs/wisp/screen-map.md`: bob ±8dp/1.2s + sway ±3°/2.4s,
+  verified against recording frames), and a `Page.captureScreenshot` mostly waits
+  for the next surface frame. Suppressing that one animation puts the same
+  viewport back on 67 ms a shot — identical to a still client. Never touch a
+  simulator to make a recording faster; the harness carries the cost instead
+  (`MAX_INFLIGHT` in `startPool`).
 
 ## Tour teaser (the opposite rules to the FAQ clips)
 

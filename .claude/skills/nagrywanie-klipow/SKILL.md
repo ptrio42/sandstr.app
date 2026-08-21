@@ -130,13 +130,44 @@ naraz (równoległe instancje przeciw jednemu Vite dawały puste pliki) i wymusz
    Czekaj na **plik** (poll, aż rozmiar przestanie rosnąć), potem ubij **grupę procesów** — sam pid
    zostawia kilkanaście helperów. Wzorzec działa w `scripts/og-client-cards.mjs`. Przy więcej niż
    kilku ujęciach i tak wygrywa CDP (lekcje 1–8); `--screenshot` zostaw statycznym stronom.
+10. **Pula NIE strzela, zanim karta wczyta prawdziwy dokument** (`Page.loadEventFired`, brama
+    w `startPool`). `startPool` rusza przed nawigacją, więc pierwszy `Page.captureScreenshot`
+    leci w `about:blank`, gdzie surface nigdy nie powstaje — i **wisi pełne 4 s** wyścigu.
+    Nie „failuje natychmiast", jak twierdził komentarz w kodzie do 2026-08-21. Zmierzone offsety
+    startu i czasy strzałów od startu puli: `0!+4001  4001+72  4073+136  4209+101 …`. `t0` betu
+    wypada w środku tych czterech sekund, więc zjadały **2,3–2,5 s otwarcia KAŻDEGO okna,
+    u każdego klienta**. Objaw był mylący: wyglądało to na „klient z animacją nagrywa się
+    o połowę wolniej", bo to, co zostawało po martwym starcie, dopełniało się już tempem
+    danego klienta.
+11. **Klient, który animuje bez końca, kosztuje ~2× na klatkę — i to jest WIERNOŚĆ, nie bug.**
+    Splash Wispa buja glifem w kółko (`docs/refs/wisp/screen-map.md`: bob ±8dp/1.2s +
+    sway ±3°/2.4s, zweryfikowane na klatkach nagrania), a `Page.captureScreenshot` w większości
+    CZEKA na kolejną klatkę surface'u. Wyłączenie samej tej animacji zrównuje Wispa ze stojącym
+    ekranem co do milisekundy (67 ms vs 67 ms, n=120, rotowana kolejność ramion). **Nigdy nie
+    ruszaj `src/simulators/<klient>/`, żeby przyspieszyć nagranie.** Koszt bierze na siebie
+    harness: `MAX_INFLIGHT = 2` w `startPool` (Chrome pipeline'uje żądania, więc druga linia
+    spędza to czekanie dwa razy — `gap p50` Wispa 136 → 68 ms, trzy przebiegi).
+    Ślepe zaułki, zmierzone i odrzucone: `fromSurface:false` jest 6× wolniejszy (528 ms p50),
+    jakość JPEG nie ma znaczenia (q92→q60 to 7 ms), `optimizeForSpeed` nic nie daje.
 
 ## Checklist
 
 Przed montażem:
-- Capture wypisał dla każdej pozycji `→ N frames, Xs`. Referencja z dobrego przebiegu: pętle
-  178–565 klatek (Coracle najniżej, bo desktop), switche 38–81. Kilkanaście klatek na pętlę =
-  stream zdechł (patrz lekcje 1/4/8), nie „mało ruchu na ekranie".
+- Capture wypisuje `→ N frames, Xs  F fps  hole Mms@Ts  shot … gap …`. **`Xs` to okno
+  STEROWNIKA (`t1 − t0`), nie rozpiętość ocalałych klatek — od 2026-08-21.** Stara metryka
+  dzieliła przez rozpiętość klatek, czyli po cichu wycinała ciszę na obu końcach: jeden switch
+  raportował `18 frames, 1.3s, 13.8 fps`, mając trzecią część betu bez ani jednej klatki.
+  **Żadna liczba fps zapisana wcześniej nie jest porównywalna z dzisiejszą.**
+- Czytaj w tej kolejności: **`hole` → liczba klatek → fps**. `hole` podaje rozmiar i offset
+  najdłuższej ciszy; średnia przechodzi przez zamrożony fragment bez mrugnięcia. Flaga `← HOLE`
+  leci od 1000 ms, bo ~600 ms przy montowaniu chunka klienta to normalny koszt switcha
+  (Wisp, 204 kB, jest na górze tego zakresu), a błąd, dla którego ta flaga istnieje, miał 2400 ms.
+- Referencja z dobrego przebiegu (**przemierzona 2026-08-21, nową metryką**): switche
+  **35–48 klatek**, `gap p50` 53–75 ms; switch kończący na kliencie z animacją siedzi przy
+  dolnej krawędzi i bywa, że zapali `← THIN` — patrz lekcja 11, to podłoga, nie usterka.
+  Pętle: 178–565 klatek starą metryką, **nieprzeliczone** — nie porównuj ich z nowym outputem,
+  dopóki ktoś nie zmierzy ich ponownie. Kilkanaście klatek na switch = pula zdechła
+  (patrz lekcje 1/4/8/10), nie „mało ruchu na ekranie".
 - Każda **pętla** (nie switch) ma `.work/faq/<id>/marks.json` z `typing`/`question`/`demo` — z nich
   montaż liczy prędkości faz; brak pliku wywala build (`require` w `mark()`), ale **brak klucza
   cicho daje 0** i faza wyjdzie absurdalnie szybka. `answer` i `end` są zapisywane i nieużywane —

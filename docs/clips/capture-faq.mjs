@@ -625,8 +625,8 @@ async function captureLoop(page, pool, loop, baseUrl) {
   const manifest = await encodeRange(pool, t0, t1, dir, out);
   await writeFile(join(dir, 'marks.json'), JSON.stringify(marks, null, 1));
 
-  const secs = ((manifest.at(-1).at - manifest[0].at) / 1000).toFixed(1);
-  return { id: loop.id, frames: manifest.length, secs, out };
+  const secs = (manifest.windowMs / 1000).toFixed(1);
+  return { id: loop.id, frames: manifest.length, secs, hole: manifest.holeMs, holeAt: manifest.holeAtMs, out };
 }
 
 // ------------------------------------------------------------- one switch ----
@@ -662,8 +662,8 @@ async function captureSwitch(page, pool, sw, baseUrl) {
   await pool.flush();
   const out = join(WORK, `${sw.id}.mp4`);
   const manifest = await encodeRange(pool, t0, t1, dir, out);
-  const secs = ((manifest.at(-1).at - manifest[0].at) / 1000).toFixed(1);
-  return { id: sw.id, frames: manifest.length, secs, out };
+  const secs = (manifest.windowMs / 1000).toFixed(1);
+  return { id: sw.id, frames: manifest.length, secs, hole: manifest.holeMs, holeAt: manifest.holeAtMs, out };
 }
 
 // ------------------------------------------------------------- one script ----
@@ -703,8 +703,8 @@ async function captureScript(page, pool, script, baseUrl) {
   const out = join(WORK, `${script.id}.mp4`);
   const manifest = await encodeRange(pool, t0, t1, dir, out, { w: page.deviceW, h: page.deviceH });
   await writeFile(join(dir, 'marks.json'), JSON.stringify(marks, null, 1));
-  const secs = ((manifest.at(-1).at - manifest[0].at) / 1000).toFixed(1);
-  return { id: script.id, frames: manifest.length, secs, out };
+  const secs = (manifest.windowMs / 1000).toFixed(1);
+  return { id: script.id, frames: manifest.length, secs, hole: manifest.holeMs, holeAt: manifest.holeAtMs, out };
 }
 
 // --------------------------------------------------------------- one tour ----
@@ -756,12 +756,37 @@ async function captureTour(page, pool, tour, baseUrl) {
   const out = join(WORK, `${tour.id}.mp4`);
   const manifest = await encodeRange(pool, t0, t1, dir, out, { w: page.deviceW, h: page.deviceH });
   await writeFile(join(dir, 'marks.json'), JSON.stringify(marks, null, 1));
-  const secs = ((manifest.at(-1).at - manifest[0].at) / 1000).toFixed(1);
-  return { id: tour.id, frames: manifest.length, secs, out };
+  const secs = (manifest.windowMs / 1000).toFixed(1);
+  return { id: tour.id, frames: manifest.length, secs, hole: manifest.holeMs, holeAt: manifest.holeAtMs, out };
 }
 
 
 // --------------------------------------------------------------------- main --
+/**
+ * One line per beat, and the two numbers that decide whether it is usable.
+ *
+ * `secs` is the DRIVER's window (t0..t1), not the span of the frames that
+ * survived — see the note on `windowMs` in encodeRange for the run that reported
+ * 13.8 fps while a third of its switch had no frames at all. `hole` is the
+ * longest stretch with nothing in it, ends included, with the offset it starts
+ * at; an average sails straight through a freeze, so it needs its own flag.
+ *
+ * HOLE_MS is 1000 because 500 cried wolf on the first beat it met. A switch beat
+ * blacks out for ~600 ms while the incoming client's lazy chunk mounts — the
+ * renderer's main thread is busy, and nothing outside it can capture a frame off
+ * a blocked renderer. That is the shot doing its job, not a defect, and Wisp
+ * (204 kB, the largest simulator chunk) sits at the top of that range. The bug
+ * this flag exists to catch measured 2400 ms, so 1000 separates the two with
+ * room on both sides. Raise it again only against a measurement, never to
+ * silence a beat.
+ */
+const HOLE_MS = 1000;
+function report(r) {
+  const fps = r.frames / Number(r.secs);
+  return `→ ${r.frames} frames, ${r.secs}s  ${fps.toFixed(1)} fps  hole ${r.hole}ms@${(r.holeAt / 1000).toFixed(1)}s  ${r.rate}`
+    + (fps < 8 ? '   ← THIN' : '') + (r.hole > HOLE_MS ? '   ← HOLE' : '');
+}
+
 async function main() {
   const wanted = process.argv.slice(2);
   const loops = wanted.length ? LOOPS.filter((l) => wanted.includes(l.id)) : LOOPS;
@@ -783,7 +808,7 @@ async function main() {
         captureLoop(page, pool, loop, baseUrl),
       );
       results.push(r);
-      console.log(`→ ${r.frames} frames, ${r.secs}s  ${(r.frames / r.secs).toFixed(1)} fps  ${r.rate}${r.frames / r.secs < 8 ? '   ← THIN' : ''}`);
+      console.log(report(r));
     }
     for (const [i, script] of scripts.entries()) {
       process.stdout.write(`  · ${script.id} (scripted) `);
@@ -791,7 +816,7 @@ async function main() {
         captureScript(page, pool, script, baseUrl),
       );
       results.push(r);
-      console.log(`→ ${r.frames} frames, ${r.secs}s  ${(r.frames / r.secs).toFixed(1)} fps  ${r.rate}${r.frames / r.secs < 8 ? '   ← THIN' : ''}`);
+      console.log(report(r));
     }
     for (const [i, tour] of tours.entries()) {
       process.stdout.write(`  · ${tour.id} `);
@@ -799,7 +824,7 @@ async function main() {
         captureTour(page, pool, tour, baseUrl),
       );
       results.push(r);
-      console.log(`→ ${r.frames} frames, ${r.secs}s  ${(r.frames / r.secs).toFixed(1)} fps  ${r.rate}${r.frames / r.secs < 8 ? '   ← THIN' : ''}`);
+      console.log(report(r));
     }
     for (const [i, sw] of switches.entries()) {
       process.stdout.write(`  · ${sw.id} `);
@@ -807,7 +832,7 @@ async function main() {
         captureSwitch(page, pool, sw, baseUrl),
       );
       results.push(r);
-      console.log(`→ ${r.frames} frames, ${r.secs}s  ${(r.frames / r.secs).toFixed(1)} fps  ${r.rate}${r.frames / r.secs < 8 ? '   ← THIN' : ''}`);
+      console.log(report(r));
     }
   } finally {
     server.close();

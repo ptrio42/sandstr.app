@@ -320,8 +320,8 @@ async function capture(page, pool, base) {
     join(WORK, `marks${SUFFIX}.json`),
     JSON.stringify({ note: NOTE, switch: SWITCH_MODE, marks }, null, 2),
   );
-  const secs = ((manifest.at(-1).at - manifest[0].at) / 1000).toFixed(1);
-  return { frames: manifest.length, secs, out, cards: geom.count };
+  const secs = (manifest.windowMs / 1000).toFixed(1);
+  return { frames: manifest.length, secs, hole: manifest.holeMs, holeAt: manifest.holeAtMs, out, cards: geom.count };
 }
 
 async function main() {
@@ -339,7 +339,7 @@ async function main() {
     );
     const fps = r.frames / Number(r.secs);
     console.log(
-      `  · compare → ${r.frames} frames, ${r.secs}s  ${fps.toFixed(1)} fps  ${r.cards} cards` +
+      `  · compare → ${r.frames} frames, ${r.secs}s  ${fps.toFixed(1)} fps  worst hole ${r.hole}ms@${(r.holeAt / 1000).toFixed(1)}s  ${r.cards} cards` +
       (fps < 8 ? '   ← THIN (see startPool in harness.mjs)' : ''),
     );
     console.log(`\n  raw take (no captions, no card — the cut is assembled separately):\n    ${r.out}`);
