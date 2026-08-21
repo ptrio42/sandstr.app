@@ -41,6 +41,7 @@ body:
         - Nostur
         - Keychat
         - Coracle
+        - Boris
         - Gossip
         - A client that isn't in Sandstr yet
     validations:
