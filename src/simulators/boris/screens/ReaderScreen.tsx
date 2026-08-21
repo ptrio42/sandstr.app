@@ -5,6 +5,8 @@ import {
   CheckCircle2,
   Clock,
   Copy,
+  Eye,
+  EyeOff,
   Globe,
   Highlighter,
   History,
@@ -185,6 +187,17 @@ export interface ReaderScreenProps {
   ttsBlock: number;
   ownMarks: string[];
   highlightStyle: 'marker' | 'underline';
+  /**
+   * The Highlights settings, honoured HERE and not only in the settings
+   * preview. `showHighlights` is the master switch and `visibility` is the
+   * per-author-class one (HighlightsSection.kt:41-45, :83-125); both gate the
+   * MARKS only. The count chip and the Highlights pane list everything
+   * regardless — hiding a mark does not unload it, which is why the pane
+   * carries its own show/hide control.
+   */
+  showHighlights: boolean;
+  visibility: { nostrverse: boolean; friends: boolean; mine: boolean };
+  onToggleMarks: () => void;
   onBack: () => void;
   onPaneChange: (p: ReaderPane) => void;
   onScroll: (percent: number) => void;
@@ -210,6 +223,9 @@ export function ReaderScreen({
   ttsBlock,
   ownMarks,
   highlightStyle,
+  showHighlights,
+  visibility,
+  onToggleMarks,
   onBack,
   onPaneChange,
   onScroll,
@@ -226,15 +242,23 @@ export function ReaderScreen({
   const swarm = borisHighlights.filter((h) => h.articleId === article.id);
   const headings = article.body.filter((b) => b.type === 'h2') as { type: 'h2'; text: string }[];
 
+  // `audience` is the data's word, `visibility` is the settings' word, and they
+  // differ by one key: the settings call your own highlights `mine`.
+  const visible = (audience: 'mine' | 'friends' | 'nostrverse') =>
+    showHighlights && visibility[audience];
+
   const marksFor = (block: BorisBlock) => {
     const out: { text: string; tint: string }[] = [];
     if (!('text' in block)) return out;
     for (const h of swarm) {
+      if (!visible(h.audience)) continue;
       if (block.text.includes(h.mark)) out.push({ text: h.mark, tint: HIGHLIGHT_TINT[h.audience] });
       if (h.mark2 && block.text.includes(h.mark2)) out.push({ text: h.mark2, tint: HIGHLIGHT_TINT[h.audience] });
     }
-    for (const m of ownMarks) {
-      if (block.text.includes(m)) out.push({ text: m, tint: HIGHLIGHT_TINT.mine });
+    if (visible('mine')) {
+      for (const m of ownMarks) {
+        if (block.text.includes(m)) out.push({ text: m, tint: HIGHLIGHT_TINT.mine });
+      }
     }
     return out;
   };
@@ -508,7 +532,23 @@ export function ReaderScreen({
       )}
 
       {pane === 'highlights' && (
-        <Pane title="Highlights" onClose={() => onPaneChange(null)} tourId="boris-pane-highlights">
+        <Pane
+          title="Highlights"
+          onClose={() => onPaneChange(null)}
+          tourId="boris-pane-highlights"
+          actions={
+            // The pane owns the master switch, which is why hiding marks does
+            // not have to mean a trip to Settings (strings.xml:199-200).
+            <IconButton
+              label={showHighlights ? 'Hide highlight marks' : 'Show highlight marks'}
+              onClick={onToggleMarks}
+              tourId="boris-pane-toggle-marks"
+              tint={showHighlights ? 'var(--boris-on-bg)' : 'var(--boris-on-surface-variant)'}
+            >
+              {showHighlights ? <Eye size={24} /> : <EyeOff size={24} />}
+            </IconButton>
+          }
+        >
           {swarm.length === 0 && ownMarks.length === 0 ? (
             <Empty text="No highlights on this article yet." />
           ) : (
@@ -603,21 +643,24 @@ function Pane({
   onClose,
   children,
   tourId,
+  actions,
 }: {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
   tourId?: string;
+  actions?: ReactNode;
 }) {
   return (
     <div className="absolute inset-0 z-50 flex flex-col" style={{ background: 'var(--boris-bg)' }} data-tour={tourId}>
-      <div className="flex h-16 shrink-0 items-center pl-1" style={{ background: 'var(--boris-bg)' }}>
+      <div className="flex h-16 shrink-0 items-center pl-1 pr-1" style={{ background: 'var(--boris-bg)' }}>
         <IconButton label={`Close ${title.toLowerCase()}`} onClick={onClose}>
           <X size={24} />
         </IconButton>
-        <span className="text-[16px] font-medium" style={{ color: 'var(--boris-on-bg)' }}>
+        <span className="flex-1 text-[16px] font-medium" style={{ color: 'var(--boris-on-bg)' }}>
           {title}
         </span>
+        {actions}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
     </div>

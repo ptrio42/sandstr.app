@@ -62,8 +62,8 @@
 | [Nostur](gaps/nostur.md) | ready | 51 | 1 | 33 | 8 | 6 | 3 | 12 | 41 | ✅ |
 | [Keychat](gaps/keychat.md) | preview | 38 | 6 | 18 | 8 | 3 | 3 | 5 | 19 | ❌ |
 | [Gossip](gaps/gossip.md) | preview | 35 | 9 | 11 | 6 | 5 | 4 | 2 | 0 | ❌ brak wrappera |
-| [Boris](gaps/boris.md) | ready | 36 | 11 | 14 | 10 | 1 | 0 | 6 | 77 | ✅ |
-| **Razem** | | **534** | **150** | **219** | **98** | **36** | **31** | **244** | **486** | **9/11** |
+| [Boris](gaps/boris.md) | ready | 38 | 13 | 14 | 10 | 1 | 0 | 7 | 77 | ✅ |
+| **Razem** | | **536** | **152** | **219** | **98** | **36** | **31** | **245** | **486** | **9/11** |
 
 > **Boris dopisany 2026-08-21, i jego wiersz ma inny status dowodowy niż pozostałe dziesięć.**
 > Ledger [`gaps/boris.md`](gaps/boris.md) spisała sesja, która zbudowała symulator, a nie niezależny
@@ -78,6 +78,13 @@
 > `bor-42` brak ⋮ w zakładce You), więc 35 → 36 luk. **Kotwice spadły z 94 na 77 nie dlatego, że
 > coś usunięto — doszły cztery, a liczbę przeliczono skryptem po metodologii opisanej niżej;
 > 94 było szacunkiem autora.** Wiersz `Razem` przeliczony deltą na tych zmianach.
+
+> **Delta 2026-08-21 (wieczór), sam Boris.** Przebieg po ścieżce TWORZENIA zakreślenia — jedynej
+> powierzchni tej apki, której nagranie referencyjne nie mogło pokazać, bo właściciel nagrywał
+> wylogowany, a `Highlight` istnieje tylko dla zalogowanego. Dwa nowe wiersze `missing`
+> (runda do signera Amber/bunker; wejście „Highlight with Boris" z innej apki) i jeden `ok`
+> (widoczność markerów działa i jest zweryfikowana klikiem). Opis realnej ścieżki wylądował
+> w `docs/refs/boris/screen-map.md` §4.1, oznaczony jako **source-only**.
 
 **Metodologia kolumny `Kotwice`:** liczba **różnych wartości `data-tour`, jakie mogą trafić do DOM**
 danego klienta — każdy literał `data-tour="…"` plus każda wartość, jaką potrafi wyprodukować

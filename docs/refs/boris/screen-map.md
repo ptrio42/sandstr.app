@@ -257,6 +257,60 @@ Label formats: `1 min read` / `N min read` (`data/ReadingTime.kt:18`); `1 highli
 own words; the third one is Boris's and reads **`TTS from here`** (`strings.xml:418`), not
 "Read from here".
 
+### 4.1 Creating a highlight — SOURCE-ONLY, the recording never showed it
+
+**Read this section differently from the rest of the file.** Everything above is grounded in the
+reference recording; this is not, and cannot be. The owner recorded while **signed out**, and the
+`Highlight` button exists only for a signed-in reader (`showHighlight = loggedIn`,
+`ReaderScreen.kt:1880`). So the app's central gesture — the reason Boris exists — has zero frames of
+evidence, and every claim below is read off `dergigi/boris-android@8456da4` alone. It is also the
+section that already produced one shipped error: the third toolbar button was written from memory as
+"Read from here" and is really `TTS from here`.
+
+**Selection is a long-press and drag** (`ui/reader/ReaderSelection.kt:205-261`, gated on
+`viewConfig.longPressTimeoutMillis`), over arbitrary text — not a tap, and not sentence-at-a-time.
+
+**Tapping `Highlight` publishes nothing by itself.** `ReaderViewModel.highlight()` (`:242-309`) builds
+an **unsigned** NIP-84 event (`Nip01Event.KIND_HIGHLIGHT`) and hands it out to be signed:
+
+- `Session.Amber` → an Intent to the external signer app; Boris's own screen shows nothing new and
+  the reader waits for `onSignerResult` (`:360-411`).
+- `Session.Bunker` → `signWithBunker()` over NIP-46, in a coroutine, returning `null` immediately.
+
+**Tags carried on the event**, and one of them explains a component elsewhere in this file:
+
+- `context` — from `Nip84.extractContext()` (`nostr/Nip84.kt:75-100`): the paragraph containing the
+  selection, trimmed back to whole sentences around it. **This is why a highlight card renders
+  before/mark/after** (§5) rather than the bare quote; the surrounding sentences are part of the event.
+- zap-split tags — computed **at creation time**, from the current settings and the article's author
+  (`ReaderViewModel.kt:315-328`). Web content has no author pubkey, so the author's share is skipped
+  and the split covers the highlighter and Boris only.
+
+**On success** (`onSignedHighlight`, `:428-447`): the mark is added optimistically the moment the
+signature returns, *before* the publish coroutine finishes; the count goes up by one; and
+`withOwnHighlightsVisible()` **force-enables your own highlight layer** if you had it switched off —
+otherwise you would tap Highlight and watch nothing appear, which reads as a broken button rather
+than a setting. **There is no success toast.** A library save says "Saved to library."
+(`strings.xml:171`); a highlight says nothing, because the mark appearing is the confirmation.
+
+**On failure**, two messages actually fire: `Highlight rejected.` (signer said no) and
+`Highlight cancelled.` (signer returned nothing, `:394-407`). `Highlight not published.`
+(`strings.xml:168`) is **declared and never used** — grep-verified across `app/src/main/java`.
+
+**A second entry point exists and this reproduction does not model it:** *Highlight with Boris*
+(`strings.xml:160`) — text selected in ANOTHER app and shared in. `PendingHighlight` holds the quote
+until the reader can consume it (`ui/reader/PendingHighlight.kt`, consumed at `ReaderScreen.kt:293`),
+with a prompt for the article URL (`highlight_url_title` / `_hint` / `_continue`) and, signed out,
+`Connect a signer to highlight with Boris.`
+
+**What our reproduction does instead.** Tapping `Highlight` paints the mark immediately: there is no
+signer, no event, no publish, because there is no crypto and no network here at all. The visible
+result is the same — upstream's user also leaves for Amber and returns to a painted mark — but the
+three states in between do not exist for us, and neither does the failure path. Recorded as gaps
+`bor-41` and `bor-42`. What we DO reproduce, verified in the browser: the marks honour
+`Show highlights` and the per-class visibility toggles, the pane and the count chip ignore both, and
+a new highlight force-shows your own layer.
+
 **Bottom stack** (`:1860-1877`): mini player, then `ReadingProgressBar`, then a navigation-bar
 spacer. The progress readout is **not** a floating percentage: it is a full-width row on `background`
 at 95 % with 12/4 dp padding, holding a 2 dp track (`outline` at 45 %) and a right-aligned label in a

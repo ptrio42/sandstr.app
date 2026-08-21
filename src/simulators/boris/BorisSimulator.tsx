@@ -374,6 +374,9 @@ export function BorisSimulator({ className = '', tourCommand, onCommandHandled }
               ttsBlock={tts?.block ?? -1}
               ownMarks={ownMarks}
               highlightStyle={settings.highlightStyle}
+              showHighlights={settings.showHighlights}
+              visibility={settings.visibility}
+              onToggleMarks={() => patchSettings({ showHighlights: !settings.showHighlights })}
               onBack={() => {
                 setArticle(null);
                 setPane(null);
@@ -390,6 +393,15 @@ export function BorisSimulator({ className = '', tourCommand, onCommandHandled }
               onOpenProfile={setProfileUser}
               onAddHighlight={(quote) => {
                 setOwnMarks((m) => (m.includes(quote) ? m : [...m, quote]));
+                // `withOwnHighlightsVisible()` — upstream force-shows your own
+                // layer the moment one of your highlights lands
+                // (ReaderViewModel.kt:428-430). Without it a reader who had
+                // turned `mine` off would tap Highlight and watch nothing
+                // happen, which reads as a broken button rather than a setting.
+                patchSettings({
+                  showHighlights: true,
+                  visibility: { ...settings.visibility, mine: true },
+                });
                 registerAction('highlight');
               }}
               ttsSlot={player}
