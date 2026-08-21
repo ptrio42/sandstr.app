@@ -84,7 +84,7 @@ mini-tourów FAQ. Zerwanie tego interfejsu psuje naraz wszystkie toury i wszystk
 ## Zasięg i sąsiednie dokumenty
 
 Ten sam silnik napędza **mini-toury FAQ** (`showMe: FaqShowMeStep[]` w `src/data/faq/<client>.ts`,
-typ w `src/data/faq/types.ts:12`) — wg `docs/TOURS.md` to 133 mini-toury obok 79 kroków głównych
+typ w `src/data/faq/types.ts:12`) — wg `docs/TOURS.md` to 137 mini-tourów obok 79 kroków głównych
 (zweryfikowane: 79 kroków w 8 plikach `src/data/tours/*-tour.ts`), więc każda zmiana
 w `src/components/tour/` dotyka ich wszystkich. **Obie listy się nie pokrywają:** Keychat ma tour,
 ale nie ma pliku FAQ; Coracle ma FAQ, ale `tour: false` (wrapper istnieje wyłącznie dla `showMe`);

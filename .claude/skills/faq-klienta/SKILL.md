@@ -5,8 +5,8 @@ description: Pisanie i rewizja kurowanego FAQ per klient w src/data/faq/ — now
 
 # FAQ klienta — jak pisać i rewidować
 
-Osiem plików klientów (`coracle damus amethyst primal nostur yakihonne snort wisp`), 230 wpisów,
-133 mini-toury. Keychat i Gossip **nie mają FAQ** — brak `docs/refs/<client>/` i brak mostka
+Osiem plików klientów (`coracle damus amethyst primal nostur yakihonne snort wisp`), 231 wpisów,
+137 mini-tourów. Keychat i Gossip **nie mają FAQ** — brak `docs/refs/<client>/` i brak mostka
 `FaqMiniTourLauncher`; nie dopisuj ich do `src/data/faq/index.ts` bez recon.
 
 ## Kolejność czytania — zanim napiszesz pierwszy wpis

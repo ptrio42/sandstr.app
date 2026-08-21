@@ -105,6 +105,18 @@ somebody is already stuck. It requires one thing — **a linkable answer**.
 
 - `sandstr.app/c/<client>?faq=<id>` — opens the panel on that specific answer;
 - `sandstr.app/c/<client>?tour=1` — starts the guided tour at step one;
+- `sandstr.app/c/<client>?showme=<id>` — replays one answer AS a mini-tour: the client
+  walks itself to the screen and the spotlight lands, with no panel over it. The
+  strongest thing a link can carry, and the shape the FAQ teaser clips are cut from.
+  Only ids whose entry has a `showMe` do anything (15–21 per client, 137 in total);
+- `sandstr.app/c/<client>?screen=<intent>` — opens on one screen instead of wherever the
+  client really opens. Vocabulary: `feed`, `notifications`, `messages`, `search`,
+  `profile`, `settings`, `relays`, `bookmarks` — but **each client maps only some of
+  them**, and an unmapped one silently falls back to the feed. Amethyst is the trap:
+  it has no `relays` intent, because relays live in its drawer rather than as a tab;
+- `sandstr.app/c/<client>?theme=dark|light` — for this link only. It never writes the
+  visitor's stored preference, so their own toggle takes it back with one click;
+- `sandstr.app/c/<client>?note=<text>` — the pasted note takes the top of the feed;
 - `sandstr.app/compare?cell=<client>:<axis>` — lands on ONE capability claim with its
   source and the build it was checked against underneath (added 2026-08-14);
 - `sandstr.app/compare?on=android&need=signer` — "here are the Android clients that
@@ -112,6 +124,35 @@ somebody is already stuck. It requires one thing — **a linkable answer**.
   list of chooser axes;
 - the address bar mirrors whichever answer, filter or cell is open, so every one of
   them copies itself without any "share" affordance.
+
+**You do not have to remember any of that.** Every client view carries a "Demo link"
+control (meta row, context panel, and the compact bar on phones) that composes those
+parameters into one URL and copies it — `src/host/DemoLinkSheet.tsx`. Two rules are
+built into it rather than left to the writer, and both were measured rather than
+reasoned about (2026-08-21):
+
+- **A start screen is dropped next to anything that navigates.** A tour launched on
+  Snort's Relays screen had walked the client back to its feed by step 3, and
+  `?screen=search&showme=zap` on Wisp opened the zap sheet, never search — a
+  mini-tour's commands put the simulator wherever its target lives. Pairing them
+  writes a clause into the link that does not happen. `?faq=` is the exception: it
+  only opens our panel over whatever screen the client is on.
+- **The screen picker offers only what the mounted client actually maps**, published
+  by `useScreenSync` rather than listed a second time anywhere. A frameless client
+  gated at phone width publishes nothing, which is correct — it is not mounted.
+
+**Any link the builder produces can also be filmed**: `node docs/clips/capture-demo.mjs '<link>'`
+takes the same URL and records what it does, so one configuration yields both artefacts — the link
+you paste and a file you can attach. It deliberately does NOT click a client through its own login
+wall the way the scripted cuts do: the recipient opens this exact URL, so a take that quietly
+signed in would be filming a page the link does not produce. A bare `/c/damus` therefore records
+its welcome screen, and the run says so.
+
+It composes; it does not author. There is deliberately no caption field: a box that
+draws arbitrary words in a spotlight card on top of somebody else's client would turn
+a reproduction into a way to put words in their mouth. The pasted note is the one
+visitor-authored string in a demo link, and it is reused from "Preview your note"
+rather than invented here.
 
 Without those parameters a reply reads "open it, hit the question mark, search" —
 three steps at exactly the moment the asker is impatient. This was the single most

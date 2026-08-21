@@ -1,6 +1,6 @@
 ---
 name: nagrywanie-klipow
-description: 'Nagrywanie i montaż klipów demo sandstr: teaser, screencast pętli FAQ, klip porównawczy, screenshoty do promocji. Użyj gdy: "nagraj teaser", "klip", "screencast", "capture", "zmontuj", "shoty na twittera", "klip na Nostra", albo gdy dotykasz docs/clips/ (harness.mjs, capture-faq.mjs, capture-compare.mjs, build-teaser-*.sh, capture-shots.sh). Harness to headless Chrome przez CDP + ffmpeg, zero zależności npm.'
+description: 'Nagrywanie i montaż klipów demo sandstr: teaser, screencast pętli FAQ, klip porównawczy, screenshoty do promocji. Użyj gdy: "nagraj teaser", "klip", "screencast", "capture", "zmontuj", "shoty na twittera", "klip na Nostra", albo gdy dotykasz docs/clips/ (harness.mjs, capture-faq.mjs, capture-compare.mjs, capture-demo.mjs, build-teaser-*.sh, capture-shots.sh). Także gdy pada "nagraj ten link" albo "zrób plik z demo linku". Harness to headless Chrome przez CDP + ffmpeg, zero zależności npm.'
 ---
 
 # Nagrywanie klipów demo sandstr
@@ -31,6 +31,17 @@ i `docs/clips/compare-teaser.md` (cut #3: jedna notatka w ośmiu klientach).
   właściciela, a wygenerowany podkład nie niesie licencji, atrybucji ani ryzyka roszczenia.
   Mapa sekcji w nagłówku pliku i cele betów w `build-teaser-compare.sh` to **jedna decyzja zapisana
   dwa razy** — ruszasz jedno, musisz ruszyć drugie.
+- **`docs/clips/capture-demo.mjs` — NIE cut, tylko narzędzie: nagrywa DOWOLNY link demo.**
+  Bierze URL (`/c/<id>?...` albo pełny `https://sandstr.app/...`) i filmuje to, co ten link robi.
+  Powstało, bo `/c/<id>` ma kontrakt parametrów (`docs/OUTREACH.md`) składany przez kreator
+  `src/host/DemoLinkSheet.tsx` — jedna konfiguracja ma dawać oba artefakty: link i plik.
+  Wyjście: `.work/demo/<slug>.mp4` + `<slug>.marks.json`.
+- `docs/clips/build-demo.sh` — **najmniejszy** z build-scriptów, bo to nie jest cut: bez podpisów,
+  bez montażu, bez karty końcowej. Dokleja pod kadrem pasek `sandstr.app · <wersja>` plus stały
+  disclaimer i cichą ścieżkę AAC. **Powód istnienia to etykieta wersji**: baner jest już w kadrze
+  (dlatego take nie jest kadrowany do samego urządzenia, inaczej niż w `build-teaser.sh`), ale
+  `reproduces` widać tylko przy kadrze desktopowym — telefonowy compact bar nie ma na to miejsca,
+  więc bez tego paska plik jedzie do maintainera bez żadnego znacznika nieaktualności.
 - Katalogi: `.work/` (pośrednie, m.in. pula klatek `.work/faq/.pool/<id>/*.jpg`), `out/`, `shots/`.
 
 **Git: w `docs/clips/` NIE JEST ŚLEDZONE nic binarnego** (od 2026-08-19). `docs/clips/.gitignore`
@@ -89,6 +100,43 @@ a każdy bet jest kodowany z `-frames:v` na dokładnie `cel × 30` klatek. Samo 
 ~30 ms zaokrąglenia na segment, co przez szesnaście betów daje słyszalny dryf. Build asertuje sumę
 przed muxem i wywala się, jeśli bety przestaną się sumować do 16 taktów.
 
+## Uruchomienie — dowolny link demo
+
+```bash
+npm run build
+node docs/clips/capture-demo.mjs '/c/wisp?theme=light&showme=zap'
+STEPS=3 node docs/clips/capture-demo.mjs '/c/wisp?tour=1'
+DWELL=9000 node docs/clips/capture-demo.mjs '/c/coracle?screen=relays'
+./docs/clips/build-demo.sh                     # wszystkie takes -> out/sandstr-demo-*.mp4
+./docs/clips/build-demo.sh wisp-tour-1         # albo jeden po slugu
+```
+
+Cztery tryby, wszystkie zmierzone 2026-08-21: mini-tour (`?showme=`), tour (`?tour=1`, przewijany
+`ArrowRight`, `STEPS=` przycina), sam ekran (`?screen=`, hold przez `DWELL=`) i goły link.
+
+- **Ten skrypt NIE przeklikuje ściany logowania**, w przeciwieństwie do tablic `ENTRY`
+  w `capture-faq.mjs` i `capture-compare.mjs`. Tamte inscenizują cut, w którym ściana nie występuje;
+  tu odbiorca otworzy dokładnie ten URL, więc take, który po cichu się loguje, filmuje stronę,
+  której ten link nie produkuje. Goły `/c/damus` kończy na powitalnym ekranie i skrypt **to wypisuje**
+  wraz z podpowiedzią (`?screen=feed`, `?showme=`, `?tour=1`). Naprawia się link, nie skrypt.
+- **Kadr wybiera się sam.** Start telefonowy (430×775); jeśli `ClientView` odda bramkę „is a desktop
+  client", skrypt przekadrowuje na 1280×1000 i ładuje raz jeszcze. Sygnałem gotowości hosta jest
+  **baner disclaimera** (renderuje się też na bramce i na ścianie logowania), a sygnałem gotowości
+  klienta `[data-tour]` — to samo, na co czeka `ClientView` przy `?tour=1`, więc nie może się
+  rozjechać z aplikacją.
+- **Próg „THIN" jest JEDEN i niski (4 fps), bo o tempie decyduje KLIENT, nie kadr.** Zmierzone po
+  poprawce puli (`96c9eda`), jedna maszyna: Coracle desktop 11,8 fps (dziura 420 ms), Damus telefon
+  11,8, Wisp `?showme=zap` 7,7. Powtórka: 13,1 / 12,8 / 8,3 — czytaj rząd wielkości, nie cyfry.
+  **Ostrzeżenie o mierzeniu raz:** pierwszy odczyt Wispa `?tour=1` dał 5,3 fps i dziurę 1501 ms,
+  co wyglądało na twardy wniosek o kliencie; powtórka tego samego polecenia dała **13,6 fps
+  i 368 ms**. Ten jeden odczyt był odstający (obciążenie maszyny), a nie własnością Wispa —
+  dlatego próg stoi na 4, a nie tuż pod 5,3. Wcześniejsza
+  wersja miała próg per kadr, na teorii „desktopowa klatka kosztuje 2×" — ta teoria wzięła się
+  z liczb mierzonych przy martwej puli. Po naprawie desktop remisuje z najszybszym telefonem,
+  a najwolniejszy jest Wisp, który animuje bez końca (lekcja 11: to wierność, nie bug), więc próg
+  musi siedzieć POD nim. Średnia i tak jest słabszym sygnałem — przechodzi przez zamrożenie jak
+  nóż przez masło — dlatego **najdłuższa dziura ma osobną linię** i ostrzeżenie od 1000 ms.
+
 ## Uruchomienie — cut #1 (stills + teaser z .mov)
 
 ```bash
@@ -117,6 +165,11 @@ naraz (równoległe instancje przeciw jednemu Vite dawały puste pliki) i wymusz
    stream po pierwszej pętli, a `Page.bringToFront` przestawia nagrywaną kartę w `hidden`.
 5. **Czekaj na `.tour-spotlight` z rectem > 8×8**, zanim uznasz, że krok wstał — mini-tour mocuje ekran
    ~1–1,5 s, a do tego czasu leci bez spotlightu (siatka missing-target) i filmujesz defekt.
+   **Ale nie jako bramka w skrypcie, który filmuje DOWOLNY link** — ring jest własnością KROKU,
+   a karty „cały ekran" świadomie go nie mają, więc `capture-demo.mjs` bramkuje na `.tour-overlay`.
+   (Historycznie: 2026-08-21 mini-tour przy 375 px nie dostawał ringu w ogóle — test „cały ekran"
+   mierzył cel względem viewportu, a na telefonie klient JEST viewportem. Naprawione tego samego
+   dnia, `abf34b0`. Bramka została, bo powód powyżej nigdy nie zależał od tamtego błędu.)
 6. **Wstrzyknij fejkowy kursor** (`installCursor`/`moveCursor`) — CDP go nie rysuje; po każdym kroku
    parkuj go na środku ringu, bo tooltip jest ukryty i nic innego nie mówi „patrz tu".
 7. **Następny krok touru wybijaj klawiszem `ArrowRight`**, nie klikiem w „Next" — ten przycisk jest
@@ -149,6 +202,21 @@ naraz (równoległe instancje przeciw jednemu Vite dawały puste pliki) i wymusz
     spędza to czekanie dwa razy — `gap p50` Wispa 136 → 68 ms, trzy przebiegi).
     Ślepe zaułki, zmierzone i odrzucone: `fromSurface:false` jest 6× wolniejszy (528 ms p50),
     jakość JPEG nie ma znaczenia (q92→q60 to 7 ms), `optimizeForSpeed` nic nie daje.
+12. **Ustawiając viewport, ustaw WSZYSTKIE PIĘĆ pól na `page`** — `viewportW`, `viewportH`, `dsf`
+    (czyta je `startPool`, licząc rozmiar zrzutu) oraz `deviceW`/`deviceH` (czyta je `encodeRange`
+    i clamp kursora). `capture-compare.mjs` i `capture-faq.mjs` ustawiają komplet; `capture-demo.mjs`
+    skopiował na starcie tylko parę `deviceW/deviceH`, dostał fallback `?? 430 / ?? 775` i **łapał
+    nieprzycięte klatki 2560×2000** (~5 MP) przy kadrze desktopowym. Objaw jest mylący dokładnie
+    tak jak w lekcji 10: wygląda na martwą pulę albo statyczną stronę, a jest źle policzonym cropem.
+13. **NIE przekadrowuj w środku sesji — jeden Chrome na jeden viewport.** Drugi, inny
+    `Emulation.setDeviceMetricsOverride` w żywej sesji **nie przeżywa kolejnej nawigacji**:
+    zmierzone na Chrome 151, po `set(430) → nav → set(1280) → nav` strona wraca z `innerWidth`
+    **430**, czyli z PIERWSZym override'em. `capture-demo.mjs` wykrywał tak bramkę desktopową,
+    przekadrowywał i ładował ponownie — i dostawał tę samą bramkę, po czym oskarżał id klienta.
+    Trzy łatki w mechanizm (nieświeży dokument wychodzący, nawigacja wyprzedzająca override, brak
+    `clearDeviceMetricsOverride`) nie ruszyły tego ani o krotę; strukturalna odpowiedź stała już
+    w nagłówku harnessu („one Chrome per capture"). Dziś bramka **kończy ujęcie**, a `main()`
+    odpala drugie w nowej przeglądarce z viewportem ustawionym od startu.
 
 ## Checklist
 
