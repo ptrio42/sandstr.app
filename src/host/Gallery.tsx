@@ -141,17 +141,31 @@ export default function Gallery() {
           </span>
         </div>
 
-        {/* The shelf answers "what is there"; this answers the question people
-            actually arrive with. Kept as a quiet secondary link — picking a
-            client is the step BEFORE trying one, but the tiles are still the
-            product. */}
-        <Link
-          to="/compare"
-          className="mt-8 inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-primary-300 hover:text-primary-600 dark:border-gray-800 dark:text-gray-300 dark:hover:text-primary-400"
-        >
-          Not sure which one? Compare them
-          <ArrowRight className="h-4 w-4" />
-        </Link>
+        {/* The shelf answers "what is there"; these answer the two questions
+            people actually arrive with. Kept as quiet secondary links — picking
+            a client is the step BEFORE trying one, but the tiles are still the
+            product.
+
+            The /docs pill is also load-bearing for crawlers: this gallery is
+            what gets baked into dist/index.html, the footer is not, so this
+            link and sitemap.xml are the only paths to /docs that survive with
+            JavaScript off. */}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <Link
+            to="/compare"
+            className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-primary-300 hover:text-primary-600 dark:border-gray-800 dark:text-gray-300 dark:hover:text-primary-400"
+          >
+            Not sure which one? Compare them
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link
+            to="/docs"
+            className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-primary-300 hover:text-primary-600 dark:border-gray-800 dark:text-gray-300 dark:hover:text-primary-400"
+          >
+            What can I do here?
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       </section>
 
       <Section

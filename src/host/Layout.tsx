@@ -63,6 +63,15 @@ export default function Layout() {
               in. Not rendered on /c/:id — this whole footer is not (see above)
               — so the client views get their route from the FAQ panel instead. */}
           <p className="mt-2">
+            First time here?{' '}
+            <Link
+              to="/docs"
+              className="underline text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              See what you can do on Sandstr
+            </Link>
+          </p>
+          <p className="mt-2">
             Not sure which client?{' '}
             <Link
               to="/compare"

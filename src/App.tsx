@@ -8,6 +8,10 @@ import ClientView from './host/ClientView';
 // nobody landing on the gallery should pay for that.
 const CompareView = lazy(() => import('./host/compare/CompareView'));
 
+// Lazy for the opposite reason: /docs is prose nobody reads twice, and the
+// people who need it arrive by link rather than by browsing the shelf.
+const DocsView = lazy(() => import('./host/docs/DocsView'));
+
 export default function App() {
   return (
     <Routes>
@@ -19,6 +23,14 @@ export default function App() {
           element={
             <Suspense fallback={<div className="p-10 text-sm text-gray-500">Loading…</div>}>
               <CompareView />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/docs"
+          element={
+            <Suspense fallback={<div className="p-10 text-sm text-gray-500">Loading…</div>}>
+              <DocsView />
             </Suspense>
           }
         />

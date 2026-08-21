@@ -9,8 +9,8 @@
  * indexable URLs that is the whole SEO surface, so we bake their markup into
  * the HTML at build time.
  *
- * WHAT IS RENDERED: the gallery, and `/compare`.
- *  - Both are pure — they read `clients` from ../registry (plain data plus
+ * WHAT IS RENDERED: the gallery, `/compare`, and `/docs`.
+ *  - All three are pure — they read `clients` from ../registry (plain data plus
  *    `lazy()` loaders that are never invoked here) and `capabilities`, and
  *    touch no browser API.
  *  - `Layout` is deliberately excluded: `useTheme` reads localStorage and
@@ -21,6 +21,10 @@
  *    is what needs a browser: the chooser, the cell-detail panel, and the
  *    side-by-side strip — which mounts eight clients' components and carries
  *    almost no text worth indexing.
+ *  - `/docs` has no static counterpart component at all: unlike /compare there
+ *    is nothing interactive to leave out, so the live route and this one render
+ *    the very same `DocsContent`. `DocsView` exists only to set the tab title
+ *    and honour a #hash on arrival, and neither belongs in a crawler's copy.
  *
  * NOT hydration. `src/main.tsx` mounts with `createRoot`, which clears the
  * container, so React re-renders from scratch and this markup is never diffed.
@@ -32,8 +36,13 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { StaticRouter } from 'react-router-dom';
 import Gallery from './host/Gallery';
 import CompareStatic from './host/compare/CompareStatic';
+import DocsContent from './host/docs/DocsContent';
 import { routable, type ClientEntry } from './registry';
 import { shareCopy } from './shareMeta';
+
+// One string for the tab title and for the tag the build bakes into
+// dist/docs.html, same trick shareMeta.ts plays for the client routes.
+export { DOCS_TITLE, DOCS_DESCRIPTION } from './host/docs/DocsContent';
 
 export function render(): string {
   return renderToStaticMarkup(
@@ -47,6 +56,14 @@ export function renderCompare(): string {
   return renderToStaticMarkup(
     <StaticRouter location="/compare">
       <CompareStatic />
+    </StaticRouter>,
+  );
+}
+
+export function renderDocs(): string {
+  return renderToStaticMarkup(
+    <StaticRouter location="/docs">
+      <DocsContent />
     </StaticRouter>,
   );
 }
