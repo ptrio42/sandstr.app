@@ -22,6 +22,7 @@ realnego renderu daje plausible-but-wrong (o mało nie wylądowało logo tam, gd
 | Wisp | `references/wisp.md` | `docs/refs/wisp/screen-map.md` | `docs/gaps/wisp.md` |
 | Coracle | `references/coracle.md` | `docs/refs/coracle/screen-map.md` | `docs/gaps/coracle.md` |
 | Nostur | `references/nostur.md` | `docs/refs/nostur/screen-map.md` | `docs/gaps/nostur.md` |
+| Boris | — (recon 2026-08-21 spisany wprost w screen-mapie) | `docs/refs/boris/screen-map.md` | `docs/gaps/boris.md` |
 | YakiHonne, Keychat, Gossip, Primal-mobile, Nostr Kitten, Olas | `references/pozostali.md` | screen-mapę ma tylko YakiHonne | `docs/gaps/{yakihonne,keychat,gossip}.md` |
 
 Tokeny, ich pliki-źródła w repo klienta i kanały opt-in: `docs/FIDELITY.md` (tam też korekty kolorów
@@ -73,7 +74,7 @@ realny klient jest prostszy (Snort nie ma kolorowania składni — usunięcie hi
 ## Twarde zasady (łamanie = regres, nie kwestia gustu)
 
 - **Katalog per symulator.** Nie dotykaj innych klientów ani `shared/` — `shared/` jest współdzielony
-  przez 10 symulatorów, więc zmiana tam jest zmianą u wszystkich naraz.
+  przez 11 symulatorów, więc zmiana tam jest zmianą u wszystkich naraz.
 - **Interfejs komend toura nietykalny** (`tourCommand` / `onCommandHandled` / `className` + `switch`) i
   każda kotwica `data-tour` — inaczej pada guided tour i mini-toury FAQ (`showMe`). Reguły silnika są
   w `docs/TOURS.md`; przeczytaj przed ruszeniem kotwicy.

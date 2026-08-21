@@ -9,4 +9,12 @@
 *.mkv
 frames/
 sheets/
+scenes/
 full/
+
+# Ad-hoc crops taken while writing a screen-map are working artefacts, not
+# evidence anyone else needs; a crop that IS cited in a screen-map gets a
+# meaningful .png name and is committed (e.g. boris/shots/navicons.png).
+*.jpg
+*.jpeg
+*.JPG

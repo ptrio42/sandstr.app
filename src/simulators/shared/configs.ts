@@ -283,6 +283,35 @@ export const nosturConfig: SimulatorConfig = {
 /**
  * All simulator configs collection
  */
+/**
+ * Boris - Android reader for nostr
+ *
+ * Two brand colours that do different jobs and must not be merged: indigo
+ * #6366F1 is the only action colour (DESIGN.md "The Two Loud Colors Rule"),
+ * and yellow #FDE047 is the mark. Every value below is read off
+ * ui/theme/Color.kt at dergigi/boris-android@8456da4, not from the app icon.
+ */
+export const borisConfig: SimulatorConfig = {
+  id: SimulatorClient.BORIS,
+  name: 'Boris',
+  description: 'Nostr-native reader: highlight what matters, and read it offline.',
+  platform: 'android',
+  primaryColor: '#6366F1', // Indigo500 - dark-theme `primary` (Color.kt:20)
+  secondaryColor: '#FDE047', // HighlightMine - the mark colour (Color.kt:22)
+  icon: '/icons/boris.png',
+  supportedFeatures: [
+    SimulatorFeature.HIGHLIGHTS,
+    SimulatorFeature.LONG_FORM,
+    SimulatorFeature.OFFLINE,
+    SimulatorFeature.TEXT_TO_SPEECH,
+    SimulatorFeature.RSS,
+    SimulatorFeature.ZAPS,
+    SimulatorFeature.SEARCH,
+    SimulatorFeature.RELAYS,
+  ],
+  defaultView: SimulatorView.HOME,
+};
+
 export const allSimulatorConfigs: Record<SimulatorClient, SimulatorConfig> = {
   [SimulatorClient.DAMUS]: damusConfig,
   [SimulatorClient.AMETHYST]: amethystConfig,
@@ -294,6 +323,7 @@ export const allSimulatorConfigs: Record<SimulatorClient, SimulatorConfig> = {
   [SimulatorClient.KEYCHAT]: keychatConfig,
   [SimulatorClient.WISP]: wispConfig,
   [SimulatorClient.NOSTUR]: nosturConfig,
+  [SimulatorClient.BORIS]: borisConfig,
 };
 
 /**

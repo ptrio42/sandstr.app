@@ -305,6 +305,33 @@ const MOUNTS: Record<
     // panel's "Show me" can drive the simulator. `tour` stays false.
     load: () => import('./simulators/coracle/CoracleSimulatorWithTour'),
   },
+  boris: {
+    frame: 'android',
+    // No guided tour and no FAQ bank yet, so no wrapper: the simulator is
+    // mounted directly and `hasTour` stays false (same shape Gossip uses).
+    // Every surface already carries its `data-tour` anchors, so adding a tour
+    // later is a wrapper plus a config, not a rebuild.
+    tour: false,
+    // Reference-verified 2026-08-21: the owner's 3m52s Android recording
+    // (docs/refs/boris/shots/) + a dergigi/boris-android@8456da4 recon of all
+    // 291 Kotlin files -> docs/refs/boris/screen-map.md, then a live
+    // side-by-side pass per surface.
+    status: 'ready',
+    // NO `theme` on purpose. Boris ships `theme = "system"`
+    // (data/UserSettings.kt:29), so following the host toggle IS the faithful
+    // behaviour — the same reasoning as Snort. Its own defaults inside each
+    // mode are Midnight (#18181B) and Sepia (#F4F1EA), which boris.theme.css
+    // carries.
+    homepage: 'https://readwithboris.com',
+    repo: 'https://github.com/dergigi/boris-android',
+    upstreamLicense: 'MIT',
+    installNote: 'Zapstore or a release APK; also a web app at read.withboris.com',
+    availableOn: ['android', 'web'],
+    // screen-map: dergigi/boris-android@8456da4 = release 1.4.49, which is also
+    // what the app's own settings footer prints.
+    reproduces: 'v1.4.49',
+    load: () => import('./simulators/boris/BorisSimulator'),
+  },
   gossip: {
     frame: null,
     tour: false,

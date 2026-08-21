@@ -1,0 +1,196 @@
+/**
+ * Boris theme — real tokens from dergigi/boris-android@8456da4 (release 1.4.49).
+ *
+ * Sources, all cited again per line in docs/refs/boris/screen-map.md §1:
+ *   app/src/main/java/org/dergigi/boris/ui/theme/Color.kt   — the literals
+ *   app/src/main/java/org/dergigi/boris/ui/theme/Theme.kt   — the M3 scheme mapping
+ *   app/src/main/java/org/dergigi/boris/data/UserSettings.kt — which variant is default
+ *   DESIGN.md (repo root)                                   — the design-system contract
+ *
+ * Boris ships THREE dark variants and THREE light ones. The shipped defaults are
+ * `darkColorTheme = "midnight"` (Zinc900) and `lightColorTheme = "sepia"`
+ * (UserSettings.kt:34,39) — not black-on-black and not paper white, which is why
+ * the reproduction opens on zinc and warm paper rather than the more obvious
+ * #000/#FFF. Appearance itself defaults to "system" (UserSettings.kt:29), so the
+ * registry entry deliberately carries no `theme` field: following the host
+ * toggle IS the faithful behaviour.
+ *
+ * Every selector is scoped under .boris-simulator — an unscoped class once bled
+ * between simulators (CLAUDE.md).
+ */
+
+.boris-simulator {
+  /* --- Material 3 dark scheme, variant "midnight" (Theme.kt:57-80) --- */
+  --boris-primary: #6366f1; /* Indigo500 */
+  --boris-on-primary: #ffffff;
+  --boris-secondary: #38bdf8; /* Sky400 */
+  --boris-on-secondary: #18181b;
+  --boris-bg: #18181b; /* Zinc900 — background AND surface */
+  --boris-on-bg: #e4e4e7; /* Zinc200 */
+  --boris-surface-variant: #27272a; /* Zinc800 — the card fill */
+  --boris-on-surface-variant: #a1a1aa; /* Zinc400 */
+  --boris-outline: #3f3f46; /* Zinc700 */
+  --boris-outline-variant: #3f3f46;
+  --boris-muted: #71717a; /* Zinc500 — footers, version line */
+  --boris-link: #38bdf8; /* linkColorDark default (UserSettings.kt:27) */
+
+  /* M3 dark-baseline roles Boris never overrides, so the framework defaults are
+     what the real app paints. The navigation-bar pill is the visible one:
+     measured #4A4458 off the reference recording at t=52s, which is exactly the
+     M3 baseline `secondaryContainer`. Guessing an indigo pill here would have
+     been the single most obvious wrong pixel in the whole reproduction. */
+  --boris-secondary-container: #4a4458;
+  --boris-on-secondary-container: #e8def8;
+
+  /* --- Highlight marks (Color.kt:25-30). Author class decides the colour;
+         these are the DEFAULT swatch of each palette row, not the only one. --- */
+  --boris-mark-mine: #fde047; /* HighlightMine */
+  --boris-mark-friends: #f97316; /* HighlightFriends */
+  --boris-mark-others: #9333ea; /* HighlightOther */
+  --boris-mark-find: #93c5fd; /* FindMark — the Find-in-article match */
+  --boris-mark-spoken: #2dd4bf; /* SpokenMark — the sentence TTS is reading */
+
+  /* --- Shape + spacing (DESIGN.md `rounded` / `spacing`) --- */
+  --boris-radius-sm: 6px;
+  --boris-radius-md: 8px;
+
+  /* The host mounts the sim in a fixed app shell — fill it, never size off vh. */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  background: var(--boris-bg);
+  color: var(--boris-on-bg);
+  /* Chrome is sans (DESIGN.md: "sans for buttons, labels, Home greeting");
+     the reading column overrides to serif below. Compose default = Roboto. */
+  font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px; /* label/title scale — the reader sets its own size */
+  line-height: 1.43;
+  /* Long unbroken tokens (URLs in article bodies) must wrap like on a phone. */
+  overflow-wrap: anywhere;
+}
+
+/* Counts and labels inside real buttons must never mid-break ("2.1x" → "2./1x").
+   Only `overflow-wrap`, deliberately: Boris's Home cards ARE buttons with
+   two-line titles, so the `white-space: nowrap` the other simulators pair with
+   this rule would clip every card title to one line. */
+.boris-simulator button {
+  overflow-wrap: normal;
+}
+
+/* --- Material 3 light scheme, variant "sepia" (Theme.kt:84-118) --- */
+.boris-simulator[data-theme='light'] {
+  --boris-primary: #4f46e5; /* Indigo600 — light theme uses the darker indigo */
+  --boris-on-primary: #ffffff;
+  --boris-secondary: #3b82f6; /* Blue500 */
+  --boris-on-secondary: #ffffff;
+  --boris-bg: #f4f1ea; /* Sepia */
+  --boris-on-bg: #2d2a24; /* SepiaText */
+  --boris-surface-variant: #ebe6db; /* SepiaElevated */
+  --boris-on-surface-variant: #5d5a54; /* SepiaSecondary */
+  --boris-outline: #d4cfc4; /* SepiaBorder */
+  --boris-outline-variant: #d4cfc4;
+  --boris-muted: #6b7280;
+  --boris-link: #3b82f6; /* linkColorLight default (UserSettings.kt:28) */
+  /* M3 light baseline, same reasoning as the dark block above. */
+  --boris-secondary-container: #e8def8;
+  --boris-on-secondary-container: #1d192b;
+}
+
+.boris-simulator ::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * The reading column. DESIGN.md: "The article is a book: Source Serif 4,
+ * justified body, little else on the page." Boris bundles the real face
+ * (app/src/main/res/font/source_serif_4.ttf); sandstr ships no fonts and makes
+ * no external requests, so the stack degrades to the platform serif. Recorded
+ * as a deliberate deviation in docs/refs/boris/screen-map.md §1.
+ * ------------------------------------------------------------------------- */
+.boris-simulator .boris-prose {
+  font-family: 'Source Serif 4', 'Source Serif Pro', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  font-size: 18px; /* body 21sp at the middle of the 5-step Font Size scale */
+  line-height: 1.71; /* DESIGN.md typography.body.lineHeight */
+  text-align: justify; /* paragraphAlignment default "justify" (UserSettings.kt:22) */
+  hyphens: auto;
+}
+
+.boris-simulator .boris-display {
+  font-family: 'Source Serif 4', 'Source Serif Pro', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* A highlight mark. `--mark` is set per author class at the call site so one
+   rule covers mine / friends / nostrverse / find / spoken.
+ *
+ * ALPHA 0.45, and the text keeps its own colour. Both halves are load-bearing
+ * and both are easy to get wrong: `HighlightMarks.paintHighlight` draws a round
+ * rect BEHIND the glyphs at `HIGHLIGHT_ALPHA = 0.45f`, inflated 5dp x 3dp with a
+ * 3dp radius (HighlightMarks.kt:24, :173-203) — it never sets a text colour.
+ * Painting the mark solid with black-on-yellow / white-on-purple (the obvious
+ * reading of DESIGN.md's "text on the mark is black", which describes the Home
+ * copy marks, not article marks) makes every highlighted passage shout.
+ * Measured against the reference recording at t=61s: the purple mark reads
+ * #502479, which is exactly #9333EA at 45% over #18181B. */
+.boris-simulator .boris-mark {
+  background: color-mix(in srgb, var(--mark, var(--boris-mark-mine)) 45%, transparent);
+  color: inherit;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  border-radius: 3px;
+  padding: 3px 5px;
+  margin: 0 -5px;
+}
+
+/* Underline is the second Highlight Style option (UserSettings.kt:45
+   `markerStyle = highlightStyle != "underline"`); the rule is 2dp at 85% alpha
+   on the line's bottom (HighlightMarks.kt:173-203). */
+.boris-simulator .boris-mark[data-style='underline'] {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  box-shadow: inset 0 -2px 0 0 color-mix(in srgb, var(--mark, var(--boris-mark-mine)) 85%, transparent);
+}
+
+/* The left rule on a Feeds/Search highlight card — the marked colour, hairline. */
+.boris-simulator .boris-card-rule {
+  border-left: 2px solid var(--rule, var(--boris-mark-others));
+}
+
+/* Hairline divider (1dp in Compose). */
+.boris-simulator .boris-divider {
+  height: 1px;
+  transform: scaleY(0.5);
+  transform-origin: top;
+  background: var(--boris-outline);
+}
+
+/* Cover art on Home cards is dimmed so the title stays readable over it —
+   the real cards carry the article's own art at low luminance. */
+.boris-simulator .boris-cover-scrim {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.25) 55%, rgba(0, 0, 0, 0.1) 100%);
+}
+
+/* Reader hero: the title sits on the image, so the image needs a floor. */
+.boris-simulator .boris-hero-scrim {
+  background: linear-gradient(to top, var(--boris-bg) 0%, rgba(0, 0, 0, 0.55) 45%, rgba(0, 0, 0, 0.15) 100%);
+}
+
+/* TTS "currently spoken" pulse — the follow-along mark (ttsFollowAlong = true). */
+@keyframes boris-spoken-pulse {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.boris-simulator .boris-spoken {
+  animation: boris-spoken-pulse 1.6s ease-in-out infinite;
+}

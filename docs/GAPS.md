@@ -62,7 +62,15 @@
 | [Nostur](gaps/nostur.md) | ready | 51 | 1 | 33 | 8 | 6 | 3 | 12 | 41 | ✅ |
 | [Keychat](gaps/keychat.md) | preview | 38 | 6 | 18 | 8 | 3 | 3 | 5 | 19 | ❌ |
 | [Gossip](gaps/gossip.md) | preview | 35 | 9 | 11 | 6 | 5 | 4 | 2 | 0 | ❌ brak wrappera |
-| **Razem** | | **498** | **139** | **205** | **88** | **35** | **31** | **238** | **409** | **8/10** |
+| [Boris](gaps/boris.md) | ready | 35 | 11 | 14 | 9 | 1 | 0 | 5 | 91 | ❌ brak wrappera |
+| **Razem** | | **533** | **150** | **219** | **97** | **36** | **31** | **243** | **500** | **8/11** |
+
+> **Boris dopisany 2026-08-21, i jego wiersz ma inny status dowodowy niż pozostałe dziesięć.**
+> Ledger [`gaps/boris.md`](gaps/boris.md) spisała sesja, która zbudowała symulator, a nie niezależny
+> przebieg audytowy z adwersaryjną weryfikacją — dzieli więc z symulatorem ślepe plamy, a jego pięć
+> wierszy `ok` nie przeszło żadnego przesiewu. Wiersz `Razem` przeliczono deltą na tym jednym
+> kliencie; pozostałe dziesięć kolumn niesie wartości z wcześniejszych przeliczeń. Przy pierwszym
+> prawdziwym audycie Borisa policz jego ledger od zera.
 
 **Metodologia kolumny `Kotwice`:** liczba **różnych wartości `data-tour`, jakie mogą trafić do DOM**
 danego klienta — każdy literał `data-tour="…"` plus każda wartość, jaką potrafi wyprodukować

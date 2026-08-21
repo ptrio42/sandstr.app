@@ -1,0 +1,96 @@
+import { FileText, StickyNote } from 'lucide-react';
+import type { BorisArticle } from '../borisData';
+
+/**
+ * The Home carousel card (ui/home/HomeScreen.kt:866-930).
+ * 140dp wide, a 140×140 cover clipped to 12dp on `surfaceVariant`, then the
+ * title (bodyMedium sans, semibold, max 2 lines) and the host (bodySmall,
+ * onSurfaceVariant, 1 line). Coverless articles get a 28dp glyph tinted with
+ * the SECTION's colour, not a neutral grey — `Article` for a web page,
+ * `StickyNote2` for a nostr note (HomeScreen.kt:897-905).
+ */
+
+export function CardReadingProgress({ percent }: { percent: number }) {
+  // Renders nothing until the article has actually been opened (percent <= 0),
+  // which is why most cards on a fresh Home have no strip at all.
+  if (percent <= 0) return null;
+  const clamped = Math.min(100, Math.max(1, percent));
+  // ReadingProgress.kt:78-82 — three states, and "started" is only 1..10%.
+  const color =
+    clamped >= 95
+      ? '#22C55E'
+      : clamped <= 10
+        ? 'var(--boris-on-bg)'
+        : 'var(--boris-primary)';
+  return (
+    <div
+      className="h-[2px] w-full overflow-hidden rounded-full"
+      style={{ background: 'color-mix(in srgb, var(--boris-outline) 30%, transparent)' }}
+    >
+      <div className="h-full" style={{ width: `${clamped}%`, background: color }} />
+    </div>
+  );
+}
+
+export function ArticleCard({
+  article,
+  tint,
+  progress = 0,
+  onOpen,
+  tourId,
+}: {
+  article: BorisArticle;
+  /** the section's colour — also the coverless glyph's tint */
+  tint: string;
+  progress?: number;
+  onOpen: () => void;
+  tourId?: string;
+}) {
+  const isNote = article.domain === 'nostr';
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      data-tour={tourId}
+      className="flex w-[140px] shrink-0 flex-col gap-2 text-left"
+    >
+      <div
+        className="relative flex h-[140px] w-[140px] items-center justify-center overflow-hidden rounded-xl"
+        style={{ background: 'var(--boris-surface-variant)' }}
+      >
+        {article.cover ? (
+          <>
+            <img src={article.cover} alt="" className="h-full w-full object-cover" />
+            {article.coverMark && (
+              <span className="absolute inset-x-0 bottom-0 p-2">
+                <span
+                  className="boris-display text-[13px] leading-tight"
+                  style={{ color: 'var(--boris-mark-mine)' }}
+                >
+                  {article.coverMark}
+                </span>
+              </span>
+            )}
+          </>
+        ) : isNote ? (
+          <StickyNote size={28} style={{ color: tint }} />
+        ) : (
+          <FileText size={28} style={{ color: tint }} />
+        )}
+      </div>
+      <span
+        className="line-clamp-2 text-[14px] font-semibold leading-[18px]"
+        style={{ color: 'var(--boris-on-bg)' }}
+      >
+        {article.title}
+      </span>
+      <span
+        className="truncate text-[12px] leading-none"
+        style={{ color: 'var(--boris-on-surface-variant)' }}
+      >
+        {article.domain}
+      </span>
+      <CardReadingProgress percent={progress} />
+    </button>
+  );
+}
