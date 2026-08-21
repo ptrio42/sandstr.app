@@ -1,7 +1,7 @@
 # Sandstr — guided toury (stan i twarde reguły)
 
 > **Co to jest.** Silnik `src/components/tour/` plus 8 konfiguracji kroków w `src/data/tours/`.
-> Ten sam silnik napędza **mini-toury FAQ** (`showMe`), więc każda zmiana tutaj dotyka 133 mini-tourów,
+> Ten sam silnik napędza **mini-toury FAQ** (`showMe`), więc każda zmiana tutaj dotyka 137 mini-tourów,
 > nie tylko 79 kroków głównych tourów.
 >
 > Ten plik opisuje **reguły, których nie widać z kodu** — i defekty, które z ich złamania wynikły.
