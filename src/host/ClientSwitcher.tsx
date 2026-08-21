@@ -48,6 +48,17 @@ function idleWarm(fn: () => void): () => void {
 
 type Orientation = 'horizontal' | 'vertical';
 
+/**
+ * How long the "you are now in X" pill stays up, in ms.
+ *
+ * Long enough to read at a glance, short enough to be gone before the next tap
+ * on a control people press repeatedly. 1.8s rather than 1.4s because the
+ * mount itself eats the first ~1.2s of it: the pill is up while the incoming
+ * client's chunk loads and its first screen paints, and it should still be
+ * legible for a beat AFTER that, not expire on arrival.
+ */
+const LANDED_MS = 1800;
+
 interface ChipProps {
   client: ClientEntry;
   active: boolean;
@@ -135,32 +146,114 @@ export default function ClientSwitcher() {
     [id, navigate],
   );
 
+  /**
+   * The client `dir` steps away — SKIPPING anything that cannot render here.
+   *
+   * At phone width a frameless client renders `DesktopClientGate` instead of
+   * the client ("Primal is a desktop client — open this on a laptop"). That is
+   * the right screen when you picked Primal by name, and a wall when you are
+   * just walking the shelf: the registry order is damus, amethyst, **primal,
+   * snort**, yakihonne, **coracle**, wisp, nostur, so stepping through it on a
+   * phone hits three gates in a row.
+   *
+   * So stepping skips them and the sheet and the palette do not: an explicit
+   * choice deserves the explanation, a casual next does not.
+   *
+   * The walk starts from the position in the FULL list rather than filtering
+   * first, so the arrows still work while you are standing ON a gate — which is
+   * exactly where you most want to leave.
+   */
+  const neighbour = useCallback(
+    (dir: 1 | -1): ClientEntry | undefined => {
+      if (!railId) return undefined;
+      const from = clients.findIndex((c) => c.id === railId);
+      if (from < 0) return undefined;
+      const n = clients.length;
+      for (let k = 1; k <= n; k++) {
+        const cand = clients[(((from + dir * k) % n) + n) % n];
+        if (!isMobile || cand.frame) return cand;
+      }
+      return undefined;
+    },
+    [railId, isMobile],
+  );
+
+  /**
+   * "You are now in X", for one beat, after a prev/next step.
+   *
+   * Stepping is the only way into a client that never names where it is
+   * sending you: the sheet and the palette are both a labelled tile you tapped
+   * on purpose. Nothing else fills the gap at phone width either — the compact
+   * bar's 14px title is the only label on screen, it sits in a corner, and it
+   * does not move when it changes, so a fast walk through the shelf leaves you
+   * guessing which app you are looking at.
+   *
+   * Phone only. Above `sm` the meta row and the context panel both restate the
+   * client and the rail moves its highlight, so there it would be our chrome on
+   * somebody's app for nothing.
+   */
+  const [landed, setLanded] = useState<{ client: ClientEntry; nonce: number } | null>(null);
+
   const step = useCallback(
     (dir: 1 | -1) => {
-      if (!railId) return;
-      const idx = clients.findIndex((c) => c.id === railId);
-      if (idx < 0) return;
-      const next = (idx + dir + clients.length) % clients.length;
-      go(clients[next].id);
+      const next = neighbour(dir);
+      if (!next || next.id === id) return;
+      stepped.current = true;
+      go(next.id);
     },
-    [railId, go],
+    [neighbour, go, id],
   );
+
+  /**
+   * ON ARRIVAL, not on the tap — and this is measured, not a preference.
+   *
+   * Announcing at the tap cannot work: the frames between the tap and the new
+   * client appearing are frames the main thread spends loading that client's
+   * lazy chunk and mounting it, so nothing new rasterises. Filmed at 30fps the
+   * pill first reached the screen 1000-1400ms after the tap however it was
+   * scheduled — including with flushSync, which commits synchronously but
+   * cannot conjure a paint out of a blocked thread. All that bought was a pill
+   * that spent most of its life invisible and expired shortly after becoming
+   * visible.
+   *
+   * So the pill says "you are HERE" rather than "you are going there". It costs
+   * nothing — during the transition the old client is still on screen and the
+   * question does not arise yet — and it means the full LANDED_MS is on screen.
+   */
+  const stepped = useRef(false);
+  const nonce = useRef(0);
+  useEffect(() => {
+    if (!stepped.current) return;
+    stepped.current = false;
+    if (!isMobile || !active) return;
+    nonce.current += 1;
+    setLanded({ client: active, nonce: nonce.current });
+  }, [railId, active, isMobile]);
+
+  // Unmount when the animation below has finished fading it out, so the two
+  // never disagree. Keyed by `nonce`, so a second step restarts both.
+  useEffect(() => {
+    if (!landed) return;
+    const t = window.setTimeout(() => setLanded(null), LANDED_MS);
+    return () => window.clearTimeout(t);
+  }, [landed]);
 
   // The bottom sheet is a mobile-only surface; close it if we grow to desktop.
   useEffect(() => {
     if (!isMobile) setSheetOpen(false);
   }, [isMobile]);
 
-  // Warm the current client's immediate neighbours so casual next/prev is instant.
+  // Warm the neighbours casual next/prev will actually reach, so it is instant.
+  // Via `neighbour`, not raw indices: at phone width the raw ±1 is a client the
+  // arrows now skip, so the old version warmed the two chunks that never get
+  // mounted and none of the two that do.
   useEffect(() => {
     if (!railId) return;
-    const idx = clients.findIndex((c) => c.id === railId);
-    if (idx < 0) return;
     return idleWarm(() => {
-      clients[idx - 1]?.preload();
-      clients[idx + 1]?.preload();
+      neighbour(1)?.preload();
+      neighbour(-1)?.preload();
     });
-  }, [railId]);
+  }, [railId, neighbour]);
 
   // On phones the sim is full-bleed, so the switcher has no floating pill to
   // tap — ClientView's compact bar fires this instead. Mirrors the existing
@@ -170,6 +263,18 @@ export default function ClientSwitcher() {
     window.addEventListener('sandstr-open-switcher', open);
     return () => window.removeEventListener('sandstr-open-switcher', open);
   }, []);
+
+  // Same idiom for the phone's prev/next arrows. They must NOT own the
+  // definition of "next": the wrap-around, the archived-snapshot redirect via
+  // `railId`, and the neighbour preloading all live in `step`, and a second
+  // copy in ClientView would drift from this one the first time any of the
+  // three changes.
+  useEffect(() => {
+    const onStep = (e: Event) =>
+      step((e as CustomEvent<number>).detail < 0 ? -1 : 1);
+    window.addEventListener('sandstr-step-client', onStep);
+    return () => window.removeEventListener('sandstr-step-client', onStep);
+  }, [step]);
 
   // Global shortcuts: ⌘/Ctrl-K opens the palette, [ / ] cycle prev/next.
   useEffect(() => {
@@ -357,6 +462,43 @@ export default function ClientSwitcher() {
             </button>
           </motion.nav>
         </div>
+      )}
+
+      {/* "you are now in X" — conditional mount, same as the sheet below. The
+          fade-OUT is a keyframe inside `animate` rather than an exit prop:
+          AnimatePresence does not unmount reliably in this tree, so the
+          animation ends at zero opacity exactly when the timer unmounts it. */}
+      {createPortal(
+        landed ? (
+          <motion.div
+            key={landed.nonce}
+            // Rail band: over the simulator's own sandbox (~2000, see
+            // gossip.theme.css) and UNDER the disclaimer, which nothing covers.
+            // Order lives in :root in src/index.css.
+            className="pointer-events-none fixed inset-x-0 top-1/2 z-[var(--z-host-rail)] flex -translate-y-1/2 justify-center sm:hidden"
+            initial={{ opacity: 0 }}
+            animate={reduce ? { opacity: [0, 1, 1, 0] } : { opacity: [0, 1, 1, 0], scale: [0.94, 1, 1, 1] }}
+            transition={{ duration: LANDED_MS / 1000, times: [0, 0.12, 0.74, 1], ease: 'easeOut' }}
+          >
+            <span
+              role="status"
+              aria-live="polite"
+              // Solid, and ringed in the CLIENT'S OWN colour. The first version
+              // was a translucent dark pill with a plain shadow, which is
+              // invisible for most of this shelf: six of the eight clients
+              // default to a near-black feed, so dark-on-dark read only in the
+              // one frame that happened to land on a bright image. A solid body
+              // separates it from a light theme (YakiHonne), the coloured ring
+              // separates it from a dark one, and the two never fail together.
+              style={{ boxShadow: `0 0 0 2px ${landed.client.primaryColor}, 0 18px 50px rgba(0,0,0,0.55)` }}
+              className="flex items-center gap-3 rounded-2xl bg-gray-950 px-5 py-4 text-white"
+            >
+              <ClientGlyph client={landed.client} className="h-11 w-11" />
+              <span className="text-xl font-semibold leading-none">{landed.client.name}</span>
+            </span>
+          </motion.div>
+        ) : null,
+        document.body,
       )}
 
       {/* mobile bottom sheet — conditional mount (no AnimatePresence) */}
