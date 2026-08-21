@@ -52,13 +52,46 @@ export const SCREEN_LABELS: Record<ScreenIntent, string> = {
 
 const INTENTS = Object.keys(SCREEN_LABELS) as ScreenIntent[];
 
+/**
+ * Validate an untrusted string against the vocabulary. Lives here rather than
+ * at the call site because this module owns the vocabulary: a second copy of
+ * the list is a second thing to forget when an intent is added.
+ *
+ * Callers today: the stored value below (sessionStorage is user-writable) and
+ * the `?screen=` deep link in ClientView. Both must treat an unknown value as
+ * absent rather than as an error — a stale or mistyped link should open the
+ * client where it really opens, not on a blank screen.
+ */
+export function parseScreenIntent(raw: string | null | undefined): ScreenIntent | null {
+  return raw && (INTENTS as string[]).includes(raw) ? (raw as ScreenIntent) : null;
+}
+
 export function readScreenIntent(): ScreenIntent | null {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = window.sessionStorage.getItem(SCREEN_STORAGE_KEY);
-    return raw && (INTENTS as string[]).includes(raw) ? (raw as ScreenIntent) : null;
+    return parseScreenIntent(window.sessionStorage.getItem(SCREEN_STORAGE_KEY));
   } catch {
     return null;
+  }
+}
+
+/**
+ * Store WITHOUT announcing — for callers that run during React's render pass.
+ *
+ * `?screen=` is resolved in a useState initialiser, because an effect runs
+ * after the first render and loses the race against the simulator's lazy
+ * chunk. But the announcing write below dispatches synchronously, and the
+ * host listens to that event with a setState: React then reports "Cannot
+ * update a component while rendering a different component". The listener is
+ * not the point there anyway — the initialiser's own return value seeds the
+ * host's state in the same breath.
+ */
+export function seedScreenIntent(intent: ScreenIntent): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.sessionStorage.setItem(SCREEN_STORAGE_KEY, intent);
+  } catch {
+    /* private mode: the feature degrades to "every client opens at its start" */
   }
 }
 
@@ -77,6 +110,30 @@ export function writeScreenIntent(intent: ScreenIntent | null): void {
 
 export function clearScreenIntent(): void {
   writeScreenIntent(null);
+}
+
+/**
+ * Which intents the CURRENTLY MOUNTED client can actually show.
+ *
+ * Published from `useScreenSync` rather than declared a second time in the
+ * registry, and that is the whole point: the map below is already the single
+ * statement of what a client can show, and a hand-copied list beside it would
+ * drift the first time a simulator gains a tab. Empty while no simulator is
+ * mounted — which includes a frameless client gated at phone widths, where a
+ * "start screen" offer would be a promise nothing can keep.
+ *
+ * Consumer: the demo-link builder, so its screen picker can offer only the
+ * screens this client really has. Amethyst is the reason it has to: it maps
+ * five intents and NOT `relays` (relays live in its drawer, not as a tab), so
+ * ?screen=relays there silently falls back to the feed — correct behaviour,
+ * but a builder that offered the option would be writing a link that lies.
+ */
+let mountedIntents: ScreenIntent[] = [];
+
+export const SCREEN_VOCAB_EVENT = 'sandstr-screen-vocab';
+
+export function mountedScreenIntents(): ScreenIntent[] {
+  return mountedIntents;
 }
 
 /**
@@ -122,6 +179,19 @@ export function useScreenSync<T extends string>({
     const target = mapRef.current[want] ?? mapRef.current.feed;
     if (target) restoreRef.current(target);
   }, [ready]);
+
+  // Publish this client's vocabulary for the host (see mountedScreenIntents).
+  // Keyed on a STRING signature, not on `map`: the object literal is rebuilt on
+  // every render, so an object dep would re-dispatch forever.
+  const signature = INTENTS.filter((i) => mapRef.current[i] != null).join(',');
+  useEffect(() => {
+    const announce = (next: ScreenIntent[]) => {
+      mountedIntents = next;
+      window.dispatchEvent(new CustomEvent(SCREEN_VOCAB_EVENT, { detail: next }));
+    };
+    announce(signature ? (signature.split(',') as ScreenIntent[]) : []);
+    return () => announce([]);
+  }, [signature]);
 
   useEffect(() => {
     if (current == null) return;

@@ -39,6 +39,16 @@ mock-tożsamości są zmyślone, README nie głosi owned-IP-first, Kitten nie je
   `data-tour-keep-clear`. Bez pierwszego tour przyciemniał baner do nieczytelności; bez drugiego
   karta toura kładła się na nim. Na formie telefonowej **nigdy `truncate`** — przy 320px ucinało
   tekst do „…not affiliated wit…", a to ten pasek mówi odwiedzającemu, że ogląda symulację.
+- **Link demo NIE jest powierzchnią bez banera** — w przeciwieństwie do karty og. `?screen=`,
+  `?theme=`, `?tour=1`, `?faq=`, `?showme=`, `?note=` otwierają zwykły `/c/<id>` z całym chrome'em
+  hosta: baner, wyjście do prawdziwego klienta, link do zgłoszenia błędu wierności. Dlatego kreator
+  (`src/host/DemoLinkSheet.tsx`) nie potrzebuje własnej mitygacji — potrzebuje tylko **nie mieć
+  parametru, który to chowa**. Nie dodawaj `?bare=`, `?chrome=0` ani trybu pełnoekranowego bez
+  hosta; to zamieniłoby link w dokładnie tę powierzchnię, przed którą broni `frame-ancestors`.
+- **Kreator składa, nie autoruje** (twarda zasada w `CLAUDE.md`): oferuje ekran, który klient realnie
+  mapuje, wpis z jego banku FAQ i jego własny tour. **Żadnego pola na własne podpisy** rysowane nad
+  cudzą apką — to jedyne miejsce w tym pomyśle, które wkłada komuś słowa w usta. Wklejona notatka
+  jest wyjątkiem, który już shipował („Preview your note"), nie precedensem do rozszerzania.
 - Czego baner nie załatwia: `X-Frame-Options: DENY` + CSP `frame-ancestors` w `public/_headers`.
   Bez nich stronę `/c/<klient>` da się osadzić w cudzej ramce z pominięciem całego chrome'u hosta,
   razem z banerem.
@@ -153,3 +163,5 @@ i ciągła) plus zweryfikowane tokeny.
    404 i share pokazuje kartę bez obrazka.
 5. Żadna mock-tożsamość nie wskazuje na realnego człowieka ani identyfikator płatności.
 6. Nic nie poszło na zewnątrz bez decyzji właściciela.
+7. Nowy parametr trasy `/c/<id>`: nie chowa banera ani wyjścia, jest w tabeli w `docs/OUTREACH.md`
+   i w kreatorze, i nie pozwala wpisać własnego tekstu NAD reprodukcją.

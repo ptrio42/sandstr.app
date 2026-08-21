@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Flag, HelpCircle, History, Info, Monitor, Moon, PenLine, Play, RotateCcw, Sun } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Flag, HelpCircle, History, Info, Link2, Monitor, Moon, PenLine, Play, RotateCcw, Sun } from 'lucide-react';
 import MobilePhoneFrame from '../simulators/shared/components/MobilePhoneFrame';
 import { ClientGlyph, platformLabel } from './ClientGlyph';
 import { clients, getClient, versionsOf, type ClientEntry } from '../registry';
@@ -10,11 +10,16 @@ import { getFaq } from '../data/faq';
 import { showFaqInSimulator } from '../components/faq/FaqMiniTourLauncher';
 import FaqPanel from './FaqPanel';
 import PreviewNoteSheet from './PreviewNoteSheet';
+import DemoLinkSheet from './DemoLinkSheet';
 import { COMPOSE_EVENT } from '../simulators/shared/composeBridge';
 import {
   clearScreenIntent,
+  mountedScreenIntents,
+  parseScreenIntent,
   readScreenIntent,
+  seedScreenIntent,
   SCREEN_LABELS,
+  SCREEN_VOCAB_EVENT,
   type ScreenIntent,
 } from '../simulators/shared/screenSync';
 import { fetchLinkPreview } from './unfurl';
@@ -267,6 +272,7 @@ function ContextPanel({
   previewActive,
   onResetScreen,
   resetTitle,
+  onDemoLink,
 }: {
   entry: ClientEntry;
   real: boolean;
@@ -276,6 +282,7 @@ function ContextPanel({
   previewActive?: boolean;
   onResetScreen?: () => void;
   resetTitle?: string;
+  onDemoLink?: () => void;
 }) {
   return (
     <aside className="hidden h-full w-[290px] shrink-0 flex-col justify-center gap-5 py-2 lg:flex">
@@ -349,6 +356,15 @@ function ContextPanel({
               className="inline-flex w-fit items-center gap-1.5 rounded-full border border-primary-300 bg-primary-50 px-3 py-1.5 text-xs font-medium text-primary-700 transition-colors hover:bg-primary-100 dark:border-primary-500/40 dark:bg-primary-500/10 dark:text-primary-300 dark:hover:bg-primary-500/20"
             >
               <HelpCircle className="h-3.5 w-3.5" /> How do I…?
+            </button>
+          )}
+          {onDemoLink && (
+            <button
+              type="button"
+              onClick={onDemoLink}
+              className="inline-flex w-fit items-center gap-1.5 rounded-full border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              <Link2 className="h-3.5 w-3.5" /> Demo link
             </button>
           )}
         </div>
@@ -633,19 +649,56 @@ export default function ClientView() {
   // Where the visitor was, in the shared vocabulary every simulator maps to its
   // own screen names. Held here only to label and gate the reset control — the
   // simulators read the stored value themselves on mount.
-  const [screenIntent, setScreenIntent] = useState<ScreenIntent | null>(() => readScreenIntent());
+  //
+  // Deep link `/c/<client>?screen=<intent>` seeds that same store, which is the
+  // whole implementation: `useScreenSync` already restores from it on mount and
+  // already falls back to the feed for an intent a client cannot show, so no
+  // simulator needs to know this link exists. Without it there is no way to
+  // point at Amethyst's relay list — the vocabulary was reachable only by
+  // walking there yourself.
+  //
+  // Resolved in the initialiser and NOT in an effect, for the same reason
+  // `?note=` is (see previewText above): an effect runs after the first render
+  // and loses the race against the simulator's lazy chunk, which reads the
+  // stored intent as it mounts. `seedScreenIntent` and not `writeScreenIntent`:
+  // the announcing form dispatches synchronously, and the listener below turns
+  // that into a setState during render — React rejects it, loudly, in console. An unknown value is dropped by `parseScreenIntent` and
+  // leaves any existing intent alone, so a stale link opens the client where it
+  // really opens rather than on a blank screen.
+  const [screenIntent, setScreenIntent] = useState<ScreenIntent | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const fromUrl = parseScreenIntent(new URLSearchParams(window.location.search).get('screen'));
+    if (fromUrl) seedScreenIntent(fromUrl);
+    return readScreenIntent();
+  });
   useEffect(() => {
     const onScreen = (e: Event) => setScreenIntent((e as CustomEvent<ScreenIntent | null>).detail ?? null);
     window.addEventListener('sandstr-screen', onScreen);
     return () => window.removeEventListener('sandstr-screen', onScreen);
   }, []);
   const [previewImage, setPreviewImage] = useState(() => activePreviewImage());
+  const [demoOpen, setDemoOpen] = useState(false);
+
+  // Which screens the MOUNTED simulator can actually show, published by
+  // useScreenSync (screenSync.ts). Read as state rather than called at render
+  // time because the value arrives with the lazily-loaded client chunk, well
+  // after this component first renders — and the demo-link builder must not
+  // offer a screen the client will silently fall back out of.
+  const [screenVocab, setScreenVocab] = useState<ScreenIntent[]>(() => mountedScreenIntents());
+  useEffect(() => {
+    const onVocab = (e: Event) => setScreenVocab((e as CustomEvent<ScreenIntent[]>).detail ?? []);
+    window.addEventListener(SCREEN_VOCAB_EVENT, onVocab);
+    // A client mounted before this listener attached has already dispatched.
+    setScreenVocab(mountedScreenIntents());
+    return () => window.removeEventListener(SCREEN_VOCAB_EVENT, onVocab);
+  }, []);
 
   // The switcher can change client while the sheet is open — it describes a
   // specific reproduction, so it must not survive into the next one.
   useEffect(() => {
     setAboutOpen(false);
     setPreviewOpen(false);
+    setDemoOpen(false);
     setFaqOpen(false);
     setFaqFocusId(null);
     setFaqResumeId(null);
@@ -665,8 +718,10 @@ export default function ClientView() {
     if (!id) return;
     const params = new URLSearchParams(window.location.search);
     // ?tour=1 wins: a link that promises a walkthrough should not also drop a
-    // panel over the first step.
-    if (params.get('tour') === '1') return;
+    // panel over the first step. ?showme= is the same bargain — it promises the
+    // client doing the thing, and our panel over it is what the clip notes call
+    // "our chrome sitting on top of somebody's app".
+    if (params.get('tour') === '1' || params.get('showme')) return;
     const wanted = params.get('faq');
     if (!wanted || deepLinkRef.current === `${id}:${wanted}`) return;
     deepLinkRef.current = `${id}:${wanted}`;
@@ -695,6 +750,52 @@ export default function ClientView() {
     let cancelled = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const fire = () => window.dispatchEvent(new Event(`start-${id}-tour`));
+    const t0 = Date.now();
+    const wait = () => {
+      if (cancelled) return;
+      if (document.querySelector('[data-tour]')) {
+        timers.push(setTimeout(() => {
+          if (cancelled) return;
+          fire();
+          timers.push(setTimeout(() => {
+            if (!cancelled && !document.querySelector('.tour-overlay')) fire();
+          }, 1500));
+        }, 250));
+        return;
+      }
+      if (Date.now() - t0 < 15000) timers.push(setTimeout(wait, 120));
+    };
+    wait();
+    return () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+    };
+  }, [id]);
+
+  // Deep link: /c/<client>?showme=<entry-id> replays one FAQ answer AS a
+  // mini-tour on arrival — the client doing the thing, rather than a panel
+  // describing it. It is the strongest demo the product can hand over in a
+  // link, and the shape the FAQ teaser clips are cut from.
+  //
+  // Same wait-for-the-chunk dance as ?tour=1 above and for the same reason: the
+  // listener lives inside the lazily-loaded *SimulatorWithTour wrapper
+  // (FaqMiniTourLauncher), so firing before it mounts hits nobody. Unlike the
+  // FAQ deep link this does NOT arm faqResumeId — a demo that ends by throwing
+  // our panel over the client would undo the point of showing the client.
+  const showMeLinkRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!id) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tour') === '1') return; // a tour and a replay cannot both drive
+    const wanted = params.get('showme');
+    if (!wanted || showMeLinkRef.current === `${id}:${wanted}`) return;
+    // Silently ignore an entry with no mini-tour: the launcher would drop it
+    // anyway, and the visitor still gets the client rather than a dead link.
+    if (!getFaq(id)?.entries.some((e) => e.id === wanted && e.showMe?.length)) return;
+    showMeLinkRef.current = `${id}:${wanted}`;
+    let cancelled = false;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const fire = () => showFaqInSimulator({ clientId: id, entryId: wanted });
     const t0 = Date.now();
     const wait = () => {
       if (cancelled) return;
@@ -764,11 +865,28 @@ export default function ClientView() {
   }, [faqResumeId]);
 
   const clientTheme = entry?.defaultTheme;
+  /**
+   * Theme precedence, highest first: `?theme=` (this view only) > the visitor's
+   * stored choice > the client's real shipping default.
+   *
+   * `?theme=` sits on top because a demo link says which theme it is a demo OF,
+   * and it is the only one of the three that was chosen for THIS page. It stays
+   * transient: nothing here writes `sandstr-theme`, so the visitor's own toggle
+   * still wins with one click (useTheme.toggle is the sole writer of that key,
+   * and must stay so), and a later visit without the param returns to whatever
+   * they had picked. The deps hold values, not the params object, so the FAQ
+   * mirror rewriting the query string cannot re-fire this and stomp a toggle.
+   */
+  const urlTheme = searchParams.get('theme') === 'dark' ? 'dark' : searchParams.get('theme') === 'light' ? 'light' : null;
   useEffect(() => {
+    if (urlTheme) {
+      document.documentElement.classList.toggle('dark', urlTheme === 'dark');
+      return;
+    }
     if (!clientTheme) return;
     if (localStorage.getItem('sandstr-theme')) return;
     document.documentElement.classList.toggle('dark', clientTheme === 'dark');
-  }, [clientTheme]);
+  }, [clientTheme, urlTheme]);
 
   // The tab title, from the same string the build bakes into dist/c/<id>.html
   // (src/shareMeta.ts). Arriving directly on /c/damus already showed "Try
@@ -1031,6 +1149,17 @@ export default function ClientView() {
               <HelpCircle className="h-4 w-4" />
             </button>
           )}
+          {!gated && (
+            <button
+              type="button"
+              aria-label={`Build a ${entry.name} demo link`}
+              aria-haspopup="dialog"
+              onClick={() => setDemoOpen(true)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              <Link2 className="h-4 w-4" />
+            </button>
+          )}
           {screenIntent && (
             <button
               type="button"
@@ -1176,6 +1305,15 @@ export default function ClientView() {
             <PenLine className="h-3.5 w-3.5" /> {previewLabel}
           </button>
         )}
+        {!gated && (
+          <button
+            type="button"
+            onClick={() => setDemoOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            <Link2 className="h-3.5 w-3.5" /> Demo link
+          </button>
+        )}
         {screenIntent && (
           <button
             type="button"
@@ -1223,6 +1361,7 @@ export default function ClientView() {
             onPreviewNote={canPreviewNote ? () => setPreviewOpen(true) : undefined}
             previewLabel={previewLabel}
             previewActive={previewActive}
+            onDemoLink={() => setDemoOpen(true)}
             onResetScreen={screenIntent ? resetToStartScreen : undefined}
             resetTitle={
               screenIntent
@@ -1234,6 +1373,15 @@ export default function ClientView() {
       </div>
 
       {aboutOpen && <AboutSheet entry={entry} real={isReal} onClose={() => setAboutOpen(false)} />}
+      {demoOpen && (
+        <DemoLinkSheet
+          entry={entry}
+          faq={faq}
+          screens={screenVocab}
+          noteText={previewText}
+          onClose={() => setDemoOpen(false)}
+        />
+      )}
       {previewOpen && (
         <PreviewNoteSheet
           clientName={entry.name}

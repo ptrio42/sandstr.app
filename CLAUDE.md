@@ -66,6 +66,14 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
 - **`src/shareMeta.ts`** — tytuł i opis trasy `/c/<id>`, jedno źródło dla karty share
   (build, przez `shareRoutes()` w `src/entry-server.tsx` → `dist/c/<id>.html`) i dla
   `document.title` w `ClientView`. Obrazki kart: `public/og/<id>.png` z `npm run og:cards`.
+- **Trasa `/c/<id>` ma KONTRAKT parametrów** — pełna tabela w `docs/OUTREACH.md` („The reply
+  playbook"). `?tour=1`, `?faq=<id>`, `?showme=<id>` (odgrywa mini-tour FAQ bez panelu),
+  `?screen=<intent>`, `?theme=dark|light`, `?note=<tekst>`. Wszystkie czytane w `ClientView`,
+  a `?screen=` i `?note=` **w inicjalizatorach `useState`, nie w efektach** — efekt biegnie po
+  pierwszym renderze i przegrywa wyścig z lazy chunkiem symulatora. Składa je kreator
+  `src/host/DemoLinkSheet.tsx` (przycisk „Demo link"); `buildDemoUrl` jest czysty i eksportowany.
+  Dokładając parametr, dopisz go do tabeli w `OUTREACH.md` i do kreatora — inaczej powstaje
+  trzecie, nieodkrywalne API tej samej trasy.
 - Montowanie: mobilne (ios/android) w `MobilePhoneFrame`, web/desktop bez ramki. `*SimulatorWithTour`
   = **default export**; Gossip i Nostr Kitten montowane przez **named export** (patrz `registry.tsx`).
 
@@ -88,6 +96,13 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
 - **Baner disclaimera MUSI zostać** na każdym widoku klienta (`Disclaimer` / `DisclaimerStrip`
   w `src/host/ClientView.tsx`, tekst „Simulation · mock data · unofficial, not affiliated with
   &lt;nazwa&gt;") — #1 lekka mitygacja ryzyka znaku towarowego. Nie usuwaj i nie skracaj.
+- **Kreator demo SKŁADA, nie AUTORUJE.** `DemoLinkSheet` oferuje wyłącznie materiał, za którym
+  produkt już stoi: ekran, który klient realnie mapuje, wpis z jego banku FAQ, jego własny tour.
+  **Żadnego pola na własny podpis nad klientem** — box rysujący dowolny tekst w karcie spotlightu
+  na wierzchu cudzej apki zmienia reprodukcję w sposób na wkładanie komuś słów w usta, i to
+  linkiem, który podróżuje dalej niż nasza strona. Jedyny string od odwiedzającego to wklejona
+  notatka, i ona też nie jest wymyślana tutaj — przychodzi z „Preview your note". Żaden parametr
+  demo nie może też chować chrome'u hosta (banera ani wyjścia do prawdziwego klienta).
 - **Kolejność warstw hosta jest jedna i stoi w `:root` w `src/index.css`** (`--z-host-rail` <
   `--z-tour-backdrop` < `--z-tour-card` < `--z-disclaimer` < `--z-host-modal`). Żadnej gołej liczby
   `z-[…]` w `src/host/` ani w `src/components/tour/` — czytaj zmienną. Baner ma być **nad tourem**
@@ -138,6 +153,22 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
   i pod ostrym CSP. Klienci `ready` mają lokalne inline-SVG avatary; nie dokładaj nowych hotlinków.
 - `useSimulator` (Context+reducer) jest **w większości nieużywany** — symulatory trzymają lokalny
   `useState`. Nie myl scaffoldingu z load-bearing.
+- **Słownik ekranów jest CZĘŚCIOWY per klient, a niedopasowanie leci cicho na feed.** `ScreenIntent`
+  ma osiem wartości, ale każdy symulator mapuje tylko część (`useScreenSync`, `map:`) — Amethyst
+  nie ma `relays`, bo relaye siedzą u niego w szufladzie, nie w zakładce. `?screen=relays` na
+  Amethyście **nie jest błędem**, tylko fallbackiem na feed: link wygląda jak działający i nic nie
+  robi. Dlatego listy mapowanych intencji **nie duplikuj** — `useScreenSync` publikuje ją przez
+  `SCREEN_VOCAB_EVENT` / `mountedScreenIntents()` i tylko z tego czyta picker kreatora. Klient
+  zagate'owany na telefonie (frameless < 640px) nie jest zamontowany, więc nie publikuje nic.
+- **Tour i mini-tour FAQ PRZEJMUJĄ nawigację klienta** (zmierzone 2026-08-21): tour odpalony na
+  ekranie Relays Snorta wrócił do feedu na kroku 3, a `?screen=search&showme=zap` na Wispie otworzył
+  arkusz zapa, nigdy search — komendy mini-touru stawiają symulator tam, gdzie żyje ich target.
+  Dlatego `?screen=` obok `?tour=1` albo `?showme=` jest klauzulą, która się nie dzieje, i
+  `buildDemoUrl` ją wycina. `?faq=` jest wyjątkiem: otwiera tylko nasz panel nad bieżącym ekranem.
+- **Zapis w inicjalizatorze `useState` nie może dispatchować eventu, którego nasłuch woła `setState`.**
+  `writeScreenIntent` ogłasza zmianę przez `sandstr-screen`, a host na tym siedzi — wywołanie go
+  z inicjalizatora dało „Cannot update a component while rendering a different component".
+  Stąd `seedScreenIntent` (zapis bez ogłaszania) obok niego; nie sklejaj ich z powrotem w jedno.
 - Feed **capuje wyświetlanie do ~25 notatek** (filtry działają na treści/kolejności, nie na liczbie).
 - **Dark mode = klasa `dark` na `<html>`**: `main.tsx` ustawia, `Layout` przełącza, `useParentTheme`
   obserwuje. Bez tego symulator utknie w jednym motywie.
@@ -193,7 +224,7 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
 - `docs/TOURS.md` — reguły silnika tourów; czytaj przed edycją `src/data/tours/` i `src/components/tour/`.
 - `docs/VERSIONS.md` — wersjonowanie symulatorów per klient: procedura freeze starszej wersji. Czytaj
   ZANIM przebudujesz symulator do nowej wersji realnego klienta — freeze idzie PRZED przebudową.
-- `docs/FAQ.md` — stan wdrożenia FAQ (230 wpisów, 133 mini-toury, 8 klientów); kontrakt autorski
+- `docs/FAQ.md` — stan wdrożenia FAQ (231 wpisów, 137 mini-tourów, 8 klientów); kontrakt autorski
   w `src/data/faq/README.md`.
 - `docs/COMPARE.md` — `/compare`: macierz możliwości (9 osi × 8 klientów) + ten sam post w ośmiu
   klientach. Czytaj ZANIM dotkniesz `src/data/capabilities.ts` — werdykt bez cytatu i bez wersji
