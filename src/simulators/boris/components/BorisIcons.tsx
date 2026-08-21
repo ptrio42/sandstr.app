@@ -53,30 +53,32 @@ export function MenuBookGlyph({ filled = false, size = 24, className }: GlyphPro
   );
 }
 
-/** Material `DynamicFeed` — a card in front, two stepped brackets behind it. */
-export function DynamicFeedGlyph({ filled = false, size = 24, className }: GlyphProps) {
+/**
+ * Material `DynamicFeed` — an outlined card in front, two stepped brackets
+ * behind it, each offset from the next by the same 4 units.
+ *
+ * MEASURED off the reference recording at its native 1080x2400, not eyeballed:
+ * the ink box is 20 x 18 units (53 x 47 px at 2.65 px/unit), the card is
+ * x10-22 / y3-13 with an x12-20 / y7-11 hole, and the brackets are 2-unit
+ * strokes at x6-17 / y8-17 and x2-13 / y12-21. The AccountCircle beside it
+ * measures a square 53 x 53 in the same frames, which is how we know the capture
+ * is not squashed and this glyph really is wider than it is tall.
+ *
+ * Deliberately NO `filled` branch. Feeds selected and Feeds unselected measure
+ * pixel-identical in the recording — the selection is the M3 indicator pill and
+ * the colour, not a second glyph. Home does swap outline for solid, which is
+ * why HomeGlyph keeps its pair.
+ */
+export function DynamicFeedGlyph({ size = 24, className }: Omit<GlyphProps, 'filled'>) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden focusable="false">
-      {/* stepped brackets — always outline, in both states */}
+      {/* back to front: lower bracket, middle bracket, then the card */}
+      <path d="M4 12H2v7c0 1.1.9 2 2 2h9v-2H4v-7z" fill="currentColor" />
+      <path d="M8 8H6v7c0 1.1.9 2 2 2h9v-2H8V8z" fill="currentColor" />
       <path
-        d="M4 11v8a1.6 1.6 0 0 0 1.6 1.6h7v-1.8H5.8V11zM8 7.4V16a1.6 1.6 0 0 0 1.6 1.6h7v-1.8H9.8V7.4z"
+        d="M20 3h-8c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 8h-8V7h8v4z"
         fill="currentColor"
       />
-      {/* the front card */}
-      {filled ? (
-        <rect x="12.2" y="3.2" width="8.6" height="6.6" rx="1.8" fill="currentColor" />
-      ) : (
-        <rect
-          x="13"
-          y="4"
-          width="7"
-          height="5"
-          rx="1.4"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.7"
-        />
-      )}
     </svg>
   );
 }

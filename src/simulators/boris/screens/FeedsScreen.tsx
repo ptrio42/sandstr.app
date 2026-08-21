@@ -75,8 +75,12 @@ export function FeedsScreen({
         actions={
           <>
             {/* One anchor around all three: a ring on a single 48dp icon reads
-                as "this button", and the step is about the trio. */}
-            <span className="flex items-center" data-tour="boris-feeds-scopes">
+                as "this button", and the step is about the trio. The explicit
+                floor is 3 x the IconButton floor: without it the wrapper counts
+                as one rigid 144 px item, the two trailing actions absorb the
+                whole shortfall alone and the last one gets clipped on a short
+                window. See the comment in TopBar for why the shortfall exists. */}
+            <span className="flex min-w-[6.75rem] shrink items-center" data-tour="boris-feeds-scopes">
             {SCOPES.map((s) => {
               const enabled = !s.needsLogin || loggedIn;
               const on = scopes.includes(s.id);
