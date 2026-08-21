@@ -32,6 +32,13 @@ ze starych notatek — to snapshot historyczny, jego rekomendacjom kolorów NIE 
 
 1. **Referencja LAYOUTU = realny render.** Bez nagrania/screenów w `docs/refs/<klient>/shots/` NIE startuj
    — web-klienty to SPA za Cloudflare, `WebFetch` zwraca pustą skorupę.
+   **I od razu wypisz, czego to nagranie NIE pokazuje.** Nagranie robi człowiek w jakimś jednym stanie,
+   a ten stan wycina powierzchnie — u Borisa właściciel był wylogowany, więc kadr nie zawierał ani
+   jednej klatki z **tworzeniem zakreślenia**, czyli z kluczową funkcją tej apki (przycisk `Highlight`
+   pokazuje się wyłącznie zalogowanemu: `showHighlight = loggedIn`). Lista „czego tu nie ma" to nie
+   dopisek — to jest lista powierzchni, które muszą dostać **głębszy przebieg po źródle**, i sekcja
+   w screen-mapie oznaczona jako *source-only*. Pominięta, produkuje dokładnie te błędy, których nikt
+   potem nie kwestionuje, bo „przecież było w screen-mapie".
 2. **Klatki:** maszyna ma `ffmpeg`, NIE ma ImageMagick. Na web-appkach scene-detect prawie nie strzela
    (płynny scroll) — podstawą jest przebieg periodyczny `fps=1/3`, scene-detect to dodatek.
 3. **Recon repo klienta** — przypnij commit/tag ze sklepu (nie losowy `main`), zanotuj licencję i autora
@@ -60,6 +67,28 @@ nagranie pokazuje MNIEJ niż repo (Nostur: 3 z 13 zakładek feedu, reszta za
 `"color-space": "display-p3"`, zwykły hex z repo NIE ISTNIEJE — są trzy odpowiedzi. Nostur: naiwny hex
 `#33A2A6`, konwersja kolorymetryczna do sRGB `#00A5A8`, a urządzenie maluje `#00BDA9` i to bierzemy.
 Sprawdź `"color-space"` zanim zaufasz konwersji; trzy wartości i powód wyboru zapisz w screen-mapie.
+
+## Wnioskowanie musi zostawiać ślad (2026-08-21, cztery trafienia w jednej sesji)
+
+Najczęstszy sposób, w jaki ta robota się psuje, to **nie** pomyłka w odczycie. To moment „nie znalazłem
+tego wprost, więc dopowiedziałem" — i dopowiedzenie wygląda na decyzję, więc przechodzi przegląd.
+Cztery instancje z jednej sesji, wszystkie w Borisie, wszystkie znalezione przez kogoś innego:
+
+| Co | Co wyszło | Jak trzeba było |
+|---|---|---|
+| Etykieta przycisku | zobaczyłem `R.string.tts_from_here` w `.kt` i wpisałem „Read from here" | **string bierzesz z `grep` w `strings.xml`, nigdy z pliku, który go referuje**; zrzuć cały plik raz na starcie reconu (Boris: 443 wpisy, jeden ekran kontekstu, i domyka About, zap splity i wszystkie podtytuły ustawień naraz) |
+| Logo | wziąłem pierwszy `res/drawable/ic_launcher*` (żółty glif Font Awesome) i **dopisałem do tego analizę licencyjną** | ikonę wskazuje **manifest sklepu** (`zapstore.yaml`, `fastlane/`), nie katalog `drawable`; kolory próbkuj (`ffmpeg -vf crop` + `xxd`), nie na oko |
+| Glif nawigacji | narysowałem `DynamicFeed` z powiększonej klatki „mniej więcej" — karta wyszła 7×5 zamiast 12×10 | **mierz w jednostkach na natywnej klatce** (1080×2400), a kontrolnie zmierz sąsiedni glif, o którym wiesz, że jest kwadratowy — jeśli wychodzi kwadratowy, kadr nie jest ściśnięty |
+| Wariant `filled` tego glifu | dorysowałem wersję wypełnioną, bo pozostałe zakładki ją mają | w nagraniu Feeds zaznaczony i niezaznaczony są **piksel w piksel identyczne** — zaznaczenie niesie pigułka M3 i kolor. **Symetria to hipoteza, nie źródło** |
+
+Do tego piąty przypadek, innej klasy: dołożyłem kartom na Home napis, którego realna apka nie rysuje
+(`coverMark` — żółty teaser na okładce). Skill mówi „odtwarzaj bugi upstreamu" i „kasuj to, czego
+upstream nie ma"; brakowało trzeciego zdania — **nie dodawaj**. Element, którego nie umiesz wskazać
+w screen-mapie, nie ma prawa wejść do symulatora.
+
+**Reguła operacyjna.** Zdanie „tego nie było w źródle, więc przyjąłem X" musi trafić do screen-mapy
+jako `(uncited — inferred)` albo do ledgera jako wiersz. Cicha inferencja jest gorsza od luki: lukę
+ktoś kiedyś domknie, a wymyślony szczegół staje się „ground truth" dla następnej sesji.
 
 ## Detal-zabójca wierności
 

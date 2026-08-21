@@ -119,6 +119,16 @@ mock-tożsamości są zmyślone, README nie głosi owned-IP-first, Kitten nie je
   shipowanie cudzego logo bez atrybucji. Otwarte pozycje (verbatim swirl Primala, realne ikony
   w `public/icons/`) są spisane w sekcji „Open items, stated plainly"; fallback bez cudzej marki już
   istnieje — `src/host/ClientGlyph.tsx`.
+- **Najpierw zidentyfikuj asset, dopiero potem pisz o nim cokolwiek prawnego.** Wiersz w
+  `THIRD-PARTY.md` jest publiczną wypowiedzią o cudzej własności, więc zdanie „przerysowaliśmy,
+  bo dziedziczylibyśmy licencję X" musi wskazywać plik, który naprawdę jest logo. Boris, 2026-08-21:
+  wziąłem `res/drawable/ic_launcher_highlighter.xml` (glif Font Awesome Free, CC BY 4.0), przerysowałem
+  go i **dopisałem do tego uzasadnienie** — a prawdziwe logo to `drawable-nodpi/ic_boris_logo.png`,
+  własna grafika autora, na którą wskazywał `zapstore.yaml`, który czytałem. Efekt: zła ikona
+  w galerii i na karcie share plus **zmyślona analiza licencyjna w pliku prawnym**. Kolejność jest
+  odwracalna tylko w jedną stronę: manifest sklepu → asset → dopiero zdanie o licencji.
+  Przerysowujemy wyłącznie wtedy, gdy asset niesie licencję do odziedziczenia (FA) albo gdy to
+  chrome wewnątrz symulatora (Snort, Nostur, Coracle) — ikona aplikacji idzie jako `copied`.
 - **Cztery pliki prawne — `LICENSE`, `PRIVACY.md`, `TRADEMARKS.md`, `THIRD-PARTY.md` — są
   podlinkowane ze stopki** (`src/host/Layout.tsx:126-141`, przez `repoFileUrl()` z
   `src/host/contribute.ts`). Dodając piąty, dopisz go tam. Nie linkuj naiwnie `href="/PRIVACY.md"` —

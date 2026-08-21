@@ -94,6 +94,12 @@ istnieje, ma kotwicę i jest osiągalna komendą.
 
 ## Weryfikacja
 
+**Pisz tour przyrostowo: krok → uruchom → zrzut → następny.** Nie 11 kroków na sucho, a potem przebieg.
+Trzy defekty w tourze Borisa (2026-08-21) były niewidoczne w konfiguracji i wyszły dopiero z obrazka:
+cel poniżej zgięcia ekranu, pierścień wielkości ekranu i krok pokazujący akcję poza kadrem. Opis
+wszystkich trzech jest w `docs/TOURS.md` (sekcja „Boris dopisany") — nie powielaj ich tutaj, przeczytaj
+je tam przed pisaniem pierwszego kroku.
+
 Odpal podgląd (`.claude/launch.json` → config `sandstr`), wejdź w klienta, kliknij **Take a tour**
 (host wysyła `start-<id>-tour`) i przejdź krok po kroku, patrząc na konsolę. Dwie pułapki produkują
 pewne-ale-fałszywe znaleziska:

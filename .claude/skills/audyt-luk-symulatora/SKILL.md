@@ -51,6 +51,11 @@ resztę wspomnij w kolumnie *Gap*. Bez tej kolejności dwa audyty tego samego ek
 - **Nie zgłaszasz wierności wizualnej** (od tego jest `docs/FIDELITY.md`), **ani świadomie odtworzonych
   bugów upstreamu** (Snort: kafelek Relays bez tła; Wisp: wycieki M3 `#4A4458`; Coracle: login bez pola
   na klucz). Ledger notuje brakującą **funkcję i ścieżkę**, nie odcień guzika.
+- **Ledger spisany przez sesję, która zbudowała symulator, to DEKLARACJA, nie audyt** — dzieli z nim
+  ślepe plamy, więc oznacz to w nagłówku pliku i w wierszu w `docs/GAPS.md` (wzór:
+  `docs/gaps/boris.md`, 2026-08-21). Najbardziej podejrzane są wtedy wiersze `ok`: nie przeszły
+  żadnego przesiewu, bo adwersaryjna weryfikacja z definicji celuje w `missing`/`dead`/`partial`.
+  Pierwszy prawdziwy audyt takiego klienta liczy ledger **od zera**, nie poprawia istniejącego.
 - **`nostr-kitten` nie ma ledgera** — `kind: 'original'` (`src/registry.tsx:280`), brak realnego pierwowzoru,
   nie ma wobec czego mierzyć. Tak samo poza zakresem: stub `src/simulators/primal/mobile/` — nieroutowany.
 
