@@ -8,6 +8,12 @@ import type { BorisArticle } from '../borisData';
  * onSurfaceVariant, 1 line). Coverless articles get a 28dp glyph tinted with
  * the SECTION's colour, not a neutral grey — `Article` for a web page,
  * `StickyNote2` for a nostr note (HomeScreen.kt:897-905).
+ *
+ * Nothing is drawn ON the cover. An earlier version painted the article's
+ * teaser line over it in highlight yellow — scaffolding from when every cover
+ * was a flat generated gradient and the card needed something to say. Real
+ * cover art arrived, and the overlay was both illegible on pale covers and
+ * absent from the real app, where the title lives BELOW the picture.
  */
 
 export function CardReadingProgress({ percent }: { percent: number }) {
@@ -59,19 +65,7 @@ export function ArticleCard({
         style={{ background: 'var(--boris-surface-variant)' }}
       >
         {article.cover ? (
-          <>
-            <img src={article.cover} alt="" className="h-full w-full object-cover" />
-            {article.coverMark && (
-              <span className="absolute inset-x-0 bottom-0 p-2">
-                <span
-                  className="boris-display text-[13px] leading-tight"
-                  style={{ color: 'var(--boris-mark-mine)' }}
-                >
-                  {article.coverMark}
-                </span>
-              </span>
-            )}
-          </>
+          <img src={article.cover} alt="" className="h-full w-full object-cover" />
         ) : isNote ? (
           <StickyNote size={28} style={{ color: tint }} />
         ) : (

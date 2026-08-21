@@ -43,12 +43,6 @@ export interface BorisArticle {
   readMinutes: number;
   published: string;
   cover: string | null;
-  /**
-   * The yellow phrase painted across a cover on Home. In the real app this is
-   * the article's own cover art carrying its own typography; here it is the
-   * card's teaser line, drawn the same way.
-   */
-  coverMark?: string;
   highlights: number;
   /** article arrived through an RSS subscription — adds the "+ RSS" chip */
   rss?: boolean;
@@ -138,7 +132,6 @@ export const borisArticles: BorisArticle[] = [
     readMinutes: 21,
     published: 'Mar 14, 2026',
     cover: cover('ferry-line'),
-    coverMark: 'eleven members, one radiator',
     highlights: 3,
     body: [
       {
@@ -203,7 +196,6 @@ export const borisArticles: BorisArticle[] = [
     readMinutes: 8,
     published: 'Jan 29, 2026',
     cover: cover('infinite-scroll'),
-    coverMark: 'the only honest promise',
     highlights: 5,
     rss: true,
     body: [
@@ -258,7 +250,6 @@ export const borisArticles: BorisArticle[] = [
     readMinutes: 6,
     published: 'Feb 2, 2026',
     cover: cover('commonplace-book'),
-    coverMark: 'copy it or lose it',
     highlights: 12,
     body: [
       {

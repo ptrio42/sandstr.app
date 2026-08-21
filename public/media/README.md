@@ -10,9 +10,9 @@ file over an old one and every client that shows it changes, with no code edit a
   [`src/simulators/boris/borisData.ts`](../../src/simulators/boris/borisData.ts). A reader's card is
   mostly its cover, so these carry meaning and cannot be interchangeable.
 
-**What is here today are placeholders** — flat two-stop gradients generated with ffmpeg, the same look
-the old inline-SVG data-URIs had. They exist so nothing 404s and so the real artwork is a pure file
-swap. Replacing them is the job this file briefs.
+**Filled 2026-08-21.** The 25 files here are the real set, made to this brief; the gradient
+placeholders they replaced are gone. Everything below still applies — it is what the next batch, or a
+replacement for any single file, has to satisfy.
 
 ## Hard rules
 
@@ -99,7 +99,7 @@ usually commissioned art rather than snapshots. Muted, one idea per cover, legib
 `everything-draft` has **no** cover on purpose: it exercises the coverless card, which falls back to a
 tinted glyph. Do not supply one.
 
-## When the files land
+## When files land (or get replaced)
 
 1. Drop them in, same names, same sizes.
 2. `npm run build` — no code change needed.
