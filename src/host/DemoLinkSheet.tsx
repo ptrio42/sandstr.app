@@ -60,10 +60,12 @@ export function buildDemoUrl(
   const url = new URL(`/c/${clientId}`, origin);
   // A start screen only survives next to things that do not navigate.
   //
-  // Both measured on 2026-08-21, not reasoned about: a tour launched on Snort's
-  // Relays screen had walked the client back to its feed by step 3, and
-  // `?screen=search&showme=zap` on Wisp opened the zap sheet, never search —
-  // a mini-tour's `commands` put the simulator wherever its target lives. In
+  // Both measured on 2026-08-21: a tour launched on Snort's Relays screen had
+  // walked the client back to its feed by step 3, and `?screen=search&showme=zap`
+  // on Wisp lands on Search and then buries it — the mini-tour's `commands` open
+  // the zap sheet over the top, so Search is in the DOM and nowhere on screen
+  // (spotlight 233x503 against 250x537 for the same replay with no `?screen=`,
+  // i.e. the ring is fine; it is the promise that is not). In
   // both cases the parameter is not merely redundant, it is a clause of the
   // link that does not happen. `answer` is different: `?faq=` only opens our
   // panel over whatever screen the client is on, so the pair is honest.
