@@ -1,17 +1,21 @@
 ---
 name: nagrywanie-klipow
-description: 'Nagrywanie i montaż klipów demo sandstr: teaser, screencast pętli FAQ, screenshoty do promocji. Użyj gdy: "nagraj teaser", "klip", "screencast", "capture", "zmontuj", "shoty na twittera", "klip na Nostra", albo gdy dotykasz docs/clips/ (capture-faq.mjs, build-teaser-faq.sh, capture-shots.sh, build-teaser.sh). Harness to headless Chrome przez CDP + ffmpeg, zero zależności npm.'
+description: 'Nagrywanie i montaż klipów demo sandstr: teaser, screencast pętli FAQ, klip porównawczy, screenshoty do promocji. Użyj gdy: "nagraj teaser", "klip", "screencast", "capture", "zmontuj", "shoty na twittera", "klip na Nostra", albo gdy dotykasz docs/clips/ (harness.mjs, capture-faq.mjs, capture-compare.mjs, build-teaser-*.sh, capture-shots.sh). Harness to headless Chrome przez CDP + ffmpeg, zero zależności npm.'
 ---
 
 # Nagrywanie klipów demo sandstr
 
-Najpierw przeczytaj scenariusze — ten skill ich NIE powtarza: `docs/clips/README.md` (cut #1)
-i `docs/clips/faq-teaser.md` (cut #2: beat sheet FAQ, reguły kadru, uzasadnienia).
+Najpierw przeczytaj scenariusze — ten skill ich NIE powtarza: `docs/clips/README.md` (cut #1),
+`docs/clips/faq-teaser.md` (cut #2: beat sheet FAQ, reguły kadru, uzasadnienia)
+i `docs/clips/compare-teaser.md` (cut #3: jedna notatka w ośmiu klientach).
 
 ## Co gdzie leży
 
-- `docs/clips/capture-faq.mjs` — headless Chrome przez CDP, **zero zależności npm** (globalny
-  `WebSocket` z Node ≥22; tu 24); tablice `LOOPS` (6 pętli) i `SWITCHES` (3 przejścia). Wyjście:
+- **`docs/clips/harness.mjs` — wspólny harness** (Chrome, CDP, `Page`, pula klatek, `encodeRange`),
+  wydzielony 2026-08-20, gdy drugi cut potrzebował tych samych helperów. **Zmieniasz coś tutaj →
+  zmieniasz OBA cuty**; każdy helper ma w komentarzu pomiar i awarię, której zapobiega. Po edycji
+  odpal smoke test jednej pętli: `node docs/clips/capture-faq.mjs sw-nostur-wisp`.
+- `docs/clips/capture-faq.mjs` — tablice `LOOPS` (6 pętli), `SWITCHES` (3 przejścia), `TOURS`. Wyjście:
   surowe `.work/faq/<id>.mp4`, a dla pętli dodatkowo `.work/faq/<id>/marks.json` (bez podpisów
   i karty). Switche marks.json **nie mają** — montaż ich nie potrzebuje.
 - `docs/clips/build-teaser-faq.sh` — sam ffmpeg; z pętli robi `out/sandstr-faq-a.mp4`, `-b.mp4`,
@@ -19,6 +23,14 @@ i `docs/clips/faq-teaser.md` (cut #2: beat sheet FAQ, reguły kadru, uzasadnieni
 - `docs/clips/capture-shots.sh` + `build-teaser.sh` + `Nagranie z ekranu 2026-08-5 o 22.07.56.mov`
   (lokalne, nieśledzone) — starsza generacja (cut #1): stills z dev servera i montaż z nagrania ekranu.
   Nie ma go w świeżym klonie: `build-teaser.sh` przyjmuje ścieżkę przez `SRC=`.
+- `docs/clips/capture-compare.mjs` + `build-teaser-compare.sh` — cut #3: JEDNO nagranie ciągłe
+  (jedna notatka, pięciu klientów telefonowych, potem `/compare`), montaż bez podpisów. Tekst
+  notatki przez `NOTE=`. Wyjścia dwa: `sandstr-compare.mp4` (z podkładem) i `-mute.mp4`.
+- `docs/clips/make-bed.mjs` — podkład cutu #3, **syntezowany w Node** (bez zależności, bez sampli,
+  deterministyczny seed). Nie licencjonujemy muzyki: to materiał promocyjny pod nazwiskiem
+  właściciela, a wygenerowany podkład nie niesie licencji, atrybucji ani ryzyka roszczenia.
+  Mapa sekcji w nagłówku pliku i cele betów w `build-teaser-compare.sh` to **jedna decyzja zapisana
+  dwa razy** — ruszasz jedno, musisz ruszyć drugie.
 - Katalogi: `.work/` (pośrednie, m.in. pula klatek `.work/faq/.pool/<id>/*.jpg`), `out/`, `shots/`.
 
 **Git: w `docs/clips/` NIE JEST ŚLEDZONE nic binarnego** (od 2026-08-19). `docs/clips/.gitignore`
@@ -46,6 +58,37 @@ node docs/clips/capture-faq.mjs wisp sw-nostur-wisp # podzbiór po id
 - Komentarze nagłówkowe obu skryptów FAQ są przestarzałe (mówią o „four loops", podają nieistniejące
   id `damus`, zapowiadają `out/sandstr-faq-teaser.mp4`) — ufaj tablicom `LOOPS` / `CUT_A` / `CUT_B`.
 
+## Uruchomienie — cut #3 (porównanie)
+
+```bash
+npm run build
+node docs/clips/capture-compare.mjs                    # ~60 s ciągłego nagrania
+NOTE='gm — inna treść? #asknostr' node docs/clips/capture-compare.mjs
+./docs/clips/build-teaser-compare.sh                   # -> out/sandstr-compare.mp4
+
+SWITCH=arrows node docs/clips/capture-compare.mjs      # przejścia strzałkami zamiast arkusza
+SWITCH=arrows ./docs/clips/build-teaser-compare.sh     # -> out/sandstr-compare-arrows.mp4
+```
+
+Trzy rzeczy, które ten cut ustalił i które obowiązują każdy następny klip pokazujący TĘ SAMĄ treść
+w kilku klientach:
+
+- **Jedno wczytanie strony na całe nagranie.** `src/data/mock` losuje bank niezaseedowanym
+  `Math.random()` przy inicjalizacji modułu (15 miejsc), więc każdy `Page.navigate` daje innego
+  autora, inne liczniki i inne źródło reposta. Poruszaj się nawigacją SPA (switcher, „All clients",
+  link `/compare` z galerii), nigdy kolejnym `navigate`.
+- **Klienci webowi (Primal, Snort, Coracle) są zablokowani poniżej 640 px.** Przy 430 px nie
+  wyrenderują ani klienta, ani afordancji FAQ. Do kadru telefonowego wchodzi pięciu klientów
+  telefonowych; ósemka pojawia się dopiero na `/compare`, bo tam karty są płynne.
+- **Ściana logowania jest tylko na PIERWSZYM kliencie.** Dalej „screen intent" przenosi ekran, więc
+  każdy kolejny montuje się od razu na feedzie. Za to każdy zamontowany przez switchera odpala
+  toast powitalny 2500 ms — dlatego capture stawia `mount:` i `feed:` po dwóch stronach tego okna.
+
+Sync z muzyką jest **z konstrukcji, nie z dociągania**: 120 BPM, takt 2 s, 16 taktów = 32,0 s,
+a każdy bet jest kodowany z `-frames:v` na dokładnie `cel × 30` klatek. Samo `-ss`/`-to` zostawia
+~30 ms zaokrąglenia na segment, co przez szesnaście betów daje słyszalny dryf. Build asertuje sumę
+przed muxem i wywala się, jeśli bety przestaną się sumować do 16 taktów.
+
 ## Uruchomienie — cut #1 (stills + teaser z .mov)
 
 ```bash
@@ -59,9 +102,13 @@ naraz (równoległe instancje przeciw jednemu Vite dawały puste pliki) i wymusz
 
 ## Twarde lekcje harnessu — złamanie kosztowało godziny
 
-1. **`Page.startScreencast`, nigdy pętla `captureScreenshot`** — pętla dzieli socket CDP z driverem
-   i dławi wszystko do ~1 fps. **Ackuj klatkę przed zapisem na dysk** — ack po zapisie stawia ją za
-   round-tripem fs i Chrome przestaje nadawać.
+1. **Klatki się POBIERA (`Page.captureScreenshot` na tempowanej pętli), nie czeka się na push
+   z `Page.startScreencast`.** Odwrotnie niż mówiła ta lista do 2026-08-14: na Chrome 151 screencast
+   emituje klatkę tylko wtedy, gdy kompozytor ją wyprodukuje, a klient stojący między kliknięciami
+   nie produkuje prawie nic — zmierzone 2 klatki w 13,8 s. Timer daje ~10,8 fps (mediana 87 ms).
+   Stare ostrzeżenie („pętla dławi wszystko do ~1 fps") było prawdziwe dla wersji, która przy okazji
+   odpytywała DOM po tym samym sockecie; `Page.until` poluje dziś WEWNĄTRZ strony i problem zniknął.
+   Kod jest źródłem prawdy: `startPool` w `harness.mjs` niesie wszystkie pomiary.
 2. **Czas klatki licz z momentu PRZYJŚCIA (`Date.now()`)**, nie z `metadata.timestamp` — ten jest
    niemonotoniczny i robił fantomowe 7-sekundowe dziury w timeline.
 3. **Nagrywaj przeciw buildowi produkcyjnemu**, nigdy przeciw `npm run dev` — inne sesje agentów
