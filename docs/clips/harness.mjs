@@ -407,6 +407,34 @@ export async function startPool(cdp, page, poolDir) {
   let n = 0;
   let stopped = false;
 
+  /**
+   * Nothing is shot until the tab has loaded a real document.
+   *
+   * The pool is started before the capture script navigates, so the first
+   * request goes to about:blank — where no surface is ever produced and the
+   * capture never comes back. The 4 s race below stops that hanging the run, but
+   * it does NOT stop it costing 4 s, and with one lane the pool is simply dead
+   * for that whole time. Measured 2026-08-21, one switch beat, shot start offset
+   * and duration in ms from pool start:
+   *
+   *   0!+4001  4001+72  4073+136  4209+101  4311+102  4413+172  4585+788 ...
+   *
+   * The beat's own t0 lands ~1.5-2 s in, so those 4 dead seconds ate the first
+   * 2.3-2.5 s of every recorded window — the entire opening of the shot, on
+   * every client. It read as "the animating client records at half rate" because
+   * what is left after the dead start fills at the client's own rate, and Wisp's
+   * splash costs about twice a still screen.
+   *
+   * `Page.loadEventFired` only fires for the main frame, and Page.enable is on
+   * before this runs. The timeout is a floor, not a plan: a document that never
+   * fires load must degrade to shooting anyway, not to shooting never.
+   */
+  let live = false;
+  let coldMisses = 0;
+  const wake = () => { live = true; };
+  cdp.on('Page.loadEventFired', wake);
+  const liveFallback = setTimeout(wake, 5000);
+
   const shoot = async () => {
     const t = Date.now();
     try {
@@ -442,8 +470,13 @@ export async function startPool(cdp, page, poolDir) {
             ? { clip: { x: 0, y: 0, width: vw, height: vh, scale: 1600 / natural } }
             : {}),
         }).then((r) => r?.data ?? null),
-        sleep(4000).then(() => null),
+        // Tight until the pool has ever seen a frame, generous after — a page
+        // that has produced nothing yet must not park a lane for seconds. The
+        // cold bound RISES with each miss so a genuinely slow first paint cannot
+        // livelock against a fixed one it can never beat.
+        sleep(frames.length ? 4000 : Math.min(4000, 750 * (1 + coldMisses))).then(() => null),
       ]);
+      if (!data && !frames.length) coldMisses++;
       if (stopped || !data) return;
       const at = Date.now();
       const buf = Buffer.from(data, 'base64');
@@ -456,42 +489,97 @@ export async function startPool(cdp, page, poolDir) {
   };
 
   /**
-   * A CONTINUOUS loop, not setInterval — but with a floor.
+   * A PACED loop with a second lane, not a chain of one shot at a time.
    *
    * setInterval plus an in-flight guard quantises every capture up to a multiple
    * of the period: at a 66 ms tick, a shot that takes 140 ms misses two ticks and
    * lands 198 ms after the last one. That is exactly what the first timer build
    * measured — a p50 inter-frame gap of 198 ms, three ticks to the millisecond,
-   * while the capture itself was nowhere near that slow. Chaining the next shot
-   * off the previous one's completion spends the real latency and nothing more.
+   * while the capture itself was nowhere near that slow. Pacing the LAUNCH and
+   * spending the real latency is what fixed it.
    *
-   * The floor is not optional. The pool starts before the first navigation, and
-   * on about:blank every capture fails instantly — an unpaced loop then fires
-   * ~125 CDP calls a second on the socket the driver is trying to navigate with,
-   * and the run hangs with an empty pool. FLOOR_MS caps the rate at ~18 fps,
-   * which is above anything the renderer delivers anyway.
+   * The floor is not optional. An unpaced loop fires ~125 CDP calls a second on
+   * the socket the driver is trying to navigate with, and the run hangs with an
+   * empty pool. FLOOR_MS paces LAUNCHES, so it still caps the request rate at
+   * ~18/s no matter how many lanes are open. (This used to say that about:blank
+   * "fails instantly", which is the opposite of what it does — it hangs until
+   * the race gives up. See the gate above, which is what stopped it mattering.)
+   *
+   * MAX_INFLIGHT is what closes the gap between a still client and an animating
+   * one. Most of a `captureScreenshot` is the renderer WAITING for the next
+   * surface frame, not this process working, and a page that animates waits
+   * longer: Wisp's splash bobs its glyph forever — faithful, see
+   * docs/refs/wisp/screen-map.md, "bob ±8dp/1.2s + sway ±3°/2.4s", verified
+   * against recording frames — and suppressing just that one animation put the
+   * same viewport back on 67 ms a shot, to the millisecond the same as a still
+   * client (n=120 each, rotated arm order). It is the client being correct, so
+   * it is not the simulator's to fix.
+   *
+   * Chrome pipelines these requests, so a second lane spends that wait twice
+   * over. Measured on the real beat, 2026-08-21, three passes alternating arms
+   * at machine load 7-11, `gap p50` (the cadence frames actually land at):
+   *
+   *                    sw-nostur-wisp      sw-damus-nostur
+   *   1 in flight    136 / 133 / 138 ms    69 / 68 / 79 ms
+   *   2 in flight     68 /  67 /  70 ms    53 / 53 / 56 ms
+   *
+   * Two, not three: an isolated throughput probe kept scaling (16.7 fps at three
+   * lanes on Wisp), but the driver shares this socket, and the launch floor
+   * already caps a still page at ~18 fps — the third lane buys throughput
+   * nothing downstream wants (the cut is 30 fps CFR from ~250 kB frames).
+   *
+   * Order this on top of the load gate above, never instead of it. Before the
+   * gate, a second lane looked like the whole fix because it was covering for a
+   * pool that was dead for four seconds; the arms only separate this cleanly
+   * once the dead start is gone.
+   *
+   * Completions came back in request order on all 496 shots of the probe run, on
+   * both pages, so `frames` — appended at ARRIVAL, and therefore sorted by `at`
+   * by construction — stays in shooting order too.
    */
   const FLOOR_MS = 55;
+  const MAX_INFLIGHT = 2;
   const pump = (async () => {
+    const lanes = new Set();
+    let nextLaunch = Date.now();
     while (!stopped) {
-      const started = Date.now();
-      await shoot();
-      const spent = Date.now() - started;
-      if (spent < FLOOR_MS) await sleep(FLOOR_MS - spent);
+      const wait = nextLaunch - Date.now();
+      if (wait > 0) await sleep(wait);
+      if (!live) { nextLaunch = Date.now() + FLOOR_MS; continue; }
+      while (lanes.size >= MAX_INFLIGHT && !stopped) await Promise.race(lanes);
+      if (stopped) break;
+      nextLaunch = Date.now() + FLOOR_MS;
+      const lane = shoot().then(() => lanes.delete(lane));
+      lanes.add(lane);
     }
+    await Promise.allSettled(lanes);
   })();
 
   return {
     frames,
-    /** Capture rate, so a thin clip is visible in the run output, not days later. */
+    /**
+     * Capture rate, so a thin clip is visible in the run output, not days later.
+     *
+     * `shot` is how long one request took, `gap` is how far apart the frames
+     * actually landed. They were the same number when the pump ran one shot at a
+     * time; with MAX_INFLIGHT lanes they are not, and `gap` is the one that
+     * decides whether a clip is thin. A `shot` that grows while `gap` holds is
+     * just the second lane queueing behind the first inside Chrome — expected.
+     * Both climbing together is the page, or the machine.
+     */
     stats() {
       if (!lat.length) return '0 shots';
-      const s = [...lat].sort((a, b) => a - b);
-      const at = (p) => s[Math.min(s.length - 1, Math.floor(s.length * p))];
-      return `shot p50 ${at(0.5)}ms p90 ${at(0.9)}ms max ${s.at(-1)}ms`;
+      const p = (arr, q) => {
+        const s = [...arr].sort((a, b) => a - b);
+        return s[Math.min(s.length - 1, Math.floor(s.length * q))];
+      };
+      const gaps = frames.slice(1).map((f, i) => f.at - frames[i].at);
+      const gap = gaps.length ? ` gap p50 ${p(gaps, 0.5)}ms` : '';
+      return `shot p50 ${p(lat, 0.5)}ms p90 ${p(lat, 0.9)}ms max ${Math.max(...lat)}ms${gap}`;
     },
     async stop() {
       stopped = true;
+      clearTimeout(liveFallback);
       // Bounded. `stop()` runs in withBrowser's finally, so waiting on the pump
       // unconditionally turns any stuck capture into a hung process that never
       // reports the error that actually killed the run. The pump only touches
@@ -539,6 +627,31 @@ export async function encodeRange(pool, t0, t1, dir, out) {
   lines.push(`file '${shot.at(-1).path}'`); // concat demuxer drops the last duration
   await writeFile(join(dir, 'concat.txt'), lines.join('\n'));
   await writeFile(join(dir, 'frames.json'), JSON.stringify(shot, null, 1));
+  // The beat's REAL length and its worst blackout, carried back on the array so
+  // every caller reports the same two numbers.
+  //
+  // Dividing the frame count by the span of the frames themselves is the flattering
+  // version and it hid this exact bug: a run whose pool went quiet for the first
+  // 1.7 s of a 3 s switch reported "18 frames, 1.3s, 13.8 fps" and looked healthy,
+  // because the holes at the ends were outside the span being divided by. The
+  // window is t0..t1 — what the driver actually spent — so a hole costs the rate
+  // wherever it falls. `holeMs` is the largest of them, ends included, because
+  // that is what the viewer sees: at 30 fps CFR a 600 ms hole is 18 identical
+  // frames, and an average can stay respectable right through a freeze.
+  shot.windowMs = t1 - t0;
+  // WHERE the hole is, not just how long: at the head it is the pool warming up,
+  // in the middle it is the page (a lazy client chunk mounting blocks the main
+  // thread, and nothing can be captured off a blocked renderer), at the tail it
+  // is the driver overrunning the hold. Reporting the size alone sent one
+  // investigation looking at the wrong end for an afternoon.
+  const holes = [
+    { ms: shot[0].at - t0, at: 0 },
+    { ms: t1 - shot.at(-1).at, at: shot.at(-1).at - t0 },
+    ...shot.slice(1).map((f, i) => ({ ms: f.at - shot[i].at, at: shot[i].at - t0 })),
+  ];
+  const worst = holes.reduce((a, b) => (b.ms > a.ms ? b : a));
+  shot.holeMs = worst.ms;
+  shot.holeAtMs = worst.at;
   await run('ffmpeg', [
     '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', join(dir, 'concat.txt'),
     // CFR 30 out of variable-duration frames, same as build-teaser.sh expects.

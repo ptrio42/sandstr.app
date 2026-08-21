@@ -74,8 +74,50 @@ function readFrameRect(element: Element): DOMRect | null {
  * backdrop, so nothing is dimmed, the ring is drawn off-screen, and the card has
  * nowhere to stand. Such steps are treated as intro/summary cards instead:
  * uniform dim, no ring, card centred on purpose.
+ *
+ * Necessary but NOT sufficient — see WHOLE_APP_CLIENT_SHARE.
  */
 const WHOLE_APP_VIEWPORT_SHARE = 0.7;
+
+/**
+ * The same question asked of the CLIENT, and the one that actually separates
+ * "the whole app" from "a big surface inside it". The viewport share cannot: on
+ * a phone the client IS the viewport, so Wisp's zap sheet (375x573 filling 71%
+ * of a 375x812 screen) read as the whole app and lost its ring, while the
+ * identical mini-tour ringed correctly at 1280x900 — the card says "look here"
+ * and nothing is marked.
+ *
+ * Measured 2026-08-21 at 375x812, as a share of the client: zap sheet 0.77,
+ * Amethyst's account drawer 0.85 (the widest surface found that is still a
+ * surface), and a step that really means the whole app 1.00 — checked on Wisp
+ * and Amethyst, and 1.00 by construction for every framed client, because below
+ * `sm` ClientView strips the bezel's padding and the simulator root fills it.
+ *
+ * Both tests must agree before a ring is suppressed, so this can only ADD rings,
+ * never remove one: on a desktop the whole-client steps fail the viewport test
+ * (0.22 of a 1280x900 window) and never reach this one.
+ */
+const WHOLE_APP_CLIENT_SHARE = 0.9;
+
+/**
+ * The client's own box: the phone bezel for framed clients, ClientView's
+ * frameless stage for web ones. Both are host-declared handles that exist for
+ * other consumers already (the tooltip's frame test below; the share-card
+ * screenshot clip in scripts/og-client-cards.mjs).
+ */
+const CLIENT_BOX_SELECTOR = '.mobile-phone-frame-bezel, [data-sandstr-stage]';
+
+/**
+ * Does this rect account for nearly all of the client it lives in? Unknown box —
+ * a target portalled out of the client, a host that stopped declaring one —
+ * answers "yes" so the viewport test decides alone, which is what it did before
+ * this pair existed.
+ */
+function coversClientBox(rect: DOMRect, element: Element | null): boolean {
+  const box = element?.closest(CLIENT_BOX_SELECTOR)?.getBoundingClientRect();
+  if (!box || box.width <= 0 || box.height <= 0) return true;
+  return (rect.width * rect.height) / (box.width * box.height) >= WHOLE_APP_CLIENT_SHARE;
+}
 
 /**
  * When the "target" is the whole client its rect says nothing about what has to
@@ -404,8 +446,12 @@ export function useTourElement(
   const vw = typeof window !== 'undefined' ? window.innerWidth : 1024;
   const vh = typeof window !== 'undefined' ? window.innerHeight : 768;
 
+  // Both shares, and the client one only when the viewport one already passed:
+  // it reads layout, and the common case is a small target that fails on the
+  // cheap test first.
   const coversViewport = targetRect
-    ? (targetRect.width * targetRect.height) / (vw * vh) >= WHOLE_APP_VIEWPORT_SHARE
+    ? (targetRect.width * targetRect.height) / (vw * vh) >= WHOLE_APP_VIEWPORT_SHARE &&
+      coversClientBox(targetRect, resolvedElementRef.current)
     : false;
 
   // The overlay is position:fixed, so the spotlight lives in VIEWPORT
@@ -522,17 +568,14 @@ export function useTourElement(
       };
     }
 
-    // Height ceiling, computed BEFORE any placement is chosen and only from
-    // card-independent quantities (the target box and the band). That
-    // independence is the whole point: a ceiling derived from the card's own
-    // measured height changes the height, which changes which placement wins,
-    // which changes the ceiling — the card flickers between two sizes forever.
+    // Free room on each side of the target, computed BEFORE any placement is
+    // chosen and only from card-independent quantities (the target box and the
+    // band). That independence is the whole point: a figure derived from the
+    // card's own measured height changes the height, which changes which
+    // placement wins, which changes the figure — the card flickers between two
+    // sizes forever.
     const roomAbove = t.top - bandTop;
     const roomBelow = bandBottom - t.bottom;
-    const maxHeight = Math.max(
-      180,
-      Math.min(bandBottom - bandTop, Math.max(roomAbove, roomBelow) - offset)
-    );
 
     const clampLeft = (l: number) => Math.max(margin, Math.min(l, Math.max(margin, maxLeft)));
     const clampTop = (tp: number) => Math.max(bandTop, Math.min(tp, Math.max(bandTop, maxTop)));
@@ -692,10 +735,15 @@ export function useTourElement(
     // the card squarely on the thing the step was pointing at: the single
     // biggest source of "the tour covers the simulator".
     //
-    // Deliberately NOT capping the height from here. Feeding a cap back into the
-    // placement changes the measured height, which changes which branch wins,
-    // which changes the cap — the card would flicker between two sizes forever.
-    // `.tour-tooltip` caps itself in CSS instead, and its body scrolls.
+    // The ceiling is the BAND, and deliberately not the free room above/below:
+    // this branch has already given up on clearing the target, so the room it
+    // could not fit in is the one figure that must not size it. Measured on
+    // Wisp's zap mini-tour at 375x812 (2026-08-21): 20px of free room floored to
+    // a 180px card whose scrolling body was 25px against 140px of copy — the
+    // step's words absent, the action band printed across the title, i.e. the
+    // exact defect UNUSABLE exists to prevent, reached by the one path that
+    // never consults it. Band-derived, so still card-independent and still
+    // unable to feed back into the placement.
     const dockBelow = roomBelow >= roomAbove;
 
     return {
@@ -703,7 +751,7 @@ export function useTourElement(
       left: clampLeft(alignedLeft),
       width: tooltipWidth,
       height: tooltipHeight,
-      maxHeight,
+      maxHeight: Math.max(UNUSABLE, Math.min(fullHeight, bandBottom - bandTop)),
     };
   })();
 

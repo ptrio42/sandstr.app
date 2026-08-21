@@ -445,6 +445,8 @@ const STAGE = '[data-sandstr-stage], .mobile-phone-frame-bezel';
  * bind the card pipeline to a simulator's internal class names or to the tour
  * command interface (which CLAUDE.md marks untouchable). Verified by walking
  * all twelve, 2026-08-16 — an unlisted client is one that needed no click.
+ * Boris, added 2026-08-21, is the thirteenth route and the clearest case of
+ * that: it has no login wall at all, so it photographs its own Home.
  */
 const ENTRY = {
   damus: ['Sign In'],
@@ -665,6 +667,20 @@ async function captureScreen(page, route, baseUrl) {
 
   await page.viewport(base);
   page.cdp.pageErrors = [];
+  // Clear the cross-client "keep your place" intent before the client mounts.
+  // All thirteen routes share one origin and one reused tab, so the previous
+  // client's `sessionStorage['sandstr:screen']`
+  // (src/simulators/shared/screenSync.ts) survives into the next one — and a
+  // client whose `onRestore` signs itself in then walks straight past the login
+  // wall `enter()` is waiting to click. Symptom: `entry step "…" matched
+  // nothing visible` with a stage that is already showing a feed; Wisp hit it
+  // first because Coracle, which needs no entry click, reports `feed` on mount.
+  //
+  // It has to be its own navigation. Between two clients this tab is parked on
+  // the `file://` card page, and sessionStorage is per-origin — clearing it
+  // there empties the wrong store and changes nothing.
+  await page.goto(`${baseUrl}/`);
+  await page.eval('sessionStorage.clear()');
   await page.goto(`${baseUrl}/c/${route.id}`);
   // 30s: a cold lazy() chunk genuinely takes longer than the default when
   // another agent session's Chrome is competing for this machine — the same

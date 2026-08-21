@@ -23,6 +23,7 @@ export enum SimulatorClient {
   KEYCHAT = 'keychat',
   WISP = 'wisp',
   NOSTUR = 'nostur',
+  BORIS = 'boris',
 }
 
 export interface SimulatorConfig {
@@ -50,6 +51,14 @@ export enum SimulatorFeature {
   MARKETPLACE = 'marketplace',
   MUTE_LIST = 'mute_list',
   PINNED_NOTES = 'pinned_notes',
+  // Reader-shaped clients need vocabulary the social ones never did. These are
+  // labels on a gallery card, nothing switches on them — but they are still
+  // claims about someone's app, so each one is a surface Boris actually ships
+  // (docs/refs/boris/screen-map.md).
+  HIGHLIGHTS = 'highlights',
+  OFFLINE = 'offline',
+  TEXT_TO_SPEECH = 'text_to_speech',
+  RSS = 'rss',
 }
 
 // ============================================

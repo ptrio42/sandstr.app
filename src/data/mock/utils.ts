@@ -191,34 +191,57 @@ export function generateAvatarGradient(seed: string): string {
   return gradients[Math.abs(hash) % gradients.length];
 }
 
-// Post images as local, deterministic, CSP-safe inline-SVG gradient "photos".
-// (The old list was mostly non-resolving fake URLs + remote picsum — broken
-// offline and under strict CSP. These data-URIs need no network.)
+/**
+ * Post images.
+ *
+ * These are FILES under `public/media/`, not data-URIs, and not remote URLs.
+ * Three constraints decide that, and all three still hold:
+ *  - no external requests (CSP `img-src 'self' data: https:`, but a hotlink
+ *    breaks offline and reads as "fake" the moment it 404s);
+ *  - no megabytes of base64 inside the JS bundle, which is what a data-URI
+ *    photo costs — the old placeholders were data-URIs precisely because they
+ *    were 400-byte gradients;
+ *  - one filename list, so replacing the artwork never touches a simulator.
+ *
+ * The FILENAME is the contract. `public/media/README.md` is the brief the
+ * images are produced against; dropping a new `photo-07.webp` over the old one
+ * changes every client that shows it, with no code change anywhere.
+ *
+ * Consumed by eight simulators through 31 call sites, which is why this list
+ * lives here and not in any one of them.
+ */
+export const SAMPLE_PHOTOS: string[] = [
+  'photo-01.webp',
+  'photo-02.webp',
+  'photo-03.webp',
+  'photo-04.webp',
+  'photo-05.webp',
+  'photo-06.webp',
+  'photo-07.webp',
+  'photo-08.webp',
+  'photo-09.webp',
+  'photo-10.webp',
+  'photo-11.webp',
+  'photo-12.webp',
+  'photo-13.webp',
+  'photo-14.webp',
+  'photo-15.webp',
+  'photo-16.webp',
+];
+
+/**
+ * Walks a module-level counter so two notes on one screen never show the same
+ * picture. Callers that render must memoise per id — `getSampleImages` during
+ * render would hand out a different photo on every pass (the note beside each
+ * call site in wispData.ts, nosturData.ts and snortUtils.ts says the same).
+ */
 let __imgSeq = 0;
-function svgPhoto(i: number): string {
-  const pairs = [[280, 330], [205, 255], [20, 48], [150, 190], [325, 15], [240, 285], [40, 90], [190, 230], [95, 140], [355, 30]];
-  const [h1, h2] = pairs[i % pairs.length];
-  const svg =
-    `<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600'>` +
-    `<defs>` +
-    `<linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>` +
-    `<stop offset='0' stop-color='hsl(${h1},64%,54%)'/><stop offset='1' stop-color='hsl(${h2},70%,40%)'/>` +
-    `</linearGradient>` +
-    `<radialGradient id='b1' cx='28%' cy='30%' r='55%'>` +
-    `<stop offset='0' stop-color='hsl(${h1},85%,72%)' stop-opacity='.75'/><stop offset='1' stop-color='hsl(${h1},85%,72%)' stop-opacity='0'/>` +
-    `</radialGradient>` +
-    `<radialGradient id='b2' cx='78%' cy='72%' r='50%'>` +
-    `<stop offset='0' stop-color='hsl(${h2},88%,62%)' stop-opacity='.65'/><stop offset='1' stop-color='hsl(${h2},88%,62%)' stop-opacity='0'/>` +
-    `</radialGradient>` +
-    `</defs>` +
-    `<rect width='800' height='600' fill='url(#g)'/><rect width='800' height='600' fill='url(#b1)'/><rect width='800' height='600' fill='url(#b2)'/>` +
-    `</svg>`;
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
-}
 
 export function getSampleImages(count: number = 1): string[] {
   const out: string[] = [];
-  for (let i = 0; i < count; i++) out.push(svgPhoto(__imgSeq++));
+  for (let i = 0; i < count; i++) {
+    out.push(`/media/${SAMPLE_PHOTOS[__imgSeq++ % SAMPLE_PHOTOS.length]}`);
+  }
   return out;
 }
 

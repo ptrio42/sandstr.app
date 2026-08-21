@@ -53,7 +53,7 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
   osiągalne z menu wersji w `ClientView`, listy Versions w AboutSheet i z bezpośrednich linków
   (`versionsOf()`; freeze: `docs/VERSIONS.md`). `getClient()` czyta wszystkie trzy — to trzyma easter-egg
   i stare linki przy życiu.
-- **`src/simulators/` — SERCE.** 11 katalogów klientów (10 brandowanych + `nostr-kitten`) + `shared/`
+- **`src/simulators/` — SERCE.** 12 katalogów klientów (11 brandowanych + `nostr-kitten`) + `shared/`
   (`SimulatorShell`, `MobilePhoneFrame`, `NoteCard`, `useParentTheme`, `configs.ts` = metadata klientów).
 - **`src/data/`** — `mock/` (users/notes/threads/relays; treść dla WSZYSTKICH symulatorów), `tours/`, `faq/`.
 - **`src/components/`** — `tour/` (silnik: Provider/Overlay/Tooltip + `tourStorage`), `faq/`
@@ -220,7 +220,8 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
   zmianą jego symulatora. Keychat i Gossip screen-mapy NIE mają.
 - `docs/FIDELITY.md` — tokeny marki per klient + ich pliki-źródła w repo klienta + kanały opt-in.
 - `docs/GAPS.md` + `docs/gaps/<klient>.md` (schemat: `docs/gaps/README.md`) — ile z realnego klienta mamy
-  (736 wierszy w dziesięciu ledgerach, stan 2026-08-13); czytaj ZANIM dodasz `showMe` w FAQ.
+  (776 wierszy w jedenastu ledgerach, stan 2026-08-21 — ledger Borisa jest deklaracją autora,
+  nie audytem, i jest tak oznaczony); czytaj ZANIM dodasz `showMe` w FAQ.
 - `docs/TOURS.md` — reguły silnika tourów; czytaj przed edycją `src/data/tours/` i `src/components/tour/`.
 - `docs/VERSIONS.md` — wersjonowanie symulatorów per klient: procedura freeze starszej wersji. Czytaj
   ZANIM przebudujesz symulator do nowej wersji realnego klienta — freeze idzie PRZED przebudową.

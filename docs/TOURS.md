@@ -83,6 +83,35 @@ zmian wizualnych, zero rozgałęzień w JSX.
   Liczenie prosto w callbacku `ResizeObservera` zmienia layout z jego wnętrza — przeglądarka zgłasza
   to jako `ResizeObserver loop completed with undelivered notifications`, czyli realny błąd w konsoli.
 
+## Szerokość telefonu to nie jest ten sam silnik (2026-08-21)
+
+Dwa defekty widoczne **wyłącznie** przy ~375 px, oba w mini-tourze `showMe` Wispa (`zap`),
+oba niewidoczne na desktopie i oba niezależne od siebie — łączy je tylko to, że wywołuje je
+ta sama sytuacja: cel wielkości ekranu telefonu.
+
+- **Test „to cały klient" to DWA udziały, nie jeden.** Sam udział w VIEWPORCIE nie rozstrzyga
+  niczego na telefonie, bo tam klient JEST viewportem: arkusz zapów Wispa (375×573 na 375×812,
+  czyli 71%) przechodził próg `WHOLE_APP_VIEWPORT_SHARE` i tracił pierścień, a ten sam krok
+  na 1280×900 rysował go poprawnie. Karta mówiła „patrz tutaj" i nic nie było oznaczone.
+  Drugi udział liczy się względem pudełka klienta (`.mobile-phone-frame-bezel` albo
+  `[data-sandstr-stage]`) i tam liczby się rozjeżdżają: arkusz 0,77, szuflada Amethysta 0,85
+  (najszersza znaleziona powierzchnia, która nadal jest powierzchnią), a krok, który naprawdę
+  znaczy „cały klient" — 1,00 (sprawdzone na Wispie i Amethyście; z konstrukcji tak wychodzi dla
+  każdego klienta w ramce, bo poniżej `sm` `ClientView` zdejmuje padding ramki i korzeń ją wypełnia).
+  Oba testy muszą się zgodzić, żeby pierścień zniknął, więc zmiana potrafi tylko DODAĆ pierścienie.
+  Pełnoekranowe arkusze (Nostur `zap` 2/2, YakiHonne `follow`) dalej ich nie dostają i dobrze:
+  nie ma czego przyciemnić.
+- **Gałąź dokowania karty miała podłogę 180 px — poniżej własnego progu `UNUSABLE`.** Sufit liczyła
+  z wolnego miejsca nad/pod celem, a to jedyna wielkość, która w tej gałęzi nie ma sensu: dokowanie
+  zaczyna się dokładnie wtedy, gdy karta nigdzie nie mieści się obok celu. Zmierzone: 20 px wolnego
+  miejsca → karta 180 px → przewijana treść 25 px przy 140 px tekstu, pasek akcji na tytule.
+  To ten sam defekt, dla którego powstał próg `UNUSABLE` (200), tyle że na jedynej ścieżce, która
+  go nie sprawdzała. Sufit bierze teraz PASMO; nadal jest niezależny od karty, więc nie miga.
+
+**Do zapamiętania przy pomiarach:** ukryty panel podglądu zwraca `innerWidth`/`innerHeight` równe 0,
+a wtedy silnik liczy `fullHeight` z podłogi 180 i **każda** karta wychodzi 180 px z uciętą treścią —
+czyli wygląda dokładnie jak powyższy błąd, także po jego naprawie. Zrzut ekranu przed pomiarem.
+
 ## Znaleziska z nagrywania promocyjnego (2026-08-12)
 
 Trzy błędy, wszystkie w jednym kroku przewodnika po Wispie, wszystkie znalezione

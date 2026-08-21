@@ -187,15 +187,21 @@ async function capture(page, pool, base) {
     // Wait on `.tour-overlay`, NOT on `.tour-spotlight`.
     //
     // The clips checklist says to wait for a spotlight with a rect over 8x8
-    // before believing a step has stood up, and for guided tours that is still
-    // right. It is WRONG as a gate here: measured 2026-08-21, a mini-tour at
-    // phone width renders its card and navigates the client correctly while
-    // `.tour-spotlight` never appears at all (Wisp `showme=zap`: present at
-    // 1280px with a 352x573 rect, null at 375px — identical whether launched
-    // from the link or from the FAQ panel's own button, so it is the engine at
-    // narrow widths and not this path). Gating on the spotlight would hang for
-    // the full timeout on exactly the phone-shaped demo this script exists to
-    // film. Tracked separately; do not "fix" it by removing this wait.
+    // before believing a step has stood up, and for a guided tour that is still
+    // the sharper check. This gate is deliberately the looser one, for a reason
+    // that outlived its original cause: the overlay is what says "a tour owns
+    // the screen", and a ring is a property of the STEP. A step may legitimately
+    // have none — the whole-app intro cards suppress it by design — so a script
+    // that films arbitrary links cannot require one.
+    //
+    // The original reason was a defect, and it is worth keeping the history:
+    // this script was written on 2026-08-21 against an engine where a mini-tour
+    // at phone width rendered its card and navigated correctly while
+    // `.tour-spotlight` never appeared at all (Wisp `showme=zap`: 352x573 at
+    // 1280px, null at 375px). Fixed the same day on main by abf34b0 — the
+    // whole-app test was measuring the target against the viewport, and on a
+    // phone the client IS the viewport. So the hang this avoided is gone; the
+    // gate stays because the reasoning above never depended on that bug.
     await page.until(`!!document.querySelector('.tour-overlay')`, {
       timeout: 25000, label: 'the tour/mini-tour overlay',
     });
@@ -247,8 +253,16 @@ async function capture(page, pool, base) {
     join(WORK, `${SLUG}.marks.json`),
     JSON.stringify({ link: LINK.path, framing, reproduces, marks, endedOn: tail }, null, 2),
   );
-  const secs = ((manifest.at(-1).at - manifest[0].at) / 1000).toFixed(1);
-  return { frames: manifest.length, secs, out, framing, wall, tail, reproduces };
+  // `manifest.windowMs`, not last-arrival minus first: dividing by the span of
+  // the frames that DID arrive hides the holes at both ends, which is exactly
+  // how a pool that was dead for its first seconds still reported a healthy
+  // rate. The window is what the driver actually spent. `holeMs` is the worst
+  // gap, ends included — an average sails straight through a freeze.
+  const secs = (manifest.windowMs / 1000).toFixed(1);
+  return {
+    frames: manifest.length, secs, out, framing, wall, tail, reproduces,
+    hole: manifest.holeMs, holeAt: manifest.holeAtMs,
+  };
 }
 
 async function main() {
@@ -274,6 +288,7 @@ async function main() {
     const floor = r.framing === 'desktop' ? 5 : 8;
     console.log(
       `  · ${SLUG} → ${r.frames} frames, ${r.secs}s  ${fps.toFixed(1)} fps  (${r.framing})` +
+      `  worst hole ${r.hole}ms@${(r.holeAt / 1000).toFixed(1)}s` +
       (fps < floor ? `   ← THIN for ${r.framing} (see startPool in harness.mjs)` : ''),
     );
     console.log(`  · reproduces: ${r.reproduces || '(none — check dist/c/<id>.html)'}`);
