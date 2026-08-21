@@ -38,8 +38,9 @@ function TabGlyph({ id, active }: { id: BorisTab; active: boolean }) {
     case 'library':
       return <MenuBookGlyph filled={active} />;
     case 'feeds':
-      // No filled/outlined pair: the two states measure pixel-identical in the
-      // reference recording, so selection is the pill and the colour alone.
+      // No filled/outlined pair: in the reference recording the two states are
+      // the same shape to within a pixel of antialiasing, so selection here is
+      // the pill and the colour alone. See DynamicFeedGlyph for the measurement.
       return <DynamicFeedGlyph />;
     case 'search':
       return <Search size={24} strokeWidth={active ? 2.5 : 2} />;
