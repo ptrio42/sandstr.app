@@ -65,6 +65,19 @@ MARKS="$SRC/marks${SUFFIX}.json"
 [ -s "$IN" ] || { echo "  ! missing $IN — run: SWITCH=$MODE node docs/clips/capture-compare.mjs"; exit 1; }
 [ -s "$MARKS" ] || { echo "  ! missing $MARKS — run: SWITCH=$MODE node docs/clips/capture-compare.mjs"; exit 1; }
 
+# The take must be NEWER than the build it was shot against. A capture that fails
+# leaves the previous one on disk, so `capture && build` chained with && is not
+# enough: the capture dies, the build finds a perfectly valid older take, and
+# prints a full set of green numbers for a film of the previous code. That
+# happened, and the numbers were reported before anyone noticed.
+DIST="$HERE/../../dist/index.html"
+if [ -f "$DIST" ] && [ ! "$IN" -nt "$DIST" ] && [ -z "${ALLOW_STALE:-}" ]; then
+  echo "  ! $IN is older than dist/ — it films code that has since been rebuilt."
+  echo "    re-shoot:  SWITCH=$MODE node docs/clips/capture-compare.mjs"
+  echo "    or, if you really mean to re-cut the old take:  ALLOW_STALE=1 $0"
+  exit 1
+fi
+
 BOLD="/System/Library/Fonts/Supplemental/Arial Bold.ttf"
 REG="/System/Library/Fonts/Supplemental/Arial.ttf"
 
