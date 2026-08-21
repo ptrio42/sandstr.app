@@ -88,6 +88,13 @@ Galeria, paleta ⌘K, rail switchera i `/c/:id` czytają tylko jego.
 
 ## Checklist podpięcia nowego klienta
 
+> **„Podpięty" to nie „skończony", i punkty 4-6 są tym, co je dzieli.** Klient bez toura i banku FAQ
+> jest widoczny, klikalny i może stać `ready` (Coracle tak stoi) — ale **nie ma `showMe`, nie wchodzi
+> na `/compare` i nie pojawia się w „How the other N clients do this" w panelu FAQ**. To realna
+> nieobecność w trzech powierzchniach produktu, nie kosmetyka, więc jeśli je odkładasz — powiedz to
+> wprost i zostaw wiersz w `docs/gaps/<id>.md`. Boris (2026-08-21) jest wzorcowym przykładem obu
+> stron: wszedł bez jednego i drugiego, tour dopisano tego samego dnia, bank FAQ został jako dług.
+
 1. `SimulatorClient` w `src/simulators/shared/types/index.ts` + config w `src/simulators/shared/configs.ts`
    (`allSimulatorConfigs` jest `Record<SimulatorClient, …>`, więc kompilator wymusi config dla nowej wartości).
 2. Wpis w `MOUNTS` w `src/registry.tsx`: `frame`, `tour`, `status` (+ `statusNote` dla preview), opcjonalny
@@ -98,15 +105,21 @@ Galeria, paleta ⌘K, rail switchera i `/c/:id` czytają tylko jego.
    a `availableOn` — gdzie realny klient chodzi. Filtr platformy na `/compare` czyta to drugie;
    czytanie `platform` gubiło klientów, które na pytanym urządzeniu jak najbardziej działają.
 3. Ikona 128px w `public/icons/` + `icon` w configu.
-4. Tour (opcjonalnie): `src/data/tours/<id>-tour.ts`, a w `src/data/tours/index.ts` re-eksport ORAZ wpis
+4. Tour — **odkładany, nie opcjonalny** (bez niego znika przycisk „Take a tour"):
+   `src/data/tours/<id>-tour.ts`, a w `src/data/tours/index.ts` re-eksport ORAZ wpis
    w mapie `tourConfigs` (z niej derywuje się `TourClient`; sam re-eksport nie wystarczy i nic o tym nie
    powie — kompilator nie pilnuje kompletności tej mapy). W `MOUNTS` `tour: true`. Reguły: `docs/TOURS.md`.
-5. FAQ (opcjonalnie): `src/data/faq/<id>.ts` + wpis w mapie `faqs` w `src/data/faq/index.ts` — bez tego
-   `getFaq()` zwróci null i wszystkie afordancje FAQ znikną. Przed pisaniem `showMe` czytaj `docs/gaps/<id>.md`.
-6. `docs/FIDELITY.md`, `docs/refs/<id>/screen-map.md`, `docs/gaps/<id>.md` i wiersz w `THIRD-PARTY.md`.
-7. Nazwa klienta trafia też do dropdownów w `.github/ISSUE_TEMPLATE/*.yml` — `fidelityReportUrl()` prefiluje
+5. FAQ — **odkładany, nie opcjonalny**: `src/data/faq/<id>.ts` + wpis w mapie `faqs` w
+   `src/data/faq/index.ts` — bez tego `getFaq()` zwróci null i wszystkie afordancje FAQ znikną.
+   Kontrakt autorski: `src/data/faq/README.md` (17 tematów kanonicznych, `coverage` wymuszane przez
+   kompilator). Przed pisaniem `showMe` czytaj `docs/gaps/<id>.md`.
+6. `/compare`: wiersze w `src/data/capabilities.ts` + id w `COMPARED_CLIENTS`. **Wymaga banku FAQ** —
+   każda komórka cytuje id wpisu FAQ, więc bez punktu 5 klienta po prostu tam nie ma. Reguły:
+   `docs/COMPARE.md`.
+7. `docs/FIDELITY.md`, `docs/refs/<id>/screen-map.md`, `docs/gaps/<id>.md` i wiersz w `THIRD-PARTY.md`.
+8. Nazwa klienta trafia też do dropdownów w `.github/ISSUE_TEMPLATE/*.yml` — `fidelityReportUrl()` prefiluje
    pole `client` dokładnym dopasowaniem, a niedopasowanie po cichu zostawia je puste.
-8. `npm run og:cards` — karta share dla nowej trasy. Ręcznie, bo robi build i woła headless
+9. `npm run og:cards` — karta share dla nowej trasy. Ręcznie, bo robi build i woła headless
    Chrome; pominięte daje `og:image` na 404. Karta **fotografuje symulator**, więc przebiegu
    wymaga też każda widoczna zmiana w kliencie, nie tylko `name`/`status`/`primaryColor`/
    `platform`/`icon` (pigułka „Early preview" znika przy promocji na `ready`).
@@ -116,4 +129,4 @@ Galeria, paleta ⌘K, rail switchera i `/c/:id` czytają tylko jego.
    klientów tego potrzebuje; bez tego karta reklamuje ekran logowania, czyli dokładnie tarcie,
    które produkt usuwa. Zmiana onboardingu istniejącego klienta wywali `og:cards` z nazwą kroku
    i tekstem ekranu — to jedyny alarm, jaki dostaniesz.
-9. Definition of done z CLAUDE.md: `npm run build` + realny klik po `/c/<id>` z czystą konsolą.
+10. Definition of done z CLAUDE.md: `npm run build` + realny klik po `/c/<id>` z czystą konsolą.

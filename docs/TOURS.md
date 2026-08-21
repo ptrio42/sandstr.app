@@ -1,8 +1,8 @@
 # Sandstr — guided toury (stan i twarde reguły)
 
-> **Co to jest.** Silnik `src/components/tour/` plus 8 konfiguracji kroków w `src/data/tours/`.
+> **Co to jest.** Silnik `src/components/tour/` plus 9 konfiguracji kroków w `src/data/tours/`.
 > Ten sam silnik napędza **mini-toury FAQ** (`showMe`), więc każda zmiana tutaj dotyka 137 mini-tourów,
-> nie tylko 79 kroków głównych tourów.
+> nie tylko 90 kroków głównych tourów.
 >
 > Ten plik opisuje **reguły, których nie widać z kodu** — i defekty, które z ich złamania wynikły.
 > Kontrakt autorski FAQ żyje w [`src/data/faq/README.md`](../src/data/faq/README.md), stan wdrożenia
@@ -15,8 +15,8 @@
 
 | | |
 |---|---|
-| Kroki głównych tourów | 79 w 8 klientach (Coracle i Gossip nie mają toura) |
-| Kroki celujące w cały klient | **0** w środku touru; 16 to welcome/outro i tak ma być |
+| Kroki głównych tourów | 90 w 9 klientach (Coracle i Gossip nie mają toura) |
+| Kroki celujące w cały klient | **0** w środku touru; 18 to welcome/outro i tak ma być |
 | Martwe selektory klasowe w celach | 0 |
 | Kroki wymagające akcji (`trigger: 'action'`) | 8, wszystkie w Amethyście |
 
@@ -47,6 +47,27 @@ dotyk**: `elementFromPoint` na każdej z pięciu zakładek zwracał pasek toura.
 **5. Chrome hosta deklaruje się, nie zgaduje.** `[data-tour-keep-clear]` na elemencie (dziś oba
 warianty disclaimera w `ClientView`) sprawia, że karta go omija **i** że pasmo rozmieszczenia zaczyna
 się pod nim. Sam z-index rozstrzyga tylko, który z dwóch nachodzących tekstów wygra piksele.
+
+## Boris dopisany 2026-08-21 (11 kroków)
+
+Jedyny tour w tym repo zbudowany wokół **jednego gestu**, a nie wokół paska zakładek: zaznacz zdanie
+-> Highlight -> zobacz cudze zaznaczenia na tej samej stronie. Cztery środkowe kroki siedzą w jednym
+artykule.
+
+Trzy rzeczy z niego warte zapamiętania przy następnym tourze:
+
+- **Krok, którego temat trzeba przewinąć, ma zły cel.** Krok "offline" celował najpierw w wiersz
+  *Airplane mode* na liście ustawień. Ten wiersz jest dwunasty - pierścień wyszedł poniżej krawędzi
+  telefonu, w połowie ucięty, z pustym prostokątem nad mini-playerem. Znalezione dopiero
+  **sfilmowaniem touru**, nie przeglądem kodu (to samo, co przy Wispie w 2026-08-12). Naprawa:
+  komenda otwiera od razu podekran, a cel to lista półek offline na nim.
+- **Pierścień wielkości ekranu to brak pierścienia.** Pierwsza wersja tej kotwicy obejmowała cały blok
+  offline razem z akapitem wstępnym i limitem pamięci - czyli prawie cały ekran. Zawężona do samej
+  listy pięciu półek.
+- **Krok, który pokazuje akcję, musi ją pokazać W KADRZE.** Komenda `highlight` zaznaczała najpierw
+  pull-quote ze środka artykułu; pierścień był na treści, a nowy żółty marker leżał poniżej zgięcia i
+  jedynym dowodem był licznik w chipie skaczący z 3 na 4. Teraz zaznacza akapit prowadzący, tuż pod
+  chipami - w tym samym pierścieniu.
 
 ## Dwa wzorce dodawania kotwic
 

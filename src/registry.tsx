@@ -307,11 +307,7 @@ const MOUNTS: Record<
   },
   boris: {
     frame: 'android',
-    // No guided tour and no FAQ bank yet, so no wrapper: the simulator is
-    // mounted directly and `hasTour` stays false (same shape Gossip uses).
-    // Every surface already carries its `data-tour` anchors, so adding a tour
-    // later is a wrapper plus a config, not a rebuild.
-    tour: false,
+    tour: true,
     // Reference-verified 2026-08-21: the owner's 3m52s Android recording
     // (docs/refs/boris/shots/) + a dergigi/boris-android@8456da4 recon of all
     // 291 Kotlin files -> docs/refs/boris/screen-map.md, then a live
@@ -330,7 +326,7 @@ const MOUNTS: Record<
     // screen-map: dergigi/boris-android@8456da4 = release 1.4.49, which is also
     // what the app's own settings footer prints.
     reproduces: 'v1.4.49',
-    load: () => import('./simulators/boris/BorisSimulator'),
+    load: () => import('./simulators/boris/BorisSimulatorWithTour'),
   },
   gossip: {
     frame: null,
