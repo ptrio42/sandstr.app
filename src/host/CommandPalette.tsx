@@ -189,9 +189,33 @@ export default function CommandPalette({ open, currentId, onClose, onSelect }: P
                 );
               })}
             </div>
+
+            {/* `[` and `]` cycle clients from anywhere on /c/:id and have since
+                the rail was built, but they appeared in no UI at all — the
+                cheapest interaction on the site was a secret. This is the one
+                surface where somebody is already asking how to get around. */}
+            <div className="flex items-center gap-3 border-t border-gray-100 px-4 py-2 text-[11px] text-gray-400 dark:border-gray-800">
+              <span className="flex items-center gap-1">
+                <kbd className={KBD}>↑</kbd>
+                <kbd className={KBD}>↓</kbd>
+                move
+              </span>
+              <span className="flex items-center gap-1">
+                <kbd className={KBD}>↵</kbd>
+                open
+              </span>
+              <span className="ml-auto flex items-center gap-1">
+                <kbd className={KBD}>[</kbd>
+                <kbd className={KBD}>]</kbd>
+                prev / next client
+              </span>
+            </div>
           </motion.div>
         </motion.div>
     ) : null,
     document.body,
   );
 }
+
+const KBD =
+  'rounded border border-gray-200 px-1 text-[10px] font-medium leading-tight text-gray-400 dark:border-gray-700';

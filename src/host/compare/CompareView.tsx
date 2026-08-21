@@ -21,7 +21,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Info } from 'lucide-react';
 import { getClient, type ClientEntry } from '../../registry';
-import { mockNotes, mockUsers, getUserByPubkey, activePreviewNote } from '../../data/mock';
+import {
+  mockNotes,
+  mockUsers,
+  getUserByPubkey,
+  activePreviewNote,
+  normalizePreviewText,
+  writePreviewNote,
+} from '../../data/mock';
 import {
   COMPARISON_AXES,
   COMPARED_CLIENTS,
@@ -189,8 +196,15 @@ function readUrlState(search: string) {
     if (CHOOSER_AXES.includes(id as AxisId)) reqs[id] = 'need';
   }
 
+  // A pasted note only reaches the note surface, so `?note=` without an
+  // explicit `?show=` picks it. Left on the default the link lands on eight
+  // login screens and the note it carries is nowhere on the page — the strip
+  // sits ~5700px down a page this long, so "scroll and find the right tab" is
+  // not a recovery a reader will make.
+  const note = normalizePreviewText(p.get('note'));
   const show = p.get('show');
-  const surfaceId = SURFACES.some((s) => s.id === show) ? show! : SURFACES[0].id;
+  const fallbackSurface = note ? 'note' : SURFACES[0].id;
+  const surfaceId = SURFACES.some((s) => s.id === show) ? show! : fallbackSurface;
 
   const [client, axis] = (p.get('cell') ?? '').split(':');
   const picked: Selection | null =
@@ -198,7 +212,7 @@ function readUrlState(search: string) {
       ? { client, axis: axis as AxisId }
       : null;
 
-  return { platform, reqs, surfaceId, picked };
+  return { platform, reqs, surfaceId, picked, note };
 }
 
 export default function CompareView() {
@@ -254,14 +268,39 @@ export default function CompareView() {
     [entries, platform, reqs],
   );
 
-  // One note, shared by every cell — that identity IS the comparison. Picked
-  // for shape, not at random: enough text to wrap, a hashtag, no attachment
-  // (media would compare our placeholder renderers, not their designs).
+  // One note, shared by every cell — that identity IS the comparison.
+  //
   // A note the visitor pasted into "Preview your note" wins outright: comparing
   // eight clients on YOUR post is the whole reason to have both features, and
   // the preview slot is `mockNotes[0]` (src/data/mock/previewNote.ts). The
-  // curated pick below is the fallback — chosen for shape, not at random.
-  const previewed = activePreviewNote();
+  // curated pick below is the fallback — chosen for shape, not at random:
+  // enough text to wrap, a hashtag, no attachment (media would compare our
+  // placeholder renderers, not their designs).
+  //
+  // `?note=<text>` is the same param `ClientView` reads, and the only URL that
+  // hands somebody eight renderings of THEIR note at once. Resolved in a state
+  // initialiser — during this render, before the strip below reads the slot.
+  // An effect would run after the first paint, i.e. render the curated note for
+  // a frame and then swap it. Writing is idempotent and StrictMode is off
+  // (main.tsx). It also persists, so clicking through to /c/<id> afterwards
+  // keeps showing the same note — the two halves of the feature share one
+  // sessionStorage key.
+  //
+  // Held in state rather than re-read every render because nothing on this page
+  // can change it except the reset below: there is no compose box here.
+  const [previewed, setPreviewed] = useState(() =>
+    initial.note ? writePreviewNote(initial.note) : activePreviewNote(),
+  );
+
+  // Take the reader to the strip, but ONLY when the note arrived in the link.
+  // A note left in sessionStorage by an earlier visit to /c/<id> is not a
+  // request to be moved anywhere; a URL naming it is. `auto`, not `smooth`:
+  // this is a jump of several screens, and a scroll animation that long
+  // fights the first flick of the reader's own scroll.
+  useEffect(() => {
+    if (!initial.note) return;
+    document.getElementById('strip-heading')?.scrollIntoView({ block: 'start', behavior: 'auto' });
+  }, [initial.note]);
   const note = useMemo(
     () =>
       (previewed ? mockNotes[0] : null) ??
@@ -276,6 +315,19 @@ export default function CompareView() {
   const author = useMemo(() => getUserByPubkey(note.pubkey) ?? mockUsers[0], [note]);
 
   const surface = SURFACES.find((s) => s.id === surfaceId) ?? SURFACES[0];
+
+  // Hand the curated note back. The param has to go with it: leaving `note` in
+  // the address bar would put the pasted note straight back on the next reload,
+  // which reads as a control that did not work. The mirror effect above owns
+  // four other keys and copies the rest through, so this is the one place that
+  // deletes this one.
+  const clearNote = () => {
+    writePreviewNote('');
+    setPreviewed('');
+    const next = new URLSearchParams(searchParams);
+    next.delete('note');
+    setSearchParams(next, { replace: true });
+  };
 
   const detail = picked ? capabilities[picked.client][picked.axis] : null;
   const detailClient = picked ? getClient(picked.client) : null;
@@ -431,6 +483,29 @@ export default function CompareView() {
           ))}
         </div>
         <p className="mb-4 max-w-3xl text-sm text-gray-600 dark:text-gray-400">{surface.blurb}</p>
+
+        {/* Only the note surface carries note content — the other three render a
+            login screen, a composer and a nav bar, none of which change when a
+            note is pasted. Announcing it under those tabs would promise
+            something the cells underneath do not deliver. And the counts are
+            named as still-mock on purpose: the preview overwrites the note's
+            text, links, hashtags and media, never its author or its numbers
+            (registerPreviewSlot in src/data/mock/previewNote.ts). */}
+        {previewed && surface.id === 'note' && (
+          <div className="mb-4 flex max-w-3xl flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-primary-200 bg-primary-50 px-3 py-2 text-sm text-primary-900 dark:border-primary-500/30 dark:bg-primary-500/10 dark:text-primary-100">
+            <span>
+              These cards are showing <strong className="font-semibold">your note</strong> — the
+              author, the time and the counts under it are still the mock ones.
+            </span>
+            <button
+              type="button"
+              onClick={clearNote}
+              className="ml-auto shrink-0 rounded-full px-2 py-1 text-xs font-medium underline underline-offset-2 hover:bg-primary-100 dark:hover:bg-primary-500/20"
+            >
+              Back to the sample note
+            </button>
+          </div>
+        )}
 
         {/* The mandated disclaimer, in its host-wide wording. These are
             brand-faithful reproductions rendered outside /c/, so the strip

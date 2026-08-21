@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ChevronDown, ChevronLeft, ExternalLink, Flag, HelpCircle, History, Info, Monitor, Moon, PenLine, Play, RotateCcw, Sun } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Flag, HelpCircle, History, Info, Monitor, Moon, PenLine, Play, RotateCcw, Sun } from 'lucide-react';
 import MobilePhoneFrame from '../simulators/shared/components/MobilePhoneFrame';
 import { ClientGlyph, platformLabel } from './ClientGlyph';
 import { clients, getClient, versionsOf, type ClientEntry } from '../registry';
@@ -1062,17 +1062,57 @@ export default function ClientView() {
           >
             {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
-          <button
-            type="button"
-            aria-label="Switch client"
-            // Mirrors the existing `start-${id}-tour` idiom: the switcher's
-            // floating pill used to sit on top of the simulator's own tab bar,
-            // so on phones the trigger lives up here instead.
-            onClick={() => window.dispatchEvent(new Event('sandstr-open-switcher'))}
-            className="flex h-8 items-center gap-0.5 rounded-lg px-1.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            <ChevronDown className="h-4 w-4" />
-          </button>
+          {/* Prev · list · next.
+              There is no rail at this width, so reaching the NEIGHBOURING
+              client cost two taps and a sheet over 55% of the screen — the
+              single most repeated move on the site, and the one the promo cut
+              films five times. One tap now, and ClientSwitcher has already
+              preloaded both neighbours, so it is instant. The sheet stays for
+              jumping further than one step.
+
+              The arrows are gated at 400px because the bar genuinely runs out:
+              measured with every optional control present (tour, FAQ, reset,
+              preview, theme, switch), the free space is 8px at 320, 19px at
+              360 and 89px at 430. Below the gate the behaviour is exactly what
+              it was — the sheet — rather than a squeezed row.
+
+              `aria-label="Switch client"` is load-bearing beyond a11y: the clip
+              harness selects the sheet trigger by it (docs/clips/*.mjs).
+
+              The three share a filled group so they read as ONE control: the
+              bar already opens with a ChevronLeft ("All clients"), and a second
+              bare left chevron on the other end meant two identical glyphs with
+              different destinations. The fill is gated on the same breakpoint,
+              so below it the lone chevron looks exactly as it always did. */}
+          <span className="flex items-center rounded-lg min-[400px]:bg-gray-100/80 dark:min-[400px]:bg-gray-800/70">
+            <button
+              type="button"
+              aria-label="Previous client"
+              onClick={() => window.dispatchEvent(new CustomEvent('sandstr-step-client', { detail: -1 }))}
+              className="hidden h-8 w-7 items-center justify-center rounded-l-lg text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 min-[400px]:flex"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              aria-label="Switch client"
+              // Mirrors the existing `start-${id}-tour` idiom: the switcher's
+              // floating pill used to sit on top of the simulator's own tab bar,
+              // so on phones the trigger lives up here instead.
+              onClick={() => window.dispatchEvent(new Event('sandstr-open-switcher'))}
+              className="flex h-8 items-center gap-0.5 rounded-lg px-1.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 min-[400px]:rounded-none min-[400px]:hover:bg-gray-200 dark:min-[400px]:hover:bg-gray-700"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              aria-label="Next client"
+              onClick={() => window.dispatchEvent(new CustomEvent('sandstr-step-client', { detail: 1 }))}
+              className="hidden h-8 w-7 items-center justify-center rounded-r-lg text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 min-[400px]:flex"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </span>
         </span>
       </div>
       <div className="sm:hidden">

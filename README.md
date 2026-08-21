@@ -15,7 +15,8 @@ one — that is the whole point of the shelf.
 
 **Preview your own note.** Paste a message into "Preview your note" on any client view (or open
 `/c/<client>?note=<text>`) and it takes the top spot of that client's feed, so you can switch
-clients and compare how each one wraps, truncates and links it. The text stays in the browser tab
+clients and compare how each one wraps, truncates and links it. `/compare?note=<text>` skips the
+switching and puts the same note in all eight at once. The text stays in the browser tab
 (sessionStorage) and is never published. Length, wrapping, truncation, hashtags, links and an
 attached image are rendered the way each reproduction does it, `nostr:` references resolve to a name
 (or a shortened npub when nobody here knows them), and a link is unfurled into a preview card — in every client with a feed — via

@@ -1,5 +1,21 @@
 # docs/clips — promo cuts
 
+Three cuts, one series. This file is cut #1; the other two have their own beat
+sheets, and everything drives the same harness.
+
+| cut | sells | scenario |
+|---|---|---|
+| #1 teaser | capability — eight clients, open one, zap, DM | this file |
+| #2 FAQ | utility — a question, the answer, the answer running | [`faq-teaser.md`](faq-teaser.md) |
+| #3 comparison | the thing nothing else does — one note, eight interfaces | [`compare-teaser.md`](compare-teaser.md) |
+
+`harness.mjs` is the shared Chrome/CDP/recorder layer behind cuts #2 and #3.
+Every helper in it carries the measurement and the failure it exists to prevent;
+changing one changes both cuts, so smoke-test with
+`node capture-faq.mjs sw-nostur-wisp` afterwards.
+
+## Cut #1
+
 Source recording plus the two scripts that turn it into something postable.
 
 **Only the scripts and these notes are in git.** The recording, the stills and the
@@ -12,6 +28,11 @@ capture-shots.sh                             # dev server → shots/*.png (headl
 build-teaser.sh                              # recording + shots → out/*.mp4 (ffmpeg only)
 shots/                                       # one hero frame per client + the 6x brand lockup
 out/                                         # what you actually post
+
+harness.mjs                                  # shared: Chrome, CDP, frame pool, encode (cuts #2, #3)
+capture-faq.mjs      build-teaser-faq.sh     # cut #2
+capture-compare.mjs  build-teaser-compare.sh # cut #3
+make-bed.mjs                                 # cut #3's music bed, synthesised (no deps, no samples)
 ```
 
 ## Output
