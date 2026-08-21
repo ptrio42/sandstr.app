@@ -62,8 +62,8 @@
 | [Nostur](gaps/nostur.md) | ready | 51 | 1 | 33 | 8 | 6 | 3 | 12 | 41 | ✅ |
 | [Keychat](gaps/keychat.md) | preview | 38 | 6 | 18 | 8 | 3 | 3 | 5 | 19 | ❌ |
 | [Gossip](gaps/gossip.md) | preview | 35 | 9 | 11 | 6 | 5 | 4 | 2 | 0 | ❌ brak wrappera |
-| [Boris](gaps/boris.md) | ready | 35 | 11 | 14 | 9 | 1 | 0 | 5 | 91 | ❌ brak wrappera |
-| **Razem** | | **533** | **150** | **219** | **97** | **36** | **31** | **243** | **500** | **8/11** |
+| [Boris](gaps/boris.md) | ready | 35 | 11 | 14 | 9 | 1 | 0 | 5 | 94 | ❌ brak banku |
+| **Razem** | | **533** | **150** | **219** | **97** | **36** | **31** | **243** | **503** | **8/11** |
 
 > **Boris dopisany 2026-08-21, i jego wiersz ma inny status dowodowy niż pozostałe dziesięć.**
 > Ledger [`gaps/boris.md`](gaps/boris.md) spisała sesja, która zbudowała symulator, a nie niezależny

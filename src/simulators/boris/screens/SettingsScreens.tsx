@@ -1152,6 +1152,10 @@ function Airplane() {
         <h4 className="text-[12px] font-medium uppercase" style={{ color: 'var(--boris-on-surface-variant)' }}>
           Available offline
         </h4>
+        {/* The shelf list ONLY. Anchoring the whole offline block instead made
+            the tour's target nearly the size of the screen, and a spotlight that
+            covers everything marks nothing. */}
+        <div className="space-y-5" data-tour="boris-offline-shelves">
         {shelves.map(([label, icon]) => (
           <div key={label} className="space-y-2">
             <div className="flex items-center justify-between gap-3">
@@ -1171,6 +1175,7 @@ function Airplane() {
             </div>
           </div>
         ))}
+        </div>
         <div className="space-y-2">
           <h4 className="text-[16px] font-semibold" style={{ color: 'var(--boris-on-bg)' }}>
             Storage limit

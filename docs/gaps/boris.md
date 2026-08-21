@@ -1,7 +1,8 @@
 # Boris — gap ledger
 
 > Ground truth: `docs/refs/boris/screen-map.md` · Sim: `src/simulators/boris/`
-> Spisany: 2026-08-21 · Registry status: ready · Sim LOC: 5577 · kotwice `data-tour`: 91
+> Spisany: 2026-08-21 · Registry status: ready · Sim LOC: 5577 · kotwice `data-tour`: 94
+> Tour: 11 kroków (`src/data/tours/boris-tour.ts`, dopisany 2026-08-21)
 
 > **Ten ledger jest deklaracją autora, nie niezależnym audytem.** Pozostałe dziesięć powstało w
 > przebiegu wieloagentowym z adwersaryjną weryfikacją każdego wiersza innego niż `ok`; ten spisała ta
@@ -18,7 +19,7 @@
 
 40 wierszy = 35 luk + 5 `ok`. Liczby policzone skryptem po kolumnie *Status*, nie ręcznie.
 
-**Top 3 do zrobienia:** bor-01 (brak toura i banku FAQ — blokuje `showMe` na całym kliencie) ·
+**Top 3 do zrobienia:** bor-01 (brak banku FAQ — blokuje `showMe` i wejście do `/compare`) ·
 bor-02 (zaznaczanie tekstu jest udawane: klik w akapit, nie realna selekcja) · bor-03 (Library
 zalogowany pokazuje te same artykuły w każdym scope).
 
@@ -26,7 +27,7 @@ zalogowany pokazuje te same artykuły w każdym scope).
 
 | ID | Surface (ścieżka w UI) | § | Status | Gap | Evidence | FAQ impact | Effort |
 |---|---|---|---|---|---|---|---|
-| bor-01 | cały klient → guided tour + bank FAQ | — | missing | Nie ma `src/data/tours/boris.ts` ani `src/data/faq/boris.ts`, więc nie ma wrappera `*WithTour` i rejestr trzyma `tour: false`. Interfejs komend i 91 kotwic już jest — brakuje danych, nie mechaniki | `src/registry.tsx:310`, `src/simulators/boris/BorisSimulator.tsx:133-210` | blocks-showme | L |
+| bor-01 | cały klient → bank FAQ (`showMe`) | — | missing | Tour wszedł 2026-08-21 (11 kroków, `tour: true`, wrapper `BorisSimulatorWithTour`), ale nie ma `src/data/faq/boris.ts`. Bez banku: brak `showMe`, brak Borisa w `/compare` (komórki w `capabilities.ts` cytują id wpisów FAQ) i brak `FaqMiniTourLauncher` we wrapperze. Silnik i 94 kotwice są gotowe — brakuje treści | `src/simulators/boris/BorisSimulatorWithTour.tsx:5-9`, `src/data/capabilities.ts` (SCOPE) | blocks-showme | L |
 | bor-02 | Reader → zaznaczenie tekstu → pasek Copy / Highlight / Read from here / Select all | §4 | partial | Pasek ma poprawny kształt i kolejność, ale nie ma realnej selekcji: klik w akapit „zaznacza" jego pierwsze zdanie. Prawdziwe `window.getSelection()` dałoby dowolny fragment | `screens/ReaderScreen.tsx:398-410` | breaks-showme | M |
 | bor-03 | Library (zalogowany) → chipy All / Private / Public / Web / Lookmarks / Archive | §6 | partial | Każdy scope filtruje ten sam zbiór artykułów po długości/domenie; nie ma osobnych zbiorów bookmarków ani stanu „zaszyfrowane, odblokuj signerem" | `screens/LibraryScreen.tsx:49-58` | breaks-showme | M |
 | bor-04 | Library → top bar → Info → arkusz „Library sources" | §6 | dead | Ikona `i` otwiera ekran ustawień Library zamiast arkusza z pięcioma opisami źródeł (lookmark = kind 7 👀 itd.) | `BorisSimulator.tsx:262` | breaks-showme | S |

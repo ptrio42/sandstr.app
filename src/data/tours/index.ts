@@ -11,6 +11,7 @@ export { yakihonneTourConfig, default as yakihonneTour } from './yakihonne-tour'
 export { keychatTourConfig, default as keychatTour } from './keychat-tour';
 export { wispTourConfig, default as wispTour } from './wisp-tour';
 export { nosturTourConfig, default as nosturTour } from './nostur-tour';
+export { borisTourConfig, default as borisTour } from './boris-tour';
 
 // Static map for easy lookup
 import { damusTourConfig as damus } from './damus-tour';
@@ -21,6 +22,7 @@ import { yakihonneTourConfig as yakihonne } from './yakihonne-tour';
 import { keychatTourConfig as keychat } from './keychat-tour';
 import { wispTourConfig as wisp } from './wisp-tour';
 import { nosturTourConfig as nostur } from './nostur-tour';
+import { borisTourConfig as boris } from './boris-tour';
 
 export const tourConfigs = {
   damus,
@@ -31,6 +33,7 @@ export const tourConfigs = {
   keychat,
   wisp,
   nostur,
+  boris,
 } as const;
 
 export type TourClient = keyof typeof tourConfigs;

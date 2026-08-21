@@ -66,13 +66,18 @@ function Section({
         </h2>
       </div>
       <div className="flex gap-3 overflow-x-auto px-5 pb-1">
-        {items.map((a) => (
+        {items.map((a, i) => (
           <ArticleCard
             key={`${id}:${a.id}`}
             article={a}
             tint={tint}
             progress={progress[a.id] ?? 0}
             onOpen={() => onOpen(a)}
+            // Index-gated so exactly ONE card carries the anchor — the pattern
+            // docs/TOURS.md prescribes for repeated rows. Without the gate the
+            // tour would resolve whichever card happened to be first in
+            // document order, which is a different card per section.
+            tourId={id === 'others' && i === 0 ? 'boris-home-card' : undefined}
           />
         ))}
       </div>

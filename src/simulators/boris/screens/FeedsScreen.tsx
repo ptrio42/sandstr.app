@@ -74,6 +74,9 @@ export function FeedsScreen({
         title="Feeds"
         actions={
           <>
+            {/* One anchor around all three: a ring on a single 48dp icon reads
+                as "this button", and the step is about the trio. */}
+            <span className="flex items-center" data-tour="boris-feeds-scopes">
             {SCOPES.map((s) => {
               const enabled = !s.needsLogin || loggedIn;
               const on = scopes.includes(s.id);
@@ -90,6 +93,7 @@ export function FeedsScreen({
                 </IconButton>
               );
             })}
+            </span>
             <IconButton label="Feed visibility" onClick={onOpenInfo} tourId="boris-feeds-info">
               <Info size={24} />
             </IconButton>

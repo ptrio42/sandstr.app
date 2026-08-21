@@ -156,8 +156,12 @@ export function BorisSimulator({ className = '', tourCommand, onCommandHandled }
         const a = articleById('infinite-scroll') ?? borisArticles[0];
         closeOverlays();
         openArticle(a);
-        const quote = a.body.find((b) => b.type === 'quote');
-        if (quote && 'text' in quote) setOwnMarks((m) => (m.includes(quote.text) ? m : [...m, quote.text]));
+        // The LEAD paragraph, not the pull-quote further down: this command is
+        // what the tour's highlight step fires, and a mark the visitor has to
+        // scroll to prove nothing. The lead sits directly under the meta chips,
+        // inside the same ring the step draws.
+        const lead = a.body.find((b) => b.type === 'lead') ?? a.body.find((b) => b.type === 'p');
+        if (lead && 'text' in lead) setOwnMarks((m) => (m.includes(lead.text) ? m : [...m, lead.text]));
         registerAction('highlight');
         break;
       }
