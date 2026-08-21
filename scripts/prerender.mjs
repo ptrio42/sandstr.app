@@ -3,16 +3,18 @@
  *   a) writes `dist/c/<id>.html` — one real file per client route, carrying
  *      that client's own share tags (title, og:*), and
  *   b) bakes the gallery's markup into `dist/index.html`, and
- *   c) writes `dist/compare.html` — the capability matrix in words.
+ *   c) writes `dist/compare.html` — the capability matrix in words, and
+ *   d) writes `dist/docs.html` — what a visitor can do on this site.
  *
  * Runs as the third stage of `npm run build`:
  *   1. `vite build`                      -> dist/ (client bundle, empty #root)
  *   2. `vite build --ssr src/entry-server.tsx --outDir dist-ssr`
  *   3. `node scripts/prerender.mjs`      -> emits + injects, then deletes dist-ssr/
  *
- * Two pages, because two are indexable:
+ * Three pages, because three are indexable:
  *   /         -> dist/index.html          the gallery
- *   /compare  -> dist/compare.html          the capability matrix in words
+ *   /compare  -> dist/compare.html        the capability matrix in words
+ *   /docs     -> dist/docs.html           what you can do on this site
  *
  * `/c/*` is Disallow'd in public/robots.txt on purpose — a pixel-faithful
  * /c/damus must not rank for "Damus" — so it is not prerendered and not listed
@@ -70,6 +72,10 @@ const htmlPath = new URL('../dist/index.html', import.meta.url);
 // Measured against production, not read from docs: before this change
 // `curl -sI https://sandstr.app/compare` returned 307.
 const comparePath = new URL('../dist/compare.html', import.meta.url);
+// Flat file for the same reason, one more time. `docs/index.html` would make
+// /docs answer 307 to /docs/, and /docs is the URL the footer, the gallery and
+// the sitemap all point at.
+const docsPath = new URL('../dist/docs.html', import.meta.url);
 
 const SITE = 'https://sandstr.app';
 const routeDir = new URL('../dist/c/', import.meta.url);
@@ -122,7 +128,12 @@ if (!existsSync(htmlPath)) {
   fail(`missing ${fileURLToPath(htmlPath)} — did stage 1 (vite build) run?`);
 }
 
-const { render, renderCompare, shareRoutes } = await import(ssrEntry.href);
+const { render, renderCompare, renderDocs, shareRoutes, DOCS_TITLE, DOCS_DESCRIPTION } =
+  await import(ssrEntry.href);
+
+if (typeof renderDocs !== 'function' || !DOCS_TITLE || !DOCS_DESCRIPTION) {
+  fail('the SSR bundle exports no renderDocs()/DOCS_TITLE/DOCS_DESCRIPTION — did src/entry-server.tsx change?');
+}
 
 const template = readFileSync(htmlPath, 'utf8');
 const occurrences = template.split(PLACEHOLDER).length - 1;
@@ -299,10 +310,24 @@ const compareHtml = page({
 });
 writeFileSync(comparePath, compareHtml, 'utf8');
 
+// The title and description live next to the copy they summarise, in
+// src/host/docs/DocsContent.tsx — the same string the tab shows on the live
+// route, so the two can never disagree about what this page is.
+const docsMarkup = renderDocs();
+const docsHtml = page({
+  markup: docsMarkup,
+  path: '/docs',
+  title: DOCS_TITLE,
+  description: DOCS_DESCRIPTION,
+  minLength: 3000,
+});
+writeFileSync(docsPath, docsHtml, 'utf8');
+
 rmSync(ssrDir, { recursive: true, force: true });
 
 const kb = (n) => (Buffer.byteLength(n, 'utf8') / 1024).toFixed(1);
 console.log(
   `prerender: ${kb(galleryMarkup)} kB into dist/index.html, ` +
-    `${kb(compareMarkup)} kB into dist/compare.html`,
+    `${kb(compareMarkup)} kB into dist/compare.html, ` +
+    `${kb(docsMarkup)} kB into dist/docs.html`,
 );

@@ -8,7 +8,9 @@ Disallow: /c/
 # dated prose about what each client can and cannot do, with every claim linked
 # to its origin. That is an ordinary comparison — the thing /c/ must not be
 # mistaken for. It carries no client's chrome and cannot be mistaken for one of
-# their apps, so the reasoning above does not reach it.
+# their apps, so the reasoning above does not reach it. /docs is welcome on the
+# same grounds and needs even less argument: it is our own prose about our own
+# site, and carries no client's chrome at all.
 
 # The sitemap lists the prerendered pages. Nothing else is listed, for the
 # reason above.

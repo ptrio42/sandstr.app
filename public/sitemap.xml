@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Two URLs, on purpose. The client reproductions under /c/ are Disallow'd in
+  Three URLs, on purpose. The client reproductions under /c/ are Disallow'd in
   robots.txt (a pixel-faithful /c/damus must not rank for "Damus"), so listing
   them here would ask crawlers to fetch what the same site tells them not to.
 
-  /compare is the opposite case, and the reason this file has a second line:
-  sourced, dated text about what clients can and cannot do is an ordinary
-  comparison page, not a clone of anyone's product. Both pages are prerendered
-  (scripts/prerender.mjs) — a crawler that runs no JavaScript still gets the
-  whole thing.
+  /compare and /docs are the opposite case, and the reason this file has more
+  than one line: sourced, dated text about what clients can and cannot do, and
+  our own prose about our own site, are ordinary pages rather than clones of
+  anyone's product. All three are prerendered (scripts/prerender.mjs) — a
+  crawler that runs no JavaScript still gets the whole thing.
 
   No <lastmod>: a hand-written date goes stale the first time it is forgotten,
   and a lastmod crawlers learn to distrust is worth less than none.
@@ -19,5 +19,8 @@
   </url>
   <url>
     <loc>https://sandstr.app/compare</loc>
+  </url>
+  <url>
+    <loc>https://sandstr.app/docs</loc>
   </url>
 </urlset>

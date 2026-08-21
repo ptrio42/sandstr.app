@@ -1,5 +1,6 @@
 /**
- * Post-build step: proves `dist/_headers` still describes `dist/index.html`.
+ * Post-build step: proves `dist/_headers` still describes every HTML file the
+ * build emits.
  *
  * Runs as the fourth stage of `npm run build`, after scripts/prerender.mjs.
  *
@@ -47,7 +48,16 @@ for (const p of [htmlPath, headersPath]) {
 // started writing dist/c/<id>.html, twelve more documents carry the same inline
 // guard, and a hash that covers only one of them ships eleven pages whose
 // script the browser silently refuses to run.
-const htmlFiles = [htmlPath];
+//
+// Scanning the whole dist root rather than naming files closes the hole this
+// list had while it was hand-written: dist/compare.html has carried the guard
+// since the day it was added and was never checked here, and dist/docs.html
+// would have joined it. A page added to prerender.mjs is now covered by
+// existing there, not by someone remembering this file too.
+const htmlFiles = [];
+for (const name of readdirSync(distDir).sort()) {
+  if (name.endsWith('.html')) htmlFiles.push(new URL(name, distDir));
+}
 if (existsSync(routeDir)) {
   for (const name of readdirSync(routeDir).sort()) {
     if (name.endsWith('.html')) htmlFiles.push(new URL(name, routeDir));
