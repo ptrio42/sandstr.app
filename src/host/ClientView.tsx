@@ -969,8 +969,10 @@ export default function ClientView() {
       // so anything keyed off its mere existence starts work on a blank page.
       // The framed half already has a stable handle in
       // `.mobile-phone-frame-bezel`, which MobilePhoneFrame names for the tour
-      // engine. Inert at runtime, and deliberately NOT a styling hook — the
-      // moment something renders off it, moving it stops being safe.
+      // engine; the tour engine reads THIS one for the same purpose (its
+      // CLIENT_BOX_SELECTOR), to tell a step aimed at the whole client from one
+      // aimed at a sheet that merely fills a phone. Still not a styling hook —
+      // both readers want the client's box, so moving it moves the box.
       data-sandstr-stage="web"
       className={cn(
         'mx-auto h-full w-full max-w-5xl overflow-hidden overscroll-contain rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-gray-800 dark:bg-gray-950',
