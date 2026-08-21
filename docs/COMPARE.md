@@ -14,12 +14,12 @@
 ## The four sections
 
 1. **Chooser** — six questions (one platform, five capabilities) that narrow the set.
-2. **Capability matrix** — 12 axes × 8 clients = 96 cells, one glyph each; picking a cell prints the
-   claim, links to the FAQ answer behind it, and dates it. Tally today: 57 `yes`, 26 `no`,
-   13 `partial`, **0 `unknown`**.
+2. **Capability matrix** — 12 axes × 9 clients = 108 cells, one glyph each; picking a cell prints the
+   claim, links to the FAQ answer behind it, and dates it. Tally today: 60 `yes`, 34 `no`,
+   14 `partial`, **0 `unknown`**.
 3. **Side-by-side strip** — one part of the interface, in every client at once, switchable between
    four surfaces.
-4. **Every answer, in words** — the same 96 claims grouped by capability. This is the part the
+4. **Every answer, in words** — the same 108 claims grouped by capability. This is the part the
    build prerenders, and the reason the page is worth crawling.
 
 The strip is the part nothing else can do. Every simulator already reads `src/data/mock`, so the
@@ -35,10 +35,10 @@ our two guesses instead of their two designs.
 
 | Surface | What it mounts | Coverage |
 |---|---|---|
-| The first screen | `LoginScreen` / `WelcomeScreen` | 8/8 |
-| A note | `NoteCard` / `PostCard` / `MaterialCard` | 8/8 |
-| Writing a post | `ComposeScreen` / `ComposeBox` / `ComposeSheet` | 8/8 |
-| Getting around | `TabBar` / `BottomNav` / `BottomBar` / `LeftSidebar` / `Rail` / `Sidebar` | 8/8 |
+| The first screen | `LoginScreen` / `WelcomeScreen` / Boris's `HomeScreen` | 9/9 |
+| A note | `NoteCard` / `PostCard` / `MaterialCard` | 8/9 |
+| Writing a post | `ComposeScreen` / `ComposeBox` / `ComposeSheet` | 8/9 |
+| Getting around | `TabBar` / `BottomNav` / `BottomBar` / `LeftSidebar` / `Rail` / `Sidebar` | 9/9 |
 
 Two of the eight needed their component freed first, and neither was faked in the meantime. Snort's
 `Rail` only needed an `export`. Coracle's sidebar was written inline in `CoracleSimulator`, closed
@@ -48,8 +48,16 @@ as props. The submenu stayed **controlled**: the simulator closes it from eight 
 navigation and most tour commands), so owning it locally would have needed an imperative escape
 hatch to reproduce behaviour a prop gives for free.
 
-`Surface.absent` still exists and still prints. Nothing uses it today; it is what let the navigation
-surface ship at 7/8 while the extraction was outstanding, instead of shipping a lookalike.
+**`Surface.absent` stopped being decorative when Boris arrived.** It is what let the navigation
+surface ship at 7/8 while an extraction was outstanding; it now carries two permanent entries,
+because Boris renders no notes and has no composer at all. Both print their reason under the
+strip — a tile that is simply missing reads as "this client has a worse one", which is the
+opposite of true.
+
+Boris's **first screen** is the cell worth arguing about, and it is not a login screen: it mounts
+its signed-out `HomeScreen`, already full of articles, because that IS what Boris asks of you.
+Substituting a stand-in auth screen would have hidden the one row of the matrix Boris wins
+(`guest-mode`).
 
 Three clients need a shape mapper on the note surface (Primal's `PNote`, YakiHonne's `YakiNoteData`,
 Amethyst's `PostData`) because their card predates the shared `MockNote` plumbing.
@@ -84,7 +92,7 @@ The note surface is the exception: fluid, laid out at the column's own width, re
 
 - **Grounded in the FAQ banks, never in our simulators.** The FAQ describes the real apps
   (`src/data/faq/README.md` grounding tiers). The simulator is a subset of the real client —
-  `docs/GAPS.md` counts 145 `missing` rows — so reading a verdict off the sim would ship false
+  `docs/GAPS.md` counts 150 `missing` rows — so reading a verdict off the sim would ship false
   claims about someone else's product.
 - **Four verdicts, and `unknown` is load-bearing.** `yes` / `partial` / `no` / `unknown`. Where the
   sources neither show the feature nor deny it, the cell says so. Inferring absence from silence is
@@ -112,15 +120,24 @@ The note surface is the exception: fluid, laid out at the column's own width, re
 - **Date per claim.** Not stored here: `ClientEntry.reproduces` in `src/registry.tsx` ('v1.12.6',
   'as of Jul 2026'), printed beside every client. A capability claim about someone else's product
   with no version and no date decays into a false statement the moment they ship.
-- **Compiler-enforced coverage.** `Record<AxisId, CapabilityCell>` — adding an axis breaks all eight
+- **Compiler-enforced coverage.** `Record<AxisId, CapabilityCell>` — adding an axis breaks all nine
   client blocks until each one answers it, exactly like `ClientFaq.coverage`.
 
-Scope is the eight `ready` clients. Keychat and Gossip have no screen-map and no FAQ, so there is
+Scope is the nine `ready` clients. Keychat and Gossip have no screen-map and no FAQ, so there is
 nothing to ground a claim in; the page says that rather than leaving a gap.
+
+**Boris (added 2026-08-21) is the stress test of the `no` verdict.** Eight of its twelve cells are
+`no`, and not one of them is a shortcoming: it does not mute because it has no timeline, it has no
+wallet because it never spends, and it has no zap button because the value it moves is a split
+attached to what you publish rather than a payment you make. Two cells go the other way and are the
+strongest `yes` on the shelf — `guest-mode`, because Boris is the only client here that opens on
+content, and `signer`, because it has no key field at all. A matrix that reads a scope as a failure
+is reading the wrong thing, which is why every one of those `detail` lines says what the client does
+INSTEAD.
 
 ### Theme gotcha
 
-**The eight theme sheets disagree about how the theme is applied.** Damus and Coracle key off a
+**The nine theme sheets disagree about how the theme is applied.** Damus and Coracle key off a
 class (`.damus-simulator.dark`); Amethyst and YakiHonne key off an attribute
 (`.amethyst-simulator[data-theme="dark"]`). Every simulator root sets *both*, which is why this
 never surfaced before — setting only the class rendered Amethyst light on a dark page and YakiHonne
@@ -137,7 +154,8 @@ are brand-faithful reproductions rendered outside `/c/`.
 
 - **Widening past 12 axes is upstream work, not UI work.** Three of the four axes tried next —
   timed mutes, whether a mute list publishes to relays, DM request inboxes — are **not in the
-  screen-maps for half the clients**, because no recording opened those screens. They are all
+  screen-maps for half the clients**, because no recording opened those screens. (Boris answers
+  all three with the same shrug and it is a real answer: it has no mutes, no lists and no DMs.) They are all
   answerable from source (`fast-zap` was), at roughly one reading pass per client per axis. Budget
   it that way or not at all; do not let an axis ship with four `unknown`s to look wider.
 - **The chooser asks five capability questions out of twelve axes.** Which five is a product
@@ -179,7 +197,8 @@ an indexable page can have. Three now, each covering a case the others cannot:
   `/compare?cell=<client>:<axis>`. This is the only route out of a client view, and the strongest of
   the three: someone reading how Damus zaps is one click from how the other seven do. It uses the
   matrix's own `source` mapping in reverse, so there is no new data and a renamed FAQ entry silently
-  stops offering the link rather than pointing somewhere wrong. 8 entries per client qualify.
+  stops offering the link rather than pointing somewhere wrong. 8 entries per client qualify
+  (Boris's twelve cells cite 10 distinct entries).
 
 **And one link back.** The prerendered `/compare` is the page body without `Layout`, so it has no
 header and no footer, and every other link on it points under `/c/` — which `robots.txt` Disallows.

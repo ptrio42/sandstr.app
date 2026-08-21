@@ -22,6 +22,7 @@ import { LoginScreen as SnortLogin } from '../../../simulators/snort/screens/Log
 import { LoginScreen as WispLogin } from '../../../simulators/wisp/screens/LoginScreen';
 import { WelcomeScreen as NosturWelcome } from '../../../simulators/nostur/screens/WelcomeScreen';
 import { LoginScreen as CoracleLogin } from '../../../simulators/coracle/screens/LoginScreen';
+import { HomeScreen as BorisHome } from '../../../simulators/boris/screens/HomeScreen';
 
 import { PHONE, WEB, type Surface, type SurfacePreviewProps } from './types';
 
@@ -37,12 +38,35 @@ function NosturFirst() { return <NosturWelcome onLogin={noop} />; }
 function CoracleFirst() {
   return <CoracleLogin onLogin={noop} onSignUp={noop} onRemoteSigner={noop} onExternal={noop} />;
 }
+// Boris has no login screen to show, and that is the comparison. Its first
+// screen is Home, signed out, already full of articles — the two dismissible
+// prompts are the only thing on it that mentions an account, and neither
+// blocks. Mounting a stand-in auth screen here would hide the one row of this
+// table Boris actually wins.
+function BorisFirst() {
+  return (
+    <BorisHome
+      loggedIn={false}
+      showFirstTime
+      showLoginPrompt
+      progress={{}}
+      onDismissFirstTime={noop}
+      onDismissLoginPrompt={noop}
+      onOpenAbout={noop}
+      onOpenLogin={noop}
+      onOpenSupport={noop}
+      onOpenProfile={noop}
+      onOpenHomeSettings={noop}
+      onOpenArticle={noop}
+    />
+  );
+}
 
 export const firstScreenSurface: Surface = {
   id: 'first-screen',
   label: 'The first screen',
   blurb:
-    'What each client asks for before it lets you in — and whether there is a way past it without a key. This is the same question the top two rows of the matrix answer in words.',
+    'What each client asks for before it lets you in — and whether there is a way past it without a key. This is the same question the top two rows of the matrix answer in words. Boris is the odd one out on purpose: its first screen is not a door, it is the reading list.',
   byClient: {
     damus: { Component: DamusFirst, rootClass: 'damus-simulator', natural: PHONE },
     amethyst: { Component: AmethystFirst, rootClass: 'amethyst-simulator', natural: PHONE },
@@ -52,5 +76,6 @@ export const firstScreenSurface: Surface = {
     wisp: { Component: WispFirst, rootClass: 'wisp-simulator', natural: PHONE },
     nostur: { Component: NosturFirst, rootClass: 'nostur-simulator', natural: PHONE },
     coracle: { Component: CoracleFirst, rootClass: 'coracle-simulator', natural: WEB },
+    boris: { Component: BorisFirst, rootClass: 'boris-simulator', natural: PHONE },
   },
 };

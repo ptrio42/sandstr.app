@@ -198,4 +198,11 @@ export const noteSurface: Surface = {
     nostur: { Component: NosturNoteCell, rootClass: 'nostur-simulator' },
     coracle: { Component: CoracleNoteCell, rootClass: 'coracle-simulator' },
   },
+  // Boris renders no notes at all, so there is nothing of its to mount here.
+  // Printed rather than skipped: a missing tile with no line under it reads as
+  // "this client has a worse note card", which is the opposite of true.
+  absent: {
+    boris:
+      'renders no notes. Its card is a highlight — somebody else’s sentence in italics, in the colour of whoever marked it, over the site it came from.',
+  },
 };

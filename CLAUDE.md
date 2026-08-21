@@ -60,7 +60,7 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
   (mostek `FaqMiniTourLauncher`).
 - **`src/host/`** — `Layout`, `Gallery`, `ClientView` (klient + ramka + **baner disclaimera**),
   `CommandPalette`, `ClientSwitcher`, `FaqPanel`, oraz `compare/` — trasa `/compare`: macierz
-  możliwości + te same powierzchnie UI w ośmiu klientach obok siebie (`docs/COMPARE.md`).
+  możliwości + te same powierzchnie UI w dziewięciu klientach obok siebie (`docs/COMPARE.md`).
   `CapabilityTable.tsx` jest współdzielony z prerenderem (`CompareStatic` → `entry-server.tsx`),
   więc wersja dla crawlerów nie może się rozjechać z żywą stroną.
 - **`src/shareMeta.ts`** — tytuł i opis trasy `/c/<id>`, jedno źródło dla karty share
@@ -220,15 +220,16 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
   zmianą jego symulatora. Keychat i Gossip screen-mapy NIE mają.
 - `docs/FIDELITY.md` — tokeny marki per klient + ich pliki-źródła w repo klienta + kanały opt-in.
 - `docs/GAPS.md` + `docs/gaps/<klient>.md` (schemat: `docs/gaps/README.md`) — ile z realnego klienta mamy
-  (776 wierszy w jedenastu ledgerach, stan 2026-08-21 — ledger Borisa jest deklaracją autora,
+  (778 wierszy w jedenastu ledgerach, stan 2026-08-21 — ledger Borisa jest deklaracją autora,
   nie audytem, i jest tak oznaczony); czytaj ZANIM dodasz `showMe` w FAQ.
 - `docs/TOURS.md` — reguły silnika tourów; czytaj przed edycją `src/data/tours/` i `src/components/tour/`.
 - `docs/VERSIONS.md` — wersjonowanie symulatorów per klient: procedura freeze starszej wersji. Czytaj
   ZANIM przebudujesz symulator do nowej wersji realnego klienta — freeze idzie PRZED przebudową.
-- `docs/FAQ.md` — stan wdrożenia FAQ (231 wpisów, 137 mini-tourów, 8 klientów); kontrakt autorski
+- `docs/FAQ.md` — stan wdrożenia FAQ (274 wpisy, 153 mini-toury, 9 klientów); kontrakt autorski
   w `src/data/faq/README.md`.
-- `docs/COMPARE.md` — `/compare`: macierz możliwości (9 osi × 8 klientów) + ten sam post w ośmiu
-  klientach. Czytaj ZANIM dotkniesz `src/data/capabilities.ts` — werdykt bez cytatu i bez wersji
+- `docs/COMPARE.md` — `/compare`: macierz możliwości (12 osi × 9 klientów) + ten sam post w ośmiu
+  klientach (Boris nie renderuje notatek — jest na stripie jako `absent` z powodem).
+  Czytaj ZANIM dotkniesz `src/data/capabilities.ts` — werdykt bez cytatu i bez wersji
   jest twierdzeniem o cudzym produkcie, a `unknown` jest pełnoprawną wartością, nie brakiem.
 - `docs/OUTREACH.md` — jak promować to na Nostrze: zmierzone formy, które działają na
   koncie właściciela, realne tematy pytań z `#asknostr`, playbook odpowiadania i lista

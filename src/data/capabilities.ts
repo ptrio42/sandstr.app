@@ -15,7 +15,7 @@
  * and in upstream source — they describe the REAL client. So does this file.
  *
  * It is NOT derived from our simulators. The simulator is a subset of the real
- * client (`docs/GAPS.md` counts the difference: 533 rows, 145 `missing`), so
+ * client (`docs/GAPS.md` counts the difference: 534 rows, 150 `missing`), so
  * "our sim has no button for it" is not evidence that the real client lacks
  * the feature. Reading a verdict off the simulator would ship false claims
  * about someone else's product.
@@ -40,9 +40,17 @@
  * screen-map. /compare prints it beside every client. Never state a capability
  * without it.
  *
- * SCOPE. The eight `ready` clients — the ones with a FAQ bank. Keychat and
+ * SCOPE. The nine `ready` clients — the ones with a FAQ bank. Keychat and
  * Gossip are `preview`, have no screen-map and no FAQ, so there is nothing to
  * ground a claim in; they are absent by design, not by omission.
+ *
+ * BORIS IS THE STRESS TEST OF THE `no` VERDICT. It is a reader, not a social
+ * client, so eight of its twelve cells are `no` — and none of them is a
+ * shortcoming. It does not mute because it has no timeline; it has no wallet
+ * because it never spends; it has no zap button because the value it moves is
+ * a split attached to what you publish, not a payment you make. A matrix that
+ * reads those as failures is reading the wrong thing, which is why every
+ * `detail` here says what the client does INSTEAD.
  */
 
 import type { CanonicalTopic } from './faq/types';
@@ -756,6 +764,91 @@ export const capabilities: Record<string, ClientCapabilities> = {
     'fast-zap': {
       verdict: 'yes',
       detail: 'A click sends your default amount, which ships at 21 sats. Change it in App Settings.',
+      source: 'zap',
+    },
+  },
+  // ---------------------------------------------------------------- Boris --
+  // The reader on a shelf of social clients, and the row that makes the table
+  // worth reading: eight `no`s that are not shortcomings but a scope. Boris
+  // does not mute because it does not have a timeline; it has no wallet
+  // because it never spends; it has no zap button because the value it moves
+  // is a split attached to what you publish. Every cell below cites the entry
+  // that says so in the client's own terms.
+  boris: {
+    signer: {
+      verdict: 'yes',
+      detail:
+        'Amber (NIP-55) or a bunker (NIP-46) are the only two doors — there is no field to type a key into anywhere in the app.',
+      source: 'sign-in',
+    },
+    'read-only': {
+      verdict: 'no',
+      detail:
+        'No key field means no npub to paste either. You are connected to a signer, or signed out — and signed out is a full reader.',
+      source: 'sign-in',
+      grounding:
+        'dergigi/boris-android@8456da4 — ui/auth/AuthUiState.kt has four states (LoggedOut, MissingSigner, LoggedIn, Connecting) and AuthBar.kt:88-110 renders exactly two buttons; no npub input exists.',
+    },
+    'multi-account': {
+      verdict: 'no',
+      detail:
+        'One session at a time, no switcher. Changing accounts is You → ⋮ → Sign out, then connect the other signer.',
+      source: 'multi-account',
+    },
+    'mute-words': {
+      verdict: 'no',
+      detail:
+        'Boris has no mute or block list of any kind. The only filter is the three audience layers — nostrverse, friends, mine.',
+      source: 'hide-highlights',
+      grounding:
+        'dergigi/boris-android@8456da4 — "mute" occurs twice in 291 Kotlin files, both as a colour variable (SettingsTints.kt:5, YouScreen.kt:384); there is no mute, block or filter list.',
+    },
+    'mute-hashtags': {
+      verdict: 'no',
+      detail: 'Nothing to mute a hashtag in — there is no tag surface and no mute list.',
+      source: 'hide-highlights',
+      grounding:
+        'dergigi/boris-android@8456da4 — same absence; no hashtag screen and no NIP-51 mute list anywhere (Nip51.kt handles bookmark lists only).',
+    },
+    'mute-threads': {
+      verdict: 'no',
+      detail: 'There are no threads: Boris has no replies, no comments and no conversation view.',
+      source: 'reply',
+    },
+    'emoji-reactions': {
+      verdict: 'partial',
+      detail:
+        'One fixed emoji, and it is not called a reaction: "Mark as read" publishes a 📚 kind 7 (kind 17 for a web page). No picker, no like. The 👀 lookmarks it lists are made elsewhere.',
+      source: 'lookmarks',
+    },
+    'builtin-wallet': {
+      verdict: 'no',
+      detail:
+        'No wallet, no NWC field, no WebLN, no balance. The one Lightning surface hands a lightning: URI to whatever wallet the phone has.',
+      source: 'connect-wallet',
+    },
+    'clear-cache': {
+      verdict: 'no',
+      detail:
+        'No clear button. Settings → Airplane mode sets a cap instead — 210 MB to 5 GB — which the caches evict down to at the next launch.',
+      source: 'clear-cache',
+    },
+    'guest-mode': {
+      verdict: 'yes',
+      detail:
+        'The only client here that opens on content. Home, Feeds, Search and the whole reader work with no key; Library and You ask politely rather than blocking.',
+      source: 'no-account',
+    },
+    'search-place': {
+      verdict: 'yes',
+      detail:
+        'The fourth tab, with four labelled result kinds — but it searches only what Boris has already downloaded; relay-side search is not implemented at this version.',
+      source: 'search',
+    },
+    'fast-zap': {
+      verdict: 'no',
+      detail:
+        'There is no zap button at all. What Boris does instead is attach zap-split tags to every highlight you publish, so someone else\'s zap is shared with the author.',
       source: 'zap',
     },
   },

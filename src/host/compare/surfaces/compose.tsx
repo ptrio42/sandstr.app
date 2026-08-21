@@ -68,4 +68,8 @@ export const composeSurface: Surface = {
     nostur: { Component: NosturComposeCell, rootClass: 'nostur-simulator', natural: PHONE },
     coracle: { Component: CoracleComposeCell, rootClass: 'coracle-simulator', natural: WEB_PANEL },
   },
+  absent: {
+    boris:
+      'has no composer. The only thing you publish is a highlight, and you make one by selecting a sentence in an article — there is no screen to show.',
+  },
 };

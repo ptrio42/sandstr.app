@@ -464,7 +464,10 @@ export function ReaderScreen({
       </div>
 
       {/* Selection toolbar — inverseSurface pill, 24dp corners
-          (HighlightTextToolbar.kt:53-84). "Highlight" only when logged in. */}
+          (HighlightTextToolbar.kt:53-84). "Highlight" only when logged in.
+          The third action is "TTS from here", not "Read from here"
+          (strings.xml:418 `tts_from_here`); Copy and Select all come from
+          android.R.string, so they read as the platform's own labels. */}
       {selection && (
         <div className="absolute inset-x-0 top-24 z-40 flex justify-center px-4">
           <div
@@ -472,7 +475,7 @@ export function ReaderScreen({
             style={{ background: '#E6E1E5', color: '#313033' }}
             data-tour="boris-selection-toolbar"
           >
-            {['Copy', ...(loggedIn ? ['Highlight'] : []), 'Read from here', 'Select all'].map((label) => (
+            {['Copy', ...(loggedIn ? ['Highlight'] : []), 'TTS from here', 'Select all'].map((label) => (
               <button
                 key={label}
                 type="button"
