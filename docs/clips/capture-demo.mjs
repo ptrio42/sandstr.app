@@ -131,12 +131,11 @@ const MOUNTED = `/SIMULATION|Simulation/.test(document.body.innerText)`;
 const CLIENT_UP = `document.querySelectorAll('[data-tour]').length > 0`;
 
 async function setViewport(page, vp) {
-  // All FIVE fields, not just the device pair. `startPool` sizes each capture
-  // from `viewportW/viewportH/dsf` and falls back to the 430x775 phone when they
-  // are missing — so a desktop take with only `deviceW/deviceH` set was grabbing
-  // uncapped 2560x2000 frames, 5 MP each, and the pool delivered 4 frames in
-  // 1.7s (measured 2026-08-21). `deviceW/deviceH` are what the encoder and the
-  // cursor clamp read. Set them together or the failure is a silent slideshow.
+  // All FIVE fields, not just the device pair: `startPool` sizes each capture
+  // from `viewportW/viewportH/dsf` and falls back to a 430x775 phone when they
+  // are missing (a desktop take with only the device pair set grabbed uncapped
+  // 2560x2000 frames and the pool crawled), while `deviceW/deviceH` are what the
+  // encoder and the cursor clamp read.
   page.viewportW = vp.w;
   page.viewportH = vp.h;
   page.dsf = vp.dsf;
@@ -147,28 +146,53 @@ async function setViewport(page, vp) {
   });
 }
 
+let navStamp = 0;
+
+/**
+ * Navigate, and be sure the answers afterwards come from the NEW document.
+ *
+ * `Page.navigate` followed by an immediate poll can be answered by the OUTGOING
+ * document, whose `readyState` is already 'complete' — CLAUDE.md carries this
+ * as a measured gotcha and the og:cards generator waits on `Page.loadEventFired`
+ * because of it. The failure here was worse than a stale read: the second
+ * navigation of a reframe reported `innerWidth` 430 after the override had been
+ * set to 1280, so the desktop retry "saw" the phone gate again and the run died
+ * with `still gated at desktop size` on a client that reframes perfectly. It
+ * survived the first weeks by timing alone, and stopped surviving when the pool
+ * fix (96c9eda) changed when frames are pulled.
+ *
+ * Stamping the outgoing document rather than subscribing to the load event, for
+ * a blunt reason: `CDP.off(method)` drops EVERY handler for that method, and
+ * `startPool` has its own `Page.loadEventFired` subscription — unsubscribing
+ * would silently stop the recorder. A fresh document simply has no stamp.
+ */
 async function goto(page, url) {
+  const stamp = ++navStamp;
+  await page.eval(`window.__sandstrNav = ${stamp}`).catch(() => {});
   await page.send('Page.navigate', { url });
-  await page.until(`document.readyState === 'complete'`, { timeout: 30000, label: 'document ready' });
+  await page.until(
+    `window.__sandstrNav !== ${stamp} && document.readyState === 'complete'`,
+    { timeout: 30000, label: 'a NEW document, ready' },
+  );
   await page.until(MOUNTED, { timeout: 25000, label: 'ClientView (the disclaimer banner)' });
 }
 
-async function capture(page, pool, base) {
-  // Phone first: it is the framing for the six framed clients, and it is what
-  // someone opening a link from a Nostr reply is holding. If ClientView answers
-  // with the desktop gate, this is one of the frameless clients and the take is
-  // re-framed and reloaded once — a second load costs nothing here, because
-  // unlike cut #3 this take makes no claim that spans two clients.
-  await setViewport(page, PHONE);
+async function capture(page, pool, base, vp) {
+  // ONE viewport, set once, in a browser launched for it. There is deliberately
+  // no reframe-and-reload: setting a second, different device-metrics override
+  // in a live session does not survive the next navigation — measured on Chrome
+  // 151, the page came back at the FIRST override's width every time, so the
+  // desktop retry re-rendered the phone gate and the run blamed the client id.
+  // Three fixes aimed at the mechanism (stale outgoing document, navigation
+  // outrunning the override, a missing clearDeviceMetricsOverride) all failed,
+  // which is where guessing stops paying. The structural answer was already in
+  // the harness header — one Chrome per take — so a gated client ends this take
+  // and main() runs a second one at desktop size in a fresh browser.
+  await setViewport(page, vp);
   await goto(page, base + LINK.path);
 
-  let framing = 'phone';
-  if (await page.eval(GATED)) {
-    framing = 'desktop';
-    await setViewport(page, DESK);
-    await goto(page, base + LINK.path);
-    if (await page.eval(GATED)) throw new Error('still gated at desktop size — check the client id');
-  }
+  const framing = vp === DESK ? 'desktop' : 'phone';
+  if (await page.eval(GATED)) return { gated: true, framing };
 
   // Only now, with the framing settled, is it worth waiting for the simulator:
   // its chunk loads lazily, long after the route matches.
@@ -260,7 +284,7 @@ async function capture(page, pool, base) {
   // gap, ends included — an average sails straight through a freeze.
   const secs = (manifest.windowMs / 1000).toFixed(1);
   return {
-    frames: manifest.length, secs, out, framing, wall, tail, reproduces,
+    gated: false, frames: manifest.length, secs, out, framing, wall, tail, reproduces,
     hole: manifest.holeMs, holeAt: manifest.holeAtMs,
   };
 }
@@ -273,24 +297,53 @@ async function main() {
   console.log(`  · link: ${LINK.path}`);
 
   try {
-    const r = await withBrowser(
-      { id: `demo-${SLUG}`, debugPort: 9423, workDir: WORK, chrome: CHROME, windowSize: '1400,1100' },
-      (cdp, page, pool) => capture(page, pool, base),
+    const take = (vp, port) => withBrowser(
+      { id: `demo-${SLUG}`, debugPort: port, workDir: WORK, chrome: CHROME, windowSize: '1400,1100' },
+      (cdp, page, pool) => capture(page, pool, base, vp),
     );
+    // Phone first — it is the framing for the framed clients and what someone
+    // opening a link from a Nostr reply is holding. A frameless client answers
+    // with ClientView's desktop gate; that take is discarded and retaken whole.
+    let r = await take(PHONE, 9423);
+    if (r.gated) {
+      console.log(`  · ${LINK.clientId} is a desktop client — retaking at ${DESK.w}x${DESK.h}`);
+      r = await take(DESK, 9424);
+      if (r.gated) throw new Error(`still gated at ${DESK.w}px — is ${LINK.clientId} a real client id?`);
+    }
+    // ONE floor, and a low one, because the framing does NOT set the rate — the
+    // CLIENT does. Measured after the pool fix (96c9eda), same machine:
+    //
+    //   coracle /c/coracle?screen=relays   desktop  11.8 fps   hole 420ms
+    //   damus   /c/damus                   phone    11.8 fps   hole 423ms
+    //   wisp    ?showme=zap                phone     7.7 fps   hole 568ms
+    //   wisp    ?tour=1 (3 steps)          phone    13.6 fps   hole  368ms
+    //
+    // Read the order of magnitude, not the digits: a repeat run of the same
+    // four gave 13.1 / 12.8 / 8.3 / 13.6. One earlier reading of the tour take
+    // came in at 5.3 fps with a 1501ms hole and did NOT reproduce — machine
+    // load, not a property of Wisp. That near-miss is why the floor sits at 4
+    // rather than just under the slowest number seen once.
+    //
+    // An earlier version of this warned per framing, on the theory that a
+    // 1600x1250 desktop frame costs about twice a phone one. That theory came
+    // from numbers taken while the pool was dead for its first four seconds;
+    // with it fixed, the desktop take ties the fastest phone take and the slow
+    // one is Wisp — whose splash animates forever, so captureScreenshot spends
+    // most of its time waiting for the next surface frame. That is fidelity,
+    // not a defect (lesson 11), so the floor must sit below it or it cries wolf
+    // on the most faithful client here.
+    //
+    // The average is the weaker signal anyway: it sails straight through a
+    // freeze. A hole is what a viewer actually sees, so it gets its own line.
     const fps = r.frames / Number(r.secs);
-    // The floor is per FRAMING, because the two are not comparable: a phone
-    // frame is 860x1550 and a desktop one is capped at 1600x1250, so the
-    // desktop take pays about twice the per-frame cost. Measured 2026-08-21 on
-    // the same machine: `/c/wisp?showme=zap` 16.1 fps at phone,
-    // `/c/coracle?screen=relays` 7.4 fps at desktop. One threshold for both
-    // would either miss a genuinely dead phone take or cry wolf on every
-    // healthy desktop one — and a warning that always fires stops being read.
-    const floor = r.framing === 'desktop' ? 5 : 8;
     console.log(
       `  · ${SLUG} → ${r.frames} frames, ${r.secs}s  ${fps.toFixed(1)} fps  (${r.framing})` +
       `  worst hole ${r.hole}ms@${(r.holeAt / 1000).toFixed(1)}s` +
-      (fps < floor ? `   ← THIN for ${r.framing} (see startPool in harness.mjs)` : ''),
+      (fps < 4 ? '   ← THIN (see startPool in harness.mjs)' : ''),
     );
+    if (r.hole >= 1000) {
+      console.log(`    ⚠ ${r.hole}ms with no frame at ${(r.holeAt / 1000).toFixed(1)}s — at 30fps CFR that is ${Math.round(r.hole / 33)} identical frames.`);
+    }
     console.log(`  · reproduces: ${r.reproduces || '(none — check dist/c/<id>.html)'}`);
     if (r.wall) {
       console.log(

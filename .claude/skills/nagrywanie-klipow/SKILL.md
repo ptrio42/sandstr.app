@@ -124,10 +124,18 @@ Cztery tryby, wszystkie zmierzone 2026-08-21: mini-tour (`?showme=`), tour (`?to
   **baner disclaimera** (renderuje się też na bramce i na ścianie logowania), a sygnałem gotowości
   klienta `[data-tour]` — to samo, na co czeka `ClientView` przy `?tour=1`, więc nie może się
   rozjechać z aplikacją.
-- **Próg „THIN" jest per kadr**: 8 fps dla telefonu, 5 dla desktopu. Zmierzone na jednej maszynie:
-  `?showme=zap` na Wispie 16,1 fps (telefon), `?screen=relays` na Coracle 7,4 fps (desktop, klatka
-  1600×1250 zamiast 860×1550). Jeden wspólny próg albo przepuszczałby martwy take telefonowy, albo
-  krzyczał przy każdym zdrowym desktopowym.
+- **Próg „THIN" jest JEDEN i niski (4 fps), bo o tempie decyduje KLIENT, nie kadr.** Zmierzone po
+  poprawce puli (`96c9eda`), jedna maszyna: Coracle desktop 11,8 fps (dziura 420 ms), Damus telefon
+  11,8, Wisp `?showme=zap` 7,7. Powtórka: 13,1 / 12,8 / 8,3 — czytaj rząd wielkości, nie cyfry.
+  **Ostrzeżenie o mierzeniu raz:** pierwszy odczyt Wispa `?tour=1` dał 5,3 fps i dziurę 1501 ms,
+  co wyglądało na twardy wniosek o kliencie; powtórka tego samego polecenia dała **13,6 fps
+  i 368 ms**. Ten jeden odczyt był odstający (obciążenie maszyny), a nie własnością Wispa —
+  dlatego próg stoi na 4, a nie tuż pod 5,3. Wcześniejsza
+  wersja miała próg per kadr, na teorii „desktopowa klatka kosztuje 2×" — ta teoria wzięła się
+  z liczb mierzonych przy martwej puli. Po naprawie desktop remisuje z najszybszym telefonem,
+  a najwolniejszy jest Wisp, który animuje bez końca (lekcja 11: to wierność, nie bug), więc próg
+  musi siedzieć POD nim. Średnia i tak jest słabszym sygnałem — przechodzi przez zamrożenie jak
+  nóż przez masło — dlatego **najdłuższa dziura ma osobną linię** i ostrzeżenie od 1000 ms.
 
 ## Uruchomienie — cut #1 (stills + teaser z .mov)
 
@@ -200,6 +208,15 @@ naraz (równoległe instancje przeciw jednemu Vite dawały puste pliki) i wymusz
     skopiował na starcie tylko parę `deviceW/deviceH`, dostał fallback `?? 430 / ?? 775` i **łapał
     nieprzycięte klatki 2560×2000** (~5 MP) przy kadrze desktopowym. Objaw jest mylący dokładnie
     tak jak w lekcji 10: wygląda na martwą pulę albo statyczną stronę, a jest źle policzonym cropem.
+13. **NIE przekadrowuj w środku sesji — jeden Chrome na jeden viewport.** Drugi, inny
+    `Emulation.setDeviceMetricsOverride` w żywej sesji **nie przeżywa kolejnej nawigacji**:
+    zmierzone na Chrome 151, po `set(430) → nav → set(1280) → nav` strona wraca z `innerWidth`
+    **430**, czyli z PIERWSZym override'em. `capture-demo.mjs` wykrywał tak bramkę desktopową,
+    przekadrowywał i ładował ponownie — i dostawał tę samą bramkę, po czym oskarżał id klienta.
+    Trzy łatki w mechanizm (nieświeży dokument wychodzący, nawigacja wyprzedzająca override, brak
+    `clearDeviceMetricsOverride`) nie ruszyły tego ani o krotę; strukturalna odpowiedź stała już
+    w nagłówku harnessu („one Chrome per capture"). Dziś bramka **kończy ujęcie**, a `main()`
+    odpala drugie w nowej przeglądarce z viewportem ustawionym od startu.
 
 ## Checklist
 
