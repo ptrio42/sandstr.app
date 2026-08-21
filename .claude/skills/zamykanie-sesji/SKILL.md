@@ -98,8 +98,10 @@ Zaproponuj miejsce, **wyboru dokonuje człowiek**:
 - **Nie odgrzewaj decyzji zamrożonych** — bez wyzwalacza odmrożenia idą do „zamrożonych", nie do
   „nierozstrzygniętych".
 - Jeśli człowiek jednak poprosi o commit, **konwencję odczytaj z `git log --oneline -20`** zamiast
-  wymyślać własną: dziś jest to `typ(zakres): temat po polsku` (`feat(faq)`, `fix(tour)`,
-  `docs(tours)`, `tooling(clips)`), a merge to `Merge: <opis>`.
+  wymyślać własną — i zaufaj logowi, nie tej linijce. Stan na 2026-08-21 (20/20 commitów):
+  `typ(zakres): temat PO ANGIELSKU` (`feat(compare)`, `fix(unfurl)`, `chore(mock)`, `docs`), a merge
+  to `merge: <opis>` małą literą. Zgadza się to z regułą globalną „wszystko, co ląduje w repozytorium,
+  po angielsku"; do rozmowy ze mną wracasz po polsku.
 
 Przeczytaj `references/pytania-do-retro.md`, gdy retro wychodzi grzeczne i ogólne albo gdy sesja była
 długa i chcesz z niej wycisnąć konkret.

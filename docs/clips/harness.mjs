@@ -22,6 +22,7 @@
 // No npm deps: Node >= 22 ships a global WebSocket (this repo runs 24).
 
 import { spawn } from 'node:child_process';
+import { closeSync, openSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -568,7 +569,12 @@ export function run(cmd, args) {
  */
 export async function withBrowser({ id, debugPort, workDir, chrome: CHROME, windowSize = '1400,1000' }, fn) {
   const userDataDir = join(workDir, `.chrome-profile-${id}`);
+  const logPath = join(workDir, `.chrome-${id}.log`);
   await rm(userDataDir, { recursive: true, force: true });
+  await mkdir(workDir, { recursive: true });
+  // A raw fd, NOT createWriteStream: a fresh write stream has `fd: null` until
+  // it opens, and spawn rejects it outright ("The argument 'stdio' is invalid").
+  const logFd = openSync(logPath, 'w');
   const chrome = spawn(CHROME, [
     '--headless=new', `--remote-debugging-port=${debugPort}`, `--user-data-dir=${userDataDir}`,
     // Screencast frames come out at the CSS viewport size; only a browser-level
@@ -577,7 +583,13 @@ export async function withBrowser({ id, debugPort, workDir, chrome: CHROME, wind
     '--no-first-run', '--no-default-browser-check', '--hide-scrollbars',
     '--force-color-profile=srgb', '--disable-background-timer-throttling',
     '--disable-renderer-backgrounding', `--window-size=${windowSize}`,
-  ], { stdio: ['ignore', 'ignore', 'ignore'] });
+  // Chrome's stderr goes to a FILE, not to /dev/null. It used to be discarded,
+  // so every launch failure — a stale profile lock, a half-finished auto-update,
+  // a port already held — surfaced as the same bare "did not expose a DevTools
+  // endpoint" with nothing to go on. It is a file rather than `inherit` because
+  // Chrome writes a wall of CVDisplayLink noise that would bury the capture's
+  // own progress output.
+  ], { stdio: ['ignore', 'ignore', logFd] });
 
   let wsUrl = null;
   for (let i = 0; i < 60 && !wsUrl; i++) {
@@ -587,7 +599,19 @@ export async function withBrowser({ id, debugPort, workDir, chrome: CHROME, wind
       wsUrl = (await r.json()).webSocketDebuggerUrl;
     } catch { /* not up yet */ }
   }
-  if (!wsUrl) { chrome.kill(); throw new Error('Chrome did not expose a DevTools endpoint'); }
+  if (!wsUrl) {
+    chrome.kill();
+    closeSync(logFd);
+    // Drop the known-harmless noise; whatever is left is the reason.
+    const noise = /CVDisplayLink|Trying to load the allocator|^\s*$/;
+    const tail = await readFile(logPath, 'utf8')
+      .then((t) => t.split('\n').filter((l) => !noise.test(l)).slice(-6).join('\n').trim())
+      .catch(() => '');
+    throw new Error(
+      `Chrome did not expose a DevTools endpoint on ${debugPort} after 15s`
+      + (tail ? `\n  chrome stderr:\n    ${tail.split('\n').join('\n    ')}` : `\n  (nothing on stderr — see ${logPath})`),
+    );
+  }
 
   const cdp = await CDP.attach(wsUrl);
   const { targetInfos } = await cdp.send('Target.getTargets');
@@ -621,5 +645,6 @@ export async function withBrowser({ id, debugPort, workDir, chrome: CHROME, wind
     await pool.stop().catch(() => {});
     cdp.close();
     chrome.kill();
+    try { closeSync(logFd); } catch { /* already closed */ }
   }
 }
