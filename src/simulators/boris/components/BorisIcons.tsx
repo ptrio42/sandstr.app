@@ -64,10 +64,12 @@ export function MenuBookGlyph({ filled = false, size = 24, className }: GlyphPro
  * measures a square 53 x 53 in the same frames, which is how we know the capture
  * is not squashed and this glyph really is wider than it is tall.
  *
- * Deliberately NO `filled` branch. Feeds selected and Feeds unselected measure
- * pixel-identical in the recording — the selection is the M3 indicator pill and
- * the colour, not a second glyph. Home does swap outline for solid, which is
- * why HomeGlyph keeps its pair.
+ * Deliberately NO `filled` branch. Thresholded and compared, the selected and
+ * unselected Feeds glyphs differ only along their edges: not one ink pixel of
+ * either sits more than 1 px outside the other, where a solid card against an
+ * outlined one would differ across the whole hole. The selection is the M3
+ * indicator pill and the colour, not a second glyph. Home DOES swap outline for
+ * solid under the same test, which is why HomeGlyph keeps its pair.
  */
 export function DynamicFeedGlyph({ size = 24, className }: Omit<GlyphProps, 'filled'>) {
   return (
