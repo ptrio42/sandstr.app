@@ -26,6 +26,7 @@ import {
   X,
 } from 'lucide-react';
 import { IconButton } from '../components/TopBar';
+import { ReaderSelectionOverlay, useReaderSelection } from '../components/ReaderSelection';
 import { BorisAvatar } from '../components/Avatar';
 import { borisHighlights, userByPubkey, type BorisArticle, type BorisBlock } from '../borisData';
 import type { MockUser } from '../../../data/mock';
@@ -266,37 +267,22 @@ export function ReaderScreen({
   ttsSlot,
 }: ReaderScreenProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [selection, setSelection] = useState<{ text: string; top: number } | null>(null);
   const [findQuery, setFindQuery] = useState('');
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   /**
-   * Read whatever the visitor actually selected, and remember where it sits so
-   * the toolbar can float over it the way the real one does.
+   * Selection is OURS, not the browser's — see components/ReaderSelection.tsx
+   * for why. Short version: on a phone a long-press hands the gesture to the
+   * platform, whose callout bar draws over Boris's toolbar and whose handles
+   * fire no event we can hear, so the visitor gets the system menu instead of
+   * the one control this client exists to show.
    *
-   * The `top` is measured against the READER's own box, never the viewport: the
-   * device screen is a transformed element, so a viewport coordinate lands in
-   * the wrong place inside the phone frame (the repo-wide `position: fixed`
-   * trap, .claude/rules/simulators.md).
+   * Geometry comes back in ROOT coordinates for the toolbar, because the device
+   * screen is a transformed element and a viewport coordinate lands in the
+   * wrong place inside the phone frame (.claude/rules/simulators.md).
    */
-  const readSelection = () => {
-    const sel = window.getSelection();
-    const root = rootRef.current;
-    const text = sel?.toString().trim() ?? '';
-    if (!sel || sel.isCollapsed || text.length < 2 || !root) {
-      setSelection(null);
-      return;
-    }
-    const node = sel.anchorNode;
-    if (!node || !bodyRef.current?.contains(node)) {
-      setSelection(null);
-      return;
-    }
-    const rect = sel.getRangeAt(0).getBoundingClientRect();
-    const rootRect = root.getBoundingClientRect();
-    setSelection({ text, top: rect.top - rootRect.top });
-  };
+  const { selection, clear: clearSelection, bodyProps } = useReaderSelection(bodyRef, rootRef);
 
   const author = article.pubkey ? userByPubkey(article.pubkey) : null;
   const swarm = borisHighlights.filter((h) => h.articleId === article.id);
@@ -455,6 +441,7 @@ export function ReaderScreen({
       {/* Article */}
       <div
         className="min-h-0 flex-1 overflow-y-auto"
+        data-boris-scroll
         onScroll={(e) => {
           const el = e.currentTarget;
           const max = el.scrollHeight - el.clientHeight;
@@ -531,7 +518,8 @@ export function ReaderScreen({
               made the paragraph the smallest thing you could pick, which meant
               the demo could never show what Boris is actually for. It also put
               block-level prose inside a button, which is invalid HTML. */}
-          <div ref={bodyRef} data-tour="boris-reader-body" onMouseUp={readSelection} onTouchEnd={readSelection}>
+          <div ref={bodyRef} data-tour="boris-reader-body" {...bodyProps}>
+            <ReaderSelectionOverlay selection={selection} />
             {article.body.map((block, i) => (
               <Prose
                 key={i}
@@ -633,7 +621,7 @@ export function ReaderScreen({
           /* Above the selection where there is room, below it otherwise — the
              real toolbar tracks the selection rather than parking at a fixed
              offset. Clamped so it never rides over the top bar. */
-          style={{ top: Math.max(72, selection.top - 56) }}
+          style={{ top: Math.max(72, selection.toolbarTop - 52) }}
         >
           <div
             className="flex items-center gap-1 rounded-3xl px-1 py-1"
@@ -647,8 +635,7 @@ export function ReaderScreen({
                 className="rounded-full px-3 py-1.5 text-[13px] font-medium"
                 onClick={() => {
                   if (label === 'Highlight') onAddHighlight(selection.text);
-                  window.getSelection()?.removeAllRanges();
-                  setSelection(null);
+                  clearSelection();
                 }}
               >
                 {label}

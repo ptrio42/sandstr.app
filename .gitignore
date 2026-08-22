@@ -3,6 +3,8 @@ dist
 dist-ssr
 *.local
 CLAUDE.local.md
+# Lokalne notatki robocze (np. docs/SCRUB-LOG.local.md) — nigdy do repo.
+*.local.md
 .DS_Store
 .vite
 

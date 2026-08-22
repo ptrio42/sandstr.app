@@ -116,83 +116,14 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
 - **`npm run build` NIE jest bramką typów** (esbuild strzypuje) — `npm run typecheck` (tsc) puszczaj
   osobno. **Jeden błąd składniowy wycisza WSZYSTKIE diagnostyki semantyczne tsc** — nigdy nie odkładaj go
   jako „znanego"; tak chowało się 40 realnych błędów. `vite.config.ts` świadomie poza zakresem.
-- **Karta share to `dist/c/<id>.html`, NIGDY `dist/c/<id>/index.html`.** Cloudflare ma domyślnie
-  `html_handling: auto-trailing-slash`: folder-index każe `/c/damus` zrobić 307 na `/c/damus/`,
-  czyli przekierowuje dokładnie ten URL, który ludzie wklejają w odpowiedziach. Płaski plik
-  serwuje `/c/damus` z 200, a to `/c/damus/` dostaje 307 z powrotem. Zweryfikowane na
-  `wrangler dev`, nie z dokumentacji.
-- **`--screenshot` w headless Chrome zapisuje PNG i się NIE kończy** (zmierzone na Chrome 151,
-  także z `--virtual-time-budget`; `--headless=old` wypadło w Chrome 132). Pętla na
-  `execFileSync` robi pierwszy zrzut i wisi na drugim. Dlatego `og-client-cards.mjs` jedzie
-  dziś przez CDP (jeden Chrome, `Page.captureScreenshot`) — jak `docs/clips/capture-faq.mjs`.
-  Jeśli kiedykolwiek wrócisz do `--screenshot`: czekaj na **plik**, nie na kod wyjścia,
-  i ubijaj całą grupę procesów — sam pid zostawia kilkanaście helperów.
-- **Zrzut symulatora do karty share: czekaj na TREŚĆ, nie na pudełko, i wchodź przez logowanie.**
-  `ClientView` układa stage natychmiast po dopasowaniu trasy, a chunk `lazy()` dochodzi znacznie
-  później — warunek na sam prostokąt startuje kroki w pustej stronie i wywala się na losowym
-  kliencie za każdym przebiegiem. Próg liczony w elementach, i **nisko**: ekran logowania Primala
-  ma ich 19, przez co próg 30 zgłaszał „never rendered" dla w pełni namalowanej strony. Do tego
-  `Page.navigate` + natychmiastowy `Runtime.evaluate` potrafi trafić w WYCHODZĄCY dokument
-  (readyState już `complete`), więc `goto()` czeka najpierw na `Page.loadEventFired`.
-  Dziewięciu z dwunastu klientów otwiera się na ścianie logowania — tabela `ENTRY` w generatorze
-  przeklikuje wejście po WIDOCZNYCH etykietach; zmiana onboardingu klienta wywala `og:cards`
-  z nazwą kroku, nie po cichu.
-- **Klik w symulator z zewnątrz potrzebuje OBU dróg.** Prawdziwe `Input.dispatchMouseEvent`
-  przechodzi hit-test (Keychat ignoruje syntetyczny `el.click()`), ale przez ten sam hit-test
-  niewidoczny scrim zjada klik (modal powitalny Gossipa). Generator próbuje myszy, a gdy ekran
-  nie drgnie — sięga po węzeł. I sprawdza „udało się" jako **zmiana ekranu ALBO zniknięcie
-  kontrolki**: modal Gossipa jest portalowany poza stage, więc jego zamknięcie nie zmienia
-  tekstu stage'u wcale.
-- **Po zalogowaniu leci toast powitalny — 2500 ms** (`showToast` w Amethyst, Amethyst v1.12
-  i Keychat). Trzy karty wyszły z nim na feedzie. Generator dośpi RESZTĘ tego okna licząc od
-  wejścia, nie płaski sleep na wierzchu dopasowywania kadru. Geometrii urządzenia na karcie
-  **nie licz trygonometrią** — obrót plus perspektywa robią z tego coś innego, niż wychodzi
-  na kartce; `og-client-cards.mjs` mierzy `getBoundingClientRect()` gotowej karty i wywala
-  się z liczbą pikseli wyjazdu.
-- **Hotlinki DiceBear: zostało 12 URL-i, wyłącznie w preview** (9 Keychat, 3 Gossip) — łamią się offline
-  i pod ostrym CSP. Klienci `ready` mają lokalne inline-SVG avatary; nie dokładaj nowych hotlinków.
-- `useSimulator` (Context+reducer) jest **w większości nieużywany** — symulatory trzymają lokalny
-  `useState`. Nie myl scaffoldingu z load-bearing.
-- **Słownik ekranów jest CZĘŚCIOWY per klient, a niedopasowanie leci cicho na feed.** `ScreenIntent`
-  ma osiem wartości, ale każdy symulator mapuje tylko część (`useScreenSync`, `map:`) — Amethyst
-  nie ma `relays`, bo relaye siedzą u niego w szufladzie, nie w zakładce. `?screen=relays` na
-  Amethyście **nie jest błędem**, tylko fallbackiem na feed: link wygląda jak działający i nic nie
-  robi. Dlatego listy mapowanych intencji **nie duplikuj** — `useScreenSync` publikuje ją przez
-  `SCREEN_VOCAB_EVENT` / `mountedScreenIntents()` i tylko z tego czyta picker kreatora. Klient
-  zagate'owany na telefonie (frameless < 640px) nie jest zamontowany, więc nie publikuje nic.
-- **Tour i mini-tour FAQ PRZEJMUJĄ nawigację klienta** (zmierzone 2026-08-21): tour odpalony na
-  ekranie Relays Snorta wrócił do feedu na kroku 3, a `?screen=search&showme=zap` na Wispie otworzył
-  arkusz zapa, nigdy search — komendy mini-touru stawiają symulator tam, gdzie żyje ich target.
-  Dlatego `?screen=` obok `?tour=1` albo `?showme=` jest klauzulą, która się nie dzieje, i
-  `buildDemoUrl` ją wycina. `?faq=` jest wyjątkiem: otwiera tylko nasz panel nad bieżącym ekranem.
-- **Zapis w inicjalizatorze `useState` nie może dispatchować eventu, którego nasłuch woła `setState`.**
-  `writeScreenIntent` ogłasza zmianę przez `sandstr-screen`, a host na tym siedzi — wywołanie go
-  z inicjalizatora dało „Cannot update a component while rendering a different component".
-  Stąd `seedScreenIntent` (zapis bez ogłaszania) obok niego; nie sklejaj ich z powrotem w jedno.
-- Feed **capuje wyświetlanie do ~25 notatek** (filtry działają na treści/kolejności, nie na liczbie).
-- **Dark mode = klasa `dark` na `<html>`**: `main.tsx` ustawia, `Layout` przełącza, `useParentTheme`
-  obserwuje. Bez tego symulator utknie w jednym motywie.
-- **StrictMode jest wyłączony** (`main.tsx`) — świadomie, by uniknąć podwójnego montowania w stanach
-  toura/efektów.
-- **Escape należy do warstwy NA WIERZCHU, i to samo `data-sandstr-modal` o tym rozstrzyga.** Każdy
-  dialog hosta (FAQ, ⌘K, About, mobilny switcher) stempluje ten atrybut; tour (`TourOverlay`,
-  `HOST_MODAL_SELECTOR`) oddaje wtedy **całą** klawiaturę, nie tylko Escape — oba nasłuchy siedzą na
-  `window`, więc zamknięcie FAQ kończyło też tour, a Enter na wpisie FAQ rozwijał odpowiedź *i*
-  przewijał krok. `ClientSwitcher` rozstrzyga Escape **przed** swoim strażnikiem (jego własny arkusz
-  też nosi ten atrybut) i **przed** `tourActive`. Nowy dialog: dodaj atrybut i własny Escape.
-- **`position: fixed` w symulatorze = ekran telefonu, nie okno przeglądarki.** Ekran w
-  `MobilePhoneFrame` ma `[transform:translateZ(0)]` właśnie po to (bezramkowa scena w `ClientView`
-  ma to samo). `relative` + `overflow-hidden` NIE wystarczy — overflow nie przycina `fixed`, dopóki
-  ten sam element nie jest jego blokiem zawierającym. Bez tego modal Keychata zaciemniał całą stronę,
-  a niewidoczny scrim dropdownu Amethysta zjadał pierwszy klik w panel hosta.
-  **…ale tylko dopóki po drodze nie ma DRUGIEGO transformu.** Blok zawierający dla `fixed` tworzy
-  *najbliższy* transformowany przodek, a `motion.*` z `layout` albo z animacją wejścia trzyma
-  `transform` także w spoczynku. Overlay renderowany wewnątrz takiego komponentu przyklei się do
-  NIEGO, nie do ekranu: arkusze `MaterialCard` (share / menu ⋮ / paleta reakcji) lądowały na dole
-  karty, na jej szerokość, poza kadrem — i `absolute`, i `fixed` dawały to samo. Reguła: overlay
-  wewnątrz komponentu animowanego framerem **portaluj** (`createPortal`) do korzenia symulatora
-  i tam dopiero użyj `fixed`; korzeń transformu nie ma. Zanim uwierzysz tej regule w nowym miejscu,
-  sprawdź `getComputedStyle(przodek).transform` — arkusz Share nosił ten błąd od dnia powstania.
+- **Reszta pułapek siedzi w `.claude/rules/`** i doładowuje się sama, gdy czytasz plik pasujący do
+  `paths:` w jej frontmatterze — nie na starcie sesji. `simulators.md` (hotlinki DiceBear,
+  `useSimulator`, cap ~25 notatek, `position: fixed` + portal pod framerem, dark mode) ·
+  `host-tour-demo-links.md` (Escape i `data-sandstr-modal`, tour przejmujący nawigację, częściowy
+  słownik `?screen=`, `seedScreenIntent`, StrictMode) · `capture-harness.md` (`--screenshot`, które
+  nie kończy, wejście przez logowanie, toast 2500 ms, geometria karty) · `build-and-deploy.md`
+  (płaskie `dist/c/<id>.html`). **Planując robotę w którymś z tych obszarów, otwórz właściwy plik
+  od razu** — reguła nie doładuje się sama, dopóki czegoś nie przeczytasz.
 
 ## Definition of done
 
@@ -220,16 +151,15 @@ Podgląd w sesji (`.claude/launch.json` → `preview_start`): **sandstr** (dev, 
   zmianą jego symulatora. Keychat i Gossip screen-mapy NIE mają.
 - `docs/FIDELITY.md` — tokeny marki per klient + ich pliki-źródła w repo klienta + kanały opt-in.
 - `docs/GAPS.md` + `docs/gaps/<klient>.md` (schemat: `docs/gaps/README.md`) — ile z realnego klienta mamy
-  (778 wierszy w jedenastu ledgerach, stan 2026-08-21 — ledger Borisa jest deklaracją autora,
+  (784 wiersze w jedenastu ledgerach, stan 2026-08-22 — ledger Borisa jest deklaracją autora,
   nie audytem, i jest tak oznaczony); czytaj ZANIM dodasz `showMe` w FAQ.
 - `docs/TOURS.md` — reguły silnika tourów; czytaj przed edycją `src/data/tours/` i `src/components/tour/`.
 - `docs/VERSIONS.md` — wersjonowanie symulatorów per klient: procedura freeze starszej wersji. Czytaj
   ZANIM przebudujesz symulator do nowej wersji realnego klienta — freeze idzie PRZED przebudową.
-- `docs/FAQ.md` — stan wdrożenia FAQ (274 wpisy, 153 mini-toury, 9 klientów); kontrakt autorski
+- `docs/FAQ.md` — stan wdrożenia FAQ (274 wpisy, 155 mini-tourów, 9 klientów); kontrakt autorski
   w `src/data/faq/README.md`.
 - `docs/COMPARE.md` — `/compare`: macierz możliwości (12 osi × 9 klientów) + ten sam post w ośmiu
-  klientach (Boris nie renderuje notatek — jest na stripie jako `absent` z powodem).
-  Czytaj ZANIM dotkniesz `src/data/capabilities.ts` — werdykt bez cytatu i bez wersji
+  klientach (Boris nie renderuje notatek — jest na stripie jako `absent` z powodem). Czytaj ZANIM dotkniesz `src/data/capabilities.ts` — werdykt bez cytatu i bez wersji
   jest twierdzeniem o cudzym produkcie, a `unknown` jest pełnoprawną wartością, nie brakiem.
 - `docs/OUTREACH.md` — jak promować to na Nostrze: zmierzone formy, które działają na
   koncie właściciela, realne tematy pytań z `#asknostr`, playbook odpowiadania i lista

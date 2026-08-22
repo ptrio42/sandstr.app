@@ -113,40 +113,54 @@ export function AccountCircleGlyph({ filled = false, size = 24, className }: Gly
 }
 
 /**
- * Boris's own mark, redrawn from `res/drawable-nodpi/ic_boris_logo.png` (the
- * same artwork as `zapstore-icon.png`): an orange highlighter angled up-right,
- * a purple wedge for the ink window, and an amber chisel tip.
+ * Boris's highlighter, taken from the project's own `boris-logo.svg` on
+ * readwithboris.com instead of redrawn: barrel `#F97316` with the ink window as
+ * a hole, chisel tip on a `#FDE047 → #F97316` gradient.
  *
- * The three colours are not decoration and not invented — sampled off the real
- * PNG they are `#F97316`, `#9333EA` and `#FCB434`, i.e. the app's own
- * friends / nostrverse / mine highlight tokens. The logo IS the palette, which
- * is why Gigi's own essay about the project is called "Purple Text, Orange
- * Highlights".
+ * The redrawing this replaced filled that window `#9333EA`, giving the pen a
+ * purple wedge the real one does not have — in the real logo the purple is the
+ * WORDMARK next to the pen, not part of it.
  *
- * Note which asset this is: `res/drawable/ic_launcher_highlighter.xml` is a
- * different, yellow glyph — the Font Awesome Free highlighter (CC BY 4.0)
- * recoloured — and is deliberately NOT what this draws.
+ * The glyph is Font Awesome Free's `highlighter` recoloured (measured: eleven
+ * segment lengths divide into Font Awesome's by 5.7916, spread 0.0001), so it
+ * carries CC BY 4.0 — attributed in `THIRD-PARTY.md`.
  */
 export function HighlighterMark({ size = 96, className }: { size?: number; className?: string }) {
   const id = `boris-tip-${size}`;
   return (
-    <svg viewBox="0 0 64 64" width={size} height={size} className={className} aria-hidden focusable="false">
+    // viewBox is the pen's own bounding box in the source file (measured with
+    // getBBox: 307.07,72.63 94.38×88.68), padded to a square so `size` gives a
+    // square mark at any scale.
+    <svg
+      viewBox="306.07 68.78 96.38 96.38"
+      width={size}
+      height={size}
+      className={className}
+      aria-hidden
+      focusable="false"
+    >
       <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+        <linearGradient
+          id={id}
+          x1="307.52621"
+          y1="152.47421"
+          x2="329.85146"
+          y2="152.47421"
+          gradientUnits="userSpaceOnUse"
+          gradientTransform="matrix(1.0408008,0,0,1.0408008,-13.002768,-6.1359144)"
+        >
           <stop offset="0" stopColor="#FDE047" />
           <stop offset="1" stopColor="#F97316" />
         </linearGradient>
       </defs>
-      <g transform="rotate(45 32 32)">
-        {/* barrel */}
-        <rect x="23" y="9" width="18" height="33" rx="6" fill="#F97316" />
-        {/* ink window — a wedge with its apex pointing back down the barrel */}
-        <path d="M32 14 L37.5 20.5 L32 33 L26.5 20.5 Z" fill="#9333EA" />
-        {/* neck */}
-        <rect x="26" y="41" width="12" height="6" rx="2.5" fill="#F97316" />
-        {/* chisel tip */}
-        <path d="M26.5 47.5h11l-2.6 7.2a2 2 0 0 1-1.9 1.3h-2a2 2 0 0 1-1.9-1.3z" fill={`url(#${id})`} />
-      </g>
+      <path
+        fill="#F97316"
+        d="m 361.91353,127.0166 27.34974,-37.139715 -5.05902,-5.05902 -37.13972,27.349765 z m -32.2879,0.86332 v 0 -12.3799 c 0,-2.64174 1.24317,-5.11082 3.36693,-6.66478 l 47.15413,-34.756975 c 1.27769,-0.94965 2.83169,-1.45037 4.42014,-1.45037 1.96838,0 3.85037,0.77698 5.24898,2.17556 l 9.46187,9.4619 c 1.39861,1.39858 2.17558,3.2806 2.17558,5.26621 0,1.58849 -0.50073,3.14246 -1.45037,4.42017 L 365.26317,141.0886 c -1.55393,2.12375 -4.04027,3.36692 -6.66476,3.36692 h -12.37989 l -4.38561,4.38563 c -2.15829,2.15827 -5.66338,2.15827 -7.82166,0 l -8.75395,-8.75399 c -2.15828,-2.15828 -2.15828,-5.66333 0,-7.82161 z m -20.89218,25.26052 8.92668,-8.92665 12.18999,12.18998 -3.40146,3.40145 c -0.77697,0.77697 -1.83023,1.20863 -2.93525,1.20863 l -11.84464,0.0172 c -2.29644,0 -4.1439,-1.84749 -4.1439,-4.1439 v -0.81151 c 0,-1.10505 0.43162,-2.15829 1.20858,-2.93527 z"
+      />
+      <path
+        fill={`url(#${id})`}
+        d="m 308.32866,153.09852 9.29089,-9.29087 12.68735,12.68734 -3.54024,3.54024 c -0.80867,0.80868 -1.9049,1.25795 -3.05501,1.25795 l -12.32791,0.0179 c -2.39014,0 -4.31297,-1.92287 -4.31297,-4.31298 v -0.84462 c 0,-1.15014 0.44923,-2.24635 1.25789,-3.05504 z"
+      />
     </svg>
   );
 }
