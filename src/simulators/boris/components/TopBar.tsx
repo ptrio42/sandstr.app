@@ -32,8 +32,13 @@ export function TopBar({
           inflexible instead, and the shortfall comes out of the IconButtons
           below, which is why they are shrinkable down to 36 px. Above a ~316 px
           screen nothing shrinks and the bar is byte-for-byte what it was. */}
+      {/* Screen titles are SERIF (`titleLarge`, Source Serif SemiBold), not the
+          sans `titleMedium` an M3 bar would use. Measured on the 2026-08-22
+          recording: "Your Library", "Feeds", "Search" and "Settings" all render
+          with serifs; the reader's article title is the one sans title in the
+          app, which is why ReaderScreen draws its own bar. */}
       <div
-        className="min-w-[3.5rem] flex-1 truncate text-[17px] font-medium"
+        className="boris-display min-w-[3.5rem] flex-1 truncate text-[19px] font-semibold"
         style={{ color: 'var(--boris-on-bg)' }}
       >
         {title}

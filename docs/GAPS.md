@@ -62,8 +62,8 @@
 | [Nostur](gaps/nostur.md) | ready | 51 | 1 | 33 | 8 | 6 | 3 | 12 | 41 | ✅ |
 | [Keychat](gaps/keychat.md) | preview | 38 | 6 | 18 | 8 | 3 | 3 | 5 | 19 | ❌ |
 | [Gossip](gaps/gossip.md) | preview | 35 | 9 | 11 | 6 | 5 | 4 | 2 | 0 | ❌ brak wrappera |
-| [Boris](gaps/boris.md) | ready | 37 | 13 | 14 | 9 | 1 | 0 | 8 | 77 | ✅ |
-| **Razem** | | **535** | **152** | **219** | **97** | **36** | **31** | **246** | **486** | **9/11** |
+| [Boris](gaps/boris.md) | ready | 39 | 14 | 14 | 10 | 1 | 0 | 9 | 83 | ✅ |
+| **Razem** | | **537** | **153** | **219** | **98** | **36** | **31** | **247** | **492** | **9/11** |
 
 > **Boris dopisany 2026-08-21, i jego wiersz ma inny status dowodowy niż pozostałe dziesięć.**
 > Ledger [`gaps/boris.md`](gaps/boris.md) spisała sesja, która zbudowała symulator, a nie niezależny
@@ -85,6 +85,22 @@
 > (runda do signera Amber/bunker; wejście „Highlight with Boris" z innej apki) i jeden `ok`
 > (widoczność markerów działa i jest zweryfikowana klikiem). Opis realnej ścieżki wylądował
 > w `docs/refs/boris/screen-map.md` §4.1, oznaczony jako **source-only**.
+
+> **Delta 2026-08-22, sam Boris: drugie nagranie, tym razem ZALOGOWANE.** Powstało po to, żeby
+> podważyć tamten `source-only` §4.1, i podważyło go w jedną stronę — samo tworzenie zakreślenia
+> okazało się opisane **poprawnie**, z etykietą `TTS from here` włącznie, a pasek zaznaczania,
+> kolor markera (`#FDE047` @ 45 % = zmierzone `#7F702D`) i brak toastu potwierdzone pomiarem.
+> Rachunek luk: 37 → 39. **W dół:** `bor-06` zamknięty (przycisk zapisu z menu private/public
+> istnieje i działa), `bor-42` i `bor-03` zmniejszone. **W górę:** `bor-46` i `bor-47` — dwie
+> powierzchnie, o których screen-mapa nie wiedziała (`Move to Archive & Close` i zielony pasek po
+> zapisie; obie kasują się same po kilku sekundach, więc świadomie nieodtworzone), oraz `bor-48`,
+> który nazywa wprost jedyną dużą powierzchnię rdzenia produktu **wciąż bez ani jednej klatki
+> dowodu: menu gotowego markera i usuwanie zakreślenia.** Przy okazji naprawione zduplikowane ID
+> (`bor-41`/`bor-42` występowały dwa razy → runda do signera i „Highlight with Boris" to teraz
+> `bor-44`/`bor-45`). Mini-tourów 16 → 18. Kotwice **77 → 83**, przeliczone skryptem po metodologii
+> poniżej: pięć nowych (`boris-reader-save`, `boris-reader-save-menu`, `boris-you-more`,
+> `boris-you-menu`, `boris-you-header`), a szósta sztuka to korekta — ten sam skrypt puszczony na
+> poprzednim `HEAD` liczy 47 literałów, nie 46, więc publikowane 77 było o jeden za niskie.
 
 **Metodologia kolumny `Kotwice`:** liczba **różnych wartości `data-tour`, jakie mogą trafić do DOM**
 danego klienta — każdy literał `data-tour="…"` plus każda wartość, jaką potrafi wyprodukować

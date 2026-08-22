@@ -1,4 +1,4 @@
-import { Archive, Eye, FileText, Globe, Info, Lock, LayoutGrid, Users } from 'lucide-react';
+import { Earth, Eye, FileText, Globe, Info, Library, Lock, LayoutGrid } from 'lucide-react';
 import { AuthBar } from '../components/AuthBar';
 import { FilterChip } from '../components/FilterChip';
 import { IconButton, TopBar } from '../components/TopBar';
@@ -23,14 +23,27 @@ import type { LibraryScope } from '../types';
 const SCOPES: { id: LibraryScope; label: string; icon: React.ReactNode }[] = [
   { id: 'all', label: 'All', icon: <LayoutGrid size={18} /> },
   { id: 'private', label: 'Private', icon: <Lock size={18} /> },
-  { id: 'public', label: 'Public', icon: <Users size={18} /> },
+  // Two of these six were the wrong glyph until the 2026-08-22 recording was
+  // read frame by frame: `Public` is a globe with a filled landmass (M3
+  // `Public`), not a pair of people, and `Archive` is three tilted books on a
+  // shelf (M3 `LibraryBooks`), not a storage box. Both are nostr concepts, and
+  // both glyphs recur elsewhere — the same books glyph rides the reader's
+  // "Move to Archive & Close" button.
+  { id: 'public', label: 'Public', icon: <Earth size={18} /> },
   { id: 'web', label: 'Web', icon: <Globe size={18} /> },
   { id: 'lookmarks', label: 'Lookmarks', icon: <Eye size={18} /> },
-  { id: 'archive', label: 'Archive', icon: <Archive size={18} /> },
+  { id: 'archive', label: 'Archive', icon: <Library size={18} /> },
 ];
 
 export interface LibraryScreenProps {
   loggedIn: boolean;
+  /**
+   * Articles the visitor saved from the reader, keyed by id. In the recording
+   * the Library starts genuinely empty and fills one row at a time as articles
+   * are bookmarked (After Kinism at t=135, Grug Speak at t=150), so a save has
+   * to land here or the button in the reader is decoration.
+   */
+  saved: Record<string, 'private' | 'public'>;
   scope: LibraryScope;
   onScopeChange: (s: LibraryScope) => void;
   onLogin: () => void;
@@ -40,13 +53,17 @@ export interface LibraryScreenProps {
 
 export function LibraryScreen({
   loggedIn,
+  saved,
   scope,
   onScopeChange,
   onLogin,
   onOpenArticle,
   onOpenInfo,
 }: LibraryScreenProps) {
-  const saved: BorisArticle[] =
+  // The seeded shelves, still filtered the same fake way (docs/gaps/boris.md
+  // bor-03), with whatever the visitor bookmarked in this session put on top of
+  // the scope it was saved to — and on `All`, which is what the recording does.
+  const seeded: BorisArticle[] =
     scope === 'archive'
       ? borisArticles.filter((a) => a.id === 'read-a-river')
       : scope === 'web'
@@ -56,6 +73,14 @@ export function LibraryScreen({
           : scope === 'lookmarks'
             ? borisArticles.filter((a) => a.readMinutes <= 9).slice(0, 3)
             : borisArticles.slice(0, 5);
+
+  const justSaved = borisArticles.filter(
+    (a) => saved[a.id] && (scope === 'all' || scope === saved[a.id]),
+  );
+  const savedList: BorisArticle[] = [
+    ...justSaved,
+    ...seeded.filter((a) => !justSaved.some((j) => j.id === a.id)),
+  ];
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -94,12 +119,12 @@ export function LibraryScreen({
             ))}
           </div>
           <div className="min-h-0 flex-1 space-y-1 overflow-y-auto px-4 pb-4">
-            {saved.length === 0 ? (
+            {savedList.length === 0 ? (
               <p className="px-1 py-8 text-center text-[14px]" style={{ color: 'var(--boris-on-surface-variant)' }}>
                 No bookmarks here yet.
               </p>
             ) : (
-              saved.map((a) => (
+              savedList.map((a) => (
                 <button
                   key={a.id}
                   type="button"
@@ -123,12 +148,11 @@ export function LibraryScreen({
                     >
                       {a.title}
                     </span>
-                    <span
-                      className="mt-1 line-clamp-2 block text-[12px]"
-                      style={{ color: 'var(--boris-on-surface-variant)' }}
-                    >
-                      {a.summary}
-                    </span>
+                    {/* Title over host, and nothing else. The row used to carry
+                        a two-line summary; the 2026-08-22 recording (t=151)
+                        shows the real shelf is deliberately terse — 72dp
+                        thumbnail, title, host — which is what lets six or seven
+                        articles fit on one screen. */}
                     <span className="mt-1 block text-[12px]" style={{ color: 'var(--boris-on-surface-variant)' }}>
                       {a.domain === 'nostr' ? a.byline : a.domain}
                     </span>

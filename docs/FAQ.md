@@ -25,10 +25,10 @@
 | Snort | 27 | 15 | dwa realne bugi symulatora przy okazji |
 | Wisp | 27 | 16 | 5 odblokowań, o które prosił ledger |
 | Coracle | 32 | 20 | **pierwszy klient bez wrappera** — zbudowany od zera |
-| Boris | 43 | 16 | czytnik, nie klient społecznościowy — patrz niżej |
-| **Razem** | **274** | **153** | +64 wpisy w rundzie 2 (8 × 8), +43 Boris (2026-08-21) |
+| Boris | 43 | 18 | czytnik, nie klient społecznościowy — patrz niżej |
+| **Razem** | **274** | **155** | +64 wpisy w rundzie 2 (8 × 8), +43 Boris (2026-08-21), +2 mini-toury Borisa (2026-08-22) |
 
-**Liczby w tabeli to snapshot drzewa roboczego z 2026-08-21** — nie aktualizują się same, więc przed
+**Liczby w tabeli to snapshot drzewa roboczego z 2026-08-22** — nie aktualizują się same, więc przed
 cytowaniem ich gdziekolwiek indziej przelicz. Historia przeliczeń: 2026-08-17 doszedł `relay-feed`
 w Damusie (28/18 → 29/19), a **Amethyst miał 16 mini-tourów, nie 13** — trzy doszły przy przebudowie
 do v1.13.1 i nikt nie ruszył tej tabeli, więc suma stała na 133 zamiast 137. 2026-08-21 doszedł
@@ -45,7 +45,8 @@ done | awk '{e+=$1;s+=$2; print} END{print "RAZEM", e, s}'
 
 ### Boris (2026-08-21) — pierwszy klient, który nie jest klientem społecznościowym
 
-43 wpisy, 16 mini-tourów, i najniższy stosunek demo do wpisów w całym banku (37% wobec ~60%
+43 wpisy, **18** mini-tourów (16 przy spisaniu, +2 po nagraniu z 2026-08-22, gdy `bor-06` i `bor-42`
+przestały być bramką), i wciąż najniższy stosunek demo do wpisów w całym banku (42% wobec ~60%
 u pozostałych). To nie jest niedoróbka, tylko bramka `showMe` działająca zgodnie z przeznaczeniem:
 [`gaps/boris.md`](gaps/boris.md) ma 14 wierszy `dead` i 11 `missing`, i wypadają na nich dokładnie te
 powierzchnie, które chciałoby się pokazać — chipy Library, menu ⋮ czytnika, półki offline, chipy

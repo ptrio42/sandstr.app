@@ -1,16 +1,21 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   ArrowLeft,
+  Bookmark,
   Calendar,
   CheckCircle2,
+  CirclePlus,
   Clock,
   Copy,
+  Earth,
   Eye,
   EyeOff,
   Globe,
   Highlighter,
   History,
+  Library,
   List,
+  Lock,
   MoreVertical,
   Pause,
   Play,
@@ -205,6 +210,28 @@ export interface ReaderScreenProps {
   onOpenProfile: (u: MockUser) => void;
   onAddHighlight: (quote: string) => void;
   /**
+   * Where this article currently sits in the library, or null when it is not
+   * saved. The real button has three states and the recording walks two of
+   * them: `AddCircleOutline` while unsaved, then a FILLED `Bookmark` once the
+   * signer comes back (2026-08-22, t=139.0 -> t=140.5 on Grug Speak). Archived
+   * is the third, reachable from the overflow rather than from this button.
+   */
+  savedAs: 'private' | 'public' | 'archived' | null;
+  /**
+   * Tapping the button does not save — it opens a two-item menu, `Add to
+   * private bookmarks` (lock) and `Add to public bookmarks` (globe), and the
+   * choice is what gets signed (t=137.5-139.0).
+   */
+  onSave: (visibility: 'private' | 'public') => void;
+  /**
+   * The save menu is CONTROLLED rather than local so a tour command can park it
+   * open — same reason `pane` lives upstairs. A mini-tour that can only say
+   * "tap this" and not "here is what it opens" is the failure mode the FAQ
+   * ledger calls `breaks-showme`.
+   */
+  saveMenuOpen: boolean;
+  onSaveMenuChange: (open: boolean) => void;
+  /**
    * The TTS mini player, when a session is live. It is a SLOT rather than an
    * overlay because upstream stacks it inside the reader's own bottom column,
    * directly above the reading-progress strip (ReaderScreen.kt:1860-1877) —
@@ -232,6 +259,10 @@ export function ReaderScreen({
   onToggleTts,
   onOpenProfile,
   onAddHighlight,
+  savedAs,
+  onSave,
+  saveMenuOpen,
+  onSaveMenuChange,
   ttsSlot,
 }: ReaderScreenProps) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -330,12 +361,41 @@ export function ReaderScreen({
             <List size={24} />
           </IconButton>
         )}
+        {/* A width FLOOR, not min-w-0 — same reason as the shared TopBar. The
+            signed-in reader bar carries six slots (back · Contents · title ·
+            Save · Listen · ⋮) and the device is only ~269px wide at a 720px
+            viewport, so without a floor the title collapsed to "N.". Sans, not
+            serif: the article title is the one top-bar title in Boris that is
+            NOT Source Serif (2026-08-22 recording, t=121). */}
         <div
-          className="min-w-0 flex-1 truncate px-1 text-[16px] font-medium"
+          className="min-w-[3.5rem] flex-1 truncate px-1 text-[16px] font-medium"
           style={{ color: 'var(--boris-on-bg)' }}
         >
           {article.title}
         </div>
+        {/* Save to library — signed in only (ReaderScreen.kt:684-866), and a
+            MENU rather than a toggle. Recording 2026-08-22: the unsaved glyph
+            is `AddCircleOutline`, tapping it drops `Add to private bookmarks` /
+            `Add to public bookmarks` under it, and the glyph only flips to a
+            filled `Bookmark` after the signer returns. */}
+        {loggedIn && (
+          <div className="relative">
+            <IconButton
+              label={savedAs ? 'In your library' : 'Save to library'}
+              onClick={() => (savedAs ? undefined : onSaveMenuChange(!saveMenuOpen))}
+              tourId="boris-reader-save"
+              tint={savedAs ? 'var(--boris-on-bg)' : undefined}
+            >
+              {savedAs === 'archived' ? (
+                <Library size={24} />
+              ) : savedAs ? (
+                <Bookmark size={24} fill="currentColor" />
+              ) : (
+                <CirclePlus size={24} />
+              )}
+            </IconButton>
+          </div>
+        )}
         <IconButton label={ttsPlaying ? 'Pause' : 'Listen'} onClick={onToggleTts} tourId="boris-reader-listen">
           {ttsPlaying ? <Pause size={24} /> : <Play size={24} />}
         </IconButton>
@@ -511,6 +571,56 @@ export function ReaderScreen({
           {progressLabel}
         </span>
       </div>
+
+      {/* Save-to-library menu. Anchored to the reader's right edge rather than
+          to its 48px button, because at the device widths this stage produces a
+          236px popover hung off the button lands OUTSIDE the phone. Upstream's
+          menu sits under the button and grows leftwards to about the same
+          place, so the right edge is what has to be faithful. */}
+      {saveMenuOpen && (
+        <>
+          <button
+            type="button"
+            aria-label="Close menu"
+            className="absolute inset-0 z-40 cursor-default"
+            onClick={() => onSaveMenuChange(false)}
+          />
+          <div
+            className="absolute right-1 top-14 z-50 max-w-[calc(100%-0.5rem)] overflow-hidden rounded-lg py-1"
+            style={{
+              background: 'var(--boris-surface-variant)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
+            }}
+            data-tour="boris-reader-save-menu"
+          >
+            {(
+              [
+                { id: 'private', label: 'Add to private bookmarks', icon: <Lock size={18} /> },
+                { id: 'public', label: 'Add to public bookmarks', icon: <Earth size={18} /> },
+              ] as const
+            ).map((row) => (
+              <button
+                key={row.id}
+                type="button"
+                className="flex w-full items-center gap-2.5 whitespace-nowrap px-3 py-2.5 text-left text-[13px]"
+                style={{ color: 'var(--boris-on-bg)' }}
+                onClick={() => {
+                  onSaveMenuChange(false);
+                  onSave(row.id);
+                }}
+              >
+                <span
+                  className="flex h-[18px] w-[18px] shrink-0 items-center justify-center"
+                  style={{ color: 'var(--boris-on-surface-variant)' }}
+                >
+                  {row.icon}
+                </span>
+                {row.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Selection toolbar — inverseSurface pill, 24dp corners
           (HighlightTextToolbar.kt:53-84). "Highlight" only when logged in.

@@ -6,7 +6,7 @@ description: Pisanie i rewizja kurowanego FAQ per klient w src/data/faq/ — now
 # FAQ klienta — jak pisać i rewidować
 
 Dziewięć plików klientów (`coracle damus amethyst primal nostur yakihonne snort wisp boris`),
-274 wpisy, 153 mini-toury. Keychat i Gossip **nie mają FAQ** — brak `docs/refs/<client>/` i brak
+274 wpisy, 155 mini-tourów. Keychat i Gossip **nie mają FAQ** — brak `docs/refs/<client>/` i brak
 mostka `FaqMiniTourLauncher`; nie dopisuj ich do `src/data/faq/index.ts` bez recon.
 
 **Boris (2026-08-21) jest wzorcem na klienta, który nie jest społecznościowy.** Siatki 17 tematów

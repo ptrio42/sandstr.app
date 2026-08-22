@@ -7,6 +7,13 @@ import type { ReactNode } from 'react';
  * what makes the chip rows read as one system.
  * Unselected is transparent with a 1dp `outline` border; M3 drops the border
  * once the chip is selected.
+ *
+ * The two colours inside an UNSELECTED chip differ, and they were both wrong
+ * here until the 2026-08-22 recording was sampled: the leading icon is
+ * `primary` (measured #6264ef on the Library and Feeds rows, i.e. Indigo500
+ * #6366F1) while the label is `onSurfaceVariant` (measured #a1a0a9 = #A1A1AA).
+ * Painting both `onBackground` made every chip row a shade louder than the real
+ * app and lost the one indigo accent M3 puts there on purpose.
  */
 export function FilterChip({
   selected,
@@ -34,10 +41,15 @@ export function FilterChip({
       style={{
         background: selected ? 'var(--boris-secondary-container)' : 'transparent',
         border: selected ? '1px solid transparent' : '1px solid var(--boris-outline)',
-        color: selected ? 'var(--boris-on-secondary-container)' : 'var(--boris-on-bg)',
+        color: selected ? 'var(--boris-on-secondary-container)' : 'var(--boris-on-surface-variant)',
       }}
     >
-      <span className="flex h-[18px] w-[18px] items-center justify-center">{icon}</span>
+      <span
+        className="flex h-[18px] w-[18px] items-center justify-center"
+        style={{ color: selected ? 'var(--boris-on-secondary-container)' : 'var(--boris-primary)' }}
+      >
+        {icon}
+      </span>
       {label}
     </button>
   );

@@ -47,6 +47,8 @@ export interface SimulatorCommand {
     | 'highlight'
     | 'openPane'
     | 'playTts'
+    | 'saveToLibrary'
+    | 'accountMenu'
     | 'openSettings'
     | 'openAbout'
     | 'viewProfile'

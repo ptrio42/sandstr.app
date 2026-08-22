@@ -8,9 +8,45 @@ not a source and neither is our reproduction.
 
 | Layer | Source |
 | --- | --- |
-| Layout, states, what a real session looks like | Owner's Android screen recording, 2026-08-21, 3 min 52 s, 1080×2400 — `shots/screen-20260821-122851-*.mp4` (untracked; `shots/.gitignore` keeps recordings out of git) |
+| Layout and states **signed out** | Owner's Android screen recording, **2026-08-21**, 3 min 52 s, 1080×2400 — `shots/screen-20260821-122851-*.mp4` (untracked; `../.gitignore` keeps recordings out of git) |
+| Layout and states **signed in** | Owner's second recording, **2026-08-22**, 2 min 41 s, 1080×2400, same phone — `shots/screen-20260822-085358-*.mp4` (untracked). This one exists because the first was signed out, which hid the app's central gesture. Timestamps below written `t=NN.N` refer to it. |
 | What each element *is*, exact strings, exact hex | `dergigi/boris-android` **@ `8456da4`** = release **1.4.49**, 291 Kotlin files. The app prints that pair itself in its settings footer, so the recording and the checkout are the same build. |
 | Design-system contract | `DESIGN.md` at that repo's root (a token manifest in front-matter, then prose) |
+
+**The stills this file names are LOCAL-ONLY, and here is how to regenerate them.** `.gitignore`
+ignores `docs/refs/*/shots/` entirely — an owner decision from 2026-07-28 that reference captures of
+other people's apps are working material and are not published, and the same line purged them from
+history. Nothing in any `shots/` folder is tracked, `navicons.png` included. So the filenames below
+are a naming convention for your own checkout, not links. With the recording in place, each is one
+`ffmpeg` call (crops are `w:h:x:y` on the native 1080×2400 frame, and `-ss` **after** `-i` so the
+seek is accurate):
+
+```sh
+V=docs/refs/boris/shots/screen-20260822-085358-*.mp4
+D=docs/refs/boris/shots
+ffmpeg -i $V -ss 48.5  -frames:v 1 -vf "crop=1080:420:0:960"    $D/highlight-toolbar.png
+ffmpeg -i $V -ss 121.0 -frames:v 1 -vf "crop=560:1240:520:80"   $D/reader-overflow-signed-in.png
+ffmpeg -i $V -ss 138.0 -frames:v 1 -vf "crop=1080:420:0:60"     $D/reader-save-menu.png
+ffmpeg -i $V -ss 151.0 -frames:v 1 -vf "crop=1080:960:0:120"    $D/library-scopes.png
+ffmpeg -i $V -ss 159.0 -frames:v 1 -vf "crop=1080:1300:0:60"    $D/you-signed-in.png
+ffmpeg -i $V -ss 88.5  -frames:v 1 -vf "crop=1080:340:0:60"     $D/feeds-scopes.png
+# the four-panel signer strip: 48.5 select · 53.0 Amber · 58.3 unmarked · 58.8 marked
+```
+
+**Beware `-ss` before `-i`.** Fast seek is off by seconds on this file, and both a contact sheet and
+a colour timeline built that way produced a confident, wrong answer about the signer round trip
+(see §4.1). Put `-ss` after `-i`, or read the frames.
+
+**Device scale, measured, and why it is worth writing down.** The selection toolbar's corner is
+`RoundedCornerShape(24.dp)` in source and renders as a 63 px radius on a 126 px-tall pill, so the
+recording's density is **2.625** and the device is **411 × 914 dp**. Every dp figure below converts
+at that rate, which is what makes "5 dp of horizontal inflation" checkable against a pixel count
+rather than an impression.
+
+**What the second recording still does NOT show**, and which therefore stays source-only: long-press
+on a finished mark and the highlight menu behind it, deleting a highlight and its confirmation
+dialog, the Highlights / Contents / Find panes, the Library `Private` scope in its locked state, and
+both failure paths (`Highlight rejected.` / `Highlight cancelled.`). The owner never opened them.
 
 Upstream: **MIT**, © Gigi (`dergigi`). Website `readwithboris.com`, web app `read.withboris.com`.
 Attribution and what we copied vs referenced: [`../../../THIRD-PARTY.md`](../../../THIRD-PARTY.md).
@@ -108,14 +144,22 @@ bundled in the APK (`app/src/main/res/font/source_serif_4.ttf`).
 | --- | --- | --- | --- |
 | `bodyLarge` | Source Serif 4 | 21 sp / 36 sp, justified, `letterSpacing 0` | the article body |
 | `bodyMedium` | Source Serif 4 | 16 sp / 24 sp | settings labels, quotes |
-| `titleLarge` | Source Serif 4 | 20 sp / 28 sp, SemiBold | preview title |
-| `titleMedium` | sans | 16 sp / 24 sp, Medium | section headers, top-bar titles |
+| `titleLarge` | Source Serif 4 | 20 sp / 28 sp, SemiBold | preview title, **and every screen title** |
+| `titleMedium` | sans | 16 sp / 24 sp, Medium | section headers, **the reader's** top-bar title |
 | `labelLarge` | sans | 14 sp / 20 sp, Medium | chips, mini-player |
 | `labelMedium` | sans | 12 sp / 16 sp, Medium | nav labels, captions |
 | `bodySmall` | sans | 13 sp / 18 sp | subtitles, meta chips |
 
 Reading Font is user-selectable from ten families and Font Size from six steps
 (16/18/**21**/24/28/32, `ReadingFonts.kt:26`).
+
+**[REC vs REPO] — screen titles are SERIF.** This table used to route "top-bar titles" to the sans
+`titleMedium`. The 2026-08-22 recording contradicts it: `Your Library` (t=151), `Feeds` (t=88),
+`Search` (t=11) and `Settings` (t=9) all render with serifs, in the semibold weight. The one
+exception is the **reader's** article title (`After Kinism`, t=121), which really is sans — which is
+why the reader draws its own bar instead of sharing the tab bar's. About, Support and Profile were
+not in frame; this reproduction gives them the serif too, which is `(uncited — inferred)` from the
+four that were measured. Recording wins here because it is a layout fact, not a hex.
 
 **Deviation, deliberate.** sandstr ships no fonts and makes no external requests, so
 `src/simulators/boris/boris.theme.css` degrades to a platform serif stack. Everything else about the
@@ -139,6 +183,10 @@ visible (`ui/shell/BorisBottomBar.kt:26-72`). Order and icon pairs from `ui/shel
 | 3 | `Feeds` | `Outlined.DynamicFeed` | `Filled.DynamicFeed` |
 | 4 | `Search` | `Outlined.Search` | `Filled.Search` |
 | 5 | `You` | `Outlined.AccountCircle` | `Filled.AccountCircle` — **replaced by your profile picture when signed in**, 24 dp, circle-clipped, with a 1.5 dp `primary` ring when selected (`BorisBottomBar.kt:39-60`) |
+
+The picture swap needs a picture: the 2026-08-22 account has no profile set, so the tab keeps the
+`AccountCircle` glyph throughout even while signed in (t=144–147). Not a contradiction — the fallback
+— but worth knowing before someone "fixes" a signed-in tab that is showing a glyph.
 
 Re-tapping the active tab does nothing visible: no scroll-to-top, no refresh
 (`BorisBottomBar.kt:36`, `BorisApp.kt:164-172`). The only "tap chrome to scroll to top" affordance in
@@ -204,10 +252,17 @@ section renders nothing.
 | 7 | `Long reads` | `AutoStories` | `primary` |
 | 8 | `Random unreads` | `Shuffle` | `primary` |
 
-**Signed out, row 4 is titled plainly `Recently highlighted`** — the app only says "by others" once
-there is a "you" or a "friends" row to distinguish it from (`HomeScreen.kt:588-592`). That one
+**Signed out, row 4 is titled plainly `Recently highlighted`** (`HomeScreen.kt:588-592`). That one
 conditional is why a signed-out Home reads so differently from every screenshot of a signed-in one,
-and the recording is signed out throughout.
+and the first recording is signed out throughout.
+
+**[REC vs REPO] — the conditional is on the SESSION, not on the other rows.** This file used to say
+the app "only says *by others* once there is a *you* or a *friends* row to distinguish it from". The
+2026-08-22 recording refutes that directly: at t=19–26 the account is signed in with zero own
+highlights and zero follows, so neither of those rows renders at all — and the header still reads
+**`Recently highlighted by others`**. Signed in is sufficient. (Our reproduction already keyed on
+`loggedIn` and was right; the prose was wrong.) The `Recently highlighted by you` row appears the
+moment the first own highlight lands, between t=82 and t=83.
 
 `Short reads` ≤ 5 min and `Long reads` ≥ 15 min (`data/ReadingTime.kt:8-9`, 200 wpm).
 
@@ -230,10 +285,50 @@ has been opened; then a 2 dp track (`outline` at 30 %) whose fill is `onBackgrou
 `ui/reader/ReaderScreen.kt` — the screen the app exists for.
 
 **Top bar** (`:684-866`): `back` · `Contents` (only when the article has headings) — `title` (tap =
-scroll to top) — `[Save to library, signed in only]` · `Listen` · `⋮`.
+scroll to top) — `[Save to library, signed in only]` · `Listen` · `⋮`. Glyphs, read off t=121 and
+t=139: back is a plain arrow, Contents is `FormatListBulleted` (a bulleted list, not a `Toc`), Listen
+is a **play triangle**, and the title is **sans** — the one top-bar title in the app that is not
+Source Serif (§1.4). An article with no headings drops the Contents slot entirely (Grug Speak,
+t=139).
+
 Overflow order: `Share` · `Copy link` · `Open in browser` · `Wayback Machine` · `archive.ph` ·
 `[Open in native app]` · `Find in article` · `[Mark as read]` · `[Reader settings]`. The last two are
-gated on being signed in, which is why the signed-out menu in the recording is six items long.
+gated on being signed in, which is why the signed-out menu in the first recording is six items long.
+**Filmed signed in** at t=120–123 on a substack article, i.e. no native app:
+`shots/reader-overflow-signed-in.png` — eight rows in exactly
+that order, ending `Mark as read` (a filled check circle) and `Reader settings` (a gear). The sheet
+is **translucent**: the hero image reads through it.
+
+**Save to library is a menu, not a toggle** (`shots/reader-save-menu.png`).
+Three states, two of them filmed:
+
+| State | Glyph | Seen |
+| --- | --- | --- |
+| not saved | `AddCircleOutline` — a ⊕ | t=112, t=139 |
+| bookmarked | **filled** `Bookmark` | t=116.5, t=140.5 |
+| archived | the Archive books glyph | not filmed — source only |
+
+Tapping ⊕ drops a two-row menu under it, `Add to private bookmarks` (a padlock) and
+`Add to public bookmarks` (the filled-landmass globe), t=137.5–139.0. Picking one hands the event to
+the signer — Amber's sheet then reads `Wants you to sign a Public web bookmark` (t=114–116) — and the
+glyph only flips once it comes back. The saved article appears in Library under `All` and under the
+scope it was saved to (t=135, t=150).
+
+**Two transient things live in the reader's bottom column, above the progress strip, and neither was
+in this file before.** Both are described from the recording only; the source was not re-read for
+them, so treat the *trigger* as `(uncited — inferred)`:
+
+- **`Move to Archive & Close`** — an outlined button, `primary` text and the Archive books glyph,
+  centred. It appears when an article opens and **removes itself after about four seconds**
+  (t=107.0–110.0 on After Kinism at 0 % progress with no scrolling; t=30–32 on Buddha Boy). Its
+  presence pushes the article text up, so its removal is a small reflow, not a fade.
+- **An indeterminate green progress bar**, full width, in the same slot, for roughly seven seconds
+  right after an article was bookmarked (t=117.5–124.0). Most likely the offline download of the
+  thing just saved, but the recording cannot prove that and the source was not consulted.
+
+Neither is reproduced: a control that dismisses itself after four seconds cannot be a tour target,
+and inventing a trigger for it would be exactly the silent inference this project keeps paying for.
+Both are logged as gaps instead.
 
 **Hero** (`:2356-2371`): 42 % of screen height clamped to 240–420 dp; gradient transparent → still
 transparent at 40 % → black at 82 %. Title `headlineLarge` bold white, 34 sp line height; summary
@@ -257,18 +352,35 @@ Label formats: `1 min read` / `N min read` (`data/ReadingTime.kt:18`); `1 highli
 own words; the third one is Boris's and reads **`TTS from here`** (`strings.xml:418`), not
 "Read from here".
 
-### 4.1 Creating a highlight — SOURCE-ONLY, the recording never showed it
+### 4.1 Creating a highlight — FILMED 2026-08-22, no longer source-only
 
-**Read this section differently from the rest of the file.** Everything above is grounded in the
-reference recording; this is not, and cannot be. The owner recorded while **signed out**, and the
-`Highlight` button exists only for a signed-in reader (`showHighlight = loggedIn`,
-`ReaderScreen.kt:1880`). So the app's central gesture — the reason Boris exists — has zero frames of
-evidence, and every claim below is read off `dergigi/boris-android@8456da4` alone. It is also the
-section that already produced one shipped error: the third toolbar button was written from memory as
-"Read from here" and is really `TTS from here`.
+This section used to carry a warning that none of it had been seen. It has now been walked twice on
+camera (t=42–63 and t=62–77), and the source reading survived: every claim below that the recording
+could reach is confirmed, and the two that it could not are marked. Evidence still:
+`shots/highlight-toolbar.png` and
+`shots/highlight-roundtrip.png`.
 
 **Selection is a long-press and drag** (`ui/reader/ReaderSelection.kt:205-261`, gated on
 `viewConfig.longPressTimeoutMillis`), over arbitrary text — not a tap, and not sentence-at-a-time.
+**Confirmed.** The recording shows the platform's own selection: Android's blue teardrop handles at
+both ends, the text magnifier bubble following the finger while it drags (t=46.0, t=47.5, t=69.5),
+and a selection tint measured `#35366F` — the system's, not a Boris token. The visitor extends the
+selection word by word and the toolbar **hides while the finger is down** and reappears on release.
+
+**The toolbar, measured.** A stadium pill floating **above** the selection, horizontally centred on
+it, with roughly 18 dp of air between its bottom edge and the top of the selected line. Measured at
+t=48.5: fill `#E6DEE7`, 126 px tall (**48 dp**), 888 px wide, corner radius 63 px — exactly half the
+height, so the source's `RoundedCornerShape(24.dp)` renders as a full stadium
+(`ui/reader/HighlightTextToolbar.kt:53-84`).
+
+`#E6DEE7` is **not a Boris colour**. It is the Material 3 baseline dark `inverseSurface` `#E6E0E9`,
+which makes this the *second* place the M3 baseline leaks through a scheme Boris never fully defines
+— the first being `secondaryContainer` `#4A4458` on chips and the nav pill (§1.2). Reproduce the
+leak; an indigo pill here would be as wrong as an indigo nav pill.
+
+Buttons, left to right, signed in: `Copy` · `Highlight` · `TTS from here` · `Select all`. **The
+third label is confirmed by pixels**, which matters because it is the string this project once
+shipped as "Read from here" from memory.
 
 **Tapping `Highlight` publishes nothing by itself.** `ReaderViewModel.highlight()` (`:242-309`) builds
 an **unsigned** NIP-84 event (`Nip01Event.KIND_HIGHLIGHT`) and hands it out to be signed:
@@ -293,6 +405,27 @@ otherwise you would tap Highlight and watch nothing appear, which reads as a bro
 than a setting. **There is no success toast.** A library save says "Saved to library."
 (`strings.xml:171`); a highlight says nothing, because the mark appearing is the confirmation.
 
+**Filmed, both round trips, and the source reading holds.** Tapping `Highlight` clears the selection
+and leaves the reader otherwise untouched — no spinner, no sheet, no snackbar — and Amber's activity
+slides up over it about a second later. On the way back the mark is simply *there*:
+
+| | tap → Amber up | Amber down → Boris drawn | Boris drawn → mark painted |
+| --- | --- | --- | --- |
+| first highlight | t=47.5 → 50.8 | t=58.1 | **≈ 0.4 s** (unmarked at t=58.3, marked at t=58.8) |
+| second highlight | t=70.8 → 73.4 | t=75.6 | **≈ 0.3 s** (unmarked at t=75.7, marked at t=76.0) |
+
+No toast fires in either. **Beware the measurement**, because this file nearly shipped the opposite
+claim: sampling one fixed crop across the return reads as *3.5 seconds of nothing*, and the 3.5 s is
+the article scrolling the marked paragraph into that crop, not the mark arriving. The numbers above
+come from looking at the frames, and each was checked against the other round trip.
+
+**Amber's own screens are not Boris's**, but two of them explain what a visitor sees. The consent
+sheet reads `Wants you to sign a Highlights` (Amber's grammar, not ours) over `Show Details` and
+`Signing as`, with an `Automatically sign this for` row — `Never` · `5m` · `10m` · `1h` · `1d` ·
+`1w` · `Always` — and `Reject` / `Accept`. On the second highlight Amber had already granted the
+request and showed `Nothing to approve yet` instead (t=75.4), so the round trip can complete with
+nothing to tap.
+
 **On failure**, two messages actually fire: `Highlight rejected.` (signer said no) and
 `Highlight cancelled.` (signer returned nothing, `:394-407`). `Highlight not published.`
 (`strings.xml:168`) is **declared and never used** — grep-verified across `app/src/main/java`.
@@ -303,13 +436,20 @@ until the reader can consume it (`ui/reader/PendingHighlight.kt`, consumed at `R
 with a prompt for the article URL (`highlight_url_title` / `_hint` / `_continue`) and, signed out,
 `Connect a signer to highlight with Boris.`
 
+**Confirmed by measurement: the mark is `HighlightMine` at 45 %, and the glyphs keep their colour.**
+Sampled inside a marked band at t=78: fill `#7F702D`, which is `#FDE047` at 45 % over the page
+`#18171A` to within one unit per channel; the text on top reads `#E4E3E6` = `onBackground`. The band
+starts 12 px (≈ 5 dp) left of the text column, matching `HighlightMarks.kt`'s 5 dp horizontal
+inflation. §1.3 previously had this verified only for the purple class; now both ends of the palette
+are.
+
 **What our reproduction does instead.** Tapping `Highlight` paints the mark immediately: there is no
 signer, no event, no publish, because there is no crypto and no network here at all. The visible
-result is the same — upstream's user also leaves for Amber and returns to a painted mark — but the
-three states in between do not exist for us, and neither does the failure path. Recorded as gaps
-`bor-41` and `bor-42`. What we DO reproduce, verified in the browser: the marks honour
-`Show highlights` and the per-class visibility toggles, the pane and the count chip ignore both, and
-a new highlight force-shows your own layer.
+result is the same, and the recording shows it is the same *quickly* — upstream's user leaves for
+Amber and returns to a mark inside half a second — but the states in between do not exist for us,
+and neither does the failure path. Recorded as gaps `bor-44` and `bor-45`. What we DO reproduce,
+verified in the browser: the marks honour `Show highlights` and the per-class visibility toggles, the
+pane and the count chip ignore both, and a new highlight force-shows your own layer.
 
 **Bottom stack** (`:1860-1877`): mini player, then `ReadingProgressBar`, then a navigation-bar
 spacer. The progress readout is **not** a floating percentage: it is a full-width row on `background`
@@ -329,7 +469,16 @@ only then `Info` and `⋮`. The toggles are **not** a radio group — they are i
 a floor of one, so "Nostrverse + You" is a real state (`ui/feed/FeedScope.kt:24-31`). Icons
 `Hub` / `Group` / `Person`, each drawn in its own highlight colour at **alpha 1 on, 0.4 off, 0.28
 when it needs a login it does not have** (`:679-692`). Signed out that reads as one bright purple hub
-between two greyed-out neighbours — exactly what the recording shows.
+between two greyed-out neighbours — exactly what the first recording shows.
+
+**The alpha scale is now measured, signed in** (`shots/feeds-scopes.png`,
+t=88.5). The owner's state was friends-only, and the three glyphs sample: hub `#49216D`, group
+`#F97214`, person `#74662C`. Solving each against its own token over the page `#18171A` gives
+**0.40 · 1.00 · 0.40** — so `#F97316` at full strength for the layer that is on, and exactly 0.4 for
+the two that are off but available. That is one bright orange between two dim neighbours, which is
+the signed-in mirror image of the signed-out frame and confirms both ends of the scale.
+
+Signed-in Feeds with no follows is empty: `Nothing in your feeds yet.` over `Try again`.
 
 **Chip row**: `All` (`Apps`) · `Highlights` (`Highlighter`) · `Writings` (`Edit`) · `RSS` (`RssFeed`),
 M3 `FilterChip` with an 18 dp leading icon and `selectedContainerColor = secondaryContainer`
@@ -354,16 +503,62 @@ colour, 16 dp padding, 12 dp gaps:
 **Library signed out** (`strings.xml:19-20`): `Your bookmarks` / `Connect, and they show up here.`,
 then the auth pair and `New to nostr? Start here: nstart.me`.
 
+**Library signed in** (`shots/library-scopes.png`, t=151). Title
+`Your Library` in **serif**, then `ⓘ` and `⋮`. Six scope chips wrapping to two rows —
+`All` · `Private` · `Public` · `Web` on the first, `Lookmarks` · `Archive` on the second — and then
+the shelf. **Rows are deliberately terse: a 72 dp square thumbnail, the title, the host. No summary
+line**, which is what lets six or seven articles sit on one screen. A fresh account's Library is
+genuinely empty (`No bookmarks here yet.` over a `Try again` link, t=85–87) and fills one row at a
+time as things are bookmarked.
+
+**The six chip glyphs, read at 2× on t=151**, because two of them were reproduced wrong from the
+label alone:
+
+| Chip | Glyph | Note |
+| --- | --- | --- |
+| `All` | M3 `Apps` — a 3×3 grid of dots | |
+| `Private` | `Lock` — a closed padlock with a keyhole | |
+| `Public` | M3 `Public` — a globe with a **filled landmass** | **not** a pair of people |
+| `Web` | M3 `Language` — a wireframe meridian globe | |
+| `Lookmarks` | `Visibility` — an eye | matches the 👀 reaction it stands for |
+| `Archive` | M3 `LibraryBooks` — **three tilted books** | **not** a storage box; the same glyph rides `Move to Archive & Close` |
+
+**Chip colours, measured, and they are two different colours.** Unselected: leading icon in
+`primary` (`#6264EF` ≈ Indigo500 `#6366F1`), label in `onSurfaceVariant` (`#A1A0A9` ≈ `#A1A1AA`),
+1 dp `outline` border, transparent fill. Selected: fill `secondaryContainer` (`#4A4357` ≈ the M3
+baseline `#4A4458`), no border, and **both** icon and label in `onSecondaryContainer`
+(`#E8DBF6` ≈ `#E8DEF8`). Painting the whole chip `onBackground` — which this reproduction did until
+2026-08-22 — loses the one indigo accent M3 puts there on purpose, on every chip row in the app.
+
 **Library scopes** (`strings.xml:7-12`): `All` · `Private` · `Public` · `Web` · `Lookmarks` ·
 `Archive`. These are nostr concepts, not folders, and the app's own Info sheet says so: a lookmark is
 a kind-7 👀 reaction, archive is the 📚 one, private bookmarks are encrypted and need the signer
-(`strings.xml:28-32`).
+(`strings.xml:28-32`). **The locked `Private` state is still unfilmed** — the owner never left the
+`All` chip — so it stays source-only.
 
 **You signed out** — the app's one piece of showmanship, worth copying exactly
 (`ui/you/YouLoggedOut.kt:38-101`): the heading `Your highlights`, then the phrase
 `the passages you care about` set in Source Serif at 22 sp / 30 sp and painted with a real highlight
 — a rounded rect at **32 % alpha in dark, 42 % in light**, 6 dp / 2 dp padding, 2 dp radius, drawn
 behind the text — then `Connect, and they show up here.`
+
+**You signed in** (`shots/you-signed-in.png`, t=159) is your own profile,
+and it is the surface this reproduction had most wrong. Top bar: the support heart on the left, then
+**both** a settings gear **and** an overflow `⋮` on the right (t=0–7, t=92–95). The `⋮` is worth its
+own sentence — it is the only place in the whole app where a session can end
+(`AccountScreen.kt:133-144`) and the only place your own npub is on screen. **Its contents are still
+source-only**; the recording shows the button and never opens it.
+
+Below it: a bordered header card with a 48 dp picture and the display name — an account with no
+profile set shows the `AccountCircle` glyph and its bare `npub193lr9xy…`, and the bottom bar's You
+tab keeps the same glyph rather than a picture (§2.1's picture swap needs a picture to swap in).
+Then the four content chips `Highlights` · `Writings` · `Public` · `Web`, an in-profile `Search…`
+field, and the highlight cards. Empty reads `No highlights yet.` over a `Try again` link.
+
+The cards match §5 exactly, now with a measured mark: a 1 dp border in the highlight colour, a
+`FormatQuote` glyph in that same colour top-left (`#FCDE44` ≈ `HighlightMine`) against the relative
+time top-right (`now`, then `1m`), the quote in italic serif with the marked span at the same 45 %
+(`#7F702D`), `— gq.com`, then the author row and its `⋯`. A `Load more` link closes the list.
 
 **Auth** (`ui/auth/AuthBar.kt:88-110`): `Amber` is the filled button with a `Key` icon and hands off
 to the NIP-55 external signer; `Bunker` is outlined with a `Shield` icon and takes a `bunker://…`
@@ -372,6 +567,11 @@ NIP-46 URI. Both 8 dp.
 **Profile** (`ui/you/ProfileScreen.kt`): bordered header card (48 dp picture, display name, about
 clipped to two lines), then the four content chips `Highlights` · `Writings` · `Public` · `Web` and
 an in-profile `Search…` field.
+
+**Signed-in empty states are a house style**, and all three were filmed: `No bookmarks here yet.`
+(Library), `Nothing in your feeds yet.` (Feeds), `No highlights yet.` (You) — each a centred grey
+line over a `primary` **`Try again`** link. A signed-in account with no follows and no bookmarks sees
+this everywhere but Home, which is the point: Boris's content does not depend on your having any.
 
 ## 7. Settings
 
@@ -451,5 +651,7 @@ the description above is a bug.
 | Robohash inline-SVG avatars | the real app loads profile pictures over the network |
 | No in-app browser, no OPML import, no real relay probing | no network, no crypto — this is a simulation |
 | Supporter avatars cycle at the real 21 s | faithful, but a visitor will rarely see it change |
+| No `Move to Archive & Close` button and no post-bookmark download bar | both filmed 2026-08-22, both **self-dismissing after a few seconds**. A control that removes itself cannot be a tour target or a `showMe`, and its trigger is not established — see §4. Logged as `bor-46` / `bor-47` rather than guessed at |
+| Saving a bookmark is instant instead of a signer round trip | same reason as the highlight round trip: no crypto, no network. The recording puts the real gap at well under a second either way |
 
 Coverage of the real app, surface by surface: [`../../gaps/boris.md`](../../gaps/boris.md).

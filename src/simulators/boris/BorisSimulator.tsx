@@ -76,6 +76,17 @@ export function BorisSimulator({ className = '', tourCommand, onCommandHandled }
   const [article, setArticle] = useState<BorisArticle | null>(null);
   const [pane, setPane] = useState<ReaderPane>(null);
   const [ownMarks, setOwnMarks] = useState<string[]>([]);
+  /**
+   * What the visitor has saved from the reader, and how. Upstream this is a
+   * NIP-51 bookmark list the signer has to sign, which is why the recording
+   * bounces to Amber between the tap and the filled bookmark icon; here the
+   * choice lands straight in state. Keyed by article id.
+   */
+  const [savedArticles, setSavedArticles] = useState<Record<string, 'private' | 'public'>>({});
+  // Both menus live here rather than inside their screens so a tour command can
+  // park one open (see ReaderScreen's `saveMenuOpen` comment).
+  const [saveMenuOpen, setSaveMenuOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [progress, setProgress] = useState<Record<string, number>>({});
 
   const [tts, setTts] = useState<{ article: BorisArticle; playing: boolean; block: number } | null>(null);
@@ -91,6 +102,8 @@ export function BorisSimulator({ className = '', tourCommand, onCommandHandled }
   }, []);
 
   const closeOverlays = useCallback(() => {
+    setSaveMenuOpen(false);
+    setAccountMenuOpen(false);
     setArticle(null);
     setPane(null);
     setSettingsScreen(null);
@@ -163,6 +176,30 @@ export function BorisSimulator({ className = '', tourCommand, onCommandHandled }
         const lead = a.body.find((b) => b.type === 'lead') ?? a.body.find((b) => b.type === 'p');
         if (lead && 'text' in lead) setOwnMarks((m) => (m.includes(lead.text) ? m : [...m, lead.text]));
         registerAction('highlight');
+        break;
+      }
+      case 'saveToLibrary': {
+        // Self-sufficient: signs in, opens an article the visitor has not saved
+        // and parks the private/public menu open, so one command is the whole
+        // step. `library` in the FAQ bank rings this.
+        const a = articleById('commonplace-book') ?? borisArticles[0];
+        setLoggedIn(true);
+        closeOverlays();
+        openArticle(a);
+        setSavedArticles((m) => {
+          const next = { ...m };
+          delete next[a.id];
+          return next;
+        });
+        setSaveMenuOpen(true);
+        break;
+      }
+      case 'accountMenu': {
+        // The only place in the app you can sign out (AccountScreen.kt:133-144).
+        setLoggedIn(true);
+        closeOverlays();
+        setActiveTab('you');
+        setAccountMenuOpen(true);
         break;
       }
       case 'openPane': {
@@ -242,6 +279,7 @@ export function BorisSimulator({ className = '', tourCommand, onCommandHandled }
         return (
           <LibraryScreen
             loggedIn={loggedIn}
+            saved={savedArticles}
             scope={libraryScope}
             onScopeChange={setLibraryScope}
             onLogin={handleLogin}
@@ -290,6 +328,19 @@ export function BorisSimulator({ className = '', tourCommand, onCommandHandled }
             onOpenProfile={setProfileUser}
             onOpenSupport={() => setSupportOpen(true)}
             onOpenSettings={() => setSettingsScreen('root')}
+            menuOpen={accountMenuOpen}
+            onMenuChange={setAccountMenuOpen}
+            onLogout={() => {
+              // The `⋮` on You is the only sign-out in the whole app
+              // (AccountScreen.kt:133-144). Signing out drops everything the
+              // session earned: your marks, your saves and your own highlight
+              // layer on Home.
+              setLoggedIn(false);
+              setOwnMarks([]);
+              setSavedArticles({});
+              setProfileTab('highlights');
+              setAccountMenuOpen(false);
+            }}
           />
         );
     }
@@ -391,6 +442,13 @@ export function BorisSimulator({ className = '', tourCommand, onCommandHandled }
                 )
               }
               onOpenProfile={setProfileUser}
+              savedAs={savedArticles[article.id] ?? null}
+              saveMenuOpen={saveMenuOpen}
+              onSaveMenuChange={setSaveMenuOpen}
+              onSave={(visibility) => {
+                setSavedArticles((m) => ({ ...m, [article.id]: visibility }));
+                registerAction('save');
+              }}
               onAddHighlight={(quote) => {
                 setOwnMarks((m) => (m.includes(quote) ? m : [...m, quote]));
                 // `withOwnHighlightsVisible()` — upstream force-shows your own

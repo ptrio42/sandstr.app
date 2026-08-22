@@ -659,6 +659,26 @@ export const borisFaq: ClientFaq = {
         'To put something in here, open it and use the Save button in the reader’s top bar — it offers "Add to private bookmarks" or "Add to public bookmarks", and turns into a filled bookmark once the article is saved.',
       ],
       note: 'Settings → Library → "Default view" picks which of the six chips Library opens on.',
+      showMe: [
+        {
+          target: '[data-tour="boris-reader-save-menu"]',
+          title: 'Private or public, decided here',
+          content:
+            'The save button in the reader is not a toggle — it opens this. "Add to private bookmarks" goes into an encrypted list only your signer can read; "Add to public bookmarks" goes into a plain one anybody can. Either way the button then turns into a filled bookmark.',
+          position: 'bottom',
+          // Self-sufficient: signs in, opens an unsaved article and parks the
+          // menu open. Confirmed against the 2026-08-22 recording, t=137.5.
+          commands: cmd({ type: 'saveToLibrary' }),
+        },
+        {
+          target: '[data-tour="boris-library-scopes"]',
+          title: 'Six shelves, not six folders',
+          content:
+            'What you just saved lands in All and in the scope you picked. Private · Public · Web · Lookmarks · Archive are nostr concepts underneath — two encrypted-or-not bookmark lists and two emoji reactions.',
+          position: 'bottom',
+          commands: cmd({ type: 'navigate', payload: 'library' }),
+        },
+      ],
     },
     {
       // nostr/Lookmarks.kt:6-8 (👀, kind 7) and nostr/Archive.kt:9-13 (📚,
@@ -953,6 +973,16 @@ export const borisFaq: ClientFaq = {
         'Everything you published stays where it was — on relays. Signing out of Boris does not delete a highlight, a bookmark or a reading position.',
       ],
       note: 'Signing out does not lock you out of the app. Home, Feeds, Search and the reader keep working exactly as before; only Library and You go back to asking.',
+      showMe: [
+        {
+          target: '[data-tour="boris-you-menu"]',
+          title: 'The one way out',
+          content:
+            'You → ⋮. This menu is the only place in Boris where a session can end, and the only place your own npub is on screen. It exists only while you are signed in.',
+          position: 'bottom',
+          commands: cmd({ type: 'accountMenu' }),
+        },
+      ],
     },
     {
       // data/SessionStore.kt:19-31 — load() reads ONE session out of one
