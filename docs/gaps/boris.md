@@ -23,7 +23,7 @@
 
 | missing | dead | partial | unreachable | unanchored | ok |
 |---|---|---|---|---|---|
-| 13 | 14 | 10 | 1 | 0 | 7 |
+| 13 | 14 | 9 | 1 | 0 | 8 |
 
 42 wiersze = 36 luk + 6 `ok`. Liczby policzone skryptem po kolumnie *Status*, nie ręcznie
 (przeliczone 2026-08-21 po zamknięciu bor-01 i dopisaniu bor-41/bor-42).
@@ -53,7 +53,7 @@ weryfikacji mini-tourów, nie przeglądem kodu.
 | ID | Surface (ścieżka w UI) | § | Status | Gap | Evidence | FAQ impact | Effort |
 |---|---|---|---|---|---|---|---|
 | bor-01 | cały klient → bank FAQ (`showMe`) | — | ok | **Zamknięte 2026-08-21.** `src/data/faq/boris.ts` = 43 wpisy / 16 mini-tourów, `borisFaq` w `src/data/faq/index.ts`, `FaqMiniTourLauncher` + gałąź `isFaqStepId` we wrapperze, Boris w `src/data/capabilities.ts` (12 osi) i na `/compare` (pierwszy ekran + pasek zakładek; nota i composer jako `absent` z powodem) | `src/data/faq/boris.ts`, `src/simulators/boris/BorisSimulatorWithTour.tsx:16-17,61-80,125` | none | — |
-| bor-02 | Reader → zaznaczenie tekstu → pasek Copy / Highlight / TTS from here / Select all | §4.1 | partial | Etykieta poprawiona 2026-08-21: trzecia pozycja to `TTS from here` (`strings.xml:418`), nie „Read from here" — błąd wędrował ze screen-mapy przez sim do kopii toura. Pasek ma poprawny kształt i kolejność, ale nie ma realnej selekcji: klik w akapit „zaznacza" jego pierwsze zdanie. Prawdziwe `window.getSelection()` dałoby dowolny fragment | `screens/ReaderScreen.tsx:398-410` | breaks-showme | M |
+| bor-02 | Reader → zaznaczenie tekstu → pasek Copy / Highlight / TTS from here / Select all | §4.1 | ok | **Domknięte 2026-08-22.** Realna selekcja przez `window.getSelection()`: zaznaczasz dowolny fragment, pasek wychodzi nad zaznaczeniem i zakreśla dokładnie to, co zaznaczyłeś. Wcześniej blok był owinięty w `<button>` (klik brał pierwsze zdanie i wkładał prozę blokową do przycisku — niepoprawny HTML). Realny gest to long-press + przeciągnięcie; u nas przeciągnięcie myszą/palcem, bo to przeglądarka. Sprawdzone drag-em w podglądzie: zaznaczony fragment = zakreślony fragment, chip 2 → 3 | `screens/ReaderScreen.tsx` (`readSelection`) | none | — |
 | bor-03 | Library (zalogowany) → chipy All / Private / Public / Web / Lookmarks / Archive | §6 | partial | Każdy scope filtruje ten sam zbiór artykułów po długości/domenie; nie ma osobnych zbiorów bookmarków ani stanu „zaszyfrowane, odblokuj signerem" | `screens/LibraryScreen.tsx:49-58` | breaks-showme | M |
 | bor-04 | Library → top bar → Info → arkusz „Library sources" | §6 | dead | Ikona `i` otwiera ekran ustawień Library zamiast arkusza z pięcioma opisami źródeł (lookmark = kind 7 👀 itd.) | `BorisSimulator.tsx:262` | breaks-showme | S |
 | bor-05 | Feeds → top bar → Info → arkusz „Feed visibility" | §5 | dead | To samo: otwiera ustawienia Feeds, nie arkusz z trzema zdaniami o zasięgach | `BorisSimulator.tsx:283` | breaks-showme | S |

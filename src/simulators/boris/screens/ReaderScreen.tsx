@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   ArrowLeft,
   Calendar,
@@ -235,8 +235,37 @@ export function ReaderScreen({
   ttsSlot,
 }: ReaderScreenProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [selection, setSelection] = useState<string | null>(null);
+  const [selection, setSelection] = useState<{ text: string; top: number } | null>(null);
   const [findQuery, setFindQuery] = useState('');
+  const bodyRef = useRef<HTMLDivElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  /**
+   * Read whatever the visitor actually selected, and remember where it sits so
+   * the toolbar can float over it the way the real one does.
+   *
+   * The `top` is measured against the READER's own box, never the viewport: the
+   * device screen is a transformed element, so a viewport coordinate lands in
+   * the wrong place inside the phone frame (the repo-wide `position: fixed`
+   * trap, .claude/rules/simulators.md).
+   */
+  const readSelection = () => {
+    const sel = window.getSelection();
+    const root = rootRef.current;
+    const text = sel?.toString().trim() ?? '';
+    if (!sel || sel.isCollapsed || text.length < 2 || !root) {
+      setSelection(null);
+      return;
+    }
+    const node = sel.anchorNode;
+    if (!node || !bodyRef.current?.contains(node)) {
+      setSelection(null);
+      return;
+    }
+    const rect = sel.getRangeAt(0).getBoundingClientRect();
+    const rootRect = root.getBoundingClientRect();
+    setSelection({ text, top: rect.top - rootRect.top });
+  };
 
   const author = article.pubkey ? userByPubkey(article.pubkey) : null;
   const swarm = borisHighlights.filter((h) => h.articleId === article.id);
@@ -286,7 +315,7 @@ export function ReaderScreen({
     : 0;
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col" style={{ background: 'var(--boris-bg)' }}>
+    <div ref={rootRef} className="relative flex h-full min-h-0 flex-col" style={{ background: 'var(--boris-bg)' }}>
       {/* Top bar */}
       <div className="flex h-16 shrink-0 items-center pl-1 pr-1" style={{ background: 'var(--boris-bg)' }}>
         <IconButton label="Back" onClick={onBack} tourId="boris-reader-back">
@@ -436,25 +465,21 @@ export function ReaderScreen({
             <MetaChip icon={<Calendar size={14} />} text={article.published} />
           </div>
 
-          <div data-tour="boris-reader-body">
+          {/* REAL text selection, not a tap target per paragraph. Upstream's
+              gesture is a long-press and drag over arbitrary text
+              (ReaderSelection.kt:205-261); wrapping each block in a <button>
+              made the paragraph the smallest thing you could pick, which meant
+              the demo could never show what Boris is actually for. It also put
+              block-level prose inside a button, which is invalid HTML. */}
+          <div ref={bodyRef} data-tour="boris-reader-body" onMouseUp={readSelection} onTouchEnd={readSelection}>
             {article.body.map((block, i) => (
-              <button
+              <Prose
                 key={i}
-                type="button"
-                className="block w-full cursor-text text-left"
-                onClick={() => {
-                  if (!('text' in block)) return;
-                  const sentence = block.text.split('. ')[0];
-                  setSelection(sentence.length > 4 ? `${sentence}.` : block.text);
-                }}
-              >
-                <Prose
-                  block={block}
-                  marks={marksFor(block)}
-                  spoken={ttsPlaying && ttsBlock === i}
-                  style={highlightStyle}
-                />
-              </button>
+                block={block}
+                marks={marksFor(block)}
+                spoken={ttsPlaying && ttsBlock === i}
+                style={highlightStyle}
+              />
             ))}
           </div>
         </div>
@@ -493,7 +518,13 @@ export function ReaderScreen({
           (strings.xml:418 `tts_from_here`); Copy and Select all come from
           android.R.string, so they read as the platform's own labels. */}
       {selection && (
-        <div className="absolute inset-x-0 top-24 z-40 flex justify-center px-4">
+        <div
+          className="absolute inset-x-0 z-40 flex justify-center px-4"
+          /* Above the selection where there is room, below it otherwise — the
+             real toolbar tracks the selection rather than parking at a fixed
+             offset. Clamped so it never rides over the top bar. */
+          style={{ top: Math.max(72, selection.top - 56) }}
+        >
           <div
             className="flex items-center gap-1 rounded-3xl px-1 py-1"
             style={{ background: '#E6E1E5', color: '#313033' }}
@@ -505,7 +536,8 @@ export function ReaderScreen({
                 type="button"
                 className="rounded-full px-3 py-1.5 text-[13px] font-medium"
                 onClick={() => {
-                  if (label === 'Highlight') onAddHighlight(selection);
+                  if (label === 'Highlight') onAddHighlight(selection.text);
+                  window.getSelection()?.removeAllRanges();
                   setSelection(null);
                 }}
               >
